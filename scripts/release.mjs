@@ -68,11 +68,13 @@ if (!bump) {
 const next = increment(current, bump);
 
 // ---- seção do changelog --------------------------------------------------------------
+const functional = ["feat", "fix", "perf"];
 const groups = [
   ["⚠️ Mudanças incompatíveis", (c) => c.breaking],
   ["Novidades", (c) => c.type === "feat" && !c.breaking],
   ["Correções", (c) => c.type === "fix" && !c.breaking],
   ["Desempenho", (c) => c.type === "perf" && !c.breaking],
+  ["Manutenção", (c) => c.type && !functional.includes(c.type) && !c.breaking && !(c.type === "chore" && c.scope === "release")],
 ];
 let section = `## [${next}] - ${new Date().toISOString().slice(0, 10)}\n`;
 for (const [title, match] of groups) {
@@ -118,7 +120,8 @@ console.log(`\nRelease v${next} publicado no GitHub. O workflow "release" vai pu
 
 // ---- utilitários ---------------------------------------------------------------------
 function git(...gitArgs) {
-  return execFileSync("git", gitArgs, { encoding: "utf8" }).trim();
+  // stderr capturado: erros esperados (ex.: describe sem tags) não poluem a saída
+  return execFileSync("git", gitArgs, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
 }
 
 function run(cmd, cmdArgs) {
