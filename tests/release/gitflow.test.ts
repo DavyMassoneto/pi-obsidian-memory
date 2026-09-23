@@ -1,6 +1,8 @@
 import { copyFileSync } from "node:fs"
 import { join } from "node:path"
+
 import { afterEach, describe, expect, it } from "vitest"
+
 import { parseGitFlowConfig, readGitFlowConfig } from "../../scripts/release/gitflow.ts"
 import { CONFIG, cleanupTempDirs, tempDir } from "./helpers.ts"
 

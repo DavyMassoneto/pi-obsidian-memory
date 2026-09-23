@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+
 import { NothingToRelease } from "../../scripts/release/plan.errors.ts"
 import { buildPlan } from "../../scripts/release/plan.ts"
 import type { PlanInput, ReleasePlan, StepId } from "../../scripts/release/plan.types.ts"

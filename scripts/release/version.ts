@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
+
 import { readJsonFile, writeJsonFile } from "./json.ts"
 import { BUMPS, RELEASE_VERSION } from "./version.constants.ts"
 import { PackageLock, PackageManifest } from "./version.schemas.ts"

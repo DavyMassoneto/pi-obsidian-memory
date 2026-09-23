@@ -1,4 +1,5 @@
 import { type Options as CliffOptions, runGitCliff } from "git-cliff"
+
 import type { Bump } from "./version.types.ts"
 
 export async function bumpedVersion(cwd: string, bump: Bump, tagPrefix: string): Promise<string> {

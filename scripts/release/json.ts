@@ -1,6 +1,8 @@
 import { readFileSync, writeFileSync } from "node:fs"
+
 import type { StaticParse, TSchema } from "typebox"
 import { Parse, ParseError } from "typebox/value"
+
 import type { JsonFile } from "./json.types.ts"
 
 export function readJsonFile<Schema extends TSchema>(path: string, schema: Schema): JsonFile<StaticParse<Schema>> {
