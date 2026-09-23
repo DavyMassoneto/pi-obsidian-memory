@@ -6,10 +6,10 @@ import {
   inSyncWithRemote,
   noOpenRelease,
   onDevelopBranch,
-  type PreflightContext,
-  runPreflight,
   versionMatchesLatestTag,
-} from "../../scripts/release/preflight.ts"
+} from "../../scripts/release/checks.ts"
+import { runPreflight } from "../../scripts/release/preflight.ts"
+import type { PreflightContext } from "../../scripts/release/preflight.types.ts"
 import { CONFIG, cleanupTempDirs, commit, git, repoOnDevWithRemote, tag, tempDir } from "./helpers.ts"
 
 afterEach(cleanupTempDirs)

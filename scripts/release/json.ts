@@ -1,12 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs"
 import type { StaticParse, TSchema } from "typebox"
 import { Parse, ParseError } from "typebox/value"
-
-export interface JsonFile<Data> {
-  readonly path: string
-  readonly data: Data
-  readonly lineEnding: string
-}
+import type { JsonFile } from "./json.types.ts"
 
 export function readJsonFile<Schema extends TSchema>(path: string, schema: Schema): JsonFile<StaticParse<Schema>> {
   const text = readFileSync(path, "utf8")

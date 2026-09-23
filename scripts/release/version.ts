@@ -1,21 +1,9 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import Type from "typebox"
 import { readJsonFile, writeJsonFile } from "./json.ts"
-
-export const BUMPS = ["auto", "patch", "minor", "major"] as const
-export type Bump = (typeof BUMPS)[number]
-
-export type Version = readonly [major: number, minor: number, patch: number]
-
-const RELEASE_VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
-
-const PackageManifest = Type.Object({ version: Type.String() })
-
-const PackageLock = Type.Object({
-  version: Type.String(),
-  packages: Type.Object({ "": Type.Object({ version: Type.String() }) }),
-})
+import { BUMPS, RELEASE_VERSION } from "./version.constants.ts"
+import { PackageLock, PackageManifest } from "./version.schemas.ts"
+import type { Bump, Version } from "./version.types.ts"
 
 export function isBump(value: string): value is Bump {
   return BUMPS.some((bump) => bump === value)

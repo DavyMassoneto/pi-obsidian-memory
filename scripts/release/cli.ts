@@ -4,30 +4,18 @@ import { stdin, stdout } from "node:process"
 import { createInterface } from "node:readline/promises"
 import { parseArgs } from "node:util"
 import { Locale } from "typebox/system"
+import { RELEASE_FILES, REMOTE, USAGE } from "./cli.constants.ts"
+import type { ReleaseOptions } from "./cli.types.ts"
 import { bumpedVersion, previewChangelog, writeChangelog } from "./cliff.ts"
 import { runVisible } from "./git.ts"
-import { type GitFlowConfig, readGitFlowConfig } from "./gitflow.ts"
-import { buildPlan, type ReleasePlan, type Step } from "./plan.ts"
+import { readGitFlowConfig } from "./gitflow.ts"
+import type { GitFlowConfig } from "./gitflow.types.ts"
+import { buildPlan } from "./plan.ts"
+import type { ReleasePlan, Step } from "./plan.types.ts"
 import { runPreflight } from "./preflight.ts"
 import { formatFailure } from "./recovery.ts"
-import { type Bump, isBump, readPackageVersion, setPackageVersion } from "./version.ts"
-
-const REMOTE = "origin"
-
-const RELEASE_FILES = ["package.json", "package-lock.json", "CHANGELOG.md"]
-
-const USAGE = `Uso: npm run release -- [opções]
-
-  --dry-run          mostra o plano e o changelog sem alterar nada
-  --bump <tipo>      força o incremento: patch | minor | major (padrão: automático)
-  -y, --yes          não pede confirmação (só com autorização explícita)
-  -h, --help         mostra esta ajuda`
-
-interface ReleaseOptions {
-  readonly dryRun: boolean
-  readonly yes: boolean
-  readonly bump: Bump
-}
+import { isBump, readPackageVersion, setPackageVersion } from "./version.ts"
+import type { Bump } from "./version.types.ts"
 
 async function main(argv: readonly string[]): Promise<number> {
   const options = parseCommandLine(argv)
