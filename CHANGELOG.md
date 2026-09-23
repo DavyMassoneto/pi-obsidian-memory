@@ -1,6 +1,21 @@
 # Changelog
 
-Mudanças relevantes de cada versão. O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o [SemVer](https://semver.org/lang/pt-BR/).
-As seções abaixo são geradas por `npm run release` a partir dos commits (Conventional Commits).
+Mudanças relevantes de cada versão. O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o [SemVer](https://semver.org/lang/pt-BR/). Gerado por `npm run release` com o [git-cliff](https://git-cliff.org).
+## [0.0.1] - 2026-09-23
 
-<!-- releases -->
+### Manutenção
+
+- Release com git-cliff no ADR 0001, no AGENTS.md e no STATE (24ce4ba)
+- Tipos e testes no CI; notas da release pelo git-cliff (9e7d5ad)
+- **release:** Plano, verificações, versões e regras do cliff.toml (0d65796)
+- **release:** Reescreve o release em TypeScript com git-cliff (3a42fd4)
+- Descrição do pacote em inglês (09c222c)
+- Validação no Windows a cada push e PR (573a133)
+- Release sem ruído do git describe e com seção de manutenção no changelog (d504842)
+- ADR 0001 e regras de release e de commits (59935cc)
+- Versionamento automático com Git Flow e publicação por Trusted Publishing (eb85151)
+- Prepara o pacote npm pi-obsidian-memory (ff37f37)
+- STATE com o repositório publicado no GitHub (e7322ca)
+- Git Flow sempre com merge --no-ff (0888d93)
+- Adota Git Flow e torna o OneDrive opcional (749119e)
+- Estudo pré-projeto, decisões da entrevista e setup do OpenSpec (87300bf)
