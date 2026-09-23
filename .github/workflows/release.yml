@@ -41,11 +41,12 @@ jobs:
           fi
 
       - name: Dependências
-        if: hashFiles('package-lock.json') != ''
         run: npm ci
 
-      - name: Testes
-        run: npm test --if-present
+      - name: Tipos e testes
+        run: |
+          npm run typecheck
+          npm test
 
       - name: Publicar no npm
         run: npm publish --access public
@@ -54,11 +55,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          node -e '
-            const fs = require("fs");
-            const version = process.env.GITHUB_REF_NAME.slice(1);
-            const text = fs.readFileSync("CHANGELOG.md", "utf8");
-            const block = text.split(/^## /m).find((s) => s.startsWith("[" + version + "]"));
-            fs.writeFileSync("notes.md", block ? block.split("\n").slice(1).join("\n").trim() : "Release " + version);
-          '
+          npx git-cliff --latest --strip header --output notes.md
           gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag

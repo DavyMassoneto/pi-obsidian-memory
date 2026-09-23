@@ -19,7 +19,7 @@
 - **GitHub:** repositório **público** em https://github.com/DavyMassoneto/pi-obsidian-memory, com branch padrão **`dev`**; `main` e `dev` publicadas. A GitHub CLI 2.101 está autenticada (use `gh pr create --base dev` quando o usuário pedir PR).
 - **PowerShell 7:** o perfil ativa o fnm, então `node` (v24), `openspec`, `pi`, `gh` e `git flow` ficam disponíveis.
 - **npm** (pacote `pi-obsidian-memory`, MIT, conta `davy121`), com publicação automática configurada:
-  - `npm run release` calcula a versão pelos Conventional Commits e roda o Git Flow;
+  - `npm run release` calcula a versão pelos Conventional Commits (git-cliff, regras no `cliff.toml`) e roda o Git Flow (`scripts/release/`, em TypeScript, com testes);
   - a tag `v*` na `main` dispara o `.github/workflows/release.yml`, que publica via Trusted Publishing e cria a GitHub Release. Só esse workflow pode publicar;
   - detalhes no [ADR 0001](decisions/0001-versionamento-automatico-e-publicacao-npm.md).
 - **CI** (`.github/workflows/ci.yml`, Windows): roda a cada push nas branches do Git Flow e em cada PR.
