@@ -16,7 +16,7 @@
   - `main` (releases) e `dev` (integração);
   - configuração versionada em `.gitflow`;
   - regras no `AGENTS.md`.
-- **GitHub CLI 2.101** instalada. Repositório **público** com branch padrão **`dev`**, criado depois do `gh auth login`.
+- **GitHub:** repositório **público** em https://github.com/DavyMassoneto/pi-obsidian-memory, com branch padrão **`dev`**; `main` e `dev` publicadas. A GitHub CLI 2.101 está autenticada (use `gh pr create --base dev` quando o usuário pedir PR).
 - **PowerShell 7:** o perfil ativa o fnm, então `node` (v24), `openspec`, `pi`, `gh` e `git flow` ficam disponíveis.
 
 ## Decisões-chave (detalhes em OPEN-QUESTIONS.md)
@@ -39,10 +39,8 @@
   - **Git Flow**: nada de commit direto em `main` ou `dev`.
 
 ## Próxima ação
-1. **Usuário:** rodar `gh auth login` (uma vez).
-2. Criar o repositório público no GitHub, fazer push de `main` e `dev` e definir `dev` como padrão.
-3. **Usuário:** abrir o **PowerShell 7** nesta pasta, rodar `pi` e colar o prompt abaixo.
-4. Mais tarde: configurar a publicação no npm.
+1. **Usuário:** abrir o **PowerShell 7** nesta pasta, rodar `pi` e colar o prompt abaixo.
+2. Mais tarde: configurar a publicação no npm, a partir de uma release (`git flow release start 0.1.0`).
 
 ## Prompt da próxima sessão (pi)
 ```text
