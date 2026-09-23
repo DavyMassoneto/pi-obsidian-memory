@@ -23,7 +23,7 @@
   - a tag `v*` na `main` dispara o `.github/workflows/release.yml`, que publica via Trusted Publishing e cria a GitHub Release. Só esse workflow pode publicar;
   - detalhes no [ADR 0001](decisions/0001-versionamento-automatico-e-publicacao-npm.md).
 - **CI** (`.github/workflows/ci.yml`, Windows): roda a cada push nas branches do Git Flow e em cada PR (Biome, tipos, testes e OpenSpec).
-- **Biome** para lint, formatação e imports (`npm run lint` / `npm run format`), com as regras de código do `AGENTS.md`: sem `;`, limites de 200 linhas por arquivo e 30 por função, sem `any`, `unknown`, type assertion nem index signature.
+- **Biome** para lint, formatação e imports (`npm run lint` / `npm run format`), com as regras de código do `AGENTS.md`: sem `;`, limites de 200 linhas por arquivo e 30 por função, sem `any`, `unknown`, type assertion nem index signature. Tipos, constantes, schemas, erros e estilos ficam cada um no seu arquivo, junto do módulo.
 
 ## Decisões-chave (detalhes em OPEN-QUESTIONS.md)
 - **Sistema de spec ≠ sistema de memória.** Os docs do projeto ficam no repositório; os vaults guardam só memórias.

@@ -51,9 +51,16 @@ Leia `docs/STATE.md` antes de tudo: ele traz a fase atual, a próxima ação e o
 
 ## Código (TypeScript)
 O Biome barra automaticamente, no `npm run lint` e no CI (configuração em `biome.json` e plugins em `biome/`):
-- ponto e vírgula (o estilo é sem), imports fora de ordem e linhas com mais de 120 colunas;
+- código fora da formatação (sem ponto e vírgula, linha de 120 colunas) e imports fora de ordem;
 - arquivo com mais de 200 linhas e função com mais de 30, sem contar as linhas em branco. Nos testes vale só o limite de arquivo, porque o `describe()` conta como função;
 - `any`, `unknown`, type assertion (`x as T`, `<T>x`, `x!`; `as const` pode) e index signature, inclusive `Record<string, T>` e `{ [K in string]: T }`. `Record` com chaves fixas pode.
+
+Cada tipo de coisa fica no seu arquivo, junto do módulo (`plan.ts` → `plan.types.ts`, `plan.constants.ts`…). O Biome barra no código; nos testes, não vale:
+- tipos e interfaces → `<módulo>.types.ts`;
+- valor no topo do módulo que não é função (texto, número, regex, lista, objeto, `Map`…) → `<módulo>.constants.ts`;
+- schema do TypeBox → `<módulo>.schemas.ts`. O construtor `Type` só é importado lá; nos outros arquivos, use `import type`;
+- classe de erro (que estende `Error`) → `<módulo>.errors.ts`;
+- estilo (`theme.fg`, `theme.bold`… do pi e bibliotecas de cor como `chalk`) → `<módulo>.styles.ts`.
 
 Valem também, mesmo sem o Biome pegar:
 - Dado externo (JSON, configuração) passa por um schema do TypeBox (`typebox`, o mesmo do pi), nunca por cast.
