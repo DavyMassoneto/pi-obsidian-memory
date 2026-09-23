@@ -1,7 +1,7 @@
 {
   "name": "pi-obsidian-memory",
   "version": "0.0.0",
-  "description": "Memória de longo prazo para o pi coding agent em vaults do Obsidian (OneDrive opcional)",
+  "description": "Long-term memory for the pi coding agent, stored in Obsidian vaults",
   "keywords": [
     "pi",
     "pi-coding-agent",
