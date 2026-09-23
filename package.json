@@ -1,6 +1,6 @@
 {
   "name": "pi-obsidian-memory",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Long-term memory for the pi coding agent, stored in Obsidian vaults",
   "keywords": [
     "pi",
