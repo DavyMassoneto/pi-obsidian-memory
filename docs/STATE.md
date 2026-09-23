@@ -18,6 +18,11 @@
   - regras no `AGENTS.md`.
 - **GitHub:** repositório **público** em https://github.com/DavyMassoneto/pi-obsidian-memory, com branch padrão **`dev`**; `main` e `dev` publicadas. A GitHub CLI 2.101 está autenticada (use `gh pr create --base dev` quando o usuário pedir PR).
 - **PowerShell 7:** o perfil ativa o fnm, então `node` (v24), `openspec`, `pi`, `gh` e `git flow` ficam disponíveis.
+- **npm** (pacote `pi-obsidian-memory`, MIT):
+  - `package.json` na versão `0.0.0`, só para reservar o nome;
+  - `npm run release` calcula a versão pelos Conventional Commits e roda o Git Flow;
+  - `.github/workflows/release.yml` publica via Trusted Publishing quando uma tag `v*` chega na `main`;
+  - detalhes no [ADR 0001](decisions/0001-versionamento-automatico-e-publicacao-npm.md).
 
 ## Decisões-chave (detalhes em OPEN-QUESTIONS.md)
 - **Sistema de spec ≠ sistema de memória.** Os docs do projeto ficam no repositório; os vaults guardam só memórias.
@@ -39,8 +44,12 @@
   - **Git Flow**: nada de commit direto em `main` ou `dev`.
 
 ## Próxima ação
-1. **Usuário:** abrir o **PowerShell 7** nesta pasta, rodar `pi` e colar o prompt abaixo.
-2. Mais tarde: configurar a publicação no npm, a partir de uma release (`git flow release start 0.1.0`).
+1. **Usuário (uma vez), publicação no npm:**
+   - `npm login`;
+   - `npm publish` (versão `0.0.0`, que reserva o nome);
+   - no npmjs.com, em *pi-obsidian-memory → Settings → Trusted Publisher*, cadastrar GitHub Actions: `DavyMassoneto` / `pi-obsidian-memory` / `release.yml`.
+2. **Usuário:** abrir o **PowerShell 7** nesta pasta, rodar `pi` e colar o prompt abaixo.
+3. Releases seguintes: `npm run release` (só quando o usuário pedir).
 
 ## Prompt da próxima sessão (pi)
 ```text
