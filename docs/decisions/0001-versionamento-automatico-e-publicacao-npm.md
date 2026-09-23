@@ -43,7 +43,7 @@ A versão e o changelog vêm do **git-cliff**, com as regras no `cliff.toml`. O 
 3. mostra o plano e a prévia do changelog (o `--dry-run` para aqui) e pede confirmação;
 4. `git flow release start X.Y.Z`;
 5. atualiza `package.json` e `package-lock.json`, regenera o `CHANGELOG.md` e commita `chore(release): vX.Y.Z`;
-6. `git flow release finish X.Y.Z`: merge na `main`, tag `vX.Y.Z` e volta para a `dev`;
+6. `git flow release finish X.Y.Z`: merge na `main`, tag `vX.Y.Z` e atualização da `dev`. Depois o script volta o terminal para a `dev`, porque o finish termina na `main`;
 7. `git push --atomic` de `main`, `dev` e da tag.
 
 Se um passo falha, o script mostra o que já foi feito e como seguir ou desfazer.
