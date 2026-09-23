@@ -61,3 +61,11 @@
 	prefix = feature/
 	autoUpdate = false
 	tag = false
+[gitflow "feature.finish"]
+	no-ff = true
+[gitflow "bugfix.finish"]
+	no-ff = true
+[gitflow "release.finish"]
+	no-ff = true
+[gitflow "hotfix.finish"]
+	no-ff = true
