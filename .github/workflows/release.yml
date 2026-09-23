@@ -1,0 +1,64 @@
+name: release
+
+# Disparado pela tag vX.Y.Z que o `npm run release` cria na main (Git Flow).
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # criar a GitHub Release
+  id-token: write # Trusted Publishing no npm (OIDC), sem token guardado
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: npm atualizado (Trusted Publishing exige npm >= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: A tag bate com o package.json
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$expected" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::A tag $GITHUB_REF_NAME não bate com o package.json ($expected)"
+            exit 1
+          fi
+
+      - name: A tag está na main
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::A tag $GITHUB_REF_NAME não está na main"
+            exit 1
+          fi
+
+      - name: Dependências
+        if: hashFiles('package-lock.json') != ''
+        run: npm ci
+
+      - name: Testes
+        run: npm test --if-present
+
+      - name: Publicar no npm
+        run: npm publish --access public
+
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const version = process.env.GITHUB_REF_NAME.slice(1);
+            const text = fs.readFileSync("CHANGELOG.md", "utf8");
+            const block = text.split(/^## /m).find((s) => s.startsWith("[" + version + "]"));
+            fs.writeFileSync("notes.md", block ? block.split("\n").slice(1).join("\n").trim() : "Release " + version);
+          '
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag

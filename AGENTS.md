@@ -34,11 +34,13 @@ Leia `docs/STATE.md` antes de tudo: ele traz a fase atual, a próxima ação e o
   - Uma change do OpenSpec corresponde a uma feature. Nomes em kebab-case, por exemplo `feature/f0-visao-requisitos`.
 - Feature concluída **e aprovada pelo usuário**: `git flow feature finish <nome>`, que faz merge `--no-ff` em `dev` e apaga a branch. Depois, `git push origin dev`.
   - Se o usuário pedir revisão por PR: `git push -u origin feature/<nome>` + `gh pr create --base dev`.
-- Release: `git flow release start X.Y.Z` → versão no `package.json` + changelog → `git flow release finish X.Y.Z`.
-  - Isso faz o merge em `main`, cria a tag `vX.Y.Z` e volta para `dev`.
-  - Depois: `git push origin main dev --follow-tags`.
+- Release (**só quando o usuário pedir**): `npm run release -- --dry-run` para conferir e depois `npm run release`.
+  - O script calcula a versão pelos Conventional Commits, roda `git flow release start/finish`, atualiza `package.json` e `CHANGELOG.md`, cria a tag `vX.Y.Z` e faz push.
+  - A tag dispara a publicação no npm (`.github/workflows/release.yml`). Detalhes em `docs/decisions/0001-versionamento-automatico-e-publicacao-npm.md`.
 - Correção urgente em produção: `git flow hotfix start X.Y.Z` (sai de `main`) → `git flow hotfix finish X.Y.Z`.
-- Versionamento SemVer; a primeira release é `0.1.0`. Mensagens de commit no estilo Conventional Commits (`feat:`, `fix:`, `docs:`…).
+- Versionamento SemVer; a primeira release funcional é `0.1.0`.
+- Mensagens de commit **obrigatoriamente** no padrão Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`…; `!` ou `BREAKING CHANGE:` para quebras), porque o versionamento automático depende disso.
+- **Nunca** inclua trailers de coautoria (`Co-Authored-By`) nem qualquer menção a IA em commits, merges, tags ou PRs.
 
 ## Segurança de dados
 - O **OneDrive é opcional**, e o núcleo não pode depender dele. As proteções de OneDrive (pin, arquivos só-na-nuvem, cópias de conflito) só rodam com `sync.provider = onedrive`, detectado e confirmado no onboarding.
