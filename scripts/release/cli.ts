@@ -3,7 +3,9 @@ import { join } from "node:path"
 import { stdin, stdout } from "node:process"
 import { createInterface } from "node:readline/promises"
 import { parseArgs } from "node:util"
+
 import { Locale } from "typebox/system"
+
 import { RELEASE_FILES, REMOTE, USAGE } from "./cli.constants.ts"
 import type { ReleaseOptions } from "./cli.types.ts"
 import { bumpedVersion, previewChangelog, writeChangelog } from "./cliff.ts"

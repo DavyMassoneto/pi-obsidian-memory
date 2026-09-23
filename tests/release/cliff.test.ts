@@ -1,6 +1,8 @@
 import { copyFileSync, readFileSync } from "node:fs"
 import { join } from "node:path"
+
 import { afterEach, describe, expect, it } from "vitest"
+
 import { bumpedVersion, previewChangelog, writeChangelog } from "../../scripts/release/cliff.ts"
 import { cleanupTempDirs, commit, git, tag, tempDir } from "./helpers.ts"
 
