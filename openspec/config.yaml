@@ -5,9 +5,10 @@ context: |
   All artifacts must be written in pt-BR.
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
 
-  Projeto: extensão do pi (TypeScript/ESM, Node >= 22.13) que grava a memória de longo prazo do agente
-  em vaults do Obsidian no OneDrive (Windows 11). Um vault GLOBAL dedicado (aprendizados sobre o usuário)
-  e um vault por PROJETO (criado por /memory-init). Base reaproveitada: módulos do pi-hermes-memory (MIT).
+  Projeto: extensão do pi (TypeScript/ESM, Node >= 24) que grava a memória de longo prazo do agente
+  em vaults do Obsidian em qualquer pasta. O OneDrive é OPCIONAL (Windows 11 primeiro, núcleo portável).
+  Um vault GLOBAL dedicado (aprendizados sobre o usuário) e um vault por PROJETO (criado por /memory-init).
+  Base reaproveitada: módulos do pi-hermes-memory (MIT). Git Flow com git-flow-next (main, dev, feature/*).
 
   Não confunda: o sistema de SPEC (docs deste repositório: docs/ e openspec/) NÃO é o sistema de MEMÓRIA
   (o produto, cujos dados vivem nos vaults).
@@ -26,12 +27,14 @@ rules:
     - "Cite o REQ-xx correspondente de docs/01-requisitos.md quando ele existir."
   design:
     - "Escrita em vault: leitura completa + hash antes de gravar, guarda contra encolhimento drástico, temporário .tmp + rename com retry (EPERM/EBUSY)."
-    - "Nunca SQLite, locks, temporários de recuperação ou .git dentro dos vaults/OneDrive: índice, locks e config ficam em ~/.pi/agent/<pacote>/."
+    - "Nunca SQLite, locks, temporários de recuperação ou .git dentro dos vaults: índice, locks e config ficam em ~/.pi/agent/<pacote>/."
+    - "O OneDrive é opcional: o núcleo funciona com qualquer pasta; as proteções de OneDrive (pin, arquivos só-na-nuvem, cópias de conflito) só rodam com sync.provider = onedrive, detectado e confirmado no onboarding."
     - "O agente só lê e escreve nos vaults de memória; nada é apagado: vai para archive/."
     - "Decisão difícil de reverter (formato em disco, API de tools, local dos dados) exige ADR em docs/decisions/ (MADR)."
   tasks:
     - "Cada tarefa cabe em uma sessão e informa o comando de verificação (ex.: npx vitest run <arquivo>)."
     - "Separe verificação automática de verificação manual (ex.: conferir a nota no Obsidian)."
+    - "Todo o trabalho acontece numa feature branch do Git Flow (git flow feature start <nome>); nunca faça commit direto em main ou dev."
 
 operations:
   apply:
@@ -44,3 +47,4 @@ operations:
     guidance:
       - "Antes de arquivar, confira se o código ainda bate com as specs (drift) e se docs/OPEN-QUESTIONS.md e os ADRs estão atualizados."
       - "Depois de arquivar, atualize docs/STATE.md."
+      - "Com o usuário de acordo, finalize a feature (git flow feature finish <nome>) e faça git push origin dev."
