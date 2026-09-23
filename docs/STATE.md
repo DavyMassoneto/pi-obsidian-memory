@@ -18,11 +18,11 @@
   - regras no `AGENTS.md`.
 - **GitHub:** repositório **público** em https://github.com/DavyMassoneto/pi-obsidian-memory, com branch padrão **`dev`**; `main` e `dev` publicadas. A GitHub CLI 2.101 está autenticada (use `gh pr create --base dev` quando o usuário pedir PR).
 - **PowerShell 7:** o perfil ativa o fnm, então `node` (v24), `openspec`, `pi`, `gh` e `git flow` ficam disponíveis.
-- **npm** (pacote `pi-obsidian-memory`, MIT):
-  - `package.json` na versão `0.0.0`, só para reservar o nome;
+- **npm** (pacote `pi-obsidian-memory`, MIT, conta `davy121`), com publicação automática configurada:
   - `npm run release` calcula a versão pelos Conventional Commits e roda o Git Flow;
-  - `.github/workflows/release.yml` publica via Trusted Publishing quando uma tag `v*` chega na `main`;
+  - a tag `v*` na `main` dispara o `.github/workflows/release.yml`, que publica via Trusted Publishing e cria a GitHub Release. Só esse workflow pode publicar;
   - detalhes no [ADR 0001](decisions/0001-versionamento-automatico-e-publicacao-npm.md).
+- **CI** (`.github/workflows/ci.yml`, Windows): roda a cada push nas branches do Git Flow e em cada PR.
 
 ## Decisões-chave (detalhes em OPEN-QUESTIONS.md)
 - **Sistema de spec ≠ sistema de memória.** Os docs do projeto ficam no repositório; os vaults guardam só memórias.
@@ -44,12 +44,8 @@
   - **Git Flow**: nada de commit direto em `main` ou `dev`.
 
 ## Próxima ação
-1. **Usuário (uma vez), publicação no npm:**
-   - `npm login`;
-   - `npm publish` (versão `0.0.0`, que reserva o nome);
-   - no npmjs.com, em *pi-obsidian-memory → Settings → Trusted Publisher*, cadastrar GitHub Actions: `DavyMassoneto` / `pi-obsidian-memory` / `release.yml`.
-2. **Usuário:** abrir o **PowerShell 7** nesta pasta, rodar `pi` e colar o prompt abaixo.
-3. Releases seguintes: `npm run release` (só quando o usuário pedir).
+1. **Usuário:** abrir o **PowerShell 7** nesta pasta, rodar `pi` e colar o prompt abaixo.
+2. Releases: `npm run release` (só quando o usuário pedir). A primeira versão funcional será a `0.1.0`.
 
 ## Prompt da próxima sessão (pi)
 ```text
