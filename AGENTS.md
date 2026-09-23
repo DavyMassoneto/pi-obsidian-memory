@@ -49,8 +49,19 @@ Leia `docs/STATE.md` antes de tudo: ele traz a fase atual, a próxima ação e o
 - Nunca sobrescreva uma nota de vault sem leitura completa + hash. Nunca apague: mova para `archive/`.
 - O agente só lê e escreve dentro dos vaults de memória. Nada fora deles, como os vaults pessoais do usuário.
 
+## Código (TypeScript)
+O Biome barra automaticamente, no `npm run lint` e no CI (configuração em `biome.json` e plugins em `biome/`):
+- ponto e vírgula (o estilo é sem), imports fora de ordem e linhas com mais de 120 colunas;
+- arquivo com mais de 200 linhas e função com mais de 30, sem contar as linhas em branco. Nos testes vale só o limite de arquivo, porque o `describe()` conta como função;
+- `any`, `unknown`, type assertion (`x as T`, `<T>x`, `x!`; `as const` pode) e index signature, inclusive `Record<string, T>` e `{ [K in string]: T }`. `Record` com chaves fixas pode.
+
+Valem também, mesmo sem o Biome pegar:
+- Dado externo (JSON, configuração) passa por um schema do TypeBox (`typebox`, o mesmo do pi), nunca por cast.
+- Comentário só quando explica um porquê que o código não mostra. JSDoc que repete o nome é proibido: prefira nomes descritivos.
+- Nunca desligue uma regra com `biome-ignore`. Se uma regra parecer errada para um caso, pergunte ao usuário.
+
 ## Comandos
+- Lint, formatação e imports (Biome): `npm run lint`. Para corrigir o que for automático: `npm run format`
 - Tipos (TypeScript estrito): `npm run typecheck`
 - Testes (vitest): `npm test`
 - Release: `npm run release -- --dry-run` / `npm run release` (ver Git Flow acima)
-- Lint: a definir na F1.

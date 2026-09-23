@@ -22,7 +22,8 @@
   - `npm run release` calcula a versão pelos Conventional Commits (git-cliff, regras no `cliff.toml`) e roda o Git Flow (`scripts/release/`, em TypeScript, com testes);
   - a tag `v*` na `main` dispara o `.github/workflows/release.yml`, que publica via Trusted Publishing e cria a GitHub Release. Só esse workflow pode publicar;
   - detalhes no [ADR 0001](decisions/0001-versionamento-automatico-e-publicacao-npm.md).
-- **CI** (`.github/workflows/ci.yml`, Windows): roda a cada push nas branches do Git Flow e em cada PR.
+- **CI** (`.github/workflows/ci.yml`, Windows): roda a cada push nas branches do Git Flow e em cada PR (Biome, tipos, testes e OpenSpec).
+- **Biome** para lint, formatação e imports (`npm run lint` / `npm run format`), com as regras de código do `AGENTS.md`: sem `;`, limites de 200 linhas por arquivo e 30 por função, sem `any`, `unknown`, type assertion nem index signature.
 
 ## Decisões-chave (detalhes em OPEN-QUESTIONS.md)
 - **Sistema de spec ≠ sistema de memória.** Os docs do projeto ficam no repositório; os vaults guardam só memórias.
@@ -40,7 +41,7 @@
   - nada é apagado (vai para `archive/`);
   - segredos permitidos (configurável).
 - **Engenharia:**
-  - Node ≥ 24 · vitest + CI no Windows · npm + `pi install` · Windows primeiro;
+  - Node ≥ 24 · vitest + CI no Windows · Biome · TypeBox para dado externo · npm + `pi install` · Windows primeiro;
   - **Git Flow**: nada de commit direto em `main` ou `dev`.
 
 ## Próxima ação
