@@ -1,0 +1,46 @@
+schema: spec-driven
+
+context: |
+  Language: pt-BR
+  All artifacts must be written in pt-BR.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Projeto: extensão do pi (TypeScript/ESM, Node >= 22.13) que grava a memória de longo prazo do agente
+  em vaults do Obsidian no OneDrive (Windows 11). Um vault GLOBAL dedicado (aprendizados sobre o usuário)
+  e um vault por PROJETO (criado por /memory-init). Base reaproveitada: módulos do pi-hermes-memory (MIT).
+
+  Não confunda: o sistema de SPEC (docs deste repositório: docs/ e openspec/) NÃO é o sistema de MEMÓRIA
+  (o produto, cujos dados vivem nos vaults).
+
+  Fontes da verdade: AGENTS.md (regras) · docs/STATE.md (onde estamos) · docs/OPEN-QUESTIONS.md (decisões e dúvidas)
+  · docs/research/ (pesquisa) · docs/decisions/ (ADRs).
+
+rules:
+  proposal:
+    - "Antes de propor, leia docs/STATE.md e docs/OPEN-QUESTIONS.md. Se houver pergunta 🔴 aberta ligada a esta change, PARE e pergunte (uma por vez, com opções e recomendação)."
+    - "Liste uma seção 'Perguntas em aberto'. Dúvida que afete escopo, formato em disco ou dados do usuário vira pergunta, nunca suposição."
+    - "Declare as chaves de configuração novas ou alteradas (nome, default, validação) e o passo do onboarding afetado (/memory-setup ou /memory-init)."
+    - "Cite as decisões de docs/OPEN-QUESTIONS.md (IDs Q-xx) e os ADRs que embasam a proposta."
+  specs:
+    - "Todo requisito usa SHALL/MUST e tem pelo menos um cenário WHEN/THEN."
+    - "Cite o REQ-xx correspondente de docs/01-requisitos.md quando ele existir."
+  design:
+    - "Escrita em vault: leitura completa + hash antes de gravar, guarda contra encolhimento drástico, temporário .tmp + rename com retry (EPERM/EBUSY)."
+    - "Nunca SQLite, locks, temporários de recuperação ou .git dentro dos vaults/OneDrive: índice, locks e config ficam em ~/.pi/agent/<pacote>/."
+    - "O agente só lê e escreve nos vaults de memória; nada é apagado: vai para archive/."
+    - "Decisão difícil de reverter (formato em disco, API de tools, local dos dados) exige ADR em docs/decisions/ (MADR)."
+  tasks:
+    - "Cada tarefa cabe em uma sessão e informa o comando de verificação (ex.: npx vitest run <arquivo>)."
+    - "Separe verificação automática de verificação manual (ex.: conferir a nota no Obsidian)."
+
+operations:
+  apply:
+    guidance:
+      - "Leia docs/STATE.md antes de começar e faça uma tarefa por vez."
+      - "Se a realidade divergir da spec, PARE e informe: esperado / encontrado / impacto / como seguir. A spec é corrigida antes do código."
+      - "Só marque uma tarefa como feita depois de rodar a verificação e mostrar a saída."
+      - "Ao terminar a sessão, atualize docs/STATE.md (feito, próxima ação, bloqueios)."
+  archive:
+    guidance:
+      - "Antes de arquivar, confira se o código ainda bate com as specs (drift) e se docs/OPEN-QUESTIONS.md e os ADRs estão atualizados."
+      - "Depois de arquivar, atualize docs/STATE.md."
