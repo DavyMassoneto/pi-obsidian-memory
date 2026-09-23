@@ -1,7 +1,8 @@
 # AGENTS.md — pi-obsidian-memory
 
-Extensão do pi (TypeScript) que grava a memória de longo prazo do agente em vaults do Obsidian no OneDrive:
-um vault **GLOBAL** (aprendizados sobre o usuário) e um vault por **PROJETO**. A base reaproveitada é o pi-hermes-memory (MIT).
+Extensão do pi (TypeScript) que grava a memória de longo prazo do agente em vaults do Obsidian, em qualquer pasta.
+O **OneDrive é opcional**. São dois tipos de vault: um **GLOBAL** (aprendizados sobre o usuário) e um por **PROJETO**.
+A base reaproveitada é o pi-hermes-memory (MIT).
 
 ## Onde estamos
 Leia `docs/STATE.md` antes de tudo: ele traz a fase atual, a próxima ação e os bloqueios.
@@ -20,17 +21,36 @@ Leia `docs/STATE.md` antes de tudo: ele traz a fase atual, a próxima ação e o
 3. Todo requisito declara (a) sua configuração (chave, default, validação) e (b) seu passo no onboarding (`/memory-setup` ou `/memory-init`).
 4. Decisão difícil de reverter (formato em disco, API de tools, local dos dados) → ADR em `docs/decisions/` (MADR).
 5. Se a realidade divergir da spec, PARE e informe: esperado, encontrado, impacto, como seguir. A spec é corrigida antes do código.
-6. Ao fim de cada tarefa: rode os testes e MOSTRE a saída; marque o checkbox; atualize `docs/STATE.md`; faça commit.
+6. Ao fim de cada tarefa: rode os testes e MOSTRE a saída; marque o checkbox; atualize `docs/STATE.md`; faça commit **na branch da feature**.
 
 ## Fluxo (no pi os comandos usam hífen; no Claude Code, dois-pontos)
 - Dúvida nova → `/entrevista <tema>`.
 - Por mudança: `/opsx-explore` → `/opsx-propose` → aprovação do usuário → **sessão nova** → `/opsx-apply` → `/opsx-archive`.
 - Contexto acima de ~60% ou troca de fase → atualize `docs/STATE.md` e comece uma sessão nova.
 
-## Segurança de dados (OneDrive)
-- Nunca grave SQLite, locks, temporários ou `.git` dentro dos vaults ou do OneDrive.
+## Git Flow (obrigatório, com git-flow-next; a configuração está em `.gitflow`)
+- `main` = só releases (cada merge tem tag `vX.Y.Z`). `dev` = integração. **Nunca faça commit direto em `main` ou `dev`.**
+- Todo trabalho, inclusive documentação, começa com `git flow feature start <nome-curto>` (sai de `dev`).
+  - Uma change do OpenSpec corresponde a uma feature. Nomes em kebab-case, por exemplo `feature/f0-visao-requisitos`.
+- Feature concluída **e aprovada pelo usuário**: `git flow feature finish <nome>`, que faz merge `--no-ff` em `dev` e apaga a branch. Depois, `git push origin dev`.
+  - Se o usuário pedir revisão por PR: `git push -u origin feature/<nome>` + `gh pr create --base dev`.
+- Release (**só quando o usuário pedir**): `npm run release -- --dry-run` para conferir e depois `npm run release`.
+  - O git-cliff calcula a versão e o changelog (regras no `cliff.toml`), e o `scripts/release/` orquestra o `git flow release start/finish`, a tag `vX.Y.Z` e o push.
+  - O script pede confirmação. `--yes` pula a pergunta e só pode ser usado com autorização explícita do usuário.
+  - A tag dispara a publicação no npm (`.github/workflows/release.yml`). Detalhes em `docs/decisions/0001-versionamento-automatico-e-publicacao-npm.md`.
+- Correção urgente em produção: `git flow hotfix start X.Y.Z` (sai de `main`) → `git flow hotfix finish X.Y.Z`.
+- Versionamento SemVer; a primeira release funcional é `0.1.0`.
+- Mensagens de commit **obrigatoriamente** no padrão Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`…; `!` ou `BREAKING CHANGE:` para quebras), porque o versionamento automático depende disso.
+- **Nunca** inclua trailers de coautoria (`Co-Authored-By`) nem qualquer menção a IA em commits, merges, tags ou PRs.
+
+## Segurança de dados
+- O **OneDrive é opcional**, e o núcleo não pode depender dele. As proteções de OneDrive (pin, arquivos só-na-nuvem, cópias de conflito) só rodam com `sync.provider = onedrive`, detectado e confirmado no onboarding.
+- Nunca grave SQLite, locks, temporários ou `.git` dentro dos vaults. Isso vale sempre, e é crítico em pasta sincronizada.
 - Nunca sobrescreva uma nota de vault sem leitura completa + hash. Nunca apague: mova para `archive/`.
 - O agente só lê e escreve dentro dos vaults de memória. Nada fora deles, como os vaults pessoais do usuário.
 
 ## Comandos
-- A definir na F1: testes, typecheck e lint.
+- Tipos (TypeScript estrito): `npm run typecheck`
+- Testes (vitest): `npm test`
+- Release: `npm run release -- --dry-run` / `npm run release` (ver Git Flow acima)
+- Lint: a definir na F1.

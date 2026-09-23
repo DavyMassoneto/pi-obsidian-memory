@@ -1,0 +1,49 @@
+# git-cliff: próxima versão e CHANGELOG a partir dos Conventional Commits.
+# Referência: https://git-cliff.org/docs/configuration
+
+[changelog]
+header = """
+# Changelog
+
+Mudanças relevantes de cada versão. O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) \
+e as versões seguem o [SemVer](https://semver.org/lang/pt-BR/). Gerado por `npm run release` com o [git-cliff](https://git-cliff.org).
+"""
+body = """
+{% if version %}\
+## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+## [Não lançado]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim }}
+{% for commit in commits %}
+- {% if commit.breaking %}⚠️ **quebra:** {% endif %}\
+{% if commit.scope %}**{{ commit.scope }}:** {% endif %}\
+{{ commit.message | upper_first }} ({{ commit.id | truncate(length=7, end="") }})\
+{% endfor %}
+{% endfor %}
+"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+protect_breaking_commits = true
+tag_pattern = "v[0-9]+\\.[0-9]+\\.[0-9]+"
+sort_commits = "newest"
+commit_parsers = [
+  { message = "^chore\\(release\\)", skip = true },
+  { message = "^feat", group = "<!-- 0 -->Novidades" },
+  { message = "^fix", group = "<!-- 1 -->Correções" },
+  { message = "^perf", group = "<!-- 2 -->Desempenho" },
+  { message = "^(refactor|build|ci|docs|test|style|chore)", group = "<!-- 3 -->Manutenção" },
+]
+
+[bump]
+# feat sobe o minor; em 0.x, uma quebra também sobe só o minor (em ≥ 1.0 sobe o major).
+features_always_bump_minor = true
+breaking_always_bump_major = false
+# Tipos que não justificam uma versão nova por si só.
+no_increment_regex = "^(build|chore|ci|docs|refactor|style|test)$"
+# Versão usada enquanto não existe nenhuma tag: a 0.0.0 foi o placeholder publicado à mão, sem tag.
+initial_tag = "v0.0.1"

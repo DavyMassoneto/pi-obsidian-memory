@@ -1,7 +1,7 @@
 # OPEN-QUESTIONS — pi-obsidian-memory
 
 > Log de perguntas do projeto. **Regra:** uma pergunta 🔴 aberta bloqueia a aprovação de requisitos e specs.
-> A entrevista de **2026-09-23** foi feita no sistema de perguntas do Claude Code, em 11 rodadas, a partir do roteiro [research/06-perguntas-abertas.md](research/06-perguntas-abertas.md).
+> A entrevista de **2026-09-23** foi feita no sistema de perguntas do Claude Code, em 12 rodadas, a partir do roteiro [research/06-perguntas-abertas.md](research/06-perguntas-abertas.md).
 > Status: ✅ resolvida · ⏭️ superada · 🔴 aberta e bloqueante.
 
 **Situação:** ✅ **todas as perguntas respondidas.** Nenhuma pendente.
@@ -16,10 +16,11 @@ Quando surgirem dúvidas novas na fase de spec, registre-as aqui com o próximo 
 | Q-G4 | Projeto identificado por **mapa manual** (pasta → projeto) | Raiz do git | Pasta não cadastrada = só memória global. O `/memory-init` é quem cadastra. A spec define se subpastas contam como o mesmo projeto |
 | Q-E2 | **O agente pode renomear e mover** memórias | Só o usuário, pelo Obsidian | Requisito: ao renomear, o agente reescreve os `[[links]]` do vault (o Obsidian não atualiza links de renomeações feitas por fora). As referências por id não quebram |
 | Q-C3 | **Busca semântica já na v1** (texto + embeddings locais) | Texto na v1, semântica na v2 | Modelo de embeddings (inglês) baixado uma vez para `~/.pi/agent/<pacote>/`, fora do OneDrive. Escolha do modelo e do armazenamento de vetores → spec/ADR |
-| Q-D5 | **Segredos permitidos** | Bloquear | Vira a opção `secretPolicy: allow \| mask \| block`, com padrão `allow`. Risco aceito: segredo salvo vai para a nuvem do OneDrive e pode entrar no prompt. O bloqueio de prompt injection e de unicode invisível **continua** (não foi perguntado) |
+| Q-D5 | **Segredos permitidos** | Bloquear | Vira a opção `secretPolicy: allow \| mask \| block`, com padrão `allow`. Risco aceito: segredo salvo vai para o sync configurado (ex.: nuvem do OneDrive) e pode entrar no prompt. O bloqueio de prompt injection e de unicode invisível **continua** (não foi perguntado) |
 | Q-H5 | **Logs + estatísticas locais** | Só logs | Resumo local de uso (memórias, buscas, tokens injetados). Nada sai da máquina |
 | Q-F3/F5/E3/E1 | **Sem Obsidian CLI** na v1 | CLI opcional | Com Q-E2, toda correção de links é feita pelo próprio agente |
 | Q-H1 | **Node ≥ 24** | Node ≥ 22.13 | Pode usar `node:sqlite` e APIs recentes sem polyfill. Ver P-11 |
+| Q-M6 | Repositório **público** (padrão `dev`) | Privado até o npm | Tudo o que for commitado fica público: não versionar dados pessoais, caminhos da máquina nem memórias reais (testes usam vaults fictícios) |
 
 ## Resolvidas: processo (sistema de SPEC, ou seja, como este projeto é documentado)
 
@@ -28,7 +29,9 @@ Quando surgirem dúvidas novas na fase de spec, registre-as aqui com o próximo 
 | Q-M1 | Método | ✅ **OpenSpec + camada `docs/` + gate de perguntas nosso** (`/entrevista` + este arquivo + regras no `AGENTS.md`) |
 | Q-M2 | Onde ficam os docs do projeto | ✅ **No repositório** (`docs/` + `openspec/`). Correção do usuário: não misturar o **sistema de spec** com o **sistema de memória** (o produto). Os vaults guardam só memórias |
 | Q-M3 | Agente que implementa | ✅ **pi** |
-| Q-M4 | Local do repositório | ✅ `D:\Projects\pi-obsidian-memory`, fora do OneDrive |
+| Q-M4 | Local do repositório | ✅ Pasta local fora de qualquer sync (o `.git` corrompe em pasta sincronizada) |
+| Q-M5 | Fluxo de branches | ✅ **Git Flow** com **git-flow-next**, configuração versionada em `.gitflow`. Branches: `main` (releases, tags `vX.Y.Z`), `dev` (integração), `feature/*`, `bugfix/*`, `release/*`, `hotfix/*`. Nada de commit direto em `main` ou `dev` |
+| Q-M6 | GitHub | ✅ Repositório **público**, branch padrão **`dev`**, gerenciado com a GitHub CLI (`gh`). A publicação no npm fica para depois |
 
 ## Resolvidas: o produto (sistema de MEMÓRIA)
 
@@ -62,7 +65,7 @@ Quando surgirem dúvidas novas na fase de spec, registre-as aqui com o próximo 
 |---|---|---|
 | Q-B1 | Quantos vaults | ✅ **Um vault global + um vault por projeto** |
 | Q-B1a | Vault global | ✅ **Dedicado** (ex.: `<raiz-de-vaults>/Agent-Global/`); os vaults pessoais do usuário ficam intocados |
-| Q-N2 | Onde ficam os vaults de projeto | ✅ `<raiz-de-vaults>/Projetos/<projeto>/`, com raiz configurável |
+| Q-N2 | Onde ficam os vaults de projeto | ✅ `<raiz-de-vaults>/Projetos/<projeto>/`, com raiz configurável (dentro ou fora do OneDrive) |
 | Q-B8 | Como nasce o vault de projeto | ✅ **`/memory-init`**, oferecido na 1ª sessão numa pasta não cadastrada: cria o vault (estrutura padrão) ou escolhe um existente e grava o mapa na config |
 | Q-G4 | Identidade do projeto | ✅ **Mapa manual** pasta → projeto (ver ⚠️) |
 | Q-G7 | Global ou projeto | ✅ O agente classifica: fala do usuário → global; o resto → projeto; na dúvida, projeto. Padrão repetido em 2 ou mais projetos → propõe promoção |
@@ -84,13 +87,20 @@ Quando surgirem dúvidas novas na fase de spec, registre-as aqui com o próximo 
 | Q-C3 | Busca | ✅ **Texto + semântica já na v1**, com embeddings locais (ver ⚠️) |
 | Q-C4 | Índice | ✅ **Local**, em `~/.pi/agent/<pacote>/index/`, reconstruível a partir dos vaults |
 | Q-C5 | `session_search` | ✅ **Sim**, com índice local; nada vai para os vaults |
-| Q-D1 | Pin no OneDrive | ✅ Sim, **com confirmação**, revalidado a cada início |
+| Q-D1 | Pin no OneDrive | ✅ Sim, **com confirmação**, revalidado a cada início. **Só quando `sync.provider = onedrive`** (Q-N7) |
 | Q-D2 | Quantos PCs gravam | ✅ Só este PC (a checagem de alteração antes de gravar continua) |
 | Q-D3 | Exclusão | ✅ Nunca apagar: **mover para `archive/`** |
-| Q-D4 | Backup | ✅ Histórico de versões do OneDrive + **comando de export** (.zip) |
+| Q-D4 | Backup | ✅ **Comando de export** (.zip) sempre; com OneDrive, também o histórico de versões dele. Sem OneDrive, o backup contínuo fica por conta do usuário (documentar no onboarding) |
 | Q-D5 | Segredos | ✅ **Permitir** por padrão, configurável (ver ⚠️) |
-| Q-D6 | Outro sync | ✅ Só o OneDrive |
+| Q-D6 | Outro sync | ✅ No caso do usuário, só o OneDrive. No produto: no máximo um sincronizador por vault (avisar no onboarding) |
 | Q-D7 | Plugins que reescrevem arquivos | ✅ **Vaults limpos:** o `/memory-init` cria o vault sem esses plugins |
+
+### OneDrive (opcional)
+
+| ID | Pergunta | Resolução |
+|---|---|---|
+| Q-N6 | O OneDrive é obrigatório? | ✅ **Não.** Os vaults podem ficar em qualquer pasta; o OneDrive é só para quem quiser. O núcleo não pode depender dele |
+| Q-N7 | Como ligar as proteções de OneDrive | ✅ **Detecta e confirma.** Se o vault estiver dentro de uma pasta do OneDrive, o `/memory-setup` e o `/memory-init` avisam e, com confirmação, ligam as proteções (pin, arquivos só-na-nuvem, cópias de conflito). Fora dele, ficam desligadas. Config: `sync.provider = none \| onedrive` |
 
 ### Configuração, onboarding e automação
 
@@ -113,6 +123,17 @@ Quando surgirem dúvidas novas na fase de spec, registre-as aqui com o próximo 
 | Q-H3 | Distribuição | ✅ **npm** (keyword `pi-package`) + `pi install npm:<pacote>` |
 | Q-H4 | Plataformas | ✅ **Windows primeiro**, núcleo portável para macOS e Linux depois |
 
+### Publicação e versionamento
+
+| ID | Pergunta | Resolução |
+|---|---|---|
+| Q-R1 | Nome no npm | ✅ `pi-obsidian-memory` (sem escopo) |
+| Q-R2 | Licença | ✅ **MIT**. Os avisos de copyright do código reaproveitado do pi-hermes-memory entram quando esse código entrar |
+| Q-R3 | Versionamento | ✅ **Automático pelos Conventional Commits, com o Git Flow intacto:** `npm run release` calcula a versão e roda `git flow release`; a tag publica no npm via Trusted Publishing ([ADR 0001](decisions/0001-versionamento-automatico-e-publicacao-npm.md)) |
+| Q-R4 | Atribuição de IA nos commits | ✅ **Proibida:** nenhum `Co-Authored-By` nem menção a IA em commits, merges, tags ou PRs |
+| Q-R5 | CI | ✅ **`ci.yml` no Windows**, a cada push nas branches do Git Flow e em cada PR: sintaxe do script de release, `openspec validate --all --strict` e, quando existirem, os testes |
+| Q-R6 | Quem pode publicar no npm | ✅ **Só o GitHub Actions** (Trusted Publishing do `release.yml`); publicação por token bloqueada (`mfa=publish`) |
+
 ## Superadas
 
 | Item | Motivo |
@@ -125,7 +146,7 @@ Quando surgirem dúvidas novas na fase de spec, registre-as aqui com o próximo 
 
 ## Pontos a checar na prática (spikes da F0, com autorização)
 
-Os pontos P-1 a P-10 estão em [research/06-perguntas-abertas.md § Pontos a checar](research/06-perguntas-abertas.md):
+Os pontos P-1 a P-10 estão em [research/06-perguntas-abertas.md § Pontos a checar](research/06-perguntas-abertas.md). P-1 a P-4 só valem no modo OneDrive:
 - pin do OneDrive e histórico de versões;
 - detecção de placeholder e frequência de `EPERM`;
 - formato do `obsidian.json` e merge do Obsidian;
