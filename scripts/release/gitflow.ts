@@ -1,19 +1,8 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { git } from "./git.ts"
-
-export interface GitFlowConfig {
-  readonly main: string
-  readonly develop: string
-  readonly releasePrefix: string
-  readonly tagPrefix: string
-}
-
-type BranchSettings = Map<string, string>
-
-export const GITFLOW_FILE = ".gitflow"
-
-const BRANCH_SETTING = /^gitflow\.branch\.(?<name>.+)\.(?<key>[^.=]+)=(?<value>.*)$/
+import { BRANCH_SETTING, GITFLOW_FILE } from "./gitflow.constants.ts"
+import type { BranchSettings, GitFlowConfig } from "./gitflow.types.ts"
 
 export function readGitFlowConfig(cwd: string): GitFlowConfig {
   const file = join(cwd, GITFLOW_FILE)

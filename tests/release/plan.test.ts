@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest"
-import {
-  buildPlan,
-  NothingToRelease,
-  type PlanInput,
-  type ReleasePlan,
-  type StepId,
-} from "../../scripts/release/plan.ts"
+import { NothingToRelease } from "../../scripts/release/plan.errors.ts"
+import { buildPlan } from "../../scripts/release/plan.ts"
+import type { PlanInput, ReleasePlan, StepId } from "../../scripts/release/plan.types.ts"
 import { formatFailure } from "../../scripts/release/recovery.ts"
 import { CONFIG } from "./helpers.ts"
 
