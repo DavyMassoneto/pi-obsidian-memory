@@ -3,7 +3,8 @@
 > Data: **2026-09-23**. Foram 4 pesquisas web paralelas, com leitura de docs e código-fonte, sem instalar nem executar nada. As afirmações mais surpreendentes foram reconferidas nas fontes primárias.
 > Status: **rascunho para decisão**. Nenhum código foi escrito, e as escolhas estão em [06-perguntas-abertas.md](06-perguntas-abertas.md).
 
-> **Atualização 2026-09-23 (depois da entrevista):** as decisões valem a partir de [../OPEN-QUESTIONS.md](../OPEN-QUESTIONS.md), e este estudo fica como registro da pesquisa. Três propostas daqui foram **superadas**:
+> **Atualização 2026-09-23 (depois da entrevista):** as decisões valem a partir de [../OPEN-QUESTIONS.md](../OPEN-QUESTIONS.md), e este estudo fica como registro da pesquisa. Estas premissas e propostas foram **superadas**:
+> - OneDrive obrigatório → **OneDrive opcional**, detectado e confirmado no onboarding (`sync.provider`);
 > - memória numa pasta do vault pessoal do usuário → **vaults dedicados**: um global e um por projeto;
 > - daily log por dispositivo → **só aprendizados e pontos importantes**, com templates;
 > - docs do projeto no vault → **sistema de spec (repositório) ≠ sistema de memória (vaults)**.
