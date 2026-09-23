@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from "vitest/config"
 
 export default defineConfig({
   test: {
@@ -6,4 +6,4 @@ export default defineConfig({
     // Os testes criam repositórios git temporários; no Windows isso é mais lento.
     testTimeout: 30_000,
   },
-});
+})
