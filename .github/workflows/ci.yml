@@ -1,6 +1,5 @@
 name: ci
 
-# Integração contínua: roda a cada push nas branches do Git Flow e em cada PR.
 # A publicação no npm fica no release.yml (disparado por tag).
 on:
   push:
@@ -25,6 +24,9 @@ jobs:
 
       - name: Dependências
         run: npm ci
+
+      - name: Lint, formatação e imports (Biome)
+        run: npx biome ci --reporter=github .
 
       - name: Tipos
         run: npm run typecheck
