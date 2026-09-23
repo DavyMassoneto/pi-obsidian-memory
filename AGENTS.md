@@ -35,7 +35,8 @@ Leia `docs/STATE.md` antes de tudo: ele traz a fase atual, a próxima ação e o
 - Feature concluída **e aprovada pelo usuário**: `git flow feature finish <nome>`, que faz merge `--no-ff` em `dev` e apaga a branch. Depois, `git push origin dev`.
   - Se o usuário pedir revisão por PR: `git push -u origin feature/<nome>` + `gh pr create --base dev`.
 - Release (**só quando o usuário pedir**): `npm run release -- --dry-run` para conferir e depois `npm run release`.
-  - O script calcula a versão pelos Conventional Commits, roda `git flow release start/finish`, atualiza `package.json` e `CHANGELOG.md`, cria a tag `vX.Y.Z` e faz push.
+  - O git-cliff calcula a versão e o changelog (regras no `cliff.toml`), e o `scripts/release/` orquestra o `git flow release start/finish`, a tag `vX.Y.Z` e o push.
+  - O script pede confirmação. `--yes` pula a pergunta e só pode ser usado com autorização explícita do usuário.
   - A tag dispara a publicação no npm (`.github/workflows/release.yml`). Detalhes em `docs/decisions/0001-versionamento-automatico-e-publicacao-npm.md`.
 - Correção urgente em produção: `git flow hotfix start X.Y.Z` (sai de `main`) → `git flow hotfix finish X.Y.Z`.
 - Versionamento SemVer; a primeira release funcional é `0.1.0`.
@@ -49,4 +50,7 @@ Leia `docs/STATE.md` antes de tudo: ele traz a fase atual, a próxima ação e o
 - O agente só lê e escreve dentro dos vaults de memória. Nada fora deles, como os vaults pessoais do usuário.
 
 ## Comandos
-- A definir na F1: testes, typecheck e lint.
+- Tipos (TypeScript estrito): `npm run typecheck`
+- Testes (vitest): `npm test`
+- Release: `npm run release -- --dry-run` / `npm run release` (ver Git Flow acima)
+- Lint: a definir na F1.
