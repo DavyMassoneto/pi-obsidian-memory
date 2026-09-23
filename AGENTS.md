@@ -51,7 +51,8 @@ Leia `docs/STATE.md` antes de tudo: ele traz a fase atual, a próxima ação e o
 
 ## Código (TypeScript)
 O Biome barra automaticamente, no `npm run lint` e no CI (configuração em `biome.json` e plugins em `biome/`):
-- código fora da formatação (sem ponto e vírgula, linha de 120 colunas) e imports fora de ordem;
+- código fora da formatação (sem ponto e vírgula, linha de 120 colunas);
+- imports fora de ordem ou fora dos grupos: Node, pacotes do npm e arquivos do projeto, separados por uma linha em branco;
 - arquivo com mais de 200 linhas e função com mais de 30, sem contar as linhas em branco. Nos testes vale só o limite de arquivo, porque o `describe()` conta como função;
 - `any`, `unknown`, type assertion (`x as T`, `<T>x`, `x!`; `as const` pode) e index signature, inclusive `Record<string, T>` e `{ [K in string]: T }`. `Record` com chaves fixas pode.
 
