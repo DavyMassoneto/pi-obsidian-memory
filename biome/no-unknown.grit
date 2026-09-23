@@ -1,0 +1,5 @@
+language js
+
+TsUnknownType() as $type where {
+  register_diagnostic(span=$type, message="`unknown` é proibido: use um tipo concreto ou valide a entrada com um schema do TypeBox.")
+}
