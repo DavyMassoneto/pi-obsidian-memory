@@ -27,9 +27,17 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "release": "node scripts/release.mjs"
+    "release": "node scripts/release/cli.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.6",
+    "git-cliff": "^2.14.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
   }
 }
