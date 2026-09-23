@@ -131,6 +131,8 @@ Quando surgirem dúvidas novas na fase de spec, registre-as aqui com o próximo 
 | Q-R2 | Licença | ✅ **MIT**. Os avisos de copyright do código reaproveitado do pi-hermes-memory entram quando esse código entrar |
 | Q-R3 | Versionamento | ✅ **Automático pelos Conventional Commits, com o Git Flow intacto:** `npm run release` calcula a versão e roda `git flow release`; a tag publica no npm via Trusted Publishing ([ADR 0001](decisions/0001-versionamento-automatico-e-publicacao-npm.md)) |
 | Q-R4 | Atribuição de IA nos commits | ✅ **Proibida:** nenhum `Co-Authored-By` nem menção a IA em commits, merges, tags ou PRs |
+| Q-R5 | CI | ✅ **`ci.yml` no Windows**, a cada push nas branches do Git Flow e em cada PR: sintaxe do script de release, `openspec validate --all --strict` e, quando existirem, os testes |
+| Q-R6 | Quem pode publicar no npm | ✅ **Só o GitHub Actions** (Trusted Publishing do `release.yml`); publicação por token bloqueada (`mfa=publish`) |
 
 ## Superadas
 
