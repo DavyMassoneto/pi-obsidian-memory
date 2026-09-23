@@ -123,6 +123,7 @@ Quando surgirem dúvidas novas na fase de spec, registre-as aqui com o próximo 
 | Q-H3 | Distribuição | ✅ **npm** (keyword `pi-package`) + `pi install npm:<pacote>` |
 | Q-H4 | Plataformas | ✅ **Windows primeiro**, núcleo portável para macOS e Linux depois |
 | Q-H6 | Lint e formatação | ✅ **Biome** (versão exata no `package.json`), no `npm run lint` e no CI; sem ESLint nem Prettier. Estilo: sem ponto e vírgula, aspas duplas, linha de 120 colunas, imports organizados. Limites: arquivo com até 200 linhas e função com até 30, sem contar as em branco (nos testes, só o de arquivo). Proibidos: `any`, `unknown`, type assertion (`as const` pode) e index signature, inclusive `Record<string, T>`. Os dois últimos são barrados por plugins GritQL em `biome/`. Dado externo é validado com TypeBox. Comentário só quando explica um porquê |
+| Q-H7 | Organização dos arquivos | ✅ **Cada tipo de coisa no seu arquivo, junto do módulo:** tipos em `<módulo>.types.ts`; valores do topo do módulo que não são função em `.constants.ts`; schemas do TypeBox em `.schemas.ts`; classes de erro em `.errors.ts`; estilo (tema do pi e bibliotecas de cor) em `.styles.ts`. Vale no código, não nos testes. O Biome barra com plugins GritQL em `biome/` e com o `noRestrictedImports` (o construtor `Type` só nos schemas) |
 
 ### Publicação e versionamento
 
