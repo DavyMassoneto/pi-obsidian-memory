@@ -123,6 +123,15 @@ Quando surgirem dúvidas novas na fase de spec, registre-as aqui com o próximo 
 | Q-H3 | Distribuição | ✅ **npm** (keyword `pi-package`) + `pi install npm:<pacote>` |
 | Q-H4 | Plataformas | ✅ **Windows primeiro**, núcleo portável para macOS e Linux depois |
 
+### Publicação e versionamento
+
+| ID | Pergunta | Resolução |
+|---|---|---|
+| Q-R1 | Nome no npm | ✅ `pi-obsidian-memory` (sem escopo) |
+| Q-R2 | Licença | ✅ **MIT**. Os avisos de copyright do código reaproveitado do pi-hermes-memory entram quando esse código entrar |
+| Q-R3 | Versionamento | ✅ **Automático pelos Conventional Commits, com o Git Flow intacto:** `npm run release` calcula a versão e roda `git flow release`; a tag publica no npm via Trusted Publishing ([ADR 0001](decisions/0001-versionamento-automatico-e-publicacao-npm.md)) |
+| Q-R4 | Atribuição de IA nos commits | ✅ **Proibida:** nenhum `Co-Authored-By` nem menção a IA em commits, merges, tags ou PRs |
+
 ## Superadas
 
 | Item | Motivo |
