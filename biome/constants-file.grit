@@ -1,0 +1,15 @@
+language js
+
+JsVariableDeclarator(id=$name, initializer=JsInitializerClause(expression=$value)) as $declarator where {
+  $declarator <: not within or {
+    JsFunctionBody(),
+    JsBlockStatement(),
+    JsStaticInitializationBlockClassMember()
+  } ,
+  $value <: not or {
+    JsArrowFunctionExpression(),
+    JsFunctionExpression(),
+    `Type.$method($arguments)`
+  },
+  register_diagnostic(span=$name, message="Valor no topo do módulo fica em <módulo>.constants.ts (schema do TypeBox, em <módulo>.schemas.ts).")
+}
