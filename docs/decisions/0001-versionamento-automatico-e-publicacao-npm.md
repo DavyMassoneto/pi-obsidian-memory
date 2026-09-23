@@ -33,13 +33,20 @@ O pacote `pi-obsidian-memory` é publicado no npm, e o projeto segue o Git Flow:
 | `fix:` / `perf:` | patch | patch |
 | Só outros tipos (`docs:`, `chore:`…) | nada, a menos que se use `--bump` | idem |
 
-O que o `scripts/release.mjs` faz:
-1. confere que está na `dev`, sem mudanças pendentes e sincronizada;
-2. calcula a versão;
-3. roda `git flow release start X.Y.Z`;
-4. atualiza `package.json` e `CHANGELOG.md` e commita `chore(release): vX.Y.Z`;
-5. roda `git flow release finish X.Y.Z`, que faz o merge na `main`, cria a tag `vX.Y.Z` e volta para a `dev`;
-6. faz push de `main`, `dev` e tag.
+A versão e o changelog vêm do **git-cliff**, com as regras no `cliff.toml`. O `scripts/release/` (TypeScript, rodado direto pelo Node 24) só orquestra o Git Flow:
+1. verifica, sem alterar nada:
+   - git-flow instalado;
+   - estar na `dev`, com a árvore limpa e nenhuma release aberta;
+   - `dev` e `main` iguais às do GitHub (via `ls-remote`, sem fetch);
+   - `package.json` igual à última tag;
+2. calcula a versão (`git-cliff --bumped-version`);
+3. mostra o plano e a prévia do changelog (o `--dry-run` para aqui) e pede confirmação;
+4. `git flow release start X.Y.Z`;
+5. atualiza `package.json` e `package-lock.json`, regenera o `CHANGELOG.md` e commita `chore(release): vX.Y.Z`;
+6. `git flow release finish X.Y.Z`: merge na `main`, tag `vX.Y.Z` e volta para a `dev`;
+7. `git push --atomic` de `main`, `dev` e da tag.
+
+Se um passo falha, o script mostra o que já foi feito e como seguir ou desfazer.
 
 A tag dispara o `.github/workflows/release.yml`, que:
 - confere que a tag bate com o `package.json` e está na `main`;
@@ -49,7 +56,7 @@ A tag dispara o `.github/workflows/release.yml`, que:
 
 ### Consequências
 
-- Bom: o Git Flow não muda. O script não tem dependências. `--dry-run` mostra o plano antes.
+- Bom: o Git Flow não muda. A versão e o changelog ficam com uma ferramenta madura (git-cliff, MIT/Apache-2.0, só em desenvolvimento), e o nosso código só orquestra. `--dry-run` mostra o plano antes.
 - Bom: a publicação não usa `NPM_TOKEN` e sai com procedência verificável.
 - Ruim: depende de mensagens no padrão Conventional Commits. Commits fora do padrão não contam para a versão (o script avisa quais são).
 - Ruim: a 1ª publicação é manual (`0.0.0`, só para reservar o nome), porque o Trusted Publishing é configurado num pacote que já existe no npm.
@@ -57,5 +64,10 @@ A tag dispara o `.github/workflows/release.yml`, que:
 
 ### Confirmação
 
-- `npm run release -- --dry-run` mostra versão, changelog e commits fora do padrão sem alterar nada.
+- `npm run release -- --dry-run` mostra a versão, os passos e a prévia do changelog sem alterar nada.
+- `npm test` cobre o plano, as verificações, o formato de versão e as regras reais do `cliff.toml`, com repositórios git temporários.
 - O workflow recusa tag que não bate com o `package.json` ou que não está na `main`.
+
+### Revisão (2026-09-23)
+
+A primeira versão do script reimplementava o parser de Conventional Commits, a conta de SemVer e o changelog, sem testes. Foi substituída pelo git-cliff mais a orquestração em TypeScript descrita acima.
