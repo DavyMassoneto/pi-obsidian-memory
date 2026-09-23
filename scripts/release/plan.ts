@@ -1,7 +1,7 @@
 import type { GitFlowConfig } from "./gitflow.ts";
 import { compareVersions, parseVersion } from "./version.ts";
 
-export type StepId = "start" | "version" | "changelog" | "commit" | "finish" | "push";
+export type StepId = "start" | "version" | "changelog" | "commit" | "finish" | "checkout" | "push";
 
 interface StepBase {
   readonly id: StepId;
@@ -96,6 +96,15 @@ export function buildPlan({ config, remote, current, next, files }: PlanInput): 
       command: "git",
       args: ["flow", "release", "finish", next, "--message", tag, "--no-push"],
       recovery: `Se parou num conflito de merge: resolva, faça git add e rode de novo: git flow release finish ${next} --message ${tag} --no-push`,
+    },
+    {
+      // O finish termina na branch de produção; o trabalho continua na de integração.
+      id: "checkout",
+      kind: "run",
+      title: `Voltar para a ${config.develop}`,
+      command: "git",
+      args: ["checkout", config.develop],
+      recovery: `O release está completo localmente. Volte com git checkout ${config.develop} e envie: git ${pushArgs.join(" ")}`,
     },
     {
       id: "push",

@@ -19,7 +19,19 @@ function argsOf(plan: ReleasePlan, id: StepId): readonly string[] {
 
 describe("buildPlan", () => {
   it("segue a ordem do Git Flow", () => {
-    expect(buildPlan(input).steps.map((step) => step.id)).toEqual(["start", "version", "changelog", "commit", "finish", "push"]);
+    expect(buildPlan(input).steps.map((step) => step.id)).toEqual([
+      "start",
+      "version",
+      "changelog",
+      "commit",
+      "finish",
+      "checkout",
+      "push",
+    ]);
+  });
+
+  it("termina na branch de integração, não na de produção", () => {
+    expect(argsOf(buildPlan(input), "checkout")).toEqual(["checkout", "dev"]);
   });
 
   it("usa os prefixos do .gitflow na branch e na tag", () => {
