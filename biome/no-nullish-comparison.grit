@@ -16,5 +16,5 @@ or {
   `typeof $value === "undefined"`,
   `typeof $value !== "undefined"`
 } as $comparison where {
-  register_diagnostic(span=$comparison, message="Comparação com undefined ou null é proibida: o tipo exato vem de um schema na borda ou de um resultado explícito ({ succeeded: true, output }).")
+  register_diagnostic(span=$comparison, message="Comparing with undefined or null is forbidden: the exact type comes from a schema at the boundary or from an explicit result ({ succeeded: true, output }).")
 }

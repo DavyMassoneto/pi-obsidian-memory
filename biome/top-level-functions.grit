@@ -10,5 +10,5 @@ JsVariableDeclarator(id=$name, initializer=JsInitializerClause(expression=$value
     JsBlockStatement(),
     JsStaticInitializationBlockClassMember()
   } ,
-  register_diagnostic(span=$name, message="Função no topo do módulo usa function nome() {}: com barrels há import circular, e só a declaração com function já existe quando o módulo começa a rodar.")
+  register_diagnostic(span=$name, message="Top-level functions use function name() {}: barrels create circular imports, and only function declarations already exist when the module starts running.")
 }

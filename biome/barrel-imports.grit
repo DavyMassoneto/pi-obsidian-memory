@@ -7,5 +7,5 @@ JsModuleSource() as $source where {
     r".\./[^/]+/.*"
   },
   $source <: not r".\.\./index\.ts.",
-  register_diagnostic(span=$source, message="Import de outra pasta vem do barrel mais alto (../index.ts); da mesma pasta, importe o arquivo direto (./arquivo.ts), nunca o ./index.ts.")
+  register_diagnostic(span=$source, message="Imports from another folder come from the highest barrel in reach (../index.ts); from the same folder, import the file directly (./file.ts), never ./index.ts.")
 }

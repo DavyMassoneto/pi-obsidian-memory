@@ -17,5 +17,5 @@ or {
   },
   TsMappedType(keys_type=$keys) where { $keys <: open_key() }
 } as $signature where {
-  register_diagnostic(span=$signature, message="Index signature é proibido, inclusive Record<string, T> e { [K in string]: T }: use chaves conhecidas, Map ou um schema do TypeBox.")
+  register_diagnostic(span=$signature, message="Index signatures are forbidden, including Record<string, T> and { [K in string]: T }: use known keys, a Map or a TypeBox schema.")
 }

@@ -12,5 +12,5 @@ or {
     JsExpressionStatement()
   } as $item where { $item <: not within JsExport() }
 } where {
-  register_diagnostic(span=$item, message="index.ts só reexporta, com export * from ./arquivo.ts ou ./pasta/index.ts.")
+  register_diagnostic(span=$item, message="index.ts only re-exports, with export * from ./file.ts or ./folder/index.ts.")
 }

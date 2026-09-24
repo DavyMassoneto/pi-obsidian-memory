@@ -3,4 +3,4 @@ language js
 or {
   TsInterfaceDeclaration(id=$name),
   TsTypeAliasDeclaration(binding_identifier=$name)
-} where { register_diagnostic(span=$name, message="Tipos e interfaces ficam no types.ts do módulo.") }
+} where { register_diagnostic(span=$name, message="Types and interfaces belong in the module types.ts.") }

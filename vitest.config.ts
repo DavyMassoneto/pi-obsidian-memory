@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config"
 export default defineConfig({
   test: {
     include: ["tests/**/*.test.ts"],
-    // Os testes criam repositórios git temporários; no Windows isso é mais lento.
+    // The tests create temporary git repositories, which is slow on Windows.
     testTimeout: 30_000,
   },
 })

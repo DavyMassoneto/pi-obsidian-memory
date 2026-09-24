@@ -10,5 +10,5 @@ or {
   `!!$value`,
   `Boolean($value)`
 } as $conversion where {
-  register_diagnostic(span=$conversion, message="Conversão manual para boolean é proibida (=== true, !!x, Boolean(x)): o valor tem que chegar como boolean, validado na borda.")
+  register_diagnostic(span=$conversion, message="Manual boolean conversion is forbidden (=== true, !!x, Boolean(x)): the value must arrive as a boolean, validated at the boundary.")
 }
