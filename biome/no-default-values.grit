@@ -1,0 +1,10 @@
+language js
+
+or {
+  JsFormalParameter(initializer=JsInitializerClause() as $default),
+  JsObjectBindingPatternShorthandProperty(init=JsInitializerClause() as $default),
+  JsObjectBindingPatternProperty(init=JsInitializerClause() as $default),
+  JsArrayBindingPatternElement(init=JsInitializerClause() as $default)
+} where {
+  register_diagnostic(span=$default, message="Valor default é proibido: torne o valor obrigatório ou trate a ausência com if.")
+}
