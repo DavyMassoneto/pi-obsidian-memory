@@ -21,7 +21,7 @@ Leia `docs/STATE.md` antes de tudo: ele traz a fase atual, a próxima ação e o
 3. Todo requisito declara (a) sua configuração (chave, default, validação) e (b) seu passo no onboarding (`/memory-setup` ou `/memory-init`).
 4. Decisão difícil de reverter (formato em disco, API de tools, local dos dados) → ADR em `docs/decisions/` (MADR).
 5. Se a realidade divergir da spec, PARE e informe: esperado, encontrado, impacto, como seguir. A spec é corrigida antes do código.
-6. Ao fim de cada tarefa: rode os testes e MOSTRE a saída; marque o checkbox; atualize `docs/STATE.md`; faça commit **na branch da feature**.
+6. Ao fim de cada tarefa: rode os testes e MOSTRE a saída; marque o checkbox; atualize `docs/STATE.md`; faça commit **na branch da tarefa** (`feature/` ou `chore/`).
 
 ## Fluxo (no pi os comandos usam hífen; no Claude Code, dois-pontos)
 - Dúvida nova → `/entrevista <tema>`.
@@ -30,10 +30,13 @@ Leia `docs/STATE.md` antes de tudo: ele traz a fase atual, a próxima ação e o
 
 ## Git Flow (obrigatório, com git-flow-next; a configuração está em `.gitflow`)
 - `main` = só releases (cada merge tem tag `vX.Y.Z`). `dev` = integração. **Nunca faça commit direto em `main` ou `dev`.**
-- Todo trabalho, inclusive documentação, começa com `git flow feature start <nome-curto>` (sai de `dev`).
-  - Uma change do OpenSpec corresponde a uma feature. Nomes em kebab-case, por exemplo `feature/f0-visao-requisitos`.
-- Feature concluída **e aprovada pelo usuário**: `git flow feature finish <nome>`, que faz merge `--no-ff` em `dev` e apaga a branch. Depois, `git push origin dev`.
-  - Se o usuário pedir revisão por PR: `git push -u origin feature/<nome>` + `gh pr create --base dev`.
+- Todo trabalho começa numa branch que sai de `dev`, e o tipo diz o que ela é:
+  - `feature/` é **só** funcionalidade do produto: cada change do OpenSpec é uma feature (`git flow feature start <nome>`);
+  - `chore/` é organização, ferramentas e processo, inclusive os documentos da F0 (`git flow chore start <nome>`). Chamar organização de feature é errado;
+  - uma organização que ainda não terminou continua na mesma `chore/`: não abra outra branch para o próximo passo dela;
+  - nomes em kebab-case, por exemplo `chore/f0-visao-requisitos`.
+- Branch concluída **e aprovada pelo usuário**: `git flow feature finish <nome>` ou `git flow chore finish <nome>`, que faz merge `--no-ff` em `dev` e apaga a branch. Depois, `git push origin dev`.
+  - Se o usuário pedir revisão por PR: `git push -u origin <tipo>/<nome>` + `gh pr create --base dev`.
 - Release (**só quando o usuário pedir**): `npm run release -- --dry-run` para conferir e depois `npm run release`.
   - O git-cliff calcula a versão e o changelog (regras no `cliff.toml`), e o `scripts/release/` orquestra o `git flow release start/finish`, a tag `vX.Y.Z` e o push.
   - O script pede confirmação. `--yes` pula a pergunta e só pode ser usado com autorização explícita do usuário.

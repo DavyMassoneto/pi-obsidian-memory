@@ -30,7 +30,7 @@ Quando surgirem dúvidas novas na fase de spec, registre-as aqui com o próximo 
 | Q-M2 | Onde ficam os docs do projeto | ✅ **No repositório** (`docs/` + `openspec/`). Correção do usuário: não misturar o **sistema de spec** com o **sistema de memória** (o produto). Os vaults guardam só memórias |
 | Q-M3 | Agente que implementa | ✅ **pi** |
 | Q-M4 | Local do repositório | ✅ Pasta local fora de qualquer sync (o `.git` corrompe em pasta sincronizada) |
-| Q-M5 | Fluxo de branches | ✅ **Git Flow** com **git-flow-next**, configuração versionada em `.gitflow`. Branches: `main` (releases, tags `vX.Y.Z`), `dev` (integração), `feature/*`, `bugfix/*`, `release/*`, `hotfix/*`. Nada de commit direto em `main` ou `dev` |
+| Q-M5 | Fluxo de branches | ✅ **Git Flow** com **git-flow-next**, configuração versionada em `.gitflow`. Branches: `main` (releases, tags `vX.Y.Z`), `dev` (integração), `feature/*` (só funcionalidade do produto: changes do OpenSpec), `chore/*` (organização, ferramentas e processo, inclusive a F0), `bugfix/*`, `release/*`, `hotfix/*`. Nada de commit direto em `main` ou `dev`. Os merges `feature/*` de organização feitos depois da v0.0.1 foram refeitos numa única `chore/organizacao-do-projeto`; os anteriores ficaram, porque já estão na release publicada |
 | Q-M6 | GitHub | ✅ Repositório **público**, branch padrão **`dev`**, gerenciado com a GitHub CLI (`gh`). A publicação no npm fica para depois |
 
 ## Resolvidas: o produto (sistema de MEMÓRIA)
