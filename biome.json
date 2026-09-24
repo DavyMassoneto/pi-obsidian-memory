@@ -105,7 +105,7 @@
               "options": {
                 "paths": {
                   "typebox": {
-                    "message": "O construtor de schema (Type) só é importado no schemas.ts do módulo; para os tipos, use import type.",
+                    "message": "The schema builder (Type) is only imported in the module schemas.ts; for types, use import type.",
                     "importNames": ["default", "Type"]
                   }
                 }

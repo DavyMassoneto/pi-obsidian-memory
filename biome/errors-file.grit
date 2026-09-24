@@ -2,5 +2,5 @@ language js
 
 JsClassDeclaration(id=$name, extends_clause=JsExtendsClause(super_class=$parent)) where {
   $parent <: r"\w*Error",
-  register_diagnostic(span=$name, message="Classes de erro ficam no errors.ts do módulo.")
+  register_diagnostic(span=$name, message="Error classes belong in the module errors.ts.")
 }

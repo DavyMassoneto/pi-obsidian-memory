@@ -6,5 +6,5 @@ or {
   JsObjectBindingPatternProperty(init=JsInitializerClause() as $default),
   JsArrayBindingPatternElement(init=JsInitializerClause() as $default)
 } where {
-  register_diagnostic(span=$default, message="Valor default é proibido: torne o valor obrigatório ou trate a ausência com if.")
+  register_diagnostic(span=$default, message="Default values are forbidden: make the value required or handle its absence with if.")
 }

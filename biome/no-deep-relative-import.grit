@@ -2,5 +2,5 @@ language js
 
 JsModuleSource() as $source where {
   $source <: r".\.\./\.\./.*",
-  register_diagnostic(span=$source, message="Import com ../../ é proibido: use o barrel mais alto ao alcance (../index.ts); nos testes, #scripts.")
+  register_diagnostic(span=$source, message="Imports with ../../ are forbidden: use the highest barrel in reach (../index.ts); in tests, #scripts.")
 }

@@ -1,13 +1,13 @@
 name: release
 
-# Disparado pela tag vX.Y.Z que o `npm run release` cria na main (Git Flow).
+# Triggered by the vX.Y.Z tag that `npm run release` creates on main (Git Flow).
 on:
   push:
     tags: ["v*"]
 
 permissions:
-  contents: write # criar a GitHub Release
-  id-token: write # Trusted Publishing no npm (OIDC), sem token guardado
+  contents: write # create the GitHub Release
+  id-token: write # npm Trusted Publishing (OIDC), no stored token
 
 jobs:
   publish:
@@ -22,33 +22,33 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
-      - name: npm atualizado (Trusted Publishing exige npm >= 11.5.1)
+      - name: Up-to-date npm (Trusted Publishing needs npm >= 11.5.1)
         run: npm install -g npm@latest
 
-      - name: A tag bate com o package.json
+      - name: The tag matches package.json
         run: |
           expected="v$(node -p "require('./package.json').version")"
           if [ "$expected" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::A tag $GITHUB_REF_NAME não bate com o package.json ($expected)"
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json ($expected)"
             exit 1
           fi
 
-      - name: A tag está na main
+      - name: The tag is on main
         run: |
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo "::error::A tag $GITHUB_REF_NAME não está na main"
+            echo "::error::Tag $GITHUB_REF_NAME is not on main"
             exit 1
           fi
 
-      - name: Dependências
+      - name: Dependencies
         run: npm ci
 
-      - name: Tipos e testes
+      - name: Types and tests
         run: |
           npm run typecheck
           npm test
 
-      - name: Publicar no npm
+      - name: Publish to npm
         run: npm publish --access public
 
       - name: GitHub Release

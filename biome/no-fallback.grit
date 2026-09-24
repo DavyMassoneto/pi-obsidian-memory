@@ -14,5 +14,5 @@ or {
     }
   }
 } where {
-  register_diagnostic(span=$fallback, message="Fallback para valor default é proibido (?? ou || que devolve valor): trate o caso com if e deixe explícito o que acontece.")
+  register_diagnostic(span=$fallback, message="Fallbacks to a default value are forbidden (?? or || that returns a value): handle the case with if and make explicit what happens.")
 }

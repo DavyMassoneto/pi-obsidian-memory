@@ -1,6 +1,6 @@
 name: ci
 
-# A publicação no npm fica no release.yml (disparado por tag).
+# Publishing to npm lives in release.yml (triggered by a tag).
 on:
   push:
     branches: [dev, "feature/**", "chore/**", "bugfix/**", "release/**", "hotfix/**"]
@@ -22,17 +22,17 @@ jobs:
         with:
           node-version: 24
 
-      - name: Dependências
+      - name: Dependencies
         run: npm ci
 
-      - name: Lint, formatação e imports (Biome)
+      - name: Lint, formatting and imports (Biome)
         run: npx biome ci --reporter=github .
 
-      - name: Tipos
+      - name: Types
         run: npm run typecheck
 
-      - name: Testes
+      - name: Tests
         run: npm test
 
-      - name: Specs do OpenSpec
+      - name: OpenSpec specs
         run: npx --yes @fission-ai/openspec@1.13.1 validate --all --strict --no-interactive
