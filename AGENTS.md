@@ -57,7 +57,8 @@ O Biome barra automaticamente, no `npm run lint` e no CI (configuração em `bio
 - código fora da formatação (sem ponto e vírgula, linha de 120 colunas);
 - imports fora de ordem ou fora dos grupos: Node, pacotes do npm e arquivos do projeto, separados por uma linha em branco;
 - arquivo com mais de 200 linhas e função com mais de 30, sem contar as linhas em branco. Nos testes vale só o limite de arquivo, porque o `describe()` conta como função;
-- `any`, `unknown`, type assertion (`x as T`, `<T>x`, `x!`; `as const` pode) e index signature, inclusive `Record<string, T>` e `{ [K in string]: T }`. `Record` com chaves fixas pode.
+- `any`, `unknown`, type assertion (`x as T`, `<T>x`, `x!`; `as const` pode) e index signature, inclusive `Record<string, T>` e `{ [K in string]: T }`. `Record` com chaves fixas pode;
+- ternário, `??`, `||` que devolve valor (`x || "texto"`) e valor default em parâmetro ou desestruturação, em qualquer arquivo. Cada caso é tratado com `if` e retorno explícito. O `||` em condição (`if (!a || !b)`) continua valendo.
 
 Todo módulo é uma pasta (ex.: `scripts/release/plan/`), com a lógica (`plan.ts` e outros, como `steps.ts`) e um arquivo para cada tipo de coisa. Os testes espelham as pastas (`tests/release/plan/plan.test.ts`). O Biome não confere as pastas, mas barra, no código (nos testes, não), o que estiver fora do arquivo certo:
 - tipos e interfaces → `types.ts`;
@@ -76,6 +77,7 @@ Toda pasta de código tem um `index.ts` (barrel) que só faz `export *` dos arqu
 O Biome barra `../../`, import fora do barrel, `index.ts` com qualquer coisa além de `export *` e arrow function no topo. Ele não vê se o `index.ts` existe: quem confere é o `tests/barrels.test.ts`, que falha se uma pasta de código não tiver `index.ts` ou se o index não reexportar tudo da pasta.
 
 Valem também, mesmo sem o Biome pegar:
+- Nada de valor default desnecessário: nem `default:` em opções (como no `parseArgs`), nem campo ou arquivo tratado como "se existir" quando o fluxo precisa dele. Dado obrigatório que falta vira erro explícito, nunca um valor inventado.
 - Dado externo (JSON, configuração) passa por um schema do TypeBox (`typebox`, o mesmo do pi), nunca por cast.
 - Comentário só quando explica um porquê que o código não mostra. JSDoc que repete o nome é proibido: prefira nomes descritivos.
 - Nunca desligue uma regra com `biome-ignore`. Se uma regra parecer errada para um caso, pergunte ao usuário.
