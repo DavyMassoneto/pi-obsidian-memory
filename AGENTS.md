@@ -1,95 +1,99 @@
 # AGENTS.md — pi-obsidian-memory
 
-Extensão do pi (TypeScript) que grava a memória de longo prazo do agente em vaults do Obsidian, em qualquer pasta.
-O **OneDrive é opcional**. São dois tipos de vault: um **GLOBAL** (aprendizados sobre o usuário) e um por **PROJETO**.
-A base reaproveitada é o pi-hermes-memory (MIT).
+A pi extension (TypeScript) that stores the agent's long-term memory in Obsidian vaults, in any folder.
+**OneDrive is optional.** There are two kinds of vault: one **GLOBAL** (learnings about the user) and one per **PROJECT**.
+The reused base is pi-hermes-memory (MIT).
 
-## Onde estamos
-Leia `docs/STATE.md` antes de tudo: ele traz a fase atual, a próxima ação e os bloqueios.
-- Perguntas e decisões: `docs/OPEN-QUESTIONS.md`
-- Pesquisa: `docs/research/`
-- Decisões difíceis de reverter: `docs/decisions/`
+## Language
+- Talk to the user in Brazilian Portuguese.
+- Everything written to the repository is in English: code, messages, tests, docs, specs, commit messages, branch names and file names.
 
-## Não confunda
-- **Sistema de SPEC** é como ESTE projeto é documentado (`docs/`, `openspec/`). Ele vive no repositório.
-- **Sistema de MEMÓRIA** é o produto que estamos construindo. Os dados dele vivem nos vaults do Obsidian.
+## Where we are
+Read `docs/STATE.md` before anything else: it has the current phase, the next action and the blockers.
+- Questions and decisions: `docs/OPEN-QUESTIONS.md`
+- Research: `docs/research/`
+- Decisions that are hard to reverse: `docs/decisions/`
 
-## Regras de processo (obrigatórias)
-1. Nenhum código de produção sem duas condições: change aprovada no OpenSpec E nenhuma pergunta 🔴 aberta em `docs/OPEN-QUESTIONS.md`.
-2. Dúvida que afete escopo, comportamento observável, formato em disco ou dados do usuário → pergunte
-   (uma por vez, com opções e a sua recomendação) e registre em `docs/OPEN-QUESTIONS.md`. Não assuma.
-3. Todo requisito declara (a) sua configuração (chave, default, validação) e (b) seu passo no onboarding (`/memory-setup` ou `/memory-init`).
-4. Decisão difícil de reverter (formato em disco, API de tools, local dos dados) → ADR em `docs/decisions/` (MADR).
-5. Se a realidade divergir da spec, PARE e informe: esperado, encontrado, impacto, como seguir. A spec é corrigida antes do código.
-6. Ao fim de cada tarefa: rode os testes e MOSTRE a saída; marque o checkbox; atualize `docs/STATE.md`; faça commit **na branch da tarefa** (`feature/` ou `chore/`).
+## Do not confuse
+- The **SPEC system** is how THIS project is documented (`docs/`, `openspec/`). It lives in the repository.
+- The **MEMORY system** is the product we are building. Its data lives in the Obsidian vaults.
 
-## Fluxo (no pi os comandos usam hífen; no Claude Code, dois-pontos)
-- Dúvida nova → `/entrevista <tema>`.
-- Por mudança: `/opsx-explore` → `/opsx-propose` → aprovação do usuário → **sessão nova** → `/opsx-apply` → `/opsx-archive`.
-- Contexto acima de ~60% ou troca de fase → atualize `docs/STATE.md` e comece uma sessão nova.
+## Process rules (mandatory)
+1. No production code unless both hold: an approved OpenSpec change AND no open 🔴 question in `docs/OPEN-QUESTIONS.md`.
+2. A doubt that affects scope, observable behavior, on-disk format or user data → ask
+   (one question at a time, with options and your recommendation) and record it in `docs/OPEN-QUESTIONS.md`. Do not assume.
+3. Every requirement declares (a) its configuration (key, default, validation) and (b) its onboarding step (`/memory-setup` or `/memory-init`).
+4. A decision that is hard to reverse (on-disk format, tool API, data location) → an ADR in `docs/decisions/` (MADR).
+5. If reality diverges from the spec, STOP and report: expected, found, impact, how to proceed. The spec is fixed before the code.
+6. At the end of each task: run the tests and SHOW the output; tick the checkbox; update `docs/STATE.md`; commit **on the task branch** (`feature/` or `chore/`).
 
-## Git Flow (obrigatório, com git-flow-next; a configuração está em `.gitflow`)
-- `main` = só releases (cada merge tem tag `vX.Y.Z`). `dev` = integração. **Nunca faça commit direto em `main` ou `dev`.**
-- Todo trabalho começa numa branch que sai de `dev`, e o tipo diz o que ela é:
-  - `feature/` é **só** funcionalidade do produto: cada change do OpenSpec é uma feature (`git flow feature start <nome>`);
-  - `chore/` é organização, ferramentas e processo, inclusive os documentos da F0 (`git flow chore start <nome>`). Chamar organização de feature é errado;
-  - uma organização que ainda não terminou continua na mesma `chore/`: não abra outra branch para o próximo passo dela;
-  - nomes em kebab-case, por exemplo `chore/f0-visao-requisitos`.
-- Branch concluída **e aprovada pelo usuário**: `git flow feature finish <nome>` ou `git flow chore finish <nome>`, que faz merge `--no-ff` em `dev` e apaga a branch. Depois, `git push origin dev`.
-  - Se o usuário pedir revisão por PR: `git push -u origin <tipo>/<nome>` + `gh pr create --base dev`.
-- Release (**só quando o usuário pedir**): `npm run release -- --dry-run` para conferir e depois `npm run release`.
-  - O git-cliff calcula a versão e o changelog (regras no `cliff.toml`), e o `scripts/release/` orquestra o `git flow release start/finish`, a tag `vX.Y.Z` e o push.
-  - O script pede confirmação. `--yes` pula a pergunta e só pode ser usado com autorização explícita do usuário.
-  - A tag dispara a publicação no npm (`.github/workflows/release.yml`). Detalhes em `docs/decisions/0001-versionamento-automatico-e-publicacao-npm.md`.
-- Correção urgente em produção: `git flow hotfix start X.Y.Z` (sai de `main`) → `git flow hotfix finish X.Y.Z`.
-- Versionamento SemVer; a primeira release funcional é `0.1.0`.
-- Mensagens de commit **obrigatoriamente** no padrão Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`…; `!` ou `BREAKING CHANGE:` para quebras), porque o versionamento automático depende disso.
-- **Nunca** inclua trailers de coautoria (`Co-Authored-By`) nem qualquer menção a IA em commits, merges, tags ou PRs.
+## Flow (in pi the commands use a hyphen; in Claude Code, a colon)
+- A new doubt → `/interview <topic>`.
+- Per change: `/opsx-explore` → `/opsx-propose` → user approval → **new session** → `/opsx-apply` → `/opsx-archive`.
+- Context above ~60% or a phase change → update `docs/STATE.md` and start a new session.
 
-## Segurança de dados
-- O **OneDrive é opcional**, e o núcleo não pode depender dele. As proteções de OneDrive (pin, arquivos só-na-nuvem, cópias de conflito) só rodam com `sync.provider = onedrive`, detectado e confirmado no onboarding.
-- Nunca grave SQLite, locks, temporários ou `.git` dentro dos vaults. Isso vale sempre, e é crítico em pasta sincronizada.
-- Nunca sobrescreva uma nota de vault sem leitura completa + hash. Nunca apague: mova para `archive/`.
-- O agente só lê e escreve dentro dos vaults de memória. Nada fora deles, como os vaults pessoais do usuário.
+## Git Flow (mandatory, with git-flow-next; the configuration is in `.gitflow`)
+- `main` = releases only (every merge has a `vX.Y.Z` tag). `dev` = integration. **Never commit directly to `main` or `dev`.**
+- All work starts on a branch taken from `dev`, and its type says what it is:
+  - `feature/` is **only** product functionality: each OpenSpec change is a feature (`git flow feature start <name>`);
+  - `chore/` is organization, tooling and process, including the F0 documents (`git flow chore start <name>`). Calling organization a feature is wrong;
+  - an organization effort that is not finished stays on the same `chore/` branch: do not open another branch for its next step;
+  - names in kebab-case, for example `chore/f0-vision-requirements`.
+- A branch that is done **and approved by the user**: `git flow feature finish <name>` or `git flow chore finish <name>`, which merges into `dev` with `--no-ff` and deletes the branch. Then `git push origin dev`.
+  - If the user asks for a PR review: `git push -u origin <type>/<name>` + `gh pr create --base dev`.
+- Release (**only when the user asks**): `npm run release -- --dry-run` to check, then `npm run release`.
+  - git-cliff calculates the version and the changelog (rules in `cliff.toml`), and `scripts/release/` orchestrates `git flow release start/finish`, the `vX.Y.Z` tag and the push.
+  - The script asks for confirmation. `--yes` skips the question and may only be used with the user's explicit authorization.
+  - The tag triggers the npm publication (`.github/workflows/release.yml`). Details in `docs/decisions/0001-automatic-versioning-and-npm-publishing.md`.
+- Urgent production fix: `git flow hotfix start X.Y.Z` (from `main`) → `git flow hotfix finish X.Y.Z`.
+- SemVer versioning; the first functional release is `0.1.0`.
+- Commit messages **must** follow Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`…; `!` or `BREAKING CHANGE:` for breaking changes), because the automatic versioning depends on it.
+- **Never** add co-author trailers (`Co-Authored-By`) or any mention of AI to commits, merges, tags or PRs.
 
-## Código (TypeScript)
-O Biome barra automaticamente, no `npm run lint` e no CI (configuração em `biome.json` e plugins em `biome/`):
-- código fora da formatação (sem ponto e vírgula, linha de 120 colunas);
-- imports fora de ordem ou fora dos grupos: Node, pacotes do npm e arquivos do projeto, separados por uma linha em branco;
-- arquivo com mais de 200 linhas e função com mais de 30, sem contar as linhas em branco. Nos testes vale só o limite de arquivo, porque o `describe()` conta como função;
-- `any`, `unknown`, type assertion (`x as T`, `<T>x`, `x!`; `as const` pode) e index signature, inclusive `Record<string, T>` e `{ [K in string]: T }`. `Record` com chaves fixas pode;
-- ternário, `??`, `||` que devolve valor (`x || "texto"`) e valor default em parâmetro ou desestruturação, em qualquer arquivo. Cada caso é tratado com `if` e retorno explícito. O `||` em condição (`if (!a || !b)`) continua valendo;
-- comparação com `undefined` ou `null` (`=== undefined`, `!= null`, `typeof x === "undefined"`) e conversão manual para boolean (`=== true`, `!!x`, `Boolean(x)`), em qualquer arquivo.
+## Data safety
+- **OneDrive is optional**, and the core cannot depend on it. The OneDrive protections (pinning, cloud-only files, conflict copies) only run with `sync.provider = onedrive`, detected and confirmed during onboarding.
+- Never write SQLite, locks, temporary files or `.git` inside the vaults. This always applies, and it is critical in a synced folder.
+- Never overwrite a vault note without a full read + hash. Never delete: move to `archive/`.
+- The agent only reads and writes inside the memory vaults. Nothing outside them, such as the user's personal vaults.
 
-Os valores chegam com o tipo exato; nada é corrigido depois:
-- dado externo (argumentos da linha de comando, saída de comando, grupos de regex, JSON) passa uma vez pelo `parseValue`, com um schema do TypeBox, e sai tipado;
-- operação que pode falhar devolve um resultado explícito (`{ succeeded: true, output }` ou `{ succeeded: false }`), nunca `undefined`; verificação devolve a lista de problemas, vazia quando está tudo certo;
-- valor usado na carga do módulo (um schema, uma lista em `constants.ts`) só depende de arquivos da própria pasta: pelo barrel, o outro módulo pode ainda não ter carregado.
+## Code (TypeScript)
+Biome blocks automatically, in `npm run lint` and in CI (configuration in `biome.json`, plugins in `biome/`):
+- code that is not formatted (no semicolons, 120-column lines);
+- imports out of order or outside the groups: Node, npm packages and project files, separated by a blank line;
+- files longer than 200 lines and functions longer than 30, not counting blank lines. Tests only have the file limit, because `describe()` counts as a function;
+- `any`, `unknown`, type assertions (`x as T`, `<T>x`, `x!`; `as const` is fine) and index signatures, including `Record<string, T>` and `{ [K in string]: T }`. A `Record` with fixed keys is fine;
+- ternaries, `??`, `||` that returns a value (`x || "text"`) and default values in parameters or destructuring, in any file. Each case is handled with `if` and explicit returns. `||` in a condition (`if (!a || !b)`) is still fine;
+- comparisons with `undefined` or `null` (`=== undefined`, `!= null`, `typeof x === "undefined"`) and manual boolean conversions (`=== true`, `!!x`, `Boolean(x)`), in any file.
 
-Todo módulo é uma pasta (ex.: `scripts/release/plan/`), com a lógica (`plan.ts` e outros, como `steps.ts`) e um arquivo para cada tipo de coisa. Os testes espelham as pastas (`tests/release/plan/plan.test.ts`). O Biome não confere as pastas, mas barra, no código (nos testes, não), o que estiver fora do arquivo certo:
-- tipos e interfaces → `types.ts`;
-- valor no topo do módulo que não é função (texto, número, regex, lista, objeto, `Map`…) → `constants.ts`;
-- schema do TypeBox → `schemas.ts`. O construtor `Type` só é importado lá; nos outros arquivos, use `import type`;
-- classe de erro (que estende `Error`) → `errors.ts`;
-- estilo (`theme.fg`, `theme.bold`… do pi e bibliotecas de cor como `chalk`) → `styles.ts`.
+Values arrive with their exact type; nothing is fixed afterwards:
+- external data (command-line arguments, command output, regex groups, JSON) goes once through `parseValue`, with a TypeBox schema, and comes out typed;
+- an operation that can fail returns an explicit result (`{ succeeded: true, output }` or `{ succeeded: false }`), never `undefined`; a check returns the list of problems, empty when everything is fine;
+- a value used while the module loads (a schema, a list in `constants.ts`) only depends on files of its own folder: through the barrel, the other module may not have loaded yet.
 
-Toda pasta de código tem um `index.ts` (barrel) que só faz `export *` dos arquivos da pasta e dos `index.ts` das subpastas. Os imports seguem o barrel:
-- da mesma pasta: o arquivo direto (`./constants.ts`), nunca o próprio `./index.ts`;
-- de outra pasta: sempre o barrel mais alto ao alcance, `../index.ts`;
-- `../../` é proibido em qualquer arquivo. Os testes importam o código pelo alias `#scripts` (campo `imports` do `package.json`, aponta para `scripts/index.ts`) e os helpers por `../helpers.ts`;
-- função no topo do módulo é declarada com `function`, nunca como arrow function: os barrels criam import circular, e só a declaração com `function` já existe quando o módulo começa a rodar;
-- o único arquivo que executa algo ao ser carregado é a entrada `scripts/release/run.ts` (o `npm run release`), e nenhum barrel o reexporta.
+Every module is a folder (e.g. `scripts/release/plan/`), with the logic (`plan.ts` and others, such as `steps.ts`) and one file for each kind of thing. The tests mirror the folders (`tests/release/plan/plan.test.ts`). Biome does not check the folders, but in the code (not in the tests) it blocks anything outside the right file:
+- types and interfaces → `types.ts`;
+- top-level values that are not functions (text, number, regex, list, object, `Map`…) → `constants.ts`;
+- TypeBox schemas → `schemas.ts`. The `Type` builder is only imported there; in the other files, use `import type`;
+- error classes (extending `Error`) → `errors.ts`;
+- styling (pi's `theme.fg`, `theme.bold`… and color libraries such as `chalk`) → `styles.ts`.
 
-O Biome barra `../../`, import fora do barrel, `index.ts` com qualquer coisa além de `export *` e arrow function no topo. Ele não vê se o `index.ts` existe: quem confere é o `tests/barrels.test.ts`, que falha se uma pasta de código não tiver `index.ts` ou se o index não reexportar tudo da pasta.
+Every code folder has an `index.ts` (barrel) that only does `export *` of the folder's files and of the subfolders' `index.ts`. Imports follow the barrels:
+- from the same folder: the file itself (`./constants.ts`), never its own `./index.ts`;
+- from another folder: always the highest barrel in reach, `../index.ts`;
+- `../../` is forbidden in any file. The tests import the code through the `#scripts` alias (the `imports` field of `package.json`, pointing to `scripts/index.ts`) and the helpers through `../helpers.ts`;
+- top-level functions are declared with `function`, never as arrow functions: the barrels create circular imports, and only `function` declarations already exist when the module starts running;
+- the only file that runs something when loaded is the entry point `scripts/release/run.ts` (`npm run release`), and no barrel re-exports it.
 
-Valem também, mesmo sem o Biome pegar:
-- Default só onde ele faz parte da definição: a flag declarada no `parseArgs` (ausente = `false`) ou o padrão da ferramenta que recebe o valor (o `--bump auto` é o do git-cliff). Na lógica, nunca: nada de campo ou arquivo tratado como "se existir" quando o fluxo precisa dele. Dado obrigatório que falta vira erro explícito, nunca um valor inventado.
-- Os schemas são do TypeBox (`typebox`, o mesmo do pi); nunca cast.
-- Comentário só quando explica um porquê que o código não mostra. JSDoc que repete o nome é proibido: prefira nomes descritivos.
-- Nunca desligue uma regra com `biome-ignore`. Se uma regra parecer errada para um caso, pergunte ao usuário.
+Biome blocks `../../`, imports outside the barrels, an `index.ts` with anything other than `export *` and top-level arrow functions. It cannot see whether an `index.ts` exists: `tests/barrels.test.ts` does, and fails when a code folder has no `index.ts` or the index does not re-export everything in the folder.
 
-## Comandos
-- Lint, formatação e imports (Biome): `npm run lint`. Para corrigir o que for automático: `npm run format`
-- Tipos (TypeScript estrito): `npm run typecheck`
-- Testes (vitest): `npm test`
-- Release: `npm run release -- --dry-run` / `npm run release` (ver Git Flow acima)
+These also apply, even where Biome cannot catch them:
+- Defaults only where they are part of the definition: a flag declared in `parseArgs` (absent = `false`) or the default of the tool that receives the value (`--bump auto` is git-cliff's). Never in the logic: no field or file treated as "if it exists" when the flow needs it. Missing required data becomes an explicit error, never an invented value.
+- The schemas are TypeBox (`typebox`, the same as pi); never a cast.
+- A comment only when it explains a why that the code does not show. JSDoc that repeats the name is forbidden: prefer descriptive names.
+- Never turn a rule off with `biome-ignore`. If a rule looks wrong for a case, ask the user.
+
+## Commands
+- Lint, formatting and imports (Biome): `npm run lint`. To fix what can be fixed automatically: `npm run format`
+- Types (strict TypeScript): `npm run typecheck`
+- Tests (vitest): `npm test`
+- Release: `npm run release -- --dry-run` / `npm run release` (see Git Flow above)

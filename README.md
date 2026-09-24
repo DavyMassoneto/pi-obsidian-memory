@@ -1,15 +1,15 @@
 # pi-obsidian-memory
 
-Memória de longo prazo para o [pi coding agent](https://pi.dev), gravada em vaults do [Obsidian](https://obsidian.md). O OneDrive é opcional.
+Long-term memory for the [pi coding agent](https://pi.dev), stored in [Obsidian](https://obsidian.md) vaults. OneDrive is optional.
 
-> **Status:** em especificação (fase F0). Ainda não há código utilizável: esta versão só reserva o nome no npm.
+> **Status:** being specified (phase F0). There is no usable code yet: this version only reserves the name on npm.
 
-- Um vault **global**, com os aprendizados sobre o usuário, e um vault **por projeto**.
-- Notas nativas do Obsidian, com índice e templates: só aprendizados e pontos importantes.
-- Tudo configurável, com onboarding (`/memory-setup` e `/memory-init`).
+- One **global** vault, with the learnings about the user, and one vault **per project**.
+- Native Obsidian notes, with an index and templates: only learnings and important points.
+- Everything configurable, with onboarding (`/memory-setup` and `/memory-init`).
 
-Documentação do projeto em [`docs/`](docs/). Decisões em [`docs/OPEN-QUESTIONS.md`](docs/OPEN-QUESTIONS.md).
+Project documentation in [`docs/`](docs/). Decisions in [`docs/OPEN-QUESTIONS.md`](docs/OPEN-QUESTIONS.md).
 
-## Licença
+## License
 
 [MIT](LICENSE)
