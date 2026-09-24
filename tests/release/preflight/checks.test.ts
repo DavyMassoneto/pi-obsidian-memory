@@ -9,10 +9,9 @@ import {
   noOpenRelease,
   onDevelopBranch,
   versionMatchesLatestTag,
-} from "../../scripts/release/checks.ts"
-import { runPreflight } from "../../scripts/release/preflight.ts"
-import type { PreflightContext } from "../../scripts/release/preflight.types.ts"
-import { CONFIG, cleanupTempDirs, commit, git, repoOnDevWithRemote, tag, tempDir } from "./helpers.ts"
+} from "../../../scripts/release/preflight/checks.ts"
+import type { PreflightContext } from "../../../scripts/release/preflight/types.ts"
+import { CONFIG, cleanupTempDirs, commit, git, repoOnDevWithRemote, tag, tempDir } from "../helpers.ts"
 
 afterEach(cleanupTempDirs)
 
@@ -81,28 +80,5 @@ describe("versionMatchesLatestTag", () => {
     tag(repo, "v0.2.0")
 
     expect(versionMatchesLatestTag(contextOf(repo))).toMatch(/0\.1\.0.*v0\.2\.0/)
-  })
-})
-
-describe("runPreflight", () => {
-  it("reúne todos os problemas encontrados", () => {
-    const repo = repoOnDevWithRemote()
-    git(repo, "checkout", "-q", "main")
-    writeFileSync(join(repo, "rascunho.txt"), "x")
-
-    expect(runPreflight(contextOf(repo), [onDevelopBranch, cleanWorkingTree, noOpenRelease])).toHaveLength(2)
-  })
-
-  it("devolve lista vazia quando está tudo certo", () => {
-    const repo = repoOnDevWithRemote()
-    const checks = [
-      onDevelopBranch,
-      cleanWorkingTree,
-      noOpenRelease,
-      inSyncWithRemote("develop"),
-      inSyncWithRemote("main"),
-    ]
-
-    expect(runPreflight(contextOf(repo), checks)).toEqual([])
   })
 })

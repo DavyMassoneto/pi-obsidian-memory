@@ -1,4 +1,4 @@
-import type { Bump } from "./version.types.ts"
+import type { Bump } from "../version/types.ts"
 
 export interface ReleaseOptions {
   readonly dryRun: boolean

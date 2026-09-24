@@ -29,7 +29,7 @@
   "scripts": {
     "format": "biome check --write .",
     "lint": "biome check .",
-    "release": "node scripts/release/cli.ts",
+    "release": "node scripts/release/cli/cli.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

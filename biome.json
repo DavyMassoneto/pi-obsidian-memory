@@ -59,23 +59,23 @@
       }
     },
     {
-      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/*.types.ts"],
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/types.ts"],
       "plugins": ["./biome/types-file.grit"]
     },
     {
-      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/*.constants.ts"],
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/constants.ts"],
       "plugins": ["./biome/constants-file.grit"]
     },
     {
-      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/*.errors.ts"],
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/errors.ts"],
       "plugins": ["./biome/errors-file.grit"]
     },
     {
-      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/*.styles.ts"],
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/styles.ts"],
       "plugins": ["./biome/styles-file.grit"]
     },
     {
-      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/*.schemas.ts"],
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/schemas.ts"],
       "linter": {
         "rules": {
           "style": {
@@ -84,7 +84,7 @@
               "options": {
                 "paths": {
                   "typebox": {
-                    "message": "O construtor de schema (Type) só é importado em <módulo>.schemas.ts; para os tipos, use import type.",
+                    "message": "O construtor de schema (Type) só é importado no schemas.ts do módulo; para os tipos, use import type.",
                     "importNames": ["default", "Type"]
                   }
                 }

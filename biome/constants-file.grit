@@ -11,5 +11,5 @@ JsVariableDeclarator(id=$name, initializer=JsInitializerClause(expression=$value
     JsFunctionExpression(),
     `Type.$method($arguments)`
   },
-  register_diagnostic(span=$name, message="Valor no topo do módulo fica em <módulo>.constants.ts (schema do TypeBox, em <módulo>.schemas.ts).")
+  register_diagnostic(span=$name, message="Valor no topo do módulo fica no constants.ts do módulo (schema do TypeBox, no schemas.ts).")
 }

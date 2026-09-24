@@ -1,4 +1,4 @@
-import type { BUMPS } from "./version.constants.ts"
+import type { BUMPS } from "./constants.ts"
 
 export type Bump = (typeof BUMPS)[number]
 

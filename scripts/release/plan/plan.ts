@@ -1,7 +1,7 @@
-import { STEPS } from "./plan.constants.ts"
-import { NothingToRelease } from "./plan.errors.ts"
-import type { PlanInput, Release, ReleasePlan, StepContext } from "./plan.types.ts"
-import { compareVersions } from "./version.ts"
+import { compareVersions } from "../version/version.ts"
+import { STEPS } from "./constants.ts"
+import { NothingToRelease } from "./errors.ts"
+import type { PlanInput, Release, ReleasePlan, StepContext } from "./types.ts"
 
 export function buildPlan(input: PlanInput): ReleasePlan {
   const { config, currentVersion, nextVersion } = input
