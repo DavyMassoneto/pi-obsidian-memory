@@ -13,17 +13,24 @@ const contextOf = (cwd: string): PreflightContext => ({ cwd, config: CONFIG, rem
 
 describe("onDevelopBranch", () => {
   it("passa na dev e barra em outra branch", () => {
-    const repo = repoOnDevWithRemote()
+    const repo = repoOnDevWithRemote("0.1.0")
     expect(onDevelopBranch(contextOf(repo))).toBeUndefined()
 
     git(repo, "checkout", "-q", "main")
     expect(onDevelopBranch(contextOf(repo))).toMatch(/a partir da dev \(branch atual: main\)/)
   })
+
+  it("explica quando o HEAD está destacado", () => {
+    const repo = repoOnDevWithRemote("0.1.0")
+    git(repo, "checkout", "-q", "--detach")
+
+    expect(onDevelopBranch(contextOf(repo))).toMatch(/a partir da dev \(HEAD destacado\)/)
+  })
 })
 
 describe("cleanWorkingTree", () => {
   it("barra arquivos não commitados", () => {
-    const repo = repoOnDevWithRemote()
+    const repo = repoOnDevWithRemote("0.1.0")
     expect(cleanWorkingTree(contextOf(repo))).toBeUndefined()
 
     writeFileSync(join(repo, "rascunho.txt"), "x")
@@ -33,7 +40,7 @@ describe("cleanWorkingTree", () => {
 
 describe("noOpenRelease", () => {
   it("barra quando já existe uma release aberta", () => {
-    const repo = repoOnDevWithRemote()
+    const repo = repoOnDevWithRemote("0.1.0")
     expect(noOpenRelease(contextOf(repo))).toBeUndefined()
 
     git(repo, "branch", "release/0.2.0")
@@ -43,7 +50,7 @@ describe("noOpenRelease", () => {
 
 describe("inSyncWithRemote", () => {
   it("barra a branch com commits que ainda não foram enviados", () => {
-    const repo = repoOnDevWithRemote()
+    const repo = repoOnDevWithRemote("0.1.0")
     expect(inSyncWithRemote("develop")(contextOf(repo))).toBeUndefined()
 
     commit(repo, "feat: ainda não enviado")

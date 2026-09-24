@@ -7,6 +7,7 @@ Locale.Set(Locale.pt_BR)
 try {
   process.exitCode = await main(process.argv.slice(2))
 } catch (error) {
-  console.error(`✖ ${error instanceof Error ? error.message : String(error)}`)
+  if (!(error instanceof Error)) throw error
+  console.error(`✖ ${error.message}`)
   process.exitCode = 1
 }

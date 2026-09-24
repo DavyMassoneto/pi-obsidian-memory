@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs"
 import { join } from "node:path"
 
 import { readJsonFile, writeJsonFile } from "../index.ts"
@@ -16,9 +15,12 @@ export function parseVersion(version: string): Version {
   return [Number(match[1]), Number(match[2]), Number(match[3])]
 }
 
-export function compareVersions(a: string, b: string): number {
-  const [x, y] = [parseVersion(a), parseVersion(b)]
-  return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]
+export function isNewerVersion(candidate: string, current: string): boolean {
+  const [major, minor, patch] = parseVersion(candidate)
+  const [currentMajor, currentMinor, currentPatch] = parseVersion(current)
+  if (major !== currentMajor) return major > currentMajor
+  if (minor !== currentMinor) return minor > currentMinor
+  return patch > currentPatch
 }
 
 export function readPackageVersion(dir: string): string {
@@ -30,11 +32,8 @@ export function readPackageVersion(dir: string): string {
 export function setPackageVersion(dir: string, version: string): void {
   parseVersion(version)
   const manifest = readJsonFile(join(dir, "package.json"), PackageManifest)
-  const lockPath = join(dir, "package-lock.json")
-  const lock = existsSync(lockPath) ? readJsonFile(lockPath, PackageLock) : undefined
+  const lock = readJsonFile(join(dir, "package-lock.json"), PackageLock)
+  const rootPackage = { ...lock.data.packages[""], version }
   writeJsonFile(manifest, { ...manifest.data, version })
-  if (lock === undefined) return
-  const { data } = lock
-  const rootPackage = { ...data.packages[""], version }
-  writeJsonFile(lock, { ...data, version, packages: { ...data.packages, "": rootPackage } })
+  writeJsonFile(lock, { ...lock.data, version, packages: { ...lock.data.packages, "": rootPackage } })
 }

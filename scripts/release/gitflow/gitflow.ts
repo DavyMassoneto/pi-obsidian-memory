@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { git } from "../index.ts"
 import { BRANCH_SETTING, GITFLOW_FILE } from "./constants.ts"
-import type { BranchSettings, GitFlowConfig } from "./types.ts"
+import type { BranchSetting, BranchSettings, GitFlowConfig } from "./types.ts"
 
 export function readGitFlowConfig(cwd: string): GitFlowConfig {
   const file = join(cwd, GITFLOW_FILE)
@@ -13,25 +13,56 @@ export function readGitFlowConfig(cwd: string): GitFlowConfig {
 
 export function parseGitFlowConfig(listing: string): GitFlowConfig {
   const branches = readBranches(listing)
-  const bases = [...branches].filter(([, settings]) => settings.get("type") === "base")
-  const main = bases.find(([, settings]) => !settings.has("parent"))?.[0]
-  if (main === undefined) throw new Error(`${GITFLOW_FILE}: nenhuma branch base sem pai (a de produção)`)
-  const develop = bases.find(([, settings]) => settings.get("parent") === main)?.[0]
-  if (develop === undefined) throw new Error(`${GITFLOW_FILE}: nenhuma branch base filha de ${main} (a de integração)`)
+  const main = findBranch(branches, "base sem pai (a de produção)", (settings) => {
+    return isBase(settings) && !settings.has("parent")
+  })
+  const develop = findBranch(branches, `base filha de ${main} (a de integração)`, (settings) => {
+    return isBase(settings) && settings.get("parent") === main
+  })
   const release = branches.get("release")
-  const releasePrefix = release?.get("prefix")
-  if (releasePrefix === undefined) throw new Error(`${GITFLOW_FILE}: prefixo das branches de release não configurado`)
-  return { main, develop, releasePrefix, tagPrefix: release?.get("tagprefix") ?? "" }
+  if (release === undefined) throw new Error(`${GITFLOW_FILE}: prefixo das branches de release não configurado`)
+  return {
+    main,
+    develop,
+    releasePrefix: requiredSetting(release, "prefix", "prefixo das branches de release"),
+    tagPrefix: requiredSetting(release, "tagprefix", "prefixo das tags de versão"),
+  }
 }
 
 function readBranches(listing: string): Map<string, BranchSettings> {
+  const settings = listing.split(/\r?\n/).flatMap(parseBranchSetting)
   const branches = new Map<string, BranchSettings>()
-  for (const line of listing.split(/\r?\n/)) {
-    const setting = BRANCH_SETTING.exec(line)?.groups
-    if (setting?.name === undefined || setting.key === undefined || setting.value === undefined) continue
-    const settings = branches.get(setting.name) ?? new Map<string, string>()
-    settings.set(setting.key.toLowerCase(), setting.value)
-    branches.set(setting.name, settings)
+  for (const [branch, entries] of Map.groupBy(settings, (setting) => setting.branch)) {
+    branches.set(branch, new Map(entries.map((entry) => [entry.key, entry.value])))
   }
   return branches
+}
+
+function parseBranchSetting(line: string): BranchSetting[] {
+  const match = BRANCH_SETTING.exec(line)
+  if (match === null) return []
+  const [, branch, key, value] = match
+  if (branch === undefined || key === undefined || value === undefined) return []
+  return [{ branch, key: key.toLowerCase(), value }]
+}
+
+function findBranch(
+  branches: Map<string, BranchSettings>,
+  description: string,
+  matches: (settings: BranchSettings) => boolean,
+): string {
+  for (const [name, settings] of branches) {
+    if (matches(settings)) return name
+  }
+  throw new Error(`${GITFLOW_FILE}: nenhuma branch ${description}`)
+}
+
+function isBase(settings: BranchSettings): boolean {
+  return settings.get("type") === "base"
+}
+
+function requiredSetting(settings: BranchSettings, key: string, description: string): string {
+  const value = settings.get(key)
+  if (value === undefined) throw new Error(`${GITFLOW_FILE}: ${description} não configurado`)
+  return value
 }

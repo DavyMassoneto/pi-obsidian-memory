@@ -15,11 +15,13 @@ function codeFolders(dir: string): string[] {
   const folders = readdirSync(dir, { withFileTypes: true }).filter(
     (entry) => entry.isDirectory() && !entry.name.startsWith(".") && !IGNORED_FOLDERS.has(entry.name),
   )
-  return folders.flatMap((folder) => {
-    const path = join(dir, folder.name)
-    const nested = codeFolders(path)
-    return hasOwnCode(path) || nested.length > 0 ? [path, ...nested] : nested
-  })
+  return folders.flatMap((folder) => codeFoldersFrom(join(dir, folder.name)))
+}
+
+function codeFoldersFrom(path: string): string[] {
+  const nested = codeFolders(path)
+  if (hasOwnCode(path) || nested.length > 0) return [path, ...nested]
+  return nested
 }
 
 function hasOwnCode(dir: string): boolean {
@@ -43,7 +45,13 @@ function actualReexports(dir: string): string[] {
   const lines = readFileSync(join(dir, "index.ts"), "utf8")
     .split(/\r?\n/)
     .filter((line) => line.trim() !== "")
-  return lines.map((line) => REEXPORT.exec(line)?.[1] ?? `linha inválida: ${line}`).sort()
+  return lines.map(reexportedPath).sort()
+}
+
+function reexportedPath(line: string): string {
+  const path = REEXPORT.exec(line)?.[1]
+  if (path === undefined) throw new Error(`linha que não é export * no index.ts: ${line}`)
+  return path
 }
 
 describe("barrels", () => {

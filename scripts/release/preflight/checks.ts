@@ -2,27 +2,26 @@ import { git, readPackageVersion, tryGit } from "../index.ts"
 import type { Check, PreflightContext, Problem } from "./types.ts"
 
 export function gitFlowInstalled({ cwd }: PreflightContext): Problem | undefined {
-  return tryGit(cwd, ["flow", "version"]) === undefined
-    ? "git-flow não encontrado: instale o git-flow-next (winget install GitTower.GitFlowNext)"
-    : undefined
+  if (tryGit(cwd, ["flow", "version"]) !== undefined) return undefined
+  return "git-flow não encontrado: instale o git-flow-next (winget install GitTower.GitFlowNext)"
 }
 
 export function onDevelopBranch({ cwd, config }: PreflightContext): Problem | undefined {
   const current = git(cwd, ["branch", "--show-current"])
-  return current === config.develop
-    ? undefined
-    : `rode o release a partir da ${config.develop} (branch atual: ${current || "HEAD destacado"})`
+  if (current === config.develop) return undefined
+  if (current === "") return `rode o release a partir da ${config.develop} (HEAD destacado)`
+  return `rode o release a partir da ${config.develop} (branch atual: ${current})`
 }
 
 export function cleanWorkingTree({ cwd }: PreflightContext): Problem | undefined {
-  return git(cwd, ["status", "--porcelain"]) === "" ? undefined : "há mudanças não commitadas"
+  if (git(cwd, ["status", "--porcelain"]) === "") return undefined
+  return "há mudanças não commitadas"
 }
 
 export function noOpenRelease({ cwd, config }: PreflightContext): Problem | undefined {
   const open = git(cwd, ["branch", "--list", `${config.releasePrefix}*`, "--format=%(refname:short)"])
-  return open === ""
-    ? undefined
-    : `já existe release aberta (${open.split(/\r?\n/).join(", ")}): termine ou apague antes`
+  if (open === "") return undefined
+  return `já existe release aberta (${open.split(/\r?\n/).join(", ")}): termine ou apague antes`
 }
 
 export function inSyncWithRemote(which: "main" | "develop"): Check {
@@ -34,9 +33,8 @@ export function inSyncWithRemote(which: "main" | "develop"): Check {
     if (listing === undefined) return `não foi possível consultar ${remote} (sem rede ou remoto inexistente)`
     const remoteSha = listing.split(/\s+/)[0]
     if (!remoteSha) return `a branch ${branch} não existe em ${remote}`
-    return local === remoteSha
-      ? undefined
-      : `${branch} local (${local.slice(0, 7)}) difere de ${remote}/${branch} (${remoteSha.slice(0, 7)}): sincronize antes`
+    if (local === remoteSha) return undefined
+    return `${branch} local (${local.slice(0, 7)}) difere de ${remote}/${branch} (${remoteSha.slice(0, 7)}): sincronize antes`
   }
 }
 
@@ -44,7 +42,6 @@ export function versionMatchesLatestTag({ cwd, config }: PreflightContext): Prob
   const tag = tryGit(cwd, ["describe", "--tags", "--abbrev=0", "--match", `${config.tagPrefix}[0-9]*`])
   if (tag === undefined) return undefined
   const version = readPackageVersion(cwd)
-  return tag === `${config.tagPrefix}${version}`
-    ? undefined
-    : `o package.json (${version}) não bate com a última tag (${tag})`
+  if (tag === `${config.tagPrefix}${version}`) return undefined
+  return `o package.json (${version}) não bate com a última tag (${tag})`
 }

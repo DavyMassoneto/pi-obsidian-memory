@@ -1,5 +1,3 @@
-import { existsSync } from "node:fs"
-import { join } from "node:path"
 import { stdin, stdout } from "node:process"
 import { createInterface } from "node:readline/promises"
 import { parseArgs } from "node:util"
@@ -7,7 +5,9 @@ import { parseArgs } from "node:util"
 import {
   type Bump,
   buildPlan,
-  bumpedVersion,
+  CHECKS,
+  calculatedVersion,
+  forcedVersion,
   type GitFlowConfig,
   isBump,
   previewChangelog,
@@ -26,25 +26,26 @@ import type { ReleaseOptions } from "./types.ts"
 
 export async function main(argv: readonly string[]): Promise<number> {
   const options = parseCommandLine(argv)
-  if (options.help) {
+  if (options.help === true) {
     console.log(USAGE)
     return 0
   }
-  if (!isBump(options.bump)) {
-    console.error(`--bump inválido: "${options.bump}"\n\n${USAGE}`)
+  const { bump } = options
+  if (bump !== undefined && !isBump(bump)) {
+    console.error(`--bump inválido: "${bump}"\n\n${USAGE}`)
     return 2
   }
-  return release(process.cwd(), { dryRun: options["dry-run"], yes: options.yes, bump: options.bump })
+  return release(process.cwd(), { dryRun: options["dry-run"] === true, yes: options.yes === true, bump })
 }
 
 function parseCommandLine(argv: readonly string[]) {
   const { values } = parseArgs({
     args: [...argv],
     options: {
-      "dry-run": { type: "boolean", default: false },
-      bump: { type: "string", default: "auto" },
-      yes: { type: "boolean", short: "y", default: false },
-      help: { type: "boolean", short: "h", default: false },
+      "dry-run": { type: "boolean" },
+      bump: { type: "string" },
+      yes: { type: "boolean", short: "y" },
+      help: { type: "boolean", short: "h" },
     },
     strict: true,
     allowPositionals: false,
@@ -69,20 +70,25 @@ async function release(cwd: string, options: ReleaseOptions): Promise<number> {
 }
 
 function passesPreflight(cwd: string, config: GitFlowConfig): boolean {
-  const problems = runPreflight({ cwd, config, remote: REMOTE })
+  const problems = runPreflight({ cwd, config, remote: REMOTE }, CHECKS)
   if (problems.length === 0) return true
   console.error(["✖ O release não pode começar:", ...problems.map((problem) => `  - ${problem}`)].join("\n"))
   return false
 }
 
-async function planRelease(cwd: string, config: GitFlowConfig, bump: Bump): Promise<ReleasePlan> {
+async function planRelease(cwd: string, config: GitFlowConfig, bump: Bump | undefined): Promise<ReleasePlan> {
   return buildPlan({
     config,
     remote: REMOTE,
     currentVersion: readPackageVersion(cwd),
-    nextVersion: await bumpedVersion(cwd, bump, config.tagPrefix),
-    releaseFiles: RELEASE_FILES.filter((file) => existsSync(join(cwd, file))),
+    nextVersion: await nextVersion(cwd, config.tagPrefix, bump),
+    releaseFiles: RELEASE_FILES,
   })
+}
+
+function nextVersion(cwd: string, tagPrefix: string, bump: Bump | undefined): Promise<string> {
+  if (bump === undefined) return calculatedVersion(cwd, tagPrefix)
+  return forcedVersion(cwd, tagPrefix, bump)
 }
 
 async function printPlan(cwd: string, plan: ReleasePlan): Promise<void> {

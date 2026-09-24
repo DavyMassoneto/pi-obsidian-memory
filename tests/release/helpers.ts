@@ -48,7 +48,7 @@ export function tag(cwd: string, name: string): void {
   git(cwd, "tag", "-a", name, "-m", name)
 }
 
-export function repoOnDevWithRemote(version = "0.1.0"): string {
+export function repoOnDevWithRemote(version: string): string {
   const remote = tempDir()
   git(remote, "init", "-q", "--bare", "-b", "main")
   const work = tempDir()
