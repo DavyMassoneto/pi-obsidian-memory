@@ -1,0 +1,16 @@
+language js
+
+or {
+  JsImport() as $item,
+  JsExport() as $item where { $item <: not r"export \* from .\./[a-z0-9-]+(?:\.ts|/index\.ts)." },
+  or {
+    JsVariableStatement(),
+    JsFunctionDeclaration(),
+    JsClassDeclaration(),
+    TsInterfaceDeclaration(),
+    TsTypeAliasDeclaration(),
+    JsExpressionStatement()
+  } as $item where { $item <: not within JsExport() }
+} where {
+  register_diagnostic(span=$item, message="index.ts só reexporta, com export * from ./arquivo.ts ou ./pasta/index.ts.")
+}

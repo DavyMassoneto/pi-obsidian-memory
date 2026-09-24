@@ -5,7 +5,7 @@
     "clientKind": "git",
     "useIgnoreFile": true
   },
-  "plugins": ["./biome/no-unknown.grit", "./biome/no-index-signature.grit"],
+  "plugins": ["./biome/no-unknown.grit", "./biome/no-index-signature.grit", "./biome/no-deep-relative-import.grit"],
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
@@ -57,6 +57,18 @@
           }
         }
       }
+    },
+    {
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**"],
+      "plugins": ["./biome/top-level-functions.grit"]
+    },
+    {
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/index.ts"],
+      "plugins": ["./biome/barrel-imports.grit"]
+    },
+    {
+      "includes": ["**/index.ts", "!tests/**"],
+      "plugins": ["./biome/index-reexports-only.grit"]
     },
     {
       "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/types.ts"],
