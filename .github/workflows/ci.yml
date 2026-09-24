@@ -3,7 +3,7 @@ name: ci
 # A publicação no npm fica no release.yml (disparado por tag).
 on:
   push:
-    branches: [dev, "feature/**", "bugfix/**", "release/**", "hotfix/**"]
+    branches: [dev, "feature/**", "chore/**", "bugfix/**", "release/**", "hotfix/**"]
   pull_request:
     branches: [dev, main]
 
