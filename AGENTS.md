@@ -7,6 +7,7 @@ The reused base is pi-hermes-memory (MIT).
 ## Language
 - Talk to the user in Brazilian Portuguese.
 - Everything written to the repository is in English: code, messages, tests, docs, specs, commit messages, branch names and file names.
+- Public metadata (the npm and GitHub descriptions) is short and says what the product is, without optional details.
 
 ## Where we are
 Read `docs/STATE.md` before anything else: it has the current phase, the next action and the blockers.
@@ -26,6 +27,7 @@ Read `docs/STATE.md` before anything else: it has the current phase, the next ac
 4. A decision that is hard to reverse (on-disk format, tool API, data location) → an ADR in `docs/decisions/` (MADR).
 5. If reality diverges from the spec, STOP and report: expected, found, impact, how to proceed. The spec is fixed before the code.
 6. At the end of each task: run the tests and SHOW the output; tick the checkbox; update `docs/STATE.md`; commit **on the task branch** (`feature/` or `chore/`).
+7. Before a non-trivial change, show what you understood (the plan, with concrete examples of the result) and wait for the user's confirmation. When a request is ambiguous, offer concrete options (e.g. the resulting folder tree) instead of guessing.
 
 ## Flow (in pi the commands use a hyphen; in Claude Code, a colon)
 - A new doubt → `/interview <topic>`.
@@ -57,10 +59,13 @@ Read `docs/STATE.md` before anything else: it has the current phase, the next ac
 - The agent only reads and writes inside the memory vaults. Nothing outside them, such as the user's personal vaults.
 
 ## Code (TypeScript)
-Biome blocks automatically, in `npm run lint` and in CI (configuration in `biome.json`, plugins in `biome/`):
-- code that is not formatted (no semicolons, 120-column lines);
+The goal is readable code: small files and functions, descriptive names, and every case handled explicitly.
+
+Biome is the only linter and formatter (do not add ESLint or Prettier). It blocks automatically, in `npm run lint` and in CI (configuration in `biome.json`, plugins in `biome/`):
+- code that is not formatted (no semicolons, double quotes, 120-column lines);
 - imports out of order or outside the groups: Node, npm packages and project files, separated by a blank line;
 - files longer than 200 lines and functions longer than 30, not counting blank lines. Tests only have the file limit, because `describe()` counts as a function;
+- functions that are too complex (cognitive complexity above 15);
 - `any`, `unknown`, type assertions (`x as T`, `<T>x`, `x!`; `as const` is fine) and index signatures, including `Record<string, T>` and `{ [K in string]: T }`. A `Record` with fixed keys is fine;
 - ternaries, `??`, `||` that returns a value (`x || "text"`) and default values in parameters or destructuring, in any file. Each case is handled with `if` and explicit returns. `||` in a condition (`if (!a || !b)`) is still fine;
 - comparisons with `undefined` or `null` (`=== undefined`, `!= null`, `typeof x === "undefined"`) and manual boolean conversions (`=== true`, `!!x`, `Boolean(x)`), in any file.
@@ -87,6 +92,8 @@ Every code folder has an `index.ts` (barrel) that only does `export *` of the fo
 Biome blocks `../../`, imports outside the barrels, an `index.ts` with anything other than `export *` and top-level arrow functions. It cannot see whether an `index.ts` exists: `tests/barrels.test.ts` does, and fails when a code folder has no `index.ts` or the index does not re-export everything in the folder.
 
 These also apply, even where Biome cannot catch them:
+- Prefer a mature, maintained tool to re-implementing one (parsers, SemVer, changelogs…): our code orchestrates it. No hand-rolled hacks, such as patching JSON with a regex.
+- Logic is covered by tests. A change is only done after it is verified in practice (tests, `--dry-run`, CI), with the output shown.
 - Defaults only where they are part of the definition: a flag declared in `parseArgs` (absent = `false`) or the default of the tool that receives the value (`--bump auto` is git-cliff's). Never in the logic: no field or file treated as "if it exists" when the flow needs it. Missing required data becomes an explicit error, never an invented value.
 - The schemas are TypeBox (`typebox`, the same as pi); never a cast.
 - A comment only when it explains a why that the code does not show. JSDoc that repeats the name is forbidden: prefer descriptive names.

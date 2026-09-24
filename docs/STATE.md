@@ -23,8 +23,9 @@
   - the `v*` tag on `main` triggers `.github/workflows/release.yml`, which publishes via Trusted Publishing and creates the GitHub Release. Only that workflow can publish;
   - details in [ADR 0001](decisions/0001-automatic-versioning-and-npm-publishing.md).
 - **CI** (`.github/workflows/ci.yml`, Windows): runs on every push to the Git Flow branches and on every PR (Biome, types, tests and OpenSpec).
-- **Biome** for lint, formatting and imports (`npm run lint` / `npm run format`), with the code rules of `AGENTS.md`: no `;`, limits of 200 lines per file and 30 per function, no `any`, `unknown`, type assertions or index signatures. Every module is a folder, with one file per kind of thing (`types.ts`, `constants.ts`, `schemas.ts`, `errors.ts`, `styles.ts`); the tests mirror the folders. Every code folder has an `index.ts` with only `export *`; another folder is imported through `../index.ts`, and `../../` is forbidden (the tests use `#scripts`).
+- **Biome** for lint, formatting and imports (`npm run lint` / `npm run format`), with the code rules of `AGENTS.md`: no `;`, limits of 200 lines per file and 30 per function, cognitive complexity up to 15, no `any`, `unknown`, type assertions or index signatures. Every module is a folder, with one file per kind of thing (`types.ts`, `constants.ts`, `schemas.ts`, `errors.ts`, `styles.ts`); the tests mirror the folders. Every code folder has an `index.ts` with only `export *`; another folder is imported through `../index.ts`, and `../../` is forbidden (the tests use `#scripts`).
 - **English everywhere in the repository** (code, docs, commits); the conversation with the user stays in Brazilian Portuguese.
+- **Quality bar and working style** (Q-H12): readable code; a mature tool instead of a re-implementation; logic covered by tests, and every change verified in practice. Before a non-trivial change, show what was understood and wait for the user's confirmation.
 
 ## Key decisions (details in OPEN-QUESTIONS.md)
 - **Spec system ≠ memory system.** The project docs live in the repository; the vaults only hold memories.
