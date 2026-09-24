@@ -1,0 +1,18 @@
+language js
+
+or {
+  `$left ?? $right` as $fallback,
+  `$left || $right` as $fallback where {
+    $right <: or {
+      JsStringLiteralExpression(),
+      JsNumberLiteralExpression(),
+      JsTemplateExpression(),
+      JsObjectExpression(),
+      JsArrayExpression(),
+      JsNewExpression(),
+      JsNullLiteralExpression()
+    }
+  }
+} where {
+  register_diagnostic(span=$fallback, message="Fallback para valor default é proibido (?? ou || que devolve valor): trate o caso com if e deixe explícito o que acontece.")
+}

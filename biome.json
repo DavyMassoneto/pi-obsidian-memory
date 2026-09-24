@@ -5,7 +5,14 @@
     "clientKind": "git",
     "useIgnoreFile": true
   },
-  "plugins": ["./biome/no-unknown.grit", "./biome/no-index-signature.grit", "./biome/no-deep-relative-import.grit"],
+  "plugins": [
+    "./biome/no-unknown.grit",
+    "./biome/no-index-signature.grit",
+    "./biome/no-deep-relative-import.grit",
+    "./biome/no-ternary.grit",
+    "./biome/no-fallback.grit",
+    "./biome/no-default-values.grit"
+  ],
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
