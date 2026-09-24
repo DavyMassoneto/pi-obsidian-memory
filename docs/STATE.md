@@ -42,7 +42,7 @@
   - segredos permitidos (configurável).
 - **Engenharia:**
   - Node ≥ 24 · vitest + CI no Windows · Biome · TypeBox para dado externo · npm + `pi install` · Windows primeiro;
-  - **Git Flow**: nada de commit direto em `main` ou `dev`.
+  - **Git Flow**: nada de commit direto em `main` ou `dev`; `feature/` só para funcionalidade do produto, `chore/` para organização, ferramentas e processo.
 
 ## Próxima ação
 1. **Usuário:** abrir o **PowerShell 7** nesta pasta, rodar `pi` e colar o prompt abaixo.
@@ -53,7 +53,7 @@
 Leia AGENTS.md, docs/STATE.md e docs/OPEN-QUESTIONS.md (comece pela seção ⚠️). A pesquisa está em docs/research/.
 Estamos na F0: todas as perguntas foram respondidas. Não reabra decisões já tomadas; se surgir dúvida nova,
 use /entrevista (uma pergunta por vez, com opções e recomendação) e registre em docs/OPEN-QUESTIONS.md.
-Siga o Git Flow do AGENTS.md: comece com `git flow feature start f0-visao-requisitos`.
+Siga o Git Flow do AGENTS.md: comece com `git flow chore start f0-visao-requisitos`.
 Proponha, nesta ordem, parando para minha aprovação a cada uma (um commit por documento aprovado):
 1. docs/00-visao.md
 2. docs/01-requisitos.md: EARS; v1/v2/fora; cada requisito com sua configuração (chave, default, validação) e seu passo
@@ -61,5 +61,5 @@ Proponha, nesta ordem, parando para minha aprovação a cada uma (um commit por 
 3. docs/02-arquitetura.md (≤ 2 páginas) + ADRs em docs/decisions/ para as decisões difíceis de reverter
 4. docs/03-roadmap.md: fases; cada fase vira uma ou mais changes do OpenSpec (e uma feature do Git Flow)
 Não escreva código. Ao final, atualize docs/STATE.md e, com a minha aprovação, rode
-`git flow feature finish f0-visao-requisitos` e `git push origin dev`.
+`git flow chore finish f0-visao-requisitos` e `git push origin dev`.
 ```
