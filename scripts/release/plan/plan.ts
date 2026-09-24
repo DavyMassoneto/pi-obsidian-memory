@@ -1,4 +1,4 @@
-import { compareVersions } from "../version/version.ts"
+import { compareVersions } from "../index.ts"
 import { STEPS } from "./constants.ts"
 import { NothingToRelease } from "./errors.ts"
 import type { PlanInput, Release, ReleasePlan, StepContext } from "./types.ts"

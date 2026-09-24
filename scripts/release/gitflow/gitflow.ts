@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 
-import { git } from "../git/git.ts"
+import { git } from "../index.ts"
 import { BRANCH_SETTING, GITFLOW_FILE } from "./constants.ts"
 import type { BranchSettings, GitFlowConfig } from "./types.ts"
 

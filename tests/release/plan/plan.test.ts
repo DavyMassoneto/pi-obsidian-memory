@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { NothingToRelease } from "../../../scripts/release/plan/errors.ts"
-import { buildPlan } from "../../../scripts/release/plan/plan.ts"
-import type { PlanInput, ReleasePlan, StepId } from "../../../scripts/release/plan/types.ts"
+import type { PlanInput, ReleasePlan, StepId } from "#scripts"
+import { buildPlan, NothingToRelease } from "#scripts"
 import { CONFIG } from "../helpers.ts"
 
 const input: PlanInput = {

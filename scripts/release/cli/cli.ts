@@ -4,22 +4,27 @@ import { stdin, stdout } from "node:process"
 import { createInterface } from "node:readline/promises"
 import { parseArgs } from "node:util"
 
-import { Locale } from "typebox/system"
-
-import { bumpedVersion, previewChangelog, writeChangelog } from "../cliff/cliff.ts"
-import { runVisible } from "../git/git.ts"
-import { readGitFlowConfig } from "../gitflow/gitflow.ts"
-import type { GitFlowConfig } from "../gitflow/types.ts"
-import { buildPlan } from "../plan/plan.ts"
-import type { ReleasePlan, Step } from "../plan/types.ts"
-import { runPreflight } from "../preflight/preflight.ts"
-import type { Bump } from "../version/types.ts"
-import { isBump, readPackageVersion, setPackageVersion } from "../version/version.ts"
+import {
+  type Bump,
+  buildPlan,
+  bumpedVersion,
+  type GitFlowConfig,
+  isBump,
+  previewChangelog,
+  type ReleasePlan,
+  readGitFlowConfig,
+  readPackageVersion,
+  runPreflight,
+  runVisible,
+  type Step,
+  setPackageVersion,
+  writeChangelog,
+} from "../index.ts"
 import { RELEASE_FILES, REMOTE, USAGE } from "./constants.ts"
 import { formatFailure } from "./recovery.ts"
 import type { ReleaseOptions } from "./types.ts"
 
-async function main(argv: readonly string[]): Promise<number> {
+export async function main(argv: readonly string[]): Promise<number> {
   const options = parseCommandLine(argv)
   if (options.help) {
     console.log(USAGE)
@@ -125,13 +130,4 @@ async function runStep(step: Step, cwd: string): Promise<void> {
     case "changelog":
       return writeChangelog(cwd, step.tag)
   }
-}
-
-Locale.Set(Locale.pt_BR)
-
-try {
-  process.exitCode = await main(process.argv.slice(2))
-} catch (error) {
-  console.error(`✖ ${error instanceof Error ? error.message : String(error)}`)
-  process.exitCode = 1
 }

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { formatFailure } from "../../../scripts/release/cli/recovery.ts"
-import { buildPlan } from "../../../scripts/release/plan/plan.ts"
+import { buildPlan, formatFailure } from "#scripts"
 import { CONFIG } from "../helpers.ts"
 
 describe("formatFailure", () => {

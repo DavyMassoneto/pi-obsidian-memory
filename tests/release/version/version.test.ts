@@ -3,13 +3,7 @@ import { join } from "node:path"
 
 import { afterEach, describe, expect, it } from "vitest"
 
-import {
-  compareVersions,
-  isBump,
-  parseVersion,
-  readPackageVersion,
-  setPackageVersion,
-} from "../../../scripts/release/version/version.ts"
+import { compareVersions, isBump, parseVersion, readPackageVersion, setPackageVersion } from "#scripts"
 import { cleanupTempDirs, tempDir } from "../helpers.ts"
 
 afterEach(cleanupTempDirs)
