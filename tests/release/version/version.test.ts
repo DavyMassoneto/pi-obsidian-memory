@@ -9,8 +9,8 @@ import {
   parseVersion,
   readPackageVersion,
   setPackageVersion,
-} from "../../scripts/release/version.ts"
-import { cleanupTempDirs, tempDir } from "./helpers.ts"
+} from "../../../scripts/release/version/version.ts"
+import { cleanupTempDirs, tempDir } from "../helpers.ts"
 
 afterEach(cleanupTempDirs)
 

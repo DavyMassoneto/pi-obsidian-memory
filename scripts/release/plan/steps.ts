@@ -1,4 +1,4 @@
-import type { Step, StepContext } from "./plan.types.ts"
+import type { Step, StepContext } from "./types.ts"
 
 export function startStep(context: StepContext): Step {
   const { config, release } = context

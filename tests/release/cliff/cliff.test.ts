@@ -3,15 +3,15 @@ import { join } from "node:path"
 
 import { afterEach, describe, expect, it } from "vitest"
 
-import { bumpedVersion, previewChangelog, writeChangelog } from "../../scripts/release/cliff.ts"
-import { cleanupTempDirs, commit, git, tag, tempDir } from "./helpers.ts"
+import { bumpedVersion, previewChangelog, writeChangelog } from "../../../scripts/release/cliff/cliff.ts"
+import { cleanupTempDirs, commit, git, REPO_ROOT, tag, tempDir } from "../helpers.ts"
 
 afterEach(cleanupTempDirs)
 
 function repoWithProjectCliffConfig(): string {
   const dir = tempDir()
   git(dir, "init", "-q", "-b", "main")
-  copyFileSync(join(import.meta.dirname, "..", "..", "cliff.toml"), join(dir, "cliff.toml"))
+  copyFileSync(join(REPO_ROOT, "cliff.toml"), join(dir, "cliff.toml"))
   return dir
 }
 

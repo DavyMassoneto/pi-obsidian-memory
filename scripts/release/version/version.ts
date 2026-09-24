@@ -1,10 +1,10 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 
-import { readJsonFile, writeJsonFile } from "./json.ts"
-import { BUMPS, RELEASE_VERSION } from "./version.constants.ts"
-import { PackageLock, PackageManifest } from "./version.schemas.ts"
-import type { Bump, Version } from "./version.types.ts"
+import { readJsonFile, writeJsonFile } from "../json/json.ts"
+import { BUMPS, RELEASE_VERSION } from "./constants.ts"
+import { PackageLock, PackageManifest } from "./schemas.ts"
+import type { Bump, Version } from "./types.ts"
 
 export function isBump(value: string): value is Bump {
   return BUMPS.some((bump) => bump === value)

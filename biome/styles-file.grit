@@ -11,10 +11,10 @@ or {
       `inverse`,
       `strikethrough`
     },
-    register_diagnostic(span=$style, message="Estilo (theme.fg, theme.bold…) fica em <módulo>.styles.ts.")
+    register_diagnostic(span=$style, message="Estilo (theme.fg, theme.bold…) fica no styles.ts do módulo.")
   },
   JsModuleSource() as $source where {
     $source <: r".(?:chalk|picocolors|kleur|colorette|ansi-colors|ansi-styles).",
-    register_diagnostic(span=$source, message="Biblioteca de cor só é importada em <módulo>.styles.ts.")
+    register_diagnostic(span=$source, message="Biblioteca de cor só é importada no styles.ts do módulo.")
   }
 }

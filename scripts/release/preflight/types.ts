@@ -1,4 +1,4 @@
-import type { GitFlowConfig } from "./gitflow.types.ts"
+import type { GitFlowConfig } from "../gitflow/types.ts"
 
 export interface PreflightContext {
   readonly cwd: string

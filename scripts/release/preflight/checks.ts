@@ -1,6 +1,6 @@
-import { git, tryGit } from "./git.ts"
-import type { Check } from "./preflight.types.ts"
-import { readPackageVersion } from "./version.ts"
+import { git, tryGit } from "../git/git.ts"
+import { readPackageVersion } from "../version/version.ts"
+import type { Check } from "./types.ts"
 
 export const gitFlowInstalled: Check = ({ cwd }) =>
   tryGit(cwd, ["flow", "version"]) === undefined

@@ -6,7 +6,7 @@ import {
   onDevelopBranch,
   versionMatchesLatestTag,
 } from "./checks.ts"
-import type { Check } from "./preflight.types.ts"
+import type { Check } from "./types.ts"
 
 export const CHECKS: readonly Check[] = [
   gitFlowInstalled,

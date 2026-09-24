@@ -3,15 +3,15 @@ import { join } from "node:path"
 
 import { afterEach, describe, expect, it } from "vitest"
 
-import { parseGitFlowConfig, readGitFlowConfig } from "../../scripts/release/gitflow.ts"
-import { CONFIG, cleanupTempDirs, tempDir } from "./helpers.ts"
+import { parseGitFlowConfig, readGitFlowConfig } from "../../../scripts/release/gitflow/gitflow.ts"
+import { CONFIG, cleanupTempDirs, REPO_ROOT, tempDir } from "../helpers.ts"
 
 afterEach(cleanupTempDirs)
 
 describe("readGitFlowConfig", () => {
   it("lê o .gitflow deste projeto", () => {
     const dir = tempDir()
-    copyFileSync(join(import.meta.dirname, "..", "..", ".gitflow"), join(dir, ".gitflow"))
+    copyFileSync(join(REPO_ROOT, ".gitflow"), join(dir, ".gitflow"))
 
     expect(readGitFlowConfig(dir)).toEqual(CONFIG)
   })

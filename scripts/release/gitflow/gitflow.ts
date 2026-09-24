@@ -1,9 +1,9 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 
-import { git } from "./git.ts"
-import { BRANCH_SETTING, GITFLOW_FILE } from "./gitflow.constants.ts"
-import type { BranchSettings, GitFlowConfig } from "./gitflow.types.ts"
+import { git } from "../git/git.ts"
+import { BRANCH_SETTING, GITFLOW_FILE } from "./constants.ts"
+import type { BranchSettings, GitFlowConfig } from "./types.ts"
 
 export function readGitFlowConfig(cwd: string): GitFlowConfig {
   const file = join(cwd, GITFLOW_FILE)

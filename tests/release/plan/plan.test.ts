@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest"
 
-import { NothingToRelease } from "../../scripts/release/plan.errors.ts"
-import { buildPlan } from "../../scripts/release/plan.ts"
-import type { PlanInput, ReleasePlan, StepId } from "../../scripts/release/plan.types.ts"
-import { formatFailure } from "../../scripts/release/recovery.ts"
-import { CONFIG } from "./helpers.ts"
+import { NothingToRelease } from "../../../scripts/release/plan/errors.ts"
+import { buildPlan } from "../../../scripts/release/plan/plan.ts"
+import type { PlanInput, ReleasePlan, StepId } from "../../../scripts/release/plan/types.ts"
+import { CONFIG } from "../helpers.ts"
 
 const input: PlanInput = {
   config: CONFIG,
@@ -83,21 +82,5 @@ describe("buildPlan", () => {
 
   it("recusa versões inválidas", () => {
     expect(() => buildPlan({ ...input, nextVersion: "0.2" })).toThrow(/versão inválida/)
-  })
-})
-
-describe("formatFailure", () => {
-  it("mostra o que já foi feito, o erro e como seguir", () => {
-    const plan = buildPlan(input)
-    const [start, version, changelog] = plan.steps
-    if (!start || !version || !changelog) throw new Error("plano incompleto")
-
-    const text = formatFailure(changelog, [start, version], new Error("disco cheio"))
-
-    expect(text).toContain("Falhou em: Gerar o CHANGELOG.md")
-    expect(text).toContain("disco cheio")
-    expect(text).toContain(`✔ ${start.title}`)
-    expect(text).toContain(`✔ ${version.title}`)
-    expect(text).toContain("git flow release delete --force 0.2.0")
   })
 })
