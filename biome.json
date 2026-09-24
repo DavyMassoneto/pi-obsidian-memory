@@ -11,7 +11,9 @@
     "./biome/no-deep-relative-import.grit",
     "./biome/no-ternary.grit",
     "./biome/no-fallback.grit",
-    "./biome/no-default-values.grit"
+    "./biome/no-default-values.grit",
+    "./biome/no-nullish-comparison.grit",
+    "./biome/no-manual-boolean.grit"
   ],
   "formatter": {
     "enabled": true,
