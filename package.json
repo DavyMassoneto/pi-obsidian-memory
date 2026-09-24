@@ -20,6 +20,9 @@
     "url": "https://github.com/DavyMassoneto/pi-obsidian-memory/issues"
   },
   "type": "module",
+  "imports": {
+    "#scripts": "./scripts/index.ts"
+  },
   "engines": {
     "node": ">=24"
   },
@@ -29,7 +32,7 @@
   "scripts": {
     "format": "biome check --write .",
     "lint": "biome check .",
-    "release": "node scripts/release/cli/cli.ts",
+    "release": "node scripts/release/run.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

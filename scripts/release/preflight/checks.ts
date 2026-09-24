@@ -1,23 +1,24 @@
-import { git, tryGit } from "../git/git.ts"
-import { readPackageVersion } from "../version/version.ts"
-import type { Check } from "./types.ts"
+import { git, readPackageVersion, tryGit } from "../index.ts"
+import type { Check, PreflightContext, Problem } from "./types.ts"
 
-export const gitFlowInstalled: Check = ({ cwd }) =>
-  tryGit(cwd, ["flow", "version"]) === undefined
+export function gitFlowInstalled({ cwd }: PreflightContext): Problem | undefined {
+  return tryGit(cwd, ["flow", "version"]) === undefined
     ? "git-flow não encontrado: instale o git-flow-next (winget install GitTower.GitFlowNext)"
     : undefined
+}
 
-export const onDevelopBranch: Check = ({ cwd, config }) => {
+export function onDevelopBranch({ cwd, config }: PreflightContext): Problem | undefined {
   const current = git(cwd, ["branch", "--show-current"])
   return current === config.develop
     ? undefined
     : `rode o release a partir da ${config.develop} (branch atual: ${current || "HEAD destacado"})`
 }
 
-export const cleanWorkingTree: Check = ({ cwd }) =>
-  git(cwd, ["status", "--porcelain"]) === "" ? undefined : "há mudanças não commitadas"
+export function cleanWorkingTree({ cwd }: PreflightContext): Problem | undefined {
+  return git(cwd, ["status", "--porcelain"]) === "" ? undefined : "há mudanças não commitadas"
+}
 
-export const noOpenRelease: Check = ({ cwd, config }) => {
+export function noOpenRelease({ cwd, config }: PreflightContext): Problem | undefined {
   const open = git(cwd, ["branch", "--list", `${config.releasePrefix}*`, "--format=%(refname:short)"])
   return open === ""
     ? undefined
@@ -39,7 +40,7 @@ export function inSyncWithRemote(which: "main" | "develop"): Check {
   }
 }
 
-export const versionMatchesLatestTag: Check = ({ cwd, config }) => {
+export function versionMatchesLatestTag({ cwd, config }: PreflightContext): Problem | undefined {
   const tag = tryGit(cwd, ["describe", "--tags", "--abbrev=0", "--match", `${config.tagPrefix}[0-9]*`])
   if (tag === undefined) return undefined
   const version = readPackageVersion(cwd)

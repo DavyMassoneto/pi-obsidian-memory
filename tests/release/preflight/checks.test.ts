@@ -3,14 +3,8 @@ import { join } from "node:path"
 
 import { afterEach, describe, expect, it } from "vitest"
 
-import {
-  cleanWorkingTree,
-  inSyncWithRemote,
-  noOpenRelease,
-  onDevelopBranch,
-  versionMatchesLatestTag,
-} from "../../../scripts/release/preflight/checks.ts"
-import type { PreflightContext } from "../../../scripts/release/preflight/types.ts"
+import type { PreflightContext } from "#scripts"
+import { cleanWorkingTree, inSyncWithRemote, noOpenRelease, onDevelopBranch, versionMatchesLatestTag } from "#scripts"
 import { CONFIG, cleanupTempDirs, commit, git, repoOnDevWithRemote, tag, tempDir } from "../helpers.ts"
 
 afterEach(cleanupTempDirs)

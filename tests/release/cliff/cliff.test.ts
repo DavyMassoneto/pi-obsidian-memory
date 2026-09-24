@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { afterEach, describe, expect, it } from "vitest"
 
-import { bumpedVersion, previewChangelog, writeChangelog } from "../../../scripts/release/cliff/cliff.ts"
+import { bumpedVersion, previewChangelog, writeChangelog } from "#scripts"
 import { cleanupTempDirs, commit, git, REPO_ROOT, tag, tempDir } from "../helpers.ts"
 
 afterEach(cleanupTempDirs)

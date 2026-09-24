@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { afterEach, describe, expect, it } from "vitest"
 
-import { parseGitFlowConfig, readGitFlowConfig } from "../../../scripts/release/gitflow/gitflow.ts"
+import { parseGitFlowConfig, readGitFlowConfig } from "#scripts"
 import { CONFIG, cleanupTempDirs, REPO_ROOT, tempDir } from "../helpers.ts"
 
 afterEach(cleanupTempDirs)

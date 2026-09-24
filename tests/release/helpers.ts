@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
-import type { GitFlowConfig } from "../../scripts/release/gitflow/types.ts"
+import type { GitFlowConfig } from "#scripts"
 
 export const CONFIG: GitFlowConfig = { main: "main", develop: "dev", releasePrefix: "release/", tagPrefix: "v" }
 
