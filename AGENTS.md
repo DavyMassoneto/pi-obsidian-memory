@@ -66,6 +66,15 @@ Todo módulo é uma pasta (ex.: `scripts/release/plan/`), com a lógica (`plan.t
 - classe de erro (que estende `Error`) → `errors.ts`;
 - estilo (`theme.fg`, `theme.bold`… do pi e bibliotecas de cor como `chalk`) → `styles.ts`.
 
+Toda pasta de código tem um `index.ts` (barrel) que só faz `export *` dos arquivos da pasta e dos `index.ts` das subpastas. Os imports seguem o barrel:
+- da mesma pasta: o arquivo direto (`./constants.ts`), nunca o próprio `./index.ts`;
+- de outra pasta: sempre o barrel mais alto ao alcance, `../index.ts`;
+- `../../` é proibido em qualquer arquivo. Os testes importam o código pelo alias `#scripts` (campo `imports` do `package.json`, aponta para `scripts/index.ts`) e os helpers por `../helpers.ts`;
+- função no topo do módulo é declarada com `function`, nunca como arrow function: os barrels criam import circular, e só a declaração com `function` já existe quando o módulo começa a rodar;
+- o único arquivo que executa algo ao ser carregado é a entrada `scripts/release/run.ts` (o `npm run release`), e nenhum barrel o reexporta.
+
+O Biome barra `../../`, import fora do barrel, `index.ts` com qualquer coisa além de `export *` e arrow function no topo. Ele não vê se o `index.ts` existe: quem confere é o `tests/barrels.test.ts`, que falha se uma pasta de código não tiver `index.ts` ou se o index não reexportar tudo da pasta.
+
 Valem também, mesmo sem o Biome pegar:
 - Dado externo (JSON, configuração) passa por um schema do TypeBox (`typebox`, o mesmo do pi), nunca por cast.
 - Comentário só quando explica um porquê que o código não mostra. JSDoc que repete o nome é proibido: prefira nomes descritivos.
