@@ -23,7 +23,7 @@
   - a tag `v*` na `main` dispara o `.github/workflows/release.yml`, que publica via Trusted Publishing e cria a GitHub Release. Só esse workflow pode publicar;
   - detalhes no [ADR 0001](decisions/0001-versionamento-automatico-e-publicacao-npm.md).
 - **CI** (`.github/workflows/ci.yml`, Windows): roda a cada push nas branches do Git Flow e em cada PR (Biome, tipos, testes e OpenSpec).
-- **Biome** para lint, formatação e imports (`npm run lint` / `npm run format`), com as regras de código do `AGENTS.md`: sem `;`, limites de 200 linhas por arquivo e 30 por função, sem `any`, `unknown`, type assertion nem index signature. Todo módulo é uma pasta, com um arquivo por tipo de coisa (`types.ts`, `constants.ts`, `schemas.ts`, `errors.ts`, `styles.ts`); os testes espelham as pastas.
+- **Biome** para lint, formatação e imports (`npm run lint` / `npm run format`), com as regras de código do `AGENTS.md`: sem `;`, limites de 200 linhas por arquivo e 30 por função, sem `any`, `unknown`, type assertion nem index signature. Todo módulo é uma pasta, com um arquivo por tipo de coisa (`types.ts`, `constants.ts`, `schemas.ts`, `errors.ts`, `styles.ts`); os testes espelham as pastas. Toda pasta de código tem um `index.ts` só com `export *`; de outra pasta, importa-se pelo `../index.ts`, e `../../` é proibido (os testes usam `#scripts`).
 
 ## Decisões-chave (detalhes em OPEN-QUESTIONS.md)
 - **Sistema de spec ≠ sistema de memória.** Os docs do projeto ficam no repositório; os vaults guardam só memórias.
