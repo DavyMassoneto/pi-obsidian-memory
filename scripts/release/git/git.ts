@@ -9,7 +9,8 @@ export function git(cwd: string, args: readonly string[]): string {
 
 export function tryGit(cwd: string, args: readonly string[]): string | undefined {
   const { status, stdout } = runGit(cwd, args)
-  return status === 0 ? stdout.trim() : undefined
+  if (status !== 0) return undefined
+  return stdout.trim()
 }
 
 export function runVisible(cwd: string, command: string, args: readonly string[]): void {
@@ -25,5 +26,6 @@ function runGit(cwd: string, args: readonly string[]): SpawnSyncReturns<string> 
 
 function commandFailed(command: string, args: readonly string[], detail: string): Error {
   const line = [command, ...args].join(" ")
-  return new Error(detail ? `${line} falhou: ${detail}` : `${line} falhou`)
+  if (detail === "") return new Error(`${line} falhou`)
+  return new Error(`${line} falhou: ${detail}`)
 }

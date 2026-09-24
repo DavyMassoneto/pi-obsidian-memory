@@ -13,7 +13,7 @@ const contextOf = (cwd: string): PreflightContext => ({ cwd, config: CONFIG, rem
 
 describe("runPreflight", () => {
   it("reúne todos os problemas encontrados", () => {
-    const repo = repoOnDevWithRemote()
+    const repo = repoOnDevWithRemote("0.1.0")
     git(repo, "checkout", "-q", "main")
     writeFileSync(join(repo, "rascunho.txt"), "x")
 
@@ -21,7 +21,7 @@ describe("runPreflight", () => {
   })
 
   it("devolve lista vazia quando está tudo certo", () => {
-    const repo = repoOnDevWithRemote()
+    const repo = repoOnDevWithRemote("0.1.0")
     const checks = [
       onDevelopBranch,
       cleanWorkingTree,

@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { afterEach, describe, expect, it } from "vitest"
 
-import { bumpedVersion, previewChangelog, writeChangelog } from "#scripts"
+import { calculatedVersion, forcedVersion, previewChangelog, writeChangelog } from "#scripts"
 import { cleanupTempDirs, commit, git, REPO_ROOT, tag, tempDir } from "../helpers.ts"
 
 afterEach(cleanupTempDirs)
@@ -23,12 +23,12 @@ function repoAt(version: string, ...messages: string[]): string {
   return dir
 }
 
-describe("bumpedVersion", () => {
+describe("calculatedVersion", () => {
   it("sem nenhuma tag, usa a versão inicial 0.0.1", async () => {
     const dir = repoWithProjectCliffConfig()
     commit(dir, "docs: início")
 
-    expect(await bumpedVersion(dir, "auto", "v")).toBe("0.0.1")
+    expect(await calculatedVersion(dir, "v")).toBe("0.0.1")
   })
 
   it.each([
@@ -38,15 +38,21 @@ describe("bumpedVersion", () => {
     ["feat!: quebra (em 0.x sobe o minor)", "0.2.0"],
     ["docs: só documentação", "0.1.0"],
   ])("depois de v0.1.0, %j → %s", async (message, expected) => {
-    expect(await bumpedVersion(repoAt("0.1.0", message), "auto", "v")).toBe(expected)
+    expect(await calculatedVersion(repoAt("0.1.0", message), "v")).toBe(expected)
   })
 
   it("a partir de 1.0, quebra sobe o major", async () => {
-    expect(await bumpedVersion(repoAt("1.2.3", "feat!: nova API"), "auto", "v")).toBe("2.0.0")
+    expect(await calculatedVersion(repoAt("1.2.3", "feat!: nova API"), "v")).toBe("2.0.0")
   })
 
-  it("--bump força o incremento", async () => {
-    expect(await bumpedVersion(repoAt("0.1.0", "docs: só documentação"), "patch", "v")).toBe("0.1.1")
+  it("recusa versão sem o prefixo de tag esperado", async () => {
+    await expect(calculatedVersion(repoAt("0.1.0", "fix: corrige"), "release-")).rejects.toThrow(/sem o prefixo/)
+  })
+})
+
+describe("forcedVersion", () => {
+  it("força o incremento pedido", async () => {
+    expect(await forcedVersion(repoAt("0.1.0", "docs: só documentação"), "v", "patch")).toBe("0.1.1")
   })
 })
 

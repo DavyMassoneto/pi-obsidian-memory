@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { afterEach, describe, expect, it } from "vitest"
 
-import { compareVersions, isBump, parseVersion, readPackageVersion, setPackageVersion } from "#scripts"
+import { isBump, isNewerVersion, parseVersion, readPackageVersion, setPackageVersion } from "#scripts"
 import { cleanupTempDirs, tempDir } from "../helpers.ts"
 
 afterEach(cleanupTempDirs)
@@ -23,17 +23,26 @@ describe("parseVersion", () => {
   })
 })
 
-describe("compareVersions", () => {
+describe("isNewerVersion", () => {
   it("compara numericamente, não como texto", () => {
-    expect(compareVersions("0.10.0", "0.9.9")).toBeGreaterThan(0)
-    expect(compareVersions("1.0.0", "1.0.1")).toBeLessThan(0)
-    expect(compareVersions("2.3.4", "2.3.4")).toBe(0)
+    expect(isNewerVersion("0.10.0", "0.9.9")).toBe(true)
+    expect(isNewerVersion("1.0.0", "1.0.1")).toBe(false)
+  })
+
+  it("decide pela parte mais significativa que muda", () => {
+    expect(isNewerVersion("2.0.0", "1.9.9")).toBe(true)
+    expect(isNewerVersion("1.2.0", "1.1.9")).toBe(true)
+  })
+
+  it("versão igual não é mais nova", () => {
+    expect(isNewerVersion("2.3.4", "2.3.4")).toBe(false)
   })
 })
 
 describe("isBump", () => {
   it("aceita só os incrementos conhecidos", () => {
-    expect(["auto", "patch", "minor", "major"].every(isBump)).toBe(true)
+    expect(["patch", "minor", "major"].every(isBump)).toBe(true)
+    expect(isBump("auto")).toBe(false)
     expect(isBump("prerelease")).toBe(false)
   })
 })
@@ -53,27 +62,30 @@ describe("setPackageVersion", () => {
   it("preserva finais de linha CRLF", () => {
     const dir = tempDir()
     writeFileSync(join(dir, "package.json"), pkg("0.0.0").replaceAll("\n", "\r\n"))
+    writeFileSync(join(dir, "package-lock.json"), lock("0.0.0").replaceAll("\n", "\r\n"))
 
     setPackageVersion(dir, "0.0.1")
 
     expect(readFileSync(join(dir, "package.json"), "utf8")).toBe(pkg("0.0.1").replaceAll("\n", "\r\n"))
+    expect(readFileSync(join(dir, "package-lock.json"), "utf8")).toBe(lock("0.0.1").replaceAll("\n", "\r\n"))
   })
 
-  it("funciona sem package-lock.json", () => {
+  it("exige o package-lock.json, sem alterar o package.json", () => {
     const dir = tempDir()
     writeFileSync(join(dir, "package.json"), pkg("0.0.0"))
 
-    setPackageVersion(dir, "1.0.0")
-
-    expect(readPackageVersion(dir)).toBe("1.0.0")
+    expect(() => setPackageVersion(dir, "1.0.0")).toThrow(/package-lock\.json/)
+    expect(readFileSync(join(dir, "package.json"), "utf8")).toBe(pkg("0.0.0"))
   })
 
   it("recusa versão inválida sem alterar nada", () => {
     const dir = tempDir()
     writeFileSync(join(dir, "package.json"), pkg("0.0.0"))
+    writeFileSync(join(dir, "package-lock.json"), lock("0.0.0"))
 
     expect(() => setPackageVersion(dir, "1.0")).toThrow(/versão inválida/)
     expect(readFileSync(join(dir, "package.json"), "utf8")).toBe(pkg("0.0.0"))
+    expect(readFileSync(join(dir, "package-lock.json"), "utf8")).toBe(lock("0.0.0"))
   })
 
   it("recusa package-lock.json sem a versão do pacote raiz", () => {

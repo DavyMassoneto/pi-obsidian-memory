@@ -32,10 +32,11 @@ describe("parseGitFlowConfig", () => {
         "gitflow.branch.integration.parent=trunk",
         "gitflow.branch.release.type=topic",
         "gitflow.branch.release.prefix=rel/",
+        "gitflow.branch.release.tagprefix=r",
       ]),
     )
 
-    expect(config).toEqual({ main: "trunk", develop: "integration", releasePrefix: "rel/", tagPrefix: "" })
+    expect(config).toEqual({ main: "trunk", develop: "integration", releasePrefix: "rel/", tagPrefix: "r" })
   })
 
   it("aceita finais de linha CRLF", () => {
@@ -58,5 +59,18 @@ describe("parseGitFlowConfig", () => {
         listing(["gitflow.branch.main.type=base", "gitflow.branch.dev.type=base", "gitflow.branch.dev.parent=main"]),
       ),
     ).toThrow(/prefixo das branches de release/)
+  })
+
+  it("recusa configuração sem prefixo de tag", () => {
+    expect(() =>
+      parseGitFlowConfig(
+        listing([
+          "gitflow.branch.main.type=base",
+          "gitflow.branch.dev.type=base",
+          "gitflow.branch.dev.parent=main",
+          "gitflow.branch.release.prefix=release/",
+        ]),
+      ),
+    ).toThrow(/prefixo das tags de versão/)
   })
 })
