@@ -1,0 +1,14 @@
+language js
+
+JsVariableDeclarator(id=$name, initializer=JsInitializerClause(expression=$value)) as $declarator where {
+  $value <: or {
+    JsArrowFunctionExpression(),
+    JsFunctionExpression()
+  },
+  $declarator <: not within or {
+    JsFunctionBody(),
+    JsBlockStatement(),
+    JsStaticInitializationBlockClassMember()
+  } ,
+  register_diagnostic(span=$name, message="Top-level functions use function name() {}: barrels create circular imports, and only function declarations already exist when the module starts running.")
+}

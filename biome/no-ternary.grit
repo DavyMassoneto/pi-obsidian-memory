@@ -1,0 +1,5 @@
+language js
+
+JsConditionalExpression() as $ternary where {
+  register_diagnostic(span=$ternary, message="Ternaries are forbidden: use if with explicit returns.")
+}

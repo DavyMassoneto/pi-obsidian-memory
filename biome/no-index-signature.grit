@@ -1,0 +1,21 @@
+language js
+
+pattern open_key() {
+  contains or {
+    TsStringType(),
+    TsNumberType(),
+    TsSymbolType(),
+    TsReferenceType(name=`PropertyKey`)
+  }
+}
+
+or {
+  TsIndexSignatureTypeMember(),
+  TsIndexSignatureClassMember(),
+  TsReferenceType(name=`Record`, type_arguments=TsTypeArguments(ts_type_argument_list=[$key, $_])) where {
+    $key <: open_key()
+  },
+  TsMappedType(keys_type=$keys) where { $keys <: open_key() }
+} as $signature where {
+  register_diagnostic(span=$signature, message="Index signatures are forbidden, including Record<string, T> and { [K in string]: T }: use known keys, a Map or a TypeBox schema.")
+}

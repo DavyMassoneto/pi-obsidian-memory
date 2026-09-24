@@ -1,0 +1,14 @@
+language js
+
+or {
+  `$value === true`,
+  `$value === false`,
+  `$value !== true`,
+  `$value !== false`,
+  `true === $value`,
+  `false === $value`,
+  `!!$value`,
+  `Boolean($value)`
+} as $conversion where {
+  register_diagnostic(span=$conversion, message="Manual boolean conversion is forbidden (=== true, !!x, Boolean(x)): the value must arrive as a boolean, validated at the boundary.")
+}

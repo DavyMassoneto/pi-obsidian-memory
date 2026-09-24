@@ -1,0 +1,11 @@
+language js
+
+JsModuleSource() as $source where {
+  $source <: or {
+    r".\.\./[^.].*",
+    r".\./index\.ts.",
+    r".\./[^/]+/.*"
+  },
+  $source <: not r".\.\./index\.ts.",
+  register_diagnostic(span=$source, message="Imports from another folder come from the highest barrel in reach (../index.ts); from the same folder, import the file directly (./file.ts), never ./index.ts.")
+}
