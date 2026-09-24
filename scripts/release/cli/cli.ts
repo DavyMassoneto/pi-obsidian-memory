@@ -43,7 +43,7 @@ export function readOptions(argv: readonly string[]): CliOptions {
     },
     strict: true,
   })
-  return parseValue(CliOptionsSchema, values, "opções da linha de comando (veja --help)")
+  return parseValue(CliOptionsSchema, values, "command-line options (see --help)")
 }
 
 async function release(cwd: string, options: CliOptions): Promise<number> {
@@ -52,11 +52,11 @@ async function release(cwd: string, options: CliOptions): Promise<number> {
   const plan = await planRelease(cwd, config, options.bump)
   await printPlan(cwd, plan)
   if (options["dry-run"]) {
-    console.log("--dry-run: nada foi alterado.")
+    console.log("--dry-run: nothing was changed.")
     return 0
   }
-  if (!options.yes && !(await confirm(`Lançar ${plan.tag}? [s/N] `))) {
-    console.log("Cancelado. Nada foi alterado.")
+  if (!options.yes && !(await confirm(`Release ${plan.tag}? [y/N] `))) {
+    console.log("Cancelled. Nothing was changed.")
     return 1
   }
   return execute(plan, cwd)
@@ -65,7 +65,7 @@ async function release(cwd: string, options: CliOptions): Promise<number> {
 function passesPreflight(cwd: string, config: GitFlowConfig): boolean {
   const problems = runPreflight({ cwd, config, remote: REMOTE }, CHECKS)
   if (problems.length === 0) return true
-  console.error(["✖ O release não pode começar:", ...problems.map((problem) => `  - ${problem}`)].join("\n"))
+  console.error(["✖ The release cannot start:", ...problems.map((problem) => `  - ${problem}`)].join("\n"))
   return false
 }
 
@@ -87,12 +87,12 @@ async function printPlan(cwd: string, plan: ReleasePlan): Promise<void> {
 
 async function confirm(question: string): Promise<boolean> {
   if (!stdin.isTTY) {
-    console.error("Sem terminal interativo para confirmar: rode de novo com --yes.")
+    console.error("No interactive terminal to confirm: run again with --yes.")
     return false
   }
   const readline = createInterface({ input: stdin, output: stdout })
   try {
-    return /^s(im)?$/i.test((await readline.question(question)).trim())
+    return /^y(es)?$/i.test((await readline.question(question)).trim())
   } finally {
     readline.close()
   }
@@ -111,7 +111,7 @@ async function execute(plan: ReleasePlan, cwd: string): Promise<number> {
     }
     done.push(step)
   }
-  console.log(`\n✔ ${plan.tag} lançado. O workflow "release" do GitHub Actions publica no npm.`)
+  console.log(`\n✔ ${plan.tag} released. The GitHub Actions "release" workflow publishes it to npm.`)
   return 0
 }
 

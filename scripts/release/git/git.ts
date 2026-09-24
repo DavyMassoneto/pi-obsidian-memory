@@ -19,7 +19,7 @@ export function runVisible(cwd: string, command: string, args: readonly string[]
   const env = { ...process.env, GIT_MERGE_AUTOEDIT: "no" }
   const { error, status } = spawnSync(command, args, { cwd, env, stdio: "inherit" })
   if (error instanceof Error) throw commandFailed(command, args, error.message)
-  if (status !== 0) throw commandFailed(command, args, `saiu com código ${status}`)
+  if (status !== 0) throw commandFailed(command, args, `exited with code ${status}`)
 }
 
 function runGit(cwd: string, args: readonly string[]): SpawnSyncReturns<string> {
@@ -28,6 +28,6 @@ function runGit(cwd: string, args: readonly string[]): SpawnSyncReturns<string> 
 
 function commandFailed(command: string, args: readonly string[], detail: string): Error {
   const line = [command, ...args].join(" ")
-  if (detail === "") return new Error(`${line} falhou`)
-  return new Error(`${line} falhou: ${detail}`)
+  if (detail === "") return new Error(`${line} failed`)
+  return new Error(`${line} failed: ${detail}`)
 }

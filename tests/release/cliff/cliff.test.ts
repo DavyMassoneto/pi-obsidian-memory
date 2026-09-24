@@ -24,59 +24,61 @@ function repoAt(version: string, ...messages: string[]): string {
 }
 
 describe("bumpedVersion", () => {
-  it("sem nenhuma tag, usa a versão inicial 0.0.1", async () => {
+  it("uses the initial version 0.0.1 when there is no tag", async () => {
     const dir = repoWithProjectCliffConfig()
-    commit(dir, "docs: início")
+    commit(dir, "docs: first commit")
 
     expect(await bumpedVersion(dir, "v", "auto")).toBe("0.0.1")
   })
 
   it.each([
-    ["fix: corrige", "0.1.1"],
-    ["perf: acelera", "0.1.1"],
-    ["feat: novidade", "0.2.0"],
-    ["feat!: quebra (em 0.x sobe o minor)", "0.2.0"],
-    ["docs: só documentação", "0.1.0"],
-  ])("depois de v0.1.0, %j → %s", async (message, expected) => {
+    ["fix: fixes a bug", "0.1.1"],
+    ["perf: speeds up", "0.1.1"],
+    ["feat: adds a feature", "0.2.0"],
+    ["feat!: breaks the API (in 0.x it bumps the minor)", "0.2.0"],
+    ["docs: only documentation", "0.1.0"],
+  ])("after v0.1.0, %j → %s", async (message, expected) => {
     expect(await bumpedVersion(repoAt("0.1.0", message), "v", "auto")).toBe(expected)
   })
 
-  it("a partir de 1.0, quebra sobe o major", async () => {
-    expect(await bumpedVersion(repoAt("1.2.3", "feat!: nova API"), "v", "auto")).toBe("2.0.0")
+  it("from 1.0 on, a breaking change bumps the major", async () => {
+    expect(await bumpedVersion(repoAt("1.2.3", "feat!: new API"), "v", "auto")).toBe("2.0.0")
   })
 
-  it("força o incremento pedido", async () => {
-    expect(await bumpedVersion(repoAt("0.1.0", "docs: só documentação"), "v", "patch")).toBe("0.1.1")
+  it("forces the requested bump", async () => {
+    expect(await bumpedVersion(repoAt("0.1.0", "docs: only documentation"), "v", "patch")).toBe("0.1.1")
   })
 
-  it("recusa versão sem o prefixo de tag esperado", async () => {
-    await expect(bumpedVersion(repoAt("0.1.0", "fix: corrige"), "release-", "auto")).rejects.toThrow(/sem o prefixo/)
+  it("rejects a version without the expected tag prefix", async () => {
+    await expect(bumpedVersion(repoAt("0.1.0", "fix: fixes a bug"), "release-", "auto")).rejects.toThrow(
+      /without the tag prefix/,
+    )
   })
 })
 
 describe("changelog", () => {
-  it("agrupa por tipo, formata escopos e ignora commits de release", async () => {
+  it("groups by type, formats scopes and skips release commits", async () => {
     const dir = repoAt(
       "0.1.0",
-      "feat(busca): busca semântica",
-      "fix: corrige acentuação",
+      "feat(search): semantic search",
+      "fix: handles accents",
       "chore(release): v0.1.1",
-      "docs: guia de instalação",
+      "docs: installation guide",
     )
 
     const preview = await previewChangelog(dir, "v0.2.0")
 
     expect(preview).toMatch(/^## \[0\.2\.0\] - \d{4}-\d{2}-\d{2}/)
-    expect(preview).toContain("### Novidades")
-    expect(preview).toContain("**busca:** Busca semântica")
-    expect(preview).toContain("### Correções")
-    expect(preview).toContain("### Manutenção")
+    expect(preview).toContain("### Features")
+    expect(preview).toContain("**search:** Semantic search")
+    expect(preview).toContain("### Bug Fixes")
+    expect(preview).toContain("### Maintenance")
     expect(preview).not.toContain("chore(release)")
     expect(preview).not.toContain("# Changelog")
   })
 
-  it("regenera o CHANGELOG.md com o cabeçalho", async () => {
-    const dir = repoAt("0.1.0", "feat: novidade")
+  it("regenerates CHANGELOG.md with the header", async () => {
+    const dir = repoAt("0.1.0", "feat: adds a feature")
 
     await writeChangelog(dir, "v0.2.0")
 
@@ -86,7 +88,7 @@ describe("changelog", () => {
     expect(text).toContain("## [0.1.0]")
   })
 
-  it("explica a falha do git-cliff", async () => {
-    await expect(previewChangelog(tempDir(), "v0.2.0")).rejects.toThrow(/git-cliff falhou: .+/)
+  it("explains a git-cliff failure", async () => {
+    await expect(previewChangelog(tempDir(), "v0.2.0")).rejects.toThrow(/git-cliff failed: .+/)
   })
 })

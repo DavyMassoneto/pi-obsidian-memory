@@ -2,9 +2,9 @@ export const REMOTE = "origin"
 
 export const RELEASE_FILES = ["package.json", "package-lock.json", "CHANGELOG.md"]
 
-export const USAGE = `Uso: npm run release -- [opções]
+export const USAGE = `Usage: npm run release -- [options]
 
-  --dry-run          mostra o plano e o changelog sem alterar nada
-  --bump <tipo>      auto | patch | minor | major (auto, se omitido: a versão sai dos commits)
-  -y, --yes          não pede confirmação (só com autorização explícita)
-  -h, --help         mostra esta ajuda`
+  --dry-run          show the plan and the changelog without changing anything
+  --bump <type>      auto | patch | minor | major (auto when omitted: the version comes from the commits)
+  -y, --yes          do not ask for confirmation (only with explicit authorization)
+  -h, --help         show this help`

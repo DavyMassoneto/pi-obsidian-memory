@@ -12,15 +12,15 @@ afterEach(cleanupTempDirs)
 const contextOf = (cwd: string): PreflightContext => ({ cwd, config: CONFIG, remote: "origin" })
 
 describe("runPreflight", () => {
-  it("reúne todos os problemas encontrados", () => {
+  it("collects every problem found", () => {
     const repo = repoOnDevWithRemote("0.1.0")
     git(repo, "checkout", "-q", "main")
-    writeFileSync(join(repo, "rascunho.txt"), "x")
+    writeFileSync(join(repo, "draft.txt"), "x")
 
     expect(runPreflight(contextOf(repo), [onDevelopBranch, cleanWorkingTree, noOpenRelease])).toHaveLength(2)
   })
 
-  it("devolve lista vazia quando está tudo certo", () => {
+  it("returns an empty list when everything is fine", () => {
     const repo = repoOnDevWithRemote("0.1.0")
     const checks = [
       onDevelopBranch,

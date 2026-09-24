@@ -8,19 +8,23 @@ import type { BranchSetting, GitFlowConfig } from "./types.ts"
 
 export function readGitFlowConfig(cwd: string): GitFlowConfig {
   const file = join(cwd, GITFLOW_FILE)
-  if (!existsSync(file)) throw new Error(`${GITFLOW_FILE} não encontrado em ${cwd}: rode "git flow init --shared"`)
+  if (!existsSync(file)) throw new Error(`${GITFLOW_FILE} not found in ${cwd}: run "git flow init --shared"`)
   return parseGitFlowConfig(git(cwd, ["config", "--file", file, "--list"]))
 }
 
 export function parseGitFlowConfig(listing: string): GitFlowConfig {
   const settings = listing.split(/\r?\n/).flatMap(parseBranchSetting)
-  const main = findBranch(settings, "base sem pai (a de produção)", (branch) => {
+  const main = findBranch(settings, "base branch without a parent (production)", (branch) => {
     return isBase(settings, branch) && !hasSetting(settings, branch, "parent")
   })
-  const develop = findBranch(settings, `base filha de ${main} (a de integração)`, (branch) => {
+  const develop = findBranch(settings, `base branch whose parent is ${main} (integration)`, (branch) => {
     return isBase(settings, branch) && hasSettingValue(settings, branch, "parent", main)
   })
-  const release = parseValue(ReleaseBranchSchema, settingsOf(settings, "release"), `${GITFLOW_FILE}, branch release`)
+  const release = parseValue(
+    ReleaseBranchSchema,
+    settingsOf(settings, "release"),
+    `${GITFLOW_FILE} release branch settings`,
+  )
   return { main, develop, releasePrefix: release.prefix, tagPrefix: release.tagprefix }
 }
 
@@ -38,7 +42,7 @@ function findBranch(
   for (const branch of new Set(settings.map((setting) => setting.branch))) {
     if (matches(branch)) return branch
   }
-  throw new Error(`${GITFLOW_FILE}: nenhuma branch ${description}`)
+  throw new Error(`${GITFLOW_FILE}: found no ${description}`)
 }
 
 function isBase(settings: readonly BranchSetting[], branch: string): boolean {

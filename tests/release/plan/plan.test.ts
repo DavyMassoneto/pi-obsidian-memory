@@ -17,7 +17,7 @@ function stepOf(plan: ReleasePlan, id: StepId): Step | undefined {
 }
 
 describe("buildPlan", () => {
-  it("segue a ordem do Git Flow", () => {
+  it("follows the Git Flow order", () => {
     expect(buildPlan(input).steps.map((step) => step.id)).toEqual([
       "start",
       "version",
@@ -29,11 +29,11 @@ describe("buildPlan", () => {
     ])
   })
 
-  it("termina na branch de integração, não na de produção", () => {
+  it("ends on the integration branch, not on the production one", () => {
     expect(stepOf(buildPlan(input), "checkout")).toMatchObject({ kind: "run", args: ["checkout", "dev"] })
   })
 
-  it("usa os prefixos do .gitflow na branch e na tag", () => {
+  it("uses the .gitflow prefixes for the branch and the tag", () => {
     const plan = buildPlan(input)
 
     expect(plan.branch).toBe("release/0.2.0")
@@ -41,36 +41,39 @@ describe("buildPlan", () => {
     expect(stepOf(plan, "start")).toMatchObject({ kind: "run", args: ["flow", "release", "start", "0.2.0"] })
   })
 
-  it("commita só os arquivos do release", () => {
+  it("commits only the release files", () => {
     expect(stepOf(buildPlan(input), "commit")).toMatchObject({
       kind: "run",
       args: ["commit", "-m", "chore(release): v0.2.0", "--", "package.json", "package-lock.json", "CHANGELOG.md"],
     })
   })
 
-  it("fecha com a mensagem da tag e sem push automático", () => {
+  it("finishes with the tag message and without pushing", () => {
     expect(stepOf(buildPlan(input), "finish")).toMatchObject({
       kind: "run",
       args: ["flow", "release", "finish", "0.2.0", "--message", "v0.2.0", "--no-push"],
     })
   })
 
-  it("envia main, dev e a tag de forma atômica", () => {
+  it("pushes main, dev and the tag atomically", () => {
     expect(stepOf(buildPlan(input), "push")).toMatchObject({
       kind: "run",
       args: ["push", "--atomic", "origin", "main", "dev", "v0.2.0"],
     })
   })
 
-  it("dá uma instrução de recuperação para cada passo", () => {
+  it("gives recovery instructions for every step", () => {
     for (const step of buildPlan(input).steps) expect(step.recovery.length).toBeGreaterThan(20)
   })
 
-  it.each(["0.1.0", "0.0.9"])("recusa quando a próxima versão (%s) não é maior que a atual", (nextVersion) => {
-    expect(() => buildPlan({ ...input, nextVersion })).toThrow(NothingToRelease)
-  })
+  it.each(["0.1.0", "0.0.9"])(
+    "refuses when the next version (%s) is not greater than the current one",
+    (nextVersion) => {
+      expect(() => buildPlan({ ...input, nextVersion })).toThrow(NothingToRelease)
+    },
+  )
 
-  it("recusa versões inválidas", () => {
-    expect(() => buildPlan({ ...input, nextVersion: "0.2" })).toThrow(/versão inválida/)
+  it("rejects invalid versions", () => {
+    expect(() => buildPlan({ ...input, nextVersion: "0.2" })).toThrow(/invalid version/)
   })
 })

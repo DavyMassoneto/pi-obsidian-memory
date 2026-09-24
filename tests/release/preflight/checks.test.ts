@@ -12,34 +12,34 @@ afterEach(cleanupTempDirs)
 const contextOf = (cwd: string): PreflightContext => ({ cwd, config: CONFIG, remote: "origin" })
 
 describe("onDevelopBranch", () => {
-  it("passa na dev e barra em outra branch", () => {
+  it("passes on dev and blocks on another branch", () => {
     const repo = repoOnDevWithRemote("0.1.0")
     expect(onDevelopBranch(contextOf(repo))).toEqual([])
 
     git(repo, "checkout", "-q", "main")
-    expect(onDevelopBranch(contextOf(repo))).toEqual([expect.stringMatching(/a partir da dev \(branch atual: main\)/)])
+    expect(onDevelopBranch(contextOf(repo))).toEqual([expect.stringMatching(/from dev \(current branch: main\)/)])
   })
 
-  it("explica quando o HEAD está destacado", () => {
+  it("explains a detached HEAD", () => {
     const repo = repoOnDevWithRemote("0.1.0")
     git(repo, "checkout", "-q", "--detach")
 
-    expect(onDevelopBranch(contextOf(repo))).toEqual([expect.stringMatching(/a partir da dev \(HEAD destacado\)/)])
+    expect(onDevelopBranch(contextOf(repo))).toEqual([expect.stringMatching(/from dev \(detached HEAD\)/)])
   })
 })
 
 describe("cleanWorkingTree", () => {
-  it("barra arquivos não commitados", () => {
+  it("blocks uncommitted files", () => {
     const repo = repoOnDevWithRemote("0.1.0")
     expect(cleanWorkingTree(contextOf(repo))).toEqual([])
 
-    writeFileSync(join(repo, "rascunho.txt"), "x")
-    expect(cleanWorkingTree(contextOf(repo))).toEqual([expect.stringMatching(/não commitadas/)])
+    writeFileSync(join(repo, "draft.txt"), "x")
+    expect(cleanWorkingTree(contextOf(repo))).toEqual([expect.stringMatching(/uncommitted changes/)])
   })
 })
 
 describe("noOpenRelease", () => {
-  it("barra quando já existe uma release aberta", () => {
+  it("blocks when a release is already open", () => {
     const repo = repoOnDevWithRemote("0.1.0")
     expect(noOpenRelease(contextOf(repo))).toEqual([])
 
@@ -49,30 +49,28 @@ describe("noOpenRelease", () => {
 })
 
 describe("inSyncWithRemote", () => {
-  it("barra a branch com commits que ainda não foram enviados", () => {
+  it("blocks a branch with commits that were not pushed yet", () => {
     const repo = repoOnDevWithRemote("0.1.0")
     expect(inSyncWithRemote("develop")(contextOf(repo))).toEqual([])
 
-    commit(repo, "feat: ainda não enviado")
+    commit(repo, "feat: not pushed yet")
     expect(inSyncWithRemote("develop")(contextOf(repo))).toEqual([
-      expect.stringMatching(/dev local .* difere de origin\/dev/),
+      expect.stringMatching(/local dev .* differs from origin\/dev/),
     ])
     expect(inSyncWithRemote("main")(contextOf(repo))).toEqual([])
   })
 
-  it("explica quando o remoto não pode ser consultado", () => {
+  it("explains when the remote cannot be reached", () => {
     const repo = tempDir()
     git(repo, "init", "-q", "-b", "dev")
-    commit(repo, "chore: início")
+    commit(repo, "chore: initial commit")
 
-    expect(inSyncWithRemote("develop")(contextOf(repo))).toEqual([
-      expect.stringMatching(/não foi possível consultar origin/),
-    ])
+    expect(inSyncWithRemote("develop")(contextOf(repo))).toEqual([expect.stringMatching(/could not reach origin/)])
   })
 })
 
 describe("versionMatchesLatestTag", () => {
-  it("passa sem tags e com a tag da versão atual", () => {
+  it("passes without tags and with the tag of the current version", () => {
     const repo = repoOnDevWithRemote("0.1.0")
     expect(versionMatchesLatestTag(contextOf(repo))).toEqual([])
 
@@ -80,7 +78,7 @@ describe("versionMatchesLatestTag", () => {
     expect(versionMatchesLatestTag(contextOf(repo))).toEqual([])
   })
 
-  it("barra quando o package.json não bate com a última tag", () => {
+  it("blocks when package.json does not match the latest tag", () => {
     const repo = repoOnDevWithRemote("0.1.0")
     tag(repo, "v0.2.0")
 

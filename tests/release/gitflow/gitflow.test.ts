@@ -9,14 +9,14 @@ import { CONFIG, cleanupTempDirs, REPO_ROOT, tempDir } from "../helpers.ts"
 afterEach(cleanupTempDirs)
 
 describe("readGitFlowConfig", () => {
-  it("lê o .gitflow deste projeto", () => {
+  it("reads this project's .gitflow", () => {
     const dir = tempDir()
     copyFileSync(join(REPO_ROOT, ".gitflow"), join(dir, ".gitflow"))
 
     expect(readGitFlowConfig(dir)).toEqual(CONFIG)
   })
 
-  it("explica o que fazer quando não há .gitflow", () => {
+  it("explains what to do when there is no .gitflow", () => {
     expect(() => readGitFlowConfig(tempDir())).toThrow(/git flow init --shared/)
   })
 })
@@ -24,7 +24,7 @@ describe("readGitFlowConfig", () => {
 describe("parseGitFlowConfig", () => {
   const listing = (lines: string[]) => lines.join("\n")
 
-  it("identifica produção e integração pela hierarquia, não pelo nome", () => {
+  it("identifies production and integration by hierarchy, not by name", () => {
     const config = parseGitFlowConfig(
       listing([
         "gitflow.branch.trunk.type=base",
@@ -39,7 +39,7 @@ describe("parseGitFlowConfig", () => {
     expect(config).toEqual({ main: "trunk", develop: "integration", releasePrefix: "rel/", tagPrefix: "r" })
   })
 
-  it("aceita finais de linha CRLF", () => {
+  it("accepts CRLF line endings", () => {
     const config = parseGitFlowConfig(
       "gitflow.branch.main.type=base\r\ngitflow.branch.dev.type=base\r\ngitflow.branch.dev.parent=main\r\ngitflow.branch.release.prefix=release/\r\ngitflow.branch.release.tagprefix=v\r\n",
     )
@@ -47,21 +47,21 @@ describe("parseGitFlowConfig", () => {
     expect(config).toEqual(CONFIG)
   })
 
-  it("recusa configuração sem branch de integração", () => {
+  it("rejects a configuration without an integration branch", () => {
     expect(() =>
       parseGitFlowConfig(listing(["gitflow.branch.main.type=base", "gitflow.branch.release.prefix=release/"])),
-    ).toThrow(/integração/)
+    ).toThrow(/integration/)
   })
 
-  it("recusa configuração sem prefixo de release", () => {
+  it("rejects a configuration without a release prefix", () => {
     expect(() =>
       parseGitFlowConfig(
         listing(["gitflow.branch.main.type=base", "gitflow.branch.dev.type=base", "gitflow.branch.dev.parent=main"]),
       ),
-    ).toThrow(/\.gitflow, branch release fora do formato esperado: .*prefix/)
+    ).toThrow(/\.gitflow release branch settings is not in the expected format: .*prefix/)
   })
 
-  it("recusa configuração sem prefixo de tag", () => {
+  it("rejects a configuration without a tag prefix", () => {
     expect(() =>
       parseGitFlowConfig(
         listing([
@@ -71,6 +71,6 @@ describe("parseGitFlowConfig", () => {
           "gitflow.branch.release.prefix=release/",
         ]),
       ),
-    ).toThrow(/\.gitflow, branch release fora do formato esperado: .*tagprefix/)
+    ).toThrow(/\.gitflow release branch settings is not in the expected format: .*tagprefix/)
   })
 })

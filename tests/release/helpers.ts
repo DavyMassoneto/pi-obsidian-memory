@@ -11,9 +11,9 @@ export const REPO_ROOT = join(import.meta.dirname, "..", "..")
 
 const MACHINE_INDEPENDENT_GIT = [
   "-c",
-  "user.name=Teste",
+  "user.name=Test",
   "-c",
-  "user.email=teste@example.com",
+  "user.email=test@example.com",
   "-c",
   "commit.gpgsign=false",
   "-c",
@@ -56,7 +56,7 @@ export function repoOnDevWithRemote(version: string): string {
   git(work, "remote", "add", "origin", remote)
   writeFileSync(join(work, "package.json"), `${JSON.stringify({ name: "demo", version }, null, 2)}\n`)
   git(work, "add", "package.json")
-  commit(work, "chore: início")
+  commit(work, "chore: initial commit")
   git(work, "branch", "dev")
   git(work, "push", "-q", "origin", "main", "dev")
   git(work, "checkout", "-q", "dev")
