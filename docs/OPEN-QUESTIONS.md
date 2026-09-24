@@ -152,7 +152,7 @@ When new doubts come up during the spec phase, record them here with the next fr
 
 ## Points to check in practice (F0 spikes, with authorization)
 
-Points P-1 to P-10 are in [research/06-open-questions.md § Points to check](research/06-open-questions.md#points-to-check). P-1 to P-4 only apply in OneDrive mode:
+Points P-1 to P-10 are in [research/06-open-questions.md § Points to check](research/06-open-questions.md#points-to-check-before-the-code-f0-spikes-only-with-authorization). P-1 to P-4 only apply in OneDrive mode:
 - OneDrive pinning and version history;
 - placeholder detection and the frequency of `EPERM`;
 - the format of `obsidian.json` and Obsidian's merge;
