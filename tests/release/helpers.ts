@@ -1,50 +1,64 @@
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import type { GitFlowConfig } from "../../scripts/release/gitflow.ts";
+import { execFileSync } from "node:child_process"
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 
-export const CONFIG: GitFlowConfig = { main: "main", develop: "dev", releasePrefix: "release/", tagPrefix: "v" };
+import type { GitFlowConfig } from "#scripts"
 
-const created: string[] = [];
+export const CONFIG: GitFlowConfig = { main: "main", develop: "dev", releasePrefix: "release/", tagPrefix: "v" }
 
-/** Pasta temporária, apagada por {@link cleanupTempDirs}. */
+export const REPO_ROOT = join(import.meta.dirname, "..", "..")
+
+const MACHINE_INDEPENDENT_GIT = [
+  "-c",
+  "user.name=Test",
+  "-c",
+  "user.email=test@example.com",
+  "-c",
+  "commit.gpgsign=false",
+  "-c",
+  "tag.gpgsign=false",
+]
+
+const created: string[] = []
+
 export function tempDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), "release-test-"));
-  created.push(dir);
-  return dir;
+  const dir = mkdtempSync(join(tmpdir(), "release-test-"))
+  created.push(dir)
+  return dir
 }
 
 export function cleanupTempDirs(): void {
-  for (const dir of created.splice(0)) rmSync(dir, { recursive: true, force: true });
+  for (const dir of created.splice(0)) rmSync(dir, { recursive: true, force: true })
 }
 
-/** git com identidade e assinatura fixas, sem depender da configuração da máquina. */
 export function git(cwd: string, ...args: string[]): string {
-  const fixed = ["-c", "user.name=Teste", "-c", "user.email=teste@example.com", "-c", "commit.gpgsign=false", "-c", "tag.gpgsign=false"];
-  return execFileSync("git", [...fixed, ...args], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+  return execFileSync("git", [...MACHINE_INDEPENDENT_GIT, ...args], {
+    cwd,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim()
 }
 
 export function commit(cwd: string, message: string): void {
-  git(cwd, "commit", "--allow-empty", "-q", "-m", message);
+  git(cwd, "commit", "--allow-empty", "-q", "-m", message)
 }
 
 export function tag(cwd: string, name: string): void {
-  git(cwd, "tag", "-a", name, "-m", name);
+  git(cwd, "tag", "-a", name, "-m", name)
 }
 
-/** Repositório na `dev`, com `main` e `dev` publicadas num remoto local (bare) chamado origin. */
-export function repoWithRemote(version = "0.1.0"): string {
-  const remote = tempDir();
-  git(remote, "init", "-q", "--bare", "-b", "main");
-  const work = tempDir();
-  git(work, "init", "-q", "-b", "main");
-  git(work, "remote", "add", "origin", remote);
-  writeFileSync(join(work, "package.json"), `${JSON.stringify({ name: "demo", version }, null, 2)}\n`);
-  git(work, "add", "package.json");
-  commit(work, "chore: início");
-  git(work, "branch", "dev");
-  git(work, "push", "-q", "origin", "main", "dev");
-  git(work, "checkout", "-q", "dev");
-  return work;
+export function repoOnDevWithRemote(version: string): string {
+  const remote = tempDir()
+  git(remote, "init", "-q", "--bare", "-b", "main")
+  const work = tempDir()
+  git(work, "init", "-q", "-b", "main")
+  git(work, "remote", "add", "origin", remote)
+  writeFileSync(join(work, "package.json"), `${JSON.stringify({ name: "demo", version }, null, 2)}\n`)
+  git(work, "add", "package.json")
+  commit(work, "chore: initial commit")
+  git(work, "branch", "dev")
+  git(work, "push", "-q", "origin", "main", "dev")
+  git(work, "checkout", "-q", "dev")
+  return work
 }

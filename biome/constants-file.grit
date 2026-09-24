@@ -1,0 +1,15 @@
+language js
+
+JsVariableDeclarator(id=$name, initializer=JsInitializerClause(expression=$value)) as $declarator where {
+  $declarator <: not within or {
+    JsFunctionBody(),
+    JsBlockStatement(),
+    JsStaticInitializationBlockClassMember()
+  } ,
+  $value <: not or {
+    JsArrowFunctionExpression(),
+    JsFunctionExpression(),
+    `Type.$method($arguments)`
+  },
+  register_diagnostic(span=$name, message="Top-level values belong in the module constants.ts (TypeBox schemas in schemas.ts).")
+}

@@ -1,0 +1,20 @@
+language js
+
+or {
+  `$receiver.$method($arguments)` as $style where {
+    $method <: or {
+      `fg`,
+      `bg`,
+      `bold`,
+      `italic`,
+      `underline`,
+      `inverse`,
+      `strikethrough`
+    },
+    register_diagnostic(span=$style, message="Styling (theme.fg, theme.bold…) belongs in the module styles.ts.")
+  },
+  JsModuleSource() as $source where {
+    $source <: r".(?:chalk|picocolors|kleur|colorette|ansi-colors|ansi-styles).",
+    register_diagnostic(span=$source, message="Color libraries are only imported in the module styles.ts.")
+  }
+}

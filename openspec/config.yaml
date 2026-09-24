@@ -1,50 +1,50 @@
 schema: spec-driven
 
 context: |
-  Language: pt-BR
-  All artifacts must be written in pt-BR.
+  Language: English
+  All artifacts must be written in English. Talk to the user in Brazilian Portuguese.
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
 
-  Projeto: extensão do pi (TypeScript/ESM, Node >= 24) que grava a memória de longo prazo do agente
-  em vaults do Obsidian em qualquer pasta. O OneDrive é OPCIONAL (Windows 11 primeiro, núcleo portável).
-  Um vault GLOBAL dedicado (aprendizados sobre o usuário) e um vault por PROJETO (criado por /memory-init).
-  Base reaproveitada: módulos do pi-hermes-memory (MIT). Git Flow com git-flow-next (main, dev, feature/*).
+  Project: a pi extension (TypeScript/ESM, Node >= 24) that stores the agent's long-term memory
+  in Obsidian vaults in any folder. OneDrive is OPTIONAL (Windows 11 first, portable core).
+  One dedicated GLOBAL vault (learnings about the user) and one vault per PROJECT (created by /memory-init).
+  Reused base: modules from pi-hermes-memory (MIT). Git Flow with git-flow-next (main, dev, feature/*, chore/*).
 
-  Não confunda: o sistema de SPEC (docs deste repositório: docs/ e openspec/) NÃO é o sistema de MEMÓRIA
-  (o produto, cujos dados vivem nos vaults).
+  Do not confuse: the SPEC system (this repository's docs: docs/ and openspec/) is NOT the MEMORY system
+  (the product, whose data lives in the vaults).
 
-  Fontes da verdade: AGENTS.md (regras) · docs/STATE.md (onde estamos) · docs/OPEN-QUESTIONS.md (decisões e dúvidas)
-  · docs/research/ (pesquisa) · docs/decisions/ (ADRs).
+  Sources of truth: AGENTS.md (rules) · docs/STATE.md (where we are) · docs/OPEN-QUESTIONS.md (decisions and doubts)
+  · docs/research/ (research) · docs/decisions/ (ADRs).
 
 rules:
   proposal:
-    - "Antes de propor, leia docs/STATE.md e docs/OPEN-QUESTIONS.md. Se houver pergunta 🔴 aberta ligada a esta change, PARE e pergunte (uma por vez, com opções e recomendação)."
-    - "Liste uma seção 'Perguntas em aberto'. Dúvida que afete escopo, formato em disco ou dados do usuário vira pergunta, nunca suposição."
-    - "Declare as chaves de configuração novas ou alteradas (nome, default, validação) e o passo do onboarding afetado (/memory-setup ou /memory-init)."
-    - "Cite as decisões de docs/OPEN-QUESTIONS.md (IDs Q-xx) e os ADRs que embasam a proposta."
+    - "Before proposing, read docs/STATE.md and docs/OPEN-QUESTIONS.md. If there is an open 🔴 question tied to this change, STOP and ask (one at a time, with options and a recommendation)."
+    - "Include an 'Open questions' section. A doubt that affects scope, on-disk format or user data becomes a question, never an assumption."
+    - "Declare the new or changed configuration keys (name, default, validation) and the affected onboarding step (/memory-setup or /memory-init)."
+    - "Cite the decisions from docs/OPEN-QUESTIONS.md (Q-xx IDs) and the ADRs that support the proposal."
   specs:
-    - "Todo requisito usa SHALL/MUST e tem pelo menos um cenário WHEN/THEN."
-    - "Cite o REQ-xx correspondente de docs/01-requisitos.md quando ele existir."
+    - "Every requirement uses SHALL/MUST and has at least one WHEN/THEN scenario."
+    - "Cite the matching REQ-xx from docs/01-requirements.md when it exists."
   design:
-    - "Escrita em vault: leitura completa + hash antes de gravar, guarda contra encolhimento drástico, temporário .tmp + rename com retry (EPERM/EBUSY)."
-    - "Nunca SQLite, locks, temporários de recuperação ou .git dentro dos vaults: índice, locks e config ficam em ~/.pi/agent/<pacote>/."
-    - "O OneDrive é opcional: o núcleo funciona com qualquer pasta; as proteções de OneDrive (pin, arquivos só-na-nuvem, cópias de conflito) só rodam com sync.provider = onedrive, detectado e confirmado no onboarding."
-    - "O agente só lê e escreve nos vaults de memória; nada é apagado: vai para archive/."
-    - "Decisão difícil de reverter (formato em disco, API de tools, local dos dados) exige ADR em docs/decisions/ (MADR)."
+    - "Writing to a vault: full read + hash before writing, a guard against drastic shrinking, a .tmp file + rename with retry (EPERM/EBUSY)."
+    - "Never SQLite, locks, recovery temp files or .git inside the vaults: index, locks and config live in ~/.pi/agent/<package>/."
+    - "OneDrive is optional: the core works with any folder; the OneDrive protections (pinning, cloud-only files, conflict copies) only run with sync.provider = onedrive, detected and confirmed during onboarding."
+    - "The agent only reads and writes in the memory vaults; nothing is deleted: it goes to archive/."
+    - "A decision that is hard to reverse (on-disk format, tool API, data location) requires an ADR in docs/decisions/ (MADR)."
   tasks:
-    - "Cada tarefa cabe em uma sessão e informa o comando de verificação (ex.: npx vitest run <arquivo>)."
-    - "Separe verificação automática de verificação manual (ex.: conferir a nota no Obsidian)."
-    - "Todo o trabalho acontece numa feature branch do Git Flow (git flow feature start <nome>); nunca faça commit direto em main ou dev."
+    - "Each task fits in one session and states its verification command (e.g. npx vitest run <file>)."
+    - "Separate automatic verification from manual verification (e.g. checking the note in Obsidian)."
+    - "All the work happens on a Git Flow feature branch (git flow feature start <name>); never commit directly to main or dev."
 
 operations:
   apply:
     guidance:
-      - "Leia docs/STATE.md antes de começar e faça uma tarefa por vez."
-      - "Se a realidade divergir da spec, PARE e informe: esperado / encontrado / impacto / como seguir. A spec é corrigida antes do código."
-      - "Só marque uma tarefa como feita depois de rodar a verificação e mostrar a saída."
-      - "Ao terminar a sessão, atualize docs/STATE.md (feito, próxima ação, bloqueios)."
+      - "Read docs/STATE.md before starting and do one task at a time."
+      - "If reality diverges from the spec, STOP and report: expected / found / impact / how to proceed. The spec is fixed before the code."
+      - "Only mark a task as done after running its verification and showing the output."
+      - "When the session ends, update docs/STATE.md (done, next action, blockers)."
   archive:
     guidance:
-      - "Antes de arquivar, confira se o código ainda bate com as specs (drift) e se docs/OPEN-QUESTIONS.md e os ADRs estão atualizados."
-      - "Depois de arquivar, atualize docs/STATE.md."
-      - "Com o usuário de acordo, finalize a feature (git flow feature finish <nome>) e faça git push origin dev."
+      - "Before archiving, check that the code still matches the specs (drift) and that docs/OPEN-QUESTIONS.md and the ADRs are up to date."
+      - "After archiving, update docs/STATE.md."
+      - "With the user's agreement, finish the feature (git flow feature finish <name>) and run git push origin dev."

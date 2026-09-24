@@ -1,0 +1,138 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "plugins": [
+    "./biome/no-unknown.grit",
+    "./biome/no-index-signature.grit",
+    "./biome/no-deep-relative-import.grit",
+    "./biome/no-ternary.grit",
+    "./biome/no-fallback.grit",
+    "./biome/no-default-values.grit",
+    "./biome/no-nullish-comparison.grit",
+    "./biome/no-manual-boolean.grit"
+  ],
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "asNeeded",
+      "trailingCommas": "all"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "error",
+        "noExcessiveLinesPerFunction": {
+          "level": "error",
+          "options": { "maxLines": 30, "skipBlankLines": true }
+        }
+      },
+      "nursery": {
+        "noUnsafeTypeAssertion": "error"
+      },
+      "style": {
+        "noExcessiveLinesPerFile": {
+          "level": "error",
+          "options": { "maxLines": 200, "skipBlankLines": true }
+        },
+        "noNonNullAssertion": "error"
+      },
+      "suspicious": {
+        "noEvolvingTypes": "error",
+        "noExplicitAny": "error",
+        "noImplicitAnyLet": "error"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["tests/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveLinesPerFunction": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**"],
+      "plugins": ["./biome/top-level-functions.grit"]
+    },
+    {
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/index.ts"],
+      "plugins": ["./biome/barrel-imports.grit"]
+    },
+    {
+      "includes": ["**/index.ts", "!tests/**"],
+      "plugins": ["./biome/index-reexports-only.grit"]
+    },
+    {
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/types.ts"],
+      "plugins": ["./biome/types-file.grit"]
+    },
+    {
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/constants.ts"],
+      "plugins": ["./biome/constants-file.grit"]
+    },
+    {
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/errors.ts"],
+      "plugins": ["./biome/errors-file.grit"]
+    },
+    {
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/styles.ts"],
+      "plugins": ["./biome/styles-file.grit"]
+    },
+    {
+      "includes": ["**/*.ts", "!**/*.d.ts", "!**/*.config.ts", "!tests/**", "!**/schemas.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "typebox": {
+                    "message": "The schema builder (Type) is only imported in the module schemas.ts; for types, use import type.",
+                    "importNames": ["default", "Type"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              ":NODE:",
+              ":BLANK_LINE:",
+              [":PACKAGE:", ":PACKAGE_WITH_PROTOCOL:"],
+              ":BLANK_LINE:",
+              [":ALIAS:", ":PATH:"]
+            ]
+          }
+        }
+      }
+    }
+  }
+}
