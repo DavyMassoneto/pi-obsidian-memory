@@ -1,26 +1,23 @@
 import { join } from "node:path"
 
-import { readJsonFile, writeJsonFile } from "../index.ts"
-import { BUMPS, RELEASE_VERSION } from "./constants.ts"
-import { PackageLock, PackageManifest } from "./schemas.ts"
-import type { Bump, Version } from "./types.ts"
-
-export function isBump(value: string): value is Bump {
-  return BUMPS.some((bump) => bump === value)
-}
+import { parseValue, readJsonFile, writeJsonFile } from "../index.ts"
+import { RELEASE_VERSION } from "./constants.ts"
+import { PackageLock, PackageManifest, VersionPartsSchema } from "./schemas.ts"
+import type { Version } from "./types.ts"
 
 export function parseVersion(version: string): Version {
   const match = RELEASE_VERSION.exec(version)
   if (!match) throw new Error(`versão inválida: "${version}" (esperado X.Y.Z)`)
-  return [Number(match[1]), Number(match[2]), Number(match[3])]
+  const parts = parseValue(VersionPartsSchema, match.groups, `versão ${version}`)
+  return { major: Number(parts.major), minor: Number(parts.minor), patch: Number(parts.patch) }
 }
 
 export function isNewerVersion(candidate: string, current: string): boolean {
-  const [major, minor, patch] = parseVersion(candidate)
-  const [currentMajor, currentMinor, currentPatch] = parseVersion(current)
-  if (major !== currentMajor) return major > currentMajor
-  if (minor !== currentMinor) return minor > currentMinor
-  return patch > currentPatch
+  const next = parseVersion(candidate)
+  const now = parseVersion(current)
+  if (next.major !== now.major) return next.major > now.major
+  if (next.minor !== now.minor) return next.minor > now.minor
+  return next.patch > now.patch
 }
 
 export function readPackageVersion(dir: string): string {

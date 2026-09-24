@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { afterEach, describe, expect, it } from "vitest"
 
-import { isBump, isNewerVersion, parseVersion, readPackageVersion, setPackageVersion } from "#scripts"
+import { isNewerVersion, parseVersion, readPackageVersion, setPackageVersion } from "#scripts"
 import { cleanupTempDirs, tempDir } from "../helpers.ts"
 
 afterEach(cleanupTempDirs)
@@ -15,7 +15,7 @@ const lock = (version: string) =>
 
 describe("parseVersion", () => {
   it("aceita X.Y.Z", () => {
-    expect(parseVersion("1.20.3")).toEqual([1, 20, 3])
+    expect(parseVersion("1.20.3")).toEqual({ major: 1, minor: 20, patch: 3 })
   })
 
   it.each(["1.2", "01.2.3", "1.2.3-beta.1", "v1.2.3", ""])("recusa %j", (version) => {
@@ -36,14 +36,6 @@ describe("isNewerVersion", () => {
 
   it("versão igual não é mais nova", () => {
     expect(isNewerVersion("2.3.4", "2.3.4")).toBe(false)
-  })
-})
-
-describe("isBump", () => {
-  it("aceita só os incrementos conhecidos", () => {
-    expect(["patch", "minor", "major"].every(isBump)).toBe(true)
-    expect(isBump("auto")).toBe(false)
-    expect(isBump("prerelease")).toBe(false)
   })
 })
 

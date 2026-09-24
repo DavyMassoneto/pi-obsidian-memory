@@ -8,4 +8,4 @@ export interface PreflightContext {
 
 export type Problem = string
 
-export type Check = (context: PreflightContext) => Problem | undefined
+export type Check = (context: PreflightContext) => readonly Problem[]

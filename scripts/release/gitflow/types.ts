@@ -1,3 +1,7 @@
+import type { Static } from "typebox"
+
+import type { BranchSettingSchema } from "./schemas.ts"
+
 export interface GitFlowConfig {
   readonly main: string
   readonly develop: string
@@ -5,10 +9,4 @@ export interface GitFlowConfig {
   readonly tagPrefix: string
 }
 
-export interface BranchSetting {
-  readonly branch: string
-  readonly key: string
-  readonly value: string
-}
-
-export type BranchSettings = Map<string, string>
+export type BranchSetting = Static<typeof BranchSettingSchema>
