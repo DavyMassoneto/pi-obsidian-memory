@@ -51,23 +51,23 @@ function actualReexports(dir: string): string[] {
 }
 
 function reexportedPath(line: string): string {
-  if (!REEXPORT.test(line)) throw new Error(`linha que não é export * no index.ts: ${line}`)
+  if (!REEXPORT.test(line)) throw new Error(`index.ts line that is not an export *: ${line}`)
   return line.slice(REEXPORT_START.length, -1)
 }
 
 describe("barrels", () => {
   const folders = codeFolders(ROOT).map((dir) => relative(ROOT, dir).replaceAll("\\", "/"))
 
-  it("encontra as pastas de código", () => {
+  it("finds the code folders", () => {
     expect(folders).toContain("scripts")
     expect(folders).toContain("scripts/release/plan")
   })
 
-  it.each(folders)("%s tem index.ts", (folder) => {
+  it.each(folders)("%s has an index.ts", (folder) => {
     expect(existsSync(join(ROOT, folder, "index.ts"))).toBe(true)
   })
 
-  it.each(folders)("%s/index.ts reexporta tudo da pasta, só com export *", (folder) => {
+  it.each(folders)("%s/index.ts re-exports everything in the folder, only with export *", (folder) => {
     expect(actualReexports(join(ROOT, folder))).toEqual(expectedReexports(join(ROOT, folder)))
   })
 })

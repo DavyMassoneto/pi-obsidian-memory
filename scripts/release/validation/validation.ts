@@ -11,7 +11,7 @@ export function parseValue<Schema extends TSchema, Input>(
     return Parse(schema, value)
   } catch (error) {
     if (!(error instanceof ParseError)) throw error
-    throw new Error(`${source} fora do formato esperado: ${error.cause.errors.map(describeProblem).join("; ")}`)
+    throw new Error(`${source} is not in the expected format: ${error.cause.errors.map(describeProblem).join("; ")}`)
   }
 }
 

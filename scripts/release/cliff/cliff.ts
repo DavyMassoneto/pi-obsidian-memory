@@ -4,7 +4,7 @@ import type { Bump } from "../index.ts"
 
 export async function bumpedVersion(cwd: string, tagPrefix: string, bump: Bump): Promise<string> {
   const tag = await cliff(cwd, { bumpedVersion: true, bump })
-  if (!tag.startsWith(tagPrefix)) throw new Error(`o git-cliff devolveu "${tag}", sem o prefixo de tag "${tagPrefix}"`)
+  if (!tag.startsWith(tagPrefix)) throw new Error(`git-cliff returned "${tag}", without the tag prefix "${tagPrefix}"`)
   return tag.slice(tagPrefix.length)
 }
 
@@ -23,7 +23,7 @@ async function cliff(cwd: string, options: CliffOptions): Promise<string> {
 }
 
 function cliffFailed(stderr: string): Error {
-  if (stderr === "") return new Error("git-cliff falhou sem mensagem de erro")
+  if (stderr === "") return new Error("git-cliff failed without an error message")
   const lastLine = stderr.slice(stderr.lastIndexOf("\n") + 1).trim()
-  return new Error(`git-cliff falhou: ${lastLine}`)
+  return new Error(`git-cliff failed: ${lastLine}`)
 }

@@ -1,8 +1,4 @@
-import { Locale } from "typebox/system"
-
 import { main } from "../index.ts"
-
-Locale.Set(Locale.pt_BR)
 
 try {
   process.exitCode = await main(process.argv.slice(2))

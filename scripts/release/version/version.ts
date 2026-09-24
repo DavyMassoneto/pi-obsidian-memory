@@ -7,8 +7,8 @@ import type { Version } from "./types.ts"
 
 export function parseVersion(version: string): Version {
   const match = RELEASE_VERSION.exec(version)
-  if (!match) throw new Error(`versão inválida: "${version}" (esperado X.Y.Z)`)
-  const parts = parseValue(VersionPartsSchema, match.groups, `versão ${version}`)
+  if (!match) throw new Error(`invalid version: "${version}" (expected X.Y.Z)`)
+  const parts = parseValue(VersionPartsSchema, match.groups, `version ${version}`)
   return { major: Number(parts.major), minor: Number(parts.minor), patch: Number(parts.patch) }
 }
 

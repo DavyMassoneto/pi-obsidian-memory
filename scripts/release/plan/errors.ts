@@ -1,8 +1,8 @@
 export class NothingToRelease extends Error {
   constructor(currentVersion: string, nextVersion: string) {
     super(
-      `nada para lançar: a próxima versão calculada (${nextVersion}) não é maior que a atual (${currentVersion}). ` +
-        "Só há commits que não mudam a versão (docs, chore, ci…); para lançar mesmo assim, use --bump patch.",
+      `nothing to release: the calculated next version (${nextVersion}) is not greater than the current one (${currentVersion}). ` +
+        "There are only commits that do not change the version (docs, chore, ci…); to release anyway, use --bump patch.",
     )
     this.name = "NothingToRelease"
   }

@@ -14,33 +14,33 @@ const lock = (version: string) =>
   `{\n  "name": "demo",\n  "version": "${version}",\n  "lockfileVersion": 3,\n  "packages": {\n    "": {\n      "name": "demo",\n      "version": "${version}"\n    }\n  }\n}\n`
 
 describe("parseVersion", () => {
-  it("aceita X.Y.Z", () => {
+  it("accepts X.Y.Z", () => {
     expect(parseVersion("1.20.3")).toEqual({ major: 1, minor: 20, patch: 3 })
   })
 
-  it.each(["1.2", "01.2.3", "1.2.3-beta.1", "v1.2.3", ""])("recusa %j", (version) => {
-    expect(() => parseVersion(version)).toThrow(/versão inválida/)
+  it.each(["1.2", "01.2.3", "1.2.3-beta.1", "v1.2.3", ""])("rejects %j", (version) => {
+    expect(() => parseVersion(version)).toThrow(/invalid version/)
   })
 })
 
 describe("isNewerVersion", () => {
-  it("compara numericamente, não como texto", () => {
+  it("compares numerically, not as text", () => {
     expect(isNewerVersion("0.10.0", "0.9.9")).toBe(true)
     expect(isNewerVersion("1.0.0", "1.0.1")).toBe(false)
   })
 
-  it("decide pela parte mais significativa que muda", () => {
+  it("decides by the most significant part that changes", () => {
     expect(isNewerVersion("2.0.0", "1.9.9")).toBe(true)
     expect(isNewerVersion("1.2.0", "1.1.9")).toBe(true)
   })
 
-  it("versão igual não é mais nova", () => {
+  it("an equal version is not newer", () => {
     expect(isNewerVersion("2.3.4", "2.3.4")).toBe(false)
   })
 })
 
 describe("setPackageVersion", () => {
-  it("atualiza package.json e package-lock.json preservando a formatação", () => {
+  it("updates package.json and package-lock.json keeping the formatting", () => {
     const dir = tempDir()
     writeFileSync(join(dir, "package.json"), pkg("0.0.0"))
     writeFileSync(join(dir, "package-lock.json"), lock("0.0.0"))
@@ -51,7 +51,7 @@ describe("setPackageVersion", () => {
     expect(readFileSync(join(dir, "package-lock.json"), "utf8")).toBe(lock("0.1.0"))
   })
 
-  it("preserva finais de linha CRLF", () => {
+  it("keeps CRLF line endings", () => {
     const dir = tempDir()
     writeFileSync(join(dir, "package.json"), pkg("0.0.0").replaceAll("\n", "\r\n"))
     writeFileSync(join(dir, "package-lock.json"), lock("0.0.0").replaceAll("\n", "\r\n"))
@@ -62,7 +62,7 @@ describe("setPackageVersion", () => {
     expect(readFileSync(join(dir, "package-lock.json"), "utf8")).toBe(lock("0.0.1").replaceAll("\n", "\r\n"))
   })
 
-  it("exige o package-lock.json, sem alterar o package.json", () => {
+  it("requires package-lock.json, without touching package.json", () => {
     const dir = tempDir()
     writeFileSync(join(dir, "package.json"), pkg("0.0.0"))
 
@@ -70,31 +70,31 @@ describe("setPackageVersion", () => {
     expect(readFileSync(join(dir, "package.json"), "utf8")).toBe(pkg("0.0.0"))
   })
 
-  it("recusa versão inválida sem alterar nada", () => {
+  it("rejects an invalid version without changing anything", () => {
     const dir = tempDir()
     writeFileSync(join(dir, "package.json"), pkg("0.0.0"))
     writeFileSync(join(dir, "package-lock.json"), lock("0.0.0"))
 
-    expect(() => setPackageVersion(dir, "1.0")).toThrow(/versão inválida/)
+    expect(() => setPackageVersion(dir, "1.0")).toThrow(/invalid version/)
     expect(readFileSync(join(dir, "package.json"), "utf8")).toBe(pkg("0.0.0"))
     expect(readFileSync(join(dir, "package-lock.json"), "utf8")).toBe(lock("0.0.0"))
   })
 
-  it("recusa package-lock.json sem a versão do pacote raiz", () => {
+  it("rejects a package-lock.json without the root package version", () => {
     const dir = tempDir()
     writeFileSync(join(dir, "package.json"), pkg("0.0.0"))
     writeFileSync(join(dir, "package-lock.json"), `{ "name": "demo", "version": "0.0.0", "packages": {} }\n`)
 
-    expect(() => setPackageVersion(dir, "0.1.0")).toThrow(/package-lock\.json fora do formato esperado/)
+    expect(() => setPackageVersion(dir, "0.1.0")).toThrow(/package-lock\.json is not in the expected format/)
     expect(readFileSync(join(dir, "package.json"), "utf8")).toBe(pkg("0.0.0"))
   })
 })
 
 describe("readPackageVersion", () => {
-  it("exige o campo version", () => {
+  it("requires the version field", () => {
     const dir = tempDir()
     writeFileSync(join(dir, "package.json"), `{ "name": "demo" }\n`)
 
-    expect(() => readPackageVersion(dir)).toThrow(/package\.json fora do formato esperado: .*version/)
+    expect(() => readPackageVersion(dir)).toThrow(/package\.json is not in the expected format: .*version/)
   })
 })
