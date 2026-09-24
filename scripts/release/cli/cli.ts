@@ -3,13 +3,11 @@ import { createInterface } from "node:readline/promises"
 import { parseArgs } from "node:util"
 
 import {
-  type Bump,
   buildPlan,
+  bumpedVersion,
   CHECKS,
-  calculatedVersion,
-  forcedVersion,
   type GitFlowConfig,
-  isBump,
+  parseValue,
   previewChangelog,
   type ReleasePlan,
   readGitFlowConfig,
@@ -22,43 +20,38 @@ import {
 } from "../index.ts"
 import { RELEASE_FILES, REMOTE, USAGE } from "./constants.ts"
 import { formatFailure } from "./recovery.ts"
-import type { ReleaseOptions } from "./types.ts"
+import { CliOptionsSchema } from "./schemas.ts"
+import type { Bump, CliOptions } from "./types.ts"
 
 export async function main(argv: readonly string[]): Promise<number> {
-  const options = parseCommandLine(argv)
-  if (options.help === true) {
+  const options = readOptions(argv)
+  if (options.help) {
     console.log(USAGE)
     return 0
   }
-  const { bump } = options
-  if (bump !== undefined && !isBump(bump)) {
-    console.error(`--bump inválido: "${bump}"\n\n${USAGE}`)
-    return 2
-  }
-  return release(process.cwd(), { dryRun: options["dry-run"] === true, yes: options.yes === true, bump })
+  return release(process.cwd(), options)
 }
 
-function parseCommandLine(argv: readonly string[]) {
+export function readOptions(argv: readonly string[]): CliOptions {
   const { values } = parseArgs({
     args: [...argv],
     options: {
-      "dry-run": { type: "boolean" },
-      bump: { type: "string" },
-      yes: { type: "boolean", short: "y" },
-      help: { type: "boolean", short: "h" },
+      "dry-run": { type: "boolean", default: false },
+      bump: { type: "string", default: "auto" },
+      yes: { type: "boolean", short: "y", default: false },
+      help: { type: "boolean", short: "h", default: false },
     },
     strict: true,
-    allowPositionals: false,
   })
-  return values
+  return parseValue(CliOptionsSchema, values, "opções da linha de comando (veja --help)")
 }
 
-async function release(cwd: string, options: ReleaseOptions): Promise<number> {
+async function release(cwd: string, options: CliOptions): Promise<number> {
   const config = readGitFlowConfig(cwd)
   if (!passesPreflight(cwd, config)) return 1
   const plan = await planRelease(cwd, config, options.bump)
   await printPlan(cwd, plan)
-  if (options.dryRun) {
+  if (options["dry-run"]) {
     console.log("--dry-run: nada foi alterado.")
     return 0
   }
@@ -76,19 +69,14 @@ function passesPreflight(cwd: string, config: GitFlowConfig): boolean {
   return false
 }
 
-async function planRelease(cwd: string, config: GitFlowConfig, bump: Bump | undefined): Promise<ReleasePlan> {
+async function planRelease(cwd: string, config: GitFlowConfig, bump: Bump): Promise<ReleasePlan> {
   return buildPlan({
     config,
     remote: REMOTE,
     currentVersion: readPackageVersion(cwd),
-    nextVersion: await nextVersion(cwd, config.tagPrefix, bump),
+    nextVersion: await bumpedVersion(cwd, config.tagPrefix, bump),
     releaseFiles: RELEASE_FILES,
   })
-}
-
-function nextVersion(cwd: string, tagPrefix: string, bump: Bump | undefined): Promise<string> {
-  if (bump === undefined) return calculatedVersion(cwd, tagPrefix)
-  return forcedVersion(cwd, tagPrefix, bump)
 }
 
 async function printPlan(cwd: string, plan: ReleasePlan): Promise<void> {

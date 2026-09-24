@@ -58,7 +58,7 @@ describe("parseGitFlowConfig", () => {
       parseGitFlowConfig(
         listing(["gitflow.branch.main.type=base", "gitflow.branch.dev.type=base", "gitflow.branch.dev.parent=main"]),
       ),
-    ).toThrow(/prefixo das branches de release/)
+    ).toThrow(/\.gitflow, branch release fora do formato esperado: .*prefix/)
   })
 
   it("recusa configuração sem prefixo de tag", () => {
@@ -71,6 +71,6 @@ describe("parseGitFlowConfig", () => {
           "gitflow.branch.release.prefix=release/",
         ]),
       ),
-    ).toThrow(/prefixo das tags de versão/)
+    ).toThrow(/\.gitflow, branch release fora do formato esperado: .*tagprefix/)
   })
 })

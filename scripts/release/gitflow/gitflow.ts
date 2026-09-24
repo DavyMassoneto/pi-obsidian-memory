@@ -1,9 +1,10 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 
-import { git } from "../index.ts"
+import { git, parseValue } from "../index.ts"
 import { BRANCH_SETTING, GITFLOW_FILE } from "./constants.ts"
-import type { BranchSetting, BranchSettings, GitFlowConfig } from "./types.ts"
+import { BranchSettingSchema, ReleaseBranchSchema } from "./schemas.ts"
+import type { BranchSetting, GitFlowConfig } from "./types.ts"
 
 export function readGitFlowConfig(cwd: string): GitFlowConfig {
   const file = join(cwd, GITFLOW_FILE)
@@ -12,57 +13,47 @@ export function readGitFlowConfig(cwd: string): GitFlowConfig {
 }
 
 export function parseGitFlowConfig(listing: string): GitFlowConfig {
-  const branches = readBranches(listing)
-  const main = findBranch(branches, "base sem pai (a de produção)", (settings) => {
-    return isBase(settings) && !settings.has("parent")
-  })
-  const develop = findBranch(branches, `base filha de ${main} (a de integração)`, (settings) => {
-    return isBase(settings) && settings.get("parent") === main
-  })
-  const release = branches.get("release")
-  if (release === undefined) throw new Error(`${GITFLOW_FILE}: prefixo das branches de release não configurado`)
-  return {
-    main,
-    develop,
-    releasePrefix: requiredSetting(release, "prefix", "prefixo das branches de release"),
-    tagPrefix: requiredSetting(release, "tagprefix", "prefixo das tags de versão"),
-  }
-}
-
-function readBranches(listing: string): Map<string, BranchSettings> {
   const settings = listing.split(/\r?\n/).flatMap(parseBranchSetting)
-  const branches = new Map<string, BranchSettings>()
-  for (const [branch, entries] of Map.groupBy(settings, (setting) => setting.branch)) {
-    branches.set(branch, new Map(entries.map((entry) => [entry.key, entry.value])))
-  }
-  return branches
+  const main = findBranch(settings, "base sem pai (a de produção)", (branch) => {
+    return isBase(settings, branch) && !hasSetting(settings, branch, "parent")
+  })
+  const develop = findBranch(settings, `base filha de ${main} (a de integração)`, (branch) => {
+    return isBase(settings, branch) && hasSettingValue(settings, branch, "parent", main)
+  })
+  const release = parseValue(ReleaseBranchSchema, settingsOf(settings, "release"), `${GITFLOW_FILE}, branch release`)
+  return { main, develop, releasePrefix: release.prefix, tagPrefix: release.tagprefix }
 }
 
 function parseBranchSetting(line: string): BranchSetting[] {
   const match = BRANCH_SETTING.exec(line)
-  if (match === null) return []
-  const [, branch, key, value] = match
-  if (branch === undefined || key === undefined || value === undefined) return []
-  return [{ branch, key: key.toLowerCase(), value }]
+  if (!match) return []
+  return [parseValue(BranchSettingSchema, match.groups, `${GITFLOW_FILE}: ${line}`)]
 }
 
 function findBranch(
-  branches: Map<string, BranchSettings>,
+  settings: readonly BranchSetting[],
   description: string,
-  matches: (settings: BranchSettings) => boolean,
+  matches: (branch: string) => boolean,
 ): string {
-  for (const [name, settings] of branches) {
-    if (matches(settings)) return name
+  for (const branch of new Set(settings.map((setting) => setting.branch))) {
+    if (matches(branch)) return branch
   }
   throw new Error(`${GITFLOW_FILE}: nenhuma branch ${description}`)
 }
 
-function isBase(settings: BranchSettings): boolean {
-  return settings.get("type") === "base"
+function isBase(settings: readonly BranchSetting[], branch: string): boolean {
+  return hasSettingValue(settings, branch, "type", "base")
 }
 
-function requiredSetting(settings: BranchSettings, key: string, description: string): string {
-  const value = settings.get(key)
-  if (value === undefined) throw new Error(`${GITFLOW_FILE}: ${description} não configurado`)
-  return value
+function hasSetting(settings: readonly BranchSetting[], branch: string, key: string): boolean {
+  return settings.some((setting) => setting.branch === branch && setting.key === key)
+}
+
+function hasSettingValue(settings: readonly BranchSetting[], branch: string, key: string, value: string): boolean {
+  return settings.some((setting) => setting.branch === branch && setting.key === key && setting.value === value)
+}
+
+function settingsOf(settings: readonly BranchSetting[], branch: string) {
+  const entries = settings.filter((setting) => setting.branch === branch).map((setting) => [setting.key, setting.value])
+  return Object.fromEntries(entries)
 }

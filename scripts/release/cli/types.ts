@@ -1,7 +1,7 @@
-import type { Bump } from "../index.ts"
+import type { Static } from "typebox"
 
-export interface ReleaseOptions {
-  readonly dryRun: boolean
-  readonly yes: boolean
-  readonly bump: Bump | undefined
-}
+import type { BumpSchema, CliOptionsSchema } from "./schemas.ts"
+
+export type Bump = Static<typeof BumpSchema>
+
+export type CliOptions = Static<typeof CliOptionsSchema>

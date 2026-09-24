@@ -19,8 +19,15 @@ describe("git", () => {
 })
 
 describe("tryGit", () => {
-  it("devolve undefined quando o comando falha", () => {
-    expect(tryGit(tempDir(), ["rev-parse", "HEAD"])).toBeUndefined()
+  it("devolve a saída quando o comando dá certo", () => {
+    const dir = tempDir()
+    git(dir, ["init", "-q", "-b", "dev"])
+
+    expect(tryGit(dir, ["branch", "--show-current"])).toEqual({ succeeded: true, output: "dev" })
+  })
+
+  it("avisa quando o comando falha", () => {
+    expect(tryGit(tempDir(), ["rev-parse", "HEAD"])).toEqual({ succeeded: false })
   })
 })
 

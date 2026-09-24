@@ -9,7 +9,9 @@ const IGNORED_FOLDERS = new Set(["node_modules", "tests"])
 
 const ENTRY_POINTS = new Set(["run.ts"])
 
-const REEXPORT = /^export \* from "(\.\/[^"]+)"$/
+const REEXPORT = /^export \* from "\.\/[^"]+"$/
+
+const REEXPORT_START = 'export * from "'
 
 function codeFolders(dir: string): string[] {
   const folders = readdirSync(dir, { withFileTypes: true }).filter(
@@ -49,9 +51,8 @@ function actualReexports(dir: string): string[] {
 }
 
 function reexportedPath(line: string): string {
-  const path = REEXPORT.exec(line)?.[1]
-  if (path === undefined) throw new Error(`linha que não é export * no index.ts: ${line}`)
-  return path
+  if (!REEXPORT.test(line)) throw new Error(`linha que não é export * no index.ts: ${line}`)
+  return line.slice(REEXPORT_START.length, -1)
 }
 
 describe("barrels", () => {
