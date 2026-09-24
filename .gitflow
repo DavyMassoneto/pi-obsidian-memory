@@ -69,3 +69,14 @@
 	no-ff = true
 [gitflow "hotfix.finish"]
 	no-ff = true
+[gitflow "branch.chore"]
+	type = topic
+	parent = dev
+	startPoint = dev
+	upstreamStrategy = merge
+	downstreamStrategy = rebase
+	prefix = chore/
+	autoUpdate = false
+	tag = false
+[gitflow "chore.finish"]
+	no-ff = true
