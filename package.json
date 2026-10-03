@@ -35,6 +35,8 @@
   "scripts": {
     "format": "biome check --write .",
     "lint": "biome check .",
+    "test": "vitest run --project unit",
+    "test:pi": "vitest run --project pi",
     "typecheck": "tsc --noEmit"
   },
   "pi": {
@@ -49,6 +51,7 @@
     "@biomejs/biome": "2.5.15",
     "@earendil-works/pi-coding-agent": "1.0.1",
     "@types/node": "24.19.1",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
   }
 }

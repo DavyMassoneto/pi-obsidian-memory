@@ -12,6 +12,8 @@ See [VISION.md](VISION.md) for what this project is and the decisions behind it.
 npm install
 npm run lint
 npm run typecheck
+npm test           # unit and integration tests
+npm run test:pi    # smoke test in the real pi
 pi -e ./src/pi/extension.ts
 ```
 
