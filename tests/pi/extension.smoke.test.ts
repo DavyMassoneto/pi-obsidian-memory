@@ -11,15 +11,18 @@ import { expect, test } from "vitest"
 const repoRoot = resolve(import.meta.dirname, "..", "..")
 const piCli = join(repoRoot, "node_modules", "@earendil-works", "pi-coding-agent", "dist", "cli.js")
 const loadedMessage = "pi-obsidian-memory loaded"
+const killPiBeforeVitestTimeoutMs = 20_000
 
 test("pi loads the extension from the package", async () => {
-  // An empty agent dir and --no-extensions keep the user's real pi config and extensions out of the test.
-  const agentDir = await mkdtemp(join(tmpdir(), "pi-smoke-"))
+  const isolatedAgentDir = await mkdtemp(join(tmpdir(), "pi-smoke-"))
   const pi = spawn(
     process.execPath,
     [piCli, "--mode", "rpc", "--no-session", "--offline", "--no-extensions", "-e", repoRoot],
-    // Below vitest's testTimeout, so a missing message ends here and the finally block still cleans up.
-    { cwd: agentDir, env: { ...process.env, PI_CODING_AGENT_DIR: agentDir }, timeout: 20_000 },
+    {
+      cwd: isolatedAgentDir,
+      env: { ...process.env, PI_CODING_AGENT_DIR: isolatedAgentDir },
+      timeout: killPiBeforeVitestTimeoutMs,
+    },
   )
   const exited = once(pi, "exit")
   try {
@@ -33,7 +36,7 @@ test("pi loads the extension from the package", async () => {
   } finally {
     pi.kill()
     await exited
-    await rm(agentDir, { recursive: true, force: true })
+    await rm(isolatedAgentDir, { recursive: true, force: true })
   }
 })
 
