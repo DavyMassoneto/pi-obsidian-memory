@@ -1,6 +1,76 @@
+# Dependencies
 node_modules/
-*.tgz
-.idea/
+.pnpm-store/
+.yarn/
+.pnp.*
 
-# Generated runtime cache, not project source.
+# Package and build output
+*.tgz
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Tests and coverage
+coverage/
+.nyc_output/
+.vitest/
+test-results/
+
+# Caches
+.cache/
+.eslintcache
+.npm/
+.biome/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# pi runtime data (sessions, caches), not project source
 /.pi/fabric/
+/.pi/sessions/
+/.pi/tasks/
+
+# Local memory data created while testing (vaults, indexes, models)
+/.local/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+
+# Editors and IDEs
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.iml
+*.swp
+*~
+
+# Operating system
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+._*
+
+# Windows reserved-name artifacts (e.g. from "> nul" in bash)
+nul
+
+# Temporary files
+tmp/
+temp/
+*.tmp
