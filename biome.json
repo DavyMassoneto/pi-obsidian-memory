@@ -51,12 +51,29 @@
       },
       "suspicious": {
         "noEvolvingTypes": "error",
+        "noImportCycles": "error",
         "noExplicitAny": "error",
         "noImplicitAnyLet": "error"
       }
     }
   },
   "overrides": [
+    {
+      "includes": ["src/domain/**"],
+      "plugins": ["./biome/layer-domain.grit"]
+    },
+    {
+      "includes": ["src/services/**"],
+      "plugins": ["./biome/layer-services.grit"]
+    },
+    {
+      "includes": ["src/usecases/**"],
+      "plugins": ["./biome/layer-usecases.grit"]
+    },
+    {
+      "includes": ["src/pi/**"],
+      "plugins": ["./biome/layer-pi.grit"]
+    },
     {
       "includes": ["tests/**"],
       "linter": {
