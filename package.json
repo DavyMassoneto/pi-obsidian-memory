@@ -21,6 +21,11 @@
     "url": "https://github.com/DavyMassoneto/pi-obsidian-memory/issues"
   },
   "type": "module",
+  "imports": {
+    "#domain": "./src/domain/index.ts",
+    "#services": "./src/services/index.ts",
+    "#usecases": "./src/usecases/index.ts"
+  },
   "engines": {
     "node": ">=24"
   },
@@ -34,7 +39,7 @@
   },
   "pi": {
     "extensions": [
-      "./src/extension.ts"
+      "./src/pi/extension.ts"
     ]
   },
   "peerDependencies": {

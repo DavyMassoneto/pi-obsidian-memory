@@ -12,7 +12,7 @@ See [VISION.md](VISION.md) for what this project is and the decisions behind it.
 npm install
 npm run lint
 npm run typecheck
-pi -e ./src/extension.ts
+pi -e ./src/pi/extension.ts
 ```
 
 ## License
