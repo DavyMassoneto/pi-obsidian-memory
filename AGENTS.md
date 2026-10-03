@@ -7,7 +7,8 @@ A pi extension that stores the agent's long-term memory in Obsidian vaults. Prod
 pi → usecases → services → domain. Each layer imports only the one right below it (enforced by Biome).
 
 - domain: pure rules, no I/O.
-- services: one resource each (vault, index, config, LLM, clock), speaking in domain terms.
+- services: one resource each (vault, index, config, LLM, clock), speaking in domain terms. Paths always arrive as
+  parameters; only the pi layer knows the real ones.
 - usecases: combine services into one operation; every entry point goes through them.
 - pi: events, tools and commands; no logic.
 
@@ -20,4 +21,17 @@ pi → usecases → services → domain. Each layer imports only the one right b
 - Files and vaults: real disk in a temp folder, never a mocked filesystem. Tests never touch the user's real vaults or
   config.
 - Mock only: pi, the LLM, the clock. To mock anything else, ask the user.
-- vitest. `tests/` mirrors `src/` (`src/vault/archive.ts` → `tests/vault/archive.test.ts`).
+- vitest. `tests/` mirrors `src/` (`src/services/vault/save.ts` → `tests/services/vault/save.test.ts`).
+
+What each layer's tests prove, and how:
+
+- domain: the rule gives the exact output for each input, edge and error cases included. Plain calls, no disk, no
+  mocks. Needing a mock means the function is not pure and belongs in another layer.
+- services: the resource is used correctly. Assert the final state of the resource (files, content), not only the
+  return value. Clock with `vi.setSystemTime`, LLM with `vi.mock`.
+- usecases: the flow is right: which services, in which order, and what happens when a step fails. Real services on a
+  temp vault; failures come from real conditions (note changed on disk, missing vault, read-only file). Don't re-test
+  service details.
+- pi: a fake pi proves each tool, event and command reaches the right usecase and translates its input and output.
+  One smoke test in the real pi (`npm run test:pi`, outside `npm test`) proves pi loads the extension; run it before
+  each release and after updating pi.
