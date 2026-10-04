@@ -1,14 +1,16 @@
-import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process"
+import { spawn } from "node:child_process"
 import { once } from "node:events"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 
+import type { PiRun } from "./types.ts"
+
 const repoRoot = resolve(import.meta.dirname, "..", "..")
 const piCli = join(repoRoot, "node_modules", "@earendil-works", "pi-coding-agent", "dist", "cli.js")
 const killPiBeforeVitestTimeoutMs = 20_000
 
-export async function withIsolatedPi(run: (pi: ChildProcessWithoutNullStreams) => Promise<void>): Promise<void> {
+export async function withIsolatedPi(run: PiRun): Promise<void> {
   const isolatedAgentDir = await mkdtemp(join(tmpdir(), "pi-smoke-"))
   const pi = spawn(
     process.execPath,

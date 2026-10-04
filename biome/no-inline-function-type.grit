@@ -1,0 +1,11 @@
+language js
+
+or {
+  TsFunctionType() as $type where { $type <: not within TsTypeAliasDeclaration() },
+  TsTypeAliasDeclaration(ty=$alias) where {
+    $alias <: not TsFunctionType(),
+    $alias <: contains TsFunctionType() as $type
+  }
+} where {
+  register_diagnostic(span=$type, message="Inline function types are forbidden: declare a named type in types.ts (type PiRun = (pi: Pi) => Promise<void>).")
+}

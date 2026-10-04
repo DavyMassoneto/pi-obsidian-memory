@@ -8,6 +8,7 @@
   "plugins": [
     "./biome/no-unknown.grit",
     "./biome/no-inline-object-type.grit",
+    "./biome/no-inline-function-type.grit",
     "./biome/no-index-signature.grit",
     "./biome/no-deep-relative-import.grit",
     "./biome/no-ternary.grit",
