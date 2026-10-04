@@ -46,6 +46,10 @@ How memory is organized inside a vault (global or project). Decided with the use
 - Every write goes to a hidden temporary file in the same folder (`.<name>.md.tmp-<id>`) and is then renamed over the
   note, so a crash never leaves a half-written note. The temporary file lives for milliseconds and is always removed.
 - A note that cannot be written (read-only, locked) is refused with the reason; the note stays as it was.
+- Archiving or succeeding a note touches several files, with no journal. Everything is checked before anything is
+  written (the note did not change, the names are free, the new notes are valid), so the usual refusals change
+  nothing. Then the order is: archived copy, successor, and only last the original is removed. A crash in the middle
+  can only leave the same note in two places, never lose one; `/memory-doctor` finds duplicate ids.
 
 ## Templates
 

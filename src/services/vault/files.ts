@@ -20,7 +20,7 @@ export async function readRawFile(path: string): Promise<RawFileResult> {
 export async function findFileIgnoringCase(directory: string, fileName: string): Promise<ExistingFileResult> {
   const wanted = fileName.toLowerCase()
 
-  for (const entry of await readdir(directory)) {
+  for (const entry of await entriesOf(directory)) {
     if (entry.toLowerCase() === wanted) {
       return { succeeded: true, output: entry }
     }
@@ -50,8 +50,36 @@ export async function writeAtomically(path: string, text: string): Promise<Write
   }
 }
 
+export async function removeFile(path: string): Promise<WriteResult> {
+  try {
+    await rm(path)
+    return { succeeded: true }
+  } catch (error) {
+    if (error instanceof Error) {
+      const notWritable = notWritableCodeOf(error)
+      if (notWritable.succeeded) {
+        return { succeeded: false, code: notWritable.output }
+      }
+    }
+
+    throw error
+  }
+}
+
 export function hashOf(content: Buffer | string): string {
   return createHash(HASH_ALGORITHM).update(content).digest("hex")
+}
+
+async function entriesOf(directory: string): Promise<string[]> {
+  try {
+    return await readdir(directory)
+  } catch (error) {
+    if (error instanceof Error && isMissingFile(error)) {
+      return []
+    }
+
+    throw error
+  }
 }
 
 function isMissingFile(error: Error): boolean {
