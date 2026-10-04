@@ -12,6 +12,11 @@ pi → usecases → services → domain. Each layer imports only the one right b
 - usecases: combine services into one operation; every entry point goes through them.
 - pi: events, tools and commands; no logic.
 
+## Code
+
+- No comments. Make the code explain itself with descriptive names; if something still seems to need a comment, ask
+  the user.
+
 ## Tests
 
 - Test what can be wrong in a way lint and typecheck can't catch. Pure wiring, types and constants need no test.
@@ -22,6 +27,8 @@ pi → usecases → services → domain. Each layer imports only the one right b
   config.
 - Mock only: pi, the LLM, the clock. To mock anything else, ask the user.
 - vitest. `tests/` mirrors `src/` (`src/services/vault/save.ts` → `tests/services/vault/save.test.ts`).
+- Shared test helpers live in `tests/helpers/` (one file per topic), imported from `#test-helpers`; test files hold
+  only tests.
 
 What each layer's tests prove, and how:
 
