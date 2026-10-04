@@ -31,6 +31,31 @@ vault/
   - Written by the LLM: over the limit, the write is refused and the LLM splits the point into smaller notes.
   - Edited by the user in Obsidian: accepted; `/memory-doctor` lists the notes over the limit.
 
+## Frontmatter
+
+```markdown
+---
+id: 01JABCDE7XKQ2M9V3RTN8WPZ5F
+type: rule
+created: 2026-10-04
+updated: 2026-10-04
+dontForget: true
+---
+
+Use pnpm for every install and script. In CI: `pnpm install --frozen-lockfile`.
+```
+
+| Field | When | What |
+|---|---|---|
+| `id` | always | ULID: stable identity that survives renames |
+| `type` | always | one of the types below |
+| `created` | always | day the memory was born (`YYYY-MM-DD`) |
+| `updated` | always | day the memory last changed (`YYYY-MM-DD`); file dates are not trusted, sync tools change them |
+| `dontForget` | only when `true` | see Don't forget |
+| `archived` | only in `archive/` | day the note was archived (`YYYY-MM-DD`) |
+
+No `tags` (the folders already group notes), no `source`, no `schemaVersion` until the format first changes.
+
 ## Types
 
 | Type | What it is | Example |
@@ -79,7 +104,3 @@ search/Local or remote embeddings.md   →   archive/search/Local or remote embe
 ## Not memory
 
 Tasks and TODOs, session logs, secrets, and anything the code or git history already records.
-
-## Open
-
-- Other frontmatter fields.
