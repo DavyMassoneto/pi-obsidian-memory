@@ -10,6 +10,25 @@ How memory is organized inside a vault (global or project). Decided with the use
   2. Reuse before creating: the LLM walks the existing tree and uses the path that already covers the subject.
   3. When two paths make sense, the LLM asks the user.
 - Splitting a folder that grew too much is up to the user, or suggested by `/memory-doctor`.
+- Every folder has an `index.md` listing its subfolders and its notes (with type and don't forget mark), so the LLM can
+  walk down the tree level by level. The memory system regenerates it on every write; manual edits to it are
+  overwritten.
+
+```markdown
+# typescript
+
+## Subjects
+- [[typescript/testing/index|testing]]
+
+## Notes
+- [[No ternaries]] · rule
+- [[Strict mode always on]] · rule · don't forget
+```
+
+## Templates
+
+- The memory system writes every note from templates defined in its code, so notes are always valid.
+- A copy of each template lives in the vault, for the user to create notes by hand with Obsidian's Templates plugin.
 - Retired notes move to `archive/`; nothing is deleted.
 
 ```text

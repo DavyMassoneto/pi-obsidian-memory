@@ -44,8 +44,11 @@ lives in any folder they choose.
 10. **Skills.** The extension ships its own skills that teach the agent how to use the
     memory. Skills are part of the package and are **never saved in the vaults**.
     Vaults hold only memory.
-11. **Configurable.** Vault locations are configurable; any folder works, OneDrive is optional.
-12. **Platform.** pi only for now. Windows first.
+11. **Vault access only through the memory system.** The LLM never reads or writes vault files directly: the extension
+    blocks pi's file tools on vault paths, and the LLM uses the memory tools, which bring search with embeddings.
+    The user edits the vault freely in Obsidian.
+12. **Configurable.** Vault locations are configurable; any folder works, OneDrive is optional.
+13. **Platform.** pi only for now. Windows first.
 
 ## Not in scope
 
