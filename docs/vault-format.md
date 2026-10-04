@@ -5,6 +5,11 @@ How memory is organized inside a vault (global or project). Decided with the use
 ## Layout
 
 - One folder per subject. Each folder holds short notes, one point per note.
+- Subjects nest with no depth limit. Where a note goes:
+  1. From general to specific: `typescript/testing/`, not `testing/typescript/`, for testing in TypeScript.
+  2. Reuse before creating: the LLM walks the existing tree and uses the path that already covers the subject.
+  3. When two paths make sense, the LLM asks the user.
+- Splitting a folder that grew too much is up to the user, or suggested by `/memory-doctor`.
 - Retired notes move to `archive/`; nothing is deleted.
 
 ```text
@@ -78,4 +83,3 @@ Tasks and TODOs, session logs, secrets, and anything the code or git history alr
 ## Open
 
 - Other frontmatter fields.
-- Folder depth.
