@@ -1,5 +1,9 @@
 import type { Note } from "#/domain/note"
 
+export interface Titled {
+  statement: string
+}
+
 export interface InvalidNote {
   statement: string
   problems: string[]

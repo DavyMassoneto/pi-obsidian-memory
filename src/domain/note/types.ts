@@ -1,5 +1,6 @@
 import type { Static } from "typebox"
 
+import type { Failed, Succeeded } from "#/domain/result"
 import type { NoteFrontmatterSchema, NoteTypeSchema } from "./schemas.ts"
 
 export type NoteType = Static<typeof NoteTypeSchema>
@@ -17,15 +18,13 @@ export interface NoteLimits {
   maxStatementChars: number
 }
 
-export type ParseNoteResult = { succeeded: true; output: Note } | { succeeded: false; problems: string[] }
-
 export interface NoteParts {
   frontmatter: string
   body: string
 }
 
-export type SplitNoteResult = { succeeded: true; output: NoteParts } | { succeeded: false; problems: string[] }
+export type ParseNoteResult = Succeeded<Note> | Failed
 
-export type ReadFrontmatterResult =
-  | { succeeded: true; output: NoteFrontmatter }
-  | { succeeded: false; problems: string[] }
+export type SplitNoteResult = Succeeded<NoteParts> | Failed
+
+export type ReadFrontmatterResult = Succeeded<NoteFrontmatter> | Failed

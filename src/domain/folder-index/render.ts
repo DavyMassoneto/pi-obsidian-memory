@@ -1,6 +1,6 @@
 import { ARCHIVE_FOLDER, FOLDER_INDEX_NAME, joinVaultPath, type Note } from "#/domain/note"
 import { DONT_FORGET_LABEL, NOTE_LINE_SEPARATOR, PROBLEM_SEPARATOR } from "./constants.ts"
-import type { FolderContents, InvalidNote } from "./types.ts"
+import type { FolderContents, InvalidNote, Titled } from "./types.ts"
 
 export function renderFolderIndex(folder: FolderContents): string {
   const path = linkPathOf(folder)
@@ -80,7 +80,7 @@ function sortAlphabetically(values: string[]): string[] {
   return [...values].sort(compareText)
 }
 
-function byStatement(first: { statement: string }, second: { statement: string }): number {
+function byStatement(first: Titled, second: Titled): number {
   return compareText(first.statement, second.statement)
 }
 
