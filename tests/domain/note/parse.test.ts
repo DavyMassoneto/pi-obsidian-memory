@@ -33,6 +33,24 @@ test("accepts a note written by hand in Obsidian", () => {
   })
 })
 
+test("reads the lifecycle links", () => {
+  const lines = [...validLines, 'replaces: "[[archive/search/Old]]"', 'replacedBy: "[[search/New]]"']
+
+  expect(parseNote(statement, frontmatterWith(lines))).toMatchObject({
+    succeeded: true,
+    output: { frontmatter: { replaces: "[[archive/search/Old]]", replacedBy: "[[search/New]]" } },
+  })
+})
+
+test("refuses a lifecycle link that is not a wikilink", () => {
+  const lines = [...validLines, 'replaces: "archive/search/Old"']
+
+  expect(parseNote(statement, frontmatterWith(lines))).toEqual({
+    succeeded: false,
+    problems: [expect.stringMatching(/^replaces: must match pattern/)],
+  })
+})
+
 test("keeps dates as YYYY-MM-DD text", () => {
   const result = parseNote(statement, frontmatterWith(validLines))
 

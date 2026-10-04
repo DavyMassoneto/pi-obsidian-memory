@@ -86,6 +86,8 @@ Use pnpm for every install and script. In CI: `pnpm install --frozen-lockfile`.
 | `updated` | always | day the memory last changed (`YYYY-MM-DD`); file dates are not trusted, sync tools change them |
 | `dontForget` | only when `true` | see Don't forget |
 | `archived` | only in `archive/` | day the note was archived (`YYYY-MM-DD`) |
+| `replaces` | only in a successor | link to the archived note it replaces (`"[[archive/search/Old]]"`) |
+| `replacedBy` | only in a replaced note | link to its successor (`"[[search/New]]"`) |
 
 No `tags` (the folders already group notes), no `source`, no `schemaVersion` until the format first changes.
 
@@ -113,21 +115,22 @@ A field that is not in this table makes the note invalid; `/memory-doctor` lists
 
 ## Lifecycle
 
-When a memory moves on in its cycle, the old note goes to `archive/` (same subject path) and a new note is born,
-linking back to it with a `[[wikilink]]`. The history stays: you can see what it used to be.
+When a memory moves on in its cycle, the old note goes to `archive/` (same subject path) and a new note is born. The
+new note links to the old one with `replaces`, the old one links forward with `replacedBy`, so the history stays and
+the LLM sees it without depending on Obsidian's backlinks. The archived note gets `archived: <today>` and keeps
+everything else; the new note is born today.
+
+Updating a note in place is different: it is for the same point getting more detail, while it is still true. A
+successor is for a point that stopped being true or was resolved, even when the type stays the same (a `fact` replaced
+by a newer `fact`).
 
 ```text
 search/Local or remote embeddings.md   →   archive/search/Local or remote embeddings.md   (question)
                                            search/Chose local embeddings.md               (decision)
 ```
 
-| From | To | When |
-|---|---|---|
-| `question` | `decision` | the question is answered |
-| `idea` | `goal` | the idea is committed to |
-| `risk` | `issue` | the risk happens |
-| `issue` | `lesson` | the issue is solved |
-| any | `archive/` only | it stops being true, with no successor |
+Any type can become any other type: there is no fixed path. A question may become a decision, an issue or an idea; a
+risk may become an issue or a lesson. A note can also go to `archive/` with no successor, when it stops being true.
 
 ## Don't forget
 

@@ -17,6 +17,8 @@ export const NoteTypeSchema = Type.Enum([
 
 export const NoteDateSchema = Type.String({ format: "date" })
 
+export const NoteLinkSchema = Type.String({ pattern: "^\\[\\[[^\\[\\]|#^]+\\]\\]$" })
+
 export const NoteFrontmatterSchema = Type.Object(
   {
     id: Type.String({ pattern: "^[0-7][0-9A-HJKMNP-TV-Z]{25}$" }),
@@ -25,6 +27,8 @@ export const NoteFrontmatterSchema = Type.Object(
     updated: NoteDateSchema,
     dontForget: Type.Optional(Type.Literal(true)),
     archived: Type.Optional(NoteDateSchema),
+    replaces: Type.Optional(NoteLinkSchema),
+    replacedBy: Type.Optional(NoteLinkSchema),
   },
   { additionalProperties: false },
 )

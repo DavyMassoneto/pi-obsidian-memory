@@ -2,6 +2,8 @@ export const FRONTMATTER_FENCE = "---"
 
 export const FOLDER_INDEX_NAME = "index"
 
+export const ARCHIVE_FOLDER = "archive"
+
 export const CHARACTERS_WINDOWS_FORBIDS_IN_FILE_NAMES = ["<", ">", ":", '"', "/", "\\", "|", "?", "*"]
 
 export const CHARACTERS_THAT_BREAK_OBSIDIAN_LINKS = ["[", "]", "#", "^"]

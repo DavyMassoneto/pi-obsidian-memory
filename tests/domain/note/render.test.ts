@@ -31,6 +31,23 @@ test("writes dontForget only when the note is marked", () => {
   expect(renderNote(marked)).toContain("updated: 2026-10-04\ndontForget: true\n---")
 })
 
+test("writes the lifecycle links quoted, after archived", () => {
+  const note = aNote()
+  const linked = {
+    ...note,
+    frontmatter: {
+      ...note.frontmatter,
+      archived: "2026-10-05",
+      replaces: "[[archive/pnpm/Use npm]]",
+      replacedBy: "[[pnpm/Use pnpm 10]]",
+    },
+  }
+
+  expect(renderNote(linked)).toContain(
+    'archived: 2026-10-05\nreplaces: "[[archive/pnpm/Use npm]]"\nreplacedBy: "[[pnpm/Use pnpm 10]]"\n---',
+  )
+})
+
 test("writes archived only when the note is archived", () => {
   const note = aNote()
   const archived = { ...note, frontmatter: { ...note.frontmatter, archived: "2026-10-05" } }

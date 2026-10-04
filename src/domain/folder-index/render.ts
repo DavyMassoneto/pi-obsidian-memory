@@ -1,5 +1,5 @@
-import { FOLDER_INDEX_NAME, type Note } from "#/domain/note"
-import { ARCHIVE_FOLDER, DONT_FORGET_LABEL, NOTE_LINE_SEPARATOR } from "./constants.ts"
+import { ARCHIVE_FOLDER, FOLDER_INDEX_NAME, joinVaultPath, type Note } from "#/domain/note"
+import { DONT_FORGET_LABEL, NOTE_LINE_SEPARATOR } from "./constants.ts"
 import type { FolderContents } from "./types.ts"
 
 export function renderFolderIndex(folder: FolderContents): string {
@@ -51,12 +51,12 @@ function archiveSection(folder: FolderContents): string[] {
 }
 
 function subjectLine(path: string, subject: string): string {
-  const target = joinPath(joinPath(path, subject), FOLDER_INDEX_NAME)
+  const target = joinVaultPath(path, subject, FOLDER_INDEX_NAME)
   return `- [[${target}|${subject}]]`
 }
 
 function noteLine(path: string, note: Note): string {
-  const link = `[[${joinPath(path, note.statement)}|${note.statement}]]`
+  const link = `[[${joinVaultPath(path, note.statement)}|${note.statement}]]`
   const parts = [link, note.frontmatter.type]
 
   if (note.frontmatter.dontForget) {
@@ -64,14 +64,6 @@ function noteLine(path: string, note: Note): string {
   }
 
   return `- ${parts.join(NOTE_LINE_SEPARATOR)}`
-}
-
-function joinPath(path: string, name: string): string {
-  if (path.length === 0) {
-    return name
-  }
-
-  return `${path}/${name}`
 }
 
 function sortAlphabetically(values: string[]): string[] {

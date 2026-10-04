@@ -25,5 +25,13 @@ function orderedFrontmatter(frontmatter: NoteFrontmatter): NoteFrontmatter {
     ordered.archived = frontmatter.archived
   }
 
+  if (frontmatter.replaces) {
+    ordered.replaces = frontmatter.replaces
+  }
+
+  if (frontmatter.replacedBy) {
+    ordered.replacedBy = frontmatter.replacedBy
+  }
+
   return ordered
 }
