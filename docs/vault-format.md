@@ -46,9 +46,15 @@ vault/
 - The file name is the statement: reading the name tells exactly what the note says.
 - New information about the same point updates that note. A new point in the same subject is a new note in that folder.
 - The frontmatter `type` says what kind of memory the note is.
-- Size limit: the body has at most 1,000 characters by default, configurable by the user.
-  - Written by the LLM: over the limit, the write is refused and the LLM splits the point into smaller notes.
-  - Edited by the user in Obsidian: accepted; `/memory-doctor` lists the notes over the limit.
+- Characters are counted as people count them: one per visible character, so an emoji or an accented letter is one.
+- Name (the statement): at most 100 characters by default, configurable. It must be a valid file name on Windows and
+  must not break Obsidian links: no `< > : " / \ | ? * [ ] # ^`, no control characters, no Windows reserved name
+  (`CON`, `NUL`, `COM1`…), no leading or trailing space, no trailing dot.
+- Body: never empty, even when the name says it all, so the LLM always records the detail. At most 1,000 characters by
+  default, configurable.
+- An invalid note is refused with every reason; nothing is fixed silently.
+  - Written by the LLM: the write is refused and the LLM rewrites the note or splits it into smaller notes.
+  - Edited by the user in Obsidian: accepted; `/memory-doctor` lists the notes with problems.
 
 ## Frontmatter
 

@@ -1,3 +1,4 @@
+export * from "./check.ts"
 export * from "./constants.ts"
 export * from "./parse.ts"
 export * from "./render.ts"

@@ -12,6 +12,11 @@ export interface Note {
   body: string
 }
 
+export interface NoteLimits {
+  maxBodyChars: number
+  maxStatementChars: number
+}
+
 export type ParseNoteResult = { succeeded: true; output: Note } | { succeeded: false; problems: string[] }
 
 export interface NoteParts {
