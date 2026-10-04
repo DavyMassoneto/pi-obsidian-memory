@@ -33,6 +33,16 @@ How memory is organized inside a vault (global or project). Decided with the use
 - [[typescript/Strict mode always on|Strict mode always on]] · rule · don't forget
 ```
 
+## Writing
+
+- A new note is refused when a note with the same name already exists in the folder, in any case (Windows does not
+  tell `Use pnpm` from `use pnpm`).
+- A note is only updated if it did not change on disk since it was read (content hash). If the user edited it in
+  Obsidian in the meantime, the update is refused as a conflict and the user's edit stays.
+- Every write goes to a hidden temporary file in the same folder (`.<name>.md.tmp-<id>`) and is then renamed over the
+  note, so a crash never leaves a half-written note. The temporary file lives for milliseconds and is always removed.
+- A note that cannot be written (read-only, locked) is refused with the reason; the note stays as it was.
+
 ## Templates
 
 - The memory system writes every note from templates defined in its code, so notes are always valid.
