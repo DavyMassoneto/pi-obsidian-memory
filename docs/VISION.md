@@ -17,7 +17,8 @@ lives in any folder they choose.
 
 1. **Reuse.** Reuse anything useful from pi-hermes-memory (MIT). Its copyright notice is
    kept only where we copy a substantial portion of its code. The on-disk format is our
-   own: Obsidian notes.
+   own: Obsidian notes. Before building anything, check whether pi-hermes-memory already
+   does it, and reuse only what is needed.
 2. **Two layers, dedicated vaults.**
    - **Global vault** (one): about the user — how to address them, preferences, patterns, global lessons.
    - **Project vault** (one per project): everything else about that project.
@@ -35,8 +36,9 @@ lives in any folder they choose.
    outside that budget. Everything else is reached through search.
 5. **Direct, detailed updates.** No consolidation and no approval step. The agent writes
    and updates memory notes directly, with full detail. New information about an existing
-   topic updates that note instead of creating a new one.
-6. **Search.** Text search **and** local semantic search (local embeddings) in v1.
+   point updates that note instead of creating a new one. Format: [vault-format.md](vault-format.md).
+6. **Search.** Text search **and** semantic search in v1. The embedding provider is the
+   user's choice: a local model, OpenAI, Google, and so on.
 7. **Language.** Notes are stored in English. The user can talk in any language.
 8. **Never delete.** Retired notes move to `archive/`.
 9. **Commands.** `/memory-setup` (global), `/memory-init` (project), `/memory-doctor`
@@ -44,22 +46,21 @@ lives in any folder they choose.
 10. **Skills.** The extension ships its own skills that teach the agent how to use the
     memory. Skills are part of the package and are **never saved in the vaults**.
     Vaults hold only memory.
-11. **Vault access only through the memory system.** The LLM never reads or writes vault files directly: the extension
+11. **Secrets.** The vault is the user's own vault: secrets are saved like any other memory,
+    with no masking or blocking.
+12. **Vault access only through the memory system.** The LLM never reads or writes vault files directly: the extension
     blocks pi's file tools on vault paths, and the LLM uses the memory tools, which bring search with embeddings.
     The user edits the vault freely in Obsidian.
-12. **Configurable.** Vault locations are configurable; any folder works, OneDrive is optional.
-13. **Platform.** pi only for now. Windows first.
+13. **Configurable.** Vault locations are configurable; any folder works, OneDrive is optional.
+14. **Platform.** pi only for now. Windows first.
 
 ## Not in scope
 
 - A session transcript or "in progress" note in the vault.
-- Saving skills or procedures to the vaults.
+- Saving skills to the vaults.
 - Hosts other than pi (for now).
+- Searching past pi sessions (for now).
 
 ## Open questions (to decide together)
 
-- Vault format, what counts as memory and the "Don't forget" list: in progress in [vault-format.md](vault-format.md).
-- Where search indexes and the embedding model live (inside or outside the vaults).
-- Which pi-hermes-memory modules to reuse, and how.
-- Secrets policy for memory content.
-- Searching past pi sessions (`session_search`): in v1 or not.
+- Where the search index lives (inside or outside the vaults).
