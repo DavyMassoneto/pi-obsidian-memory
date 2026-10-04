@@ -1,7 +1,7 @@
-import type { TLocalizedValidationError } from "typebox/error"
 import { Value } from "typebox/value"
 import { parseDocument } from "yaml"
 
+import { describeSchemaErrors } from "#/domain/validation"
 import { FRONTMATTER_FENCE } from "./constants.ts"
 import { NoteFrontmatterSchema } from "./schemas.ts"
 import type { ParseNoteResult, ReadFrontmatterResult, SplitNoteResult } from "./types.ts"
@@ -53,25 +53,8 @@ function readFrontmatter(yaml: string): ReadFrontmatterResult {
   const frontmatter = document.toJS()
   if (!Value.Check(NoteFrontmatterSchema, frontmatter)) {
     const errors = Value.Errors(NoteFrontmatterSchema, frontmatter)
-    return { succeeded: false, problems: errors.flatMap(describeError) }
+    return { succeeded: false, problems: describeSchemaErrors(errors, "frontmatter") }
   }
 
   return { succeeded: true, output: frontmatter }
-}
-
-function describeError(error: TLocalizedValidationError): string[] {
-  if (error.keyword === "additionalProperties") {
-    return error.params.additionalProperties.map((field) => `${field}: not a known field`)
-  }
-
-  if (error.keyword === "boolean") {
-    return []
-  }
-
-  const field = error.instancePath.slice(1)
-  if (field.length === 0) {
-    return [`frontmatter: ${error.message}`]
-  }
-
-  return [`${field}: ${error.message}`]
 }

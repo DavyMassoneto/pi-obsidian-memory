@@ -24,7 +24,7 @@ lives in any folder they choose.
    - **Project vault** (one per project): everything else about that project.
    - The agent classifies each memory. **When unsure, it asks the user.**
 3. **Registration.** All registration lives in one local config file on the machine,
-   outside the vaults (e.g. `~/.pi/agent/pi-obsidian-memory/config.json`).
+   outside the vaults (e.g. `~/.pi/agent/pi-obsidian-memory/config.json`). Format: [config.md](config.md).
    - **Global:** `/memory-setup` asks where the global vault lives, then creates a new
      dedicated vault or attaches an existing one, and records its path. It can be re-run
      to move or switch the vault. Until a global vault is registered there is no memory,
