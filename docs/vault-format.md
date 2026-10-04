@@ -75,6 +75,8 @@ Use pnpm for every install and script. In CI: `pnpm install --frozen-lockfile`.
 
 No `tags` (the folders already group notes), no `source`, no `schemaVersion` until the format first changes.
 
+A field that is not in this table makes the note invalid; `/memory-doctor` lists invalid notes.
+
 ## Types
 
 | Type | What it is | Example |
