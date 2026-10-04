@@ -43,14 +43,30 @@ vault/
 - The list is closed. A new type is added only with the user's approval.
 - When unsure which type fits, or whether something is memory at all, the LLM asks the user.
 
+## Lifecycle
+
+When a memory moves on in its cycle, the old note goes to `archive/` (same subject path) and a new note is born,
+linking back to it with a `[[wikilink]]`. The history stays: you can see what it used to be.
+
+```text
+search/Local or remote embeddings.md   →   archive/search/Local or remote embeddings.md   (question)
+                                           search/Chose local embeddings.md               (decision)
+```
+
+| From | To | When |
+|---|---|---|
+| `question` | `decision` | the question is answered |
+| `idea` | `goal` | the idea is committed to |
+| `risk` | `issue` | the risk happens |
+| `issue` | `lesson` | the issue is solved |
+| any | `archive/` only | it stops being true, with no successor |
+
 ## Not memory
 
 Tasks and TODOs, session logs, secrets, and anything the code or git history already records.
 
 ## Open
 
-- Lifecycle: memories change type over time (question → decision, idea → goal, risk → issue, issue → lesson) or stop
-  being true.
 - The "Don't forget" mark.
 - Other frontmatter fields.
 - Note size limit and folder depth.
