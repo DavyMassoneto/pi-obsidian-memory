@@ -1,6 +1,6 @@
 # AGENTS.md
 
-A pi extension that stores the agent's long-term memory in Obsidian vaults. Product and decisions: [VISION.md](VISION.md).
+A pi extension that stores the agent's long-term memory in Obsidian vaults. Product and decisions: [docs/VISION.md](docs/VISION.md).
 
 ## Layers
 

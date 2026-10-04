@@ -4,7 +4,7 @@ Long-term memory for the [pi coding agent](https://pi.dev), stored in [Obsidian]
 
 > **Status:** early development. The extension loads but has no features yet.
 
-See [VISION.md](VISION.md) for what this project is and the decisions behind it.
+See [docs/VISION.md](docs/VISION.md) for what this project is and the decisions behind it.
 
 ## Development
 

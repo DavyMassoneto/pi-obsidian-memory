@@ -55,8 +55,7 @@ lives in any folder they choose.
 
 ## Open questions (to decide together)
 
-- Vault folder layout and note format (frontmatter, templates, index).
-- What counts as a memory worth saving, and what the "Don't forget" list holds.
+- Vault format, what counts as memory and the "Don't forget" list: in progress in [vault-format.md](vault-format.md).
 - Where search indexes and the embedding model live (inside or outside the vaults).
 - Which pi-hermes-memory modules to reuse, and how.
 - Secrets policy for memory content.
