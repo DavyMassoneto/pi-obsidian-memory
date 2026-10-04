@@ -1,0 +1,46 @@
+import { readConfig } from "#/services/config"
+import { newNote, targetVault } from "#/services/memory"
+import { createNote, findNote, refreshIndexes, type VaultRefusal } from "#/services/vault"
+import type { AddMemoryRequest, AddMemoryResult, MemoryContext } from "./types.ts"
+
+export async function addMemory(request: AddMemoryRequest, context: MemoryContext): Promise<AddMemoryResult> {
+  const config = await readConfig(context.configPath)
+  if (!config.succeeded) {
+    return config
+  }
+
+  const target = targetVault(config.output, request.scope, context.workingFolder)
+  if (!target.succeeded) {
+    return target
+  }
+
+  const { path, name } = target.output
+  const created = await createNote(path, request.folder, newNote(request.draft), config.output.limits)
+  if (!created.succeeded) {
+    return refuseCreation(path, request, created)
+  }
+
+  const refreshed = await refreshIndexes(path, request.folder, name)
+  if (!refreshed.succeeded) {
+    return { succeeded: false, reason: "not-writable", problems: refreshed.problems }
+  }
+
+  return { succeeded: true, output: { vaultName: name, folder: request.folder, stored: created.output } }
+}
+
+async function refuseCreation(
+  vault: string,
+  request: AddMemoryRequest,
+  refusal: VaultRefusal,
+): Promise<AddMemoryResult> {
+  if (refusal.reason !== "exists") {
+    return refusal
+  }
+
+  const existing = await findNote(vault, request.folder, request.draft.statement)
+  if (!existing.succeeded) {
+    return refusal
+  }
+
+  return { ...refusal, reason: "exists", existing: existing.output }
+}

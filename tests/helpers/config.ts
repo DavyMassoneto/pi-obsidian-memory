@@ -1,3 +1,6 @@
+import { writeFile } from "node:fs/promises"
+import { join } from "node:path"
+
 import type { MemoryConfig } from "#/domain/config"
 
 export function aConfig(): MemoryConfig {
@@ -9,4 +12,10 @@ export function aConfig(): MemoryConfig {
     ],
     limits: { maxBodyChars: 1000, maxStatementChars: 100 },
   }
+}
+
+export async function writeConfig(folder: string, config: MemoryConfig): Promise<string> {
+  const path = join(folder, "config.json")
+  await writeFile(path, JSON.stringify(config, null, 2))
+  return path
 }

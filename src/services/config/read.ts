@@ -11,7 +11,7 @@ export async function readConfig(path: string): Promise<ReadConfigResult> {
 
   const parsed = parseConfig(file.output.toString("utf8"))
   if (!parsed.succeeded) {
-    return { succeeded: false, reason: "invalid", problems: parsed.problems }
+    return { succeeded: false, reason: "invalid-config", problems: parsed.problems }
   }
 
   return parsed

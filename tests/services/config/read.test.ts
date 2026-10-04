@@ -31,7 +31,7 @@ test("refuses an invalid file with every problem", async () => {
 
   expect(await readConfig(path)).toEqual({
     succeeded: false,
-    reason: "invalid",
+    reason: "invalid-config",
     problems: ["theme: not a known field"],
   })
 })
