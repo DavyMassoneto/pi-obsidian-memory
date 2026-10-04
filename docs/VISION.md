@@ -38,7 +38,10 @@ lives in any folder they choose.
    and updates memory notes directly, with full detail. New information about an existing
    point updates that note instead of creating a new one. Format: [vault-format.md](vault-format.md).
 6. **Search.** Text search **and** semantic search in v1. The embedding provider is the
-   user's choice: a local model, OpenAI, Google, and so on.
+   user's choice: a local model, OpenAI, Google, and so on. Choosing a remote provider sends
+   note content (secrets included) to it, and `/memory-setup` warns about that. The search
+   index lives outside the vaults (e.g. `~/.pi/agent/pi-obsidian-memory/index/`) and can
+   always be rebuilt from the notes.
 7. **Language.** Notes are stored in English. The user can talk in any language.
 8. **Never delete.** Retired notes move to `archive/`.
 9. **Commands.** `/memory-setup` (global), `/memory-init` (project), `/memory-doctor`
@@ -60,7 +63,3 @@ lives in any folder they choose.
 - Saving skills to the vaults.
 - Hosts other than pi (for now).
 - Searching past pi sessions (for now).
-
-## Open questions (to decide together)
-
-- Where the search index lives (inside or outside the vaults).
