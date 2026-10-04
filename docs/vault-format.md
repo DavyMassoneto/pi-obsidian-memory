@@ -61,12 +61,18 @@ search/Local or remote embeddings.md   →   archive/search/Local or remote embe
 | `issue` | `lesson` | the issue is solved |
 | any | `archive/` only | it stops being true, with no successor |
 
+## Don't forget
+
+- Any note can be marked with `dontForget: true` in its frontmatter. It keeps its subject folder and its type.
+- Every marked note is injected in full (name and body) at session start, outside the summary budget, so it never
+  depends on the LLM choosing to open it.
+- A note in `archive/` is no longer injected.
+
 ## Not memory
 
 Tasks and TODOs, session logs, secrets, and anything the code or git history already records.
 
 ## Open
 
-- The "Don't forget" mark.
 - Other frontmatter fields.
 - Note size limit and folder depth.
