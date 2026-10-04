@@ -51,7 +51,10 @@
       },
       "suspicious": {
         "noEvolvingTypes": "error",
-        "noImportCycles": "error",
+        "noImportCycles": {
+          "level": "error",
+          "options": { "ignoreTypes": false }
+        },
         "noExplicitAny": "error",
         "noImplicitAnyLet": "error"
       }

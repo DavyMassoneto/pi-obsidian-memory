@@ -1,6 +1,6 @@
 language js
 
 JsModuleSource() as $source where {
-  $source <: r".#(?:services|usecases)(?:/.*)?.",
+  $source <: r".#/(?:services|usecases|pi)(?:/.*)?.",
   register_diagnostic(span=$source, message="domain is the bottom step of the ladder (pi → usecases → services → domain): it imports no other layer.")
 }

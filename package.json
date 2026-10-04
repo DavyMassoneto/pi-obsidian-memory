@@ -22,9 +22,7 @@
   },
   "type": "module",
   "imports": {
-    "#domain": "./src/domain/index.ts",
-    "#services": "./src/services/index.ts",
-    "#usecases": "./src/usecases/index.ts",
+    "#/*": "./src/*/index.ts",
     "#test-helpers": "./tests/helpers/index.ts"
   },
   "engines": {
