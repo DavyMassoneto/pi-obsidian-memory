@@ -64,6 +64,10 @@
   },
   "overrides": [
     {
+      "includes": ["src/shared/**"],
+      "plugins": ["./biome/layer-shared.grit"]
+    },
+    {
       "includes": ["src/domain/**"],
       "plugins": ["./biome/layer-domain.grit"]
     },

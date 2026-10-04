@@ -1,5 +1,5 @@
 language js
 
 TsObjectType() as $type where {
-  register_diagnostic(span=$type, message="Inline object types are forbidden: declare a named interface in types.ts (results use the shared types in #/domain/result).")
+  register_diagnostic(span=$type, message="Inline object types are forbidden: declare a named interface in types.ts (results use the shared types in #/shared/result).")
 }

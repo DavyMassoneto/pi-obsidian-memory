@@ -1,6 +1,6 @@
 import type { Static } from "typebox"
 
-import type { Failed, Succeeded } from "#/domain/result"
+import type { Failed, Succeeded } from "#/shared/result"
 import type { NoteFrontmatterSchema, NoteTypeSchema } from "./schemas.ts"
 
 export type NoteType = Static<typeof NoteTypeSchema>

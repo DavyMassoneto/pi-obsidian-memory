@@ -1,7 +1,7 @@
 import type { InvalidNote } from "#/domain/folder-index"
 import type { PlacedNote, Succession } from "#/domain/lifecycle"
 import type { Note } from "#/domain/note"
-import type { Absent, Done, Failed, Succeeded } from "#/domain/result"
+import type { Absent, Done, Failed, Succeeded } from "#/shared/result"
 
 export interface StoredNote {
   note: Note

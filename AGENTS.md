@@ -11,6 +11,8 @@ pi → usecases → services → domain. Each layer imports only the one right b
   parameters; only the pi layer knows the real ones.
 - usecases: combine services into one operation; every entry point goes through them.
 - pi: events, tools and commands; no logic.
+- shared: outside the ladder; every layer may import it, it imports no layer. Only generic result types, no product
+  rules.
 
 ## Code
 
