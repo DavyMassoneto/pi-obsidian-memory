@@ -1,6 +1,6 @@
 import { readConfig } from "#/services/config"
 import { newNote, targetVault } from "#/services/memory"
-import { createNote, findNote, refreshIndexes, type VaultRefusal } from "#/services/vault"
+import { createNote, displayNotePath, findNote, refreshIndexes, type VaultRefusal } from "#/services/vault"
 import type { AddMemoryRequest, AddMemoryResult, MemoryContext } from "./types.ts"
 
 export async function addMemory(request: AddMemoryRequest, context: MemoryContext): Promise<AddMemoryResult> {
@@ -25,7 +25,8 @@ export async function addMemory(request: AddMemoryRequest, context: MemoryContex
     return { succeeded: false, reason: "not-writable", problems: refreshed.problems }
   }
 
-  return { succeeded: true, output: { vaultName: name, folder: request.folder, stored: created.output } }
+  const notePath = displayNotePath(request.folder, created.output.note.statement)
+  return { succeeded: true, output: { vaultName: name, folder: request.folder, notePath, stored: created.output } }
 }
 
 async function refuseCreation(

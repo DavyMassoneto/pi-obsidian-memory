@@ -39,7 +39,10 @@ test("saves a global memory in the global vault and refreshes its indexes", asyn
     { configPath, workingFolder: "D:/Downloads" },
   )
 
-  expect(result).toMatchObject({ succeeded: true, output: { vaultName: "Global memory", folder: "tools/pnpm" } })
+  expect(result).toMatchObject({
+    succeeded: true,
+    output: { vaultName: "Global memory", folder: "tools/pnpm", notePath: `tools/pnpm/${draft.statement}.md` },
+  })
   expect(await readNote(globalVault, "tools/pnpm", draft.statement)).toMatchObject({ succeeded: true })
   expect(await readFile(join(globalVault, "tools", "pnpm", "index.md"), "utf8")).toContain(draft.statement)
   expect(await readFile(join(globalVault, "index.md"), "utf8")).toContain("# Global memory")

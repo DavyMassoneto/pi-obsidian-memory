@@ -1,14 +1,11 @@
-import type { NoteType } from "#/domain/note"
+import type { Static } from "typebox"
+
 import type { Failed, Succeeded } from "#/shared/result"
+import type { MemoryDraftSchema, MemoryScopeSchema } from "./schemas.ts"
 
-export type MemoryScope = "global" | "project"
+export type MemoryScope = Static<typeof MemoryScopeSchema>
 
-export interface MemoryDraft {
-  statement: string
-  type: NoteType
-  body: string
-  dontForget: boolean
-}
+export type MemoryDraft = Static<typeof MemoryDraftSchema>
 
 export interface VaultTarget {
   path: string

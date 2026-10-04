@@ -1,7 +1,15 @@
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent"
+import { type ExtensionAPI, type ExtensionContext, getAgentDir } from "@earendil-works/pi-coding-agent"
+
+import { memoryAddTool, memoryConfigPath } from "#/pi/memory-add"
+import type { ExtensionRegistrar } from "./types.ts"
 
 export default function extension(pi: ExtensionAPI): void {
-  pi.on("session_start", handleSessionStart)
+  registerExtension(pi, getAgentDir())
+}
+
+export function registerExtension(registrar: ExtensionRegistrar, agentDir: string): void {
+  registrar.registerTool(memoryAddTool(memoryConfigPath(agentDir)))
+  registrar.on("session_start", handleSessionStart)
 }
 
 function handleSessionStart(_event: object, ctx: ExtensionContext): void {

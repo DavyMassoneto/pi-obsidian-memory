@@ -1,13 +1,12 @@
+import type { Static } from "typebox"
+
 import type { ConfigRefusal } from "#/services/config"
-import type { MemoryDraft, MemoryScope, NoProjectRefusal } from "#/services/memory"
+import type { NoProjectRefusal } from "#/services/memory"
 import type { StoredNote, VaultRefusal } from "#/services/vault"
 import type { Failed, Succeeded } from "#/shared/result"
+import type { AddMemoryRequestSchema } from "./schemas.ts"
 
-export interface AddMemoryRequest {
-  scope: MemoryScope
-  folder: string
-  draft: MemoryDraft
-}
+export type AddMemoryRequest = Static<typeof AddMemoryRequestSchema>
 
 export interface MemoryContext {
   configPath: string
@@ -17,6 +16,7 @@ export interface MemoryContext {
 export interface AddedMemory {
   vaultName: string
   folder: string
+  notePath: string
   stored: StoredNote
 }
 

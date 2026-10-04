@@ -37,6 +37,9 @@ lives in any folder they choose.
 5. **Direct, detailed updates.** No consolidation and no approval step. The agent writes
    and updates memory notes directly, with full detail. New information about an existing
    point updates that note instead of creating a new one. Format: [vault-format.md](vault-format.md).
+   Memory is captured, updated, archived and succeeded automatically, by a background process
+   that reviews the conversation. The memory tools exist only for explicit user requests
+   ("remember this"), and nothing in the prompt nudges the LLM to save on its own.
 6. **Search.** Text search **and** semantic search in v1. The embedding provider is the
    user's choice: a local model, OpenAI, Google, and so on. Choosing a remote provider sends
    note content (secrets included) to it, and `/memory-setup` warns about that. The search
