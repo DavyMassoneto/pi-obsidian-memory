@@ -13,16 +13,24 @@ How memory is organized inside a vault (global or project). Decided with the use
 - Every folder has an `index.md` listing its subfolders and its notes (with type and don't forget mark), so the LLM can
   walk down the tree level by level. The memory system regenerates it on every write; manual edits to it are
   overwritten.
+  - Links use the full path from the vault root, since every folder has an `index.md` and the same statement can
+    exist in two folders.
+  - Subjects and notes are sorted alphabetically, ignoring case; empty sections are left out.
+  - The root index is titled with the vault name and has an `## Archive` section when `archive/` exists. `archive/`
+    has its own indexes, in the same format.
+  - `index` (any case) is reserved: no note can have it as its statement.
 
 ```markdown
 # typescript
 
 ## Subjects
+
 - [[typescript/testing/index|testing]]
 
 ## Notes
-- [[No ternaries]] · rule
-- [[Strict mode always on]] · rule · don't forget
+
+- [[typescript/No ternaries|No ternaries]] · rule
+- [[typescript/Strict mode always on|Strict mode always on]] · rule · don't forget
 ```
 
 ## Templates

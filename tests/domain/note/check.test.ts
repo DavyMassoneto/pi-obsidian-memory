@@ -73,6 +73,12 @@ test.each(["CON", "nul", "Com1", "LPT9", "AUX.notes"])("refuses %s, reserved by 
   expect(checkNote(withStatement(statement), limits)).toEqual([`statement: "${statement}" is reserved by Windows`])
 })
 
+test.each(["index", "Index", "INDEX"])("refuses %s, reserved for folder indexes", (statement) => {
+  expect(checkNote(withStatement(statement), limits)).toEqual([
+    `statement: "${statement}" is reserved for folder indexes`,
+  ])
+})
+
 test("accepts a statement that only starts like a reserved name", () => {
   expect(checkNote(withStatement("Console output is buffered"), limits)).toEqual([])
 })

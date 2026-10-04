@@ -2,6 +2,7 @@ import {
   CHARACTERS_THAT_BREAK_OBSIDIAN_LINKS,
   CHARACTERS_WINDOWS_FORBIDS_IN_FILE_NAMES,
   FIRST_PRINTABLE_CHARACTER_CODE,
+  FOLDER_INDEX_NAME,
   WINDOWS_RESERVED_NAMES,
 } from "./constants.ts"
 import type { Note, NoteLimits } from "./types.ts"
@@ -20,6 +21,7 @@ function checkStatement(statement: string, maxChars: number): string[] {
     ...checkForbiddenCharacters(statement),
     ...checkControlCharacters(statement),
     ...checkReservedName(statement),
+    ...checkFolderIndexName(statement),
     ...checkEdges(statement),
   ]
 }
@@ -72,6 +74,14 @@ function checkReservedName(statement: string): string[] {
   const isReserved = WINDOWS_RESERVED_NAMES.some((reserved) => name === reserved || name.startsWith(`${reserved}.`))
   if (isReserved) {
     return [`statement: "${statement}" is reserved by Windows`]
+  }
+
+  return []
+}
+
+function checkFolderIndexName(statement: string): string[] {
+  if (statement.toLowerCase() === FOLDER_INDEX_NAME) {
+    return [`statement: "${statement}" is reserved for folder indexes`]
   }
 
   return []
