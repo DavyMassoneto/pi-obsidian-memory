@@ -4,6 +4,8 @@ export const FOLDER_INDEX_NAME = "index"
 
 export const ARCHIVE_FOLDER = "archive"
 
+export const TEMPLATES_FOLDER = "_templates"
+
 export const CHARACTERS_WINDOWS_FORBIDS_IN_FILE_NAMES = ["<", ">", ":", '"', "/", "\\", "|", "?", "*"]
 
 export const CHARACTERS_THAT_BREAK_OBSIDIAN_LINKS = ["[", "]", "#", "^"]

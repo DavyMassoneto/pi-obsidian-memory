@@ -18,6 +18,10 @@ How memory is organized inside a vault (global or project). Decided with the use
   - Subjects and notes are sorted alphabetically, ignoring case; empty sections are left out.
   - The root index is titled with the vault name and has an `## Archive` section when `archive/` exists. `archive/`
     has its own indexes, in the same format.
+  - Invalid notes are listed under `## Needs fixing`, with their problems, so they never vanish from the map.
+  - Writing a note refreshes the index of its folder and of every folder above it, up to the root.
+  - Not subjects: hidden folders (`.obsidian/`), and at the vault root `archive/` and `_templates/`. Below the root,
+    folders with those names are ordinary subjects.
   - `index` (any case) is reserved: no note can have it as its statement.
 
 ```markdown
@@ -46,7 +50,8 @@ How memory is organized inside a vault (global or project). Decided with the use
 ## Templates
 
 - The memory system writes every note from templates defined in its code, so notes are always valid.
-- A copy of each template lives in the vault, for the user to create notes by hand with Obsidian's Templates plugin.
+- A copy of each template lives in the vault, in `_templates/`, for the user to create notes by hand with Obsidian's
+  Templates plugin.
 - Retired notes move to `archive/`; nothing is deleted.
 
 ```text

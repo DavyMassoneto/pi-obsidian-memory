@@ -1,3 +1,4 @@
+import type { InvalidNote } from "#/domain/folder-index"
 import type { Note } from "#/domain/note"
 
 export interface StoredNote {
@@ -16,5 +17,13 @@ export type RawFileResult = { succeeded: true; output: Buffer } | { succeeded: f
 export type ExistingFileResult = { succeeded: true; output: string } | { succeeded: false }
 
 export type WriteResult = { succeeded: true } | { succeeded: false; code: string }
+
+export interface FolderListing {
+  subjects: string[]
+  notes: Note[]
+  invalid: InvalidNote[]
+}
+
+export type RefreshResult = { succeeded: true } | { succeeded: false; problems: string[] }
 
 export type ErrorCodeResult = { succeeded: true; output: string } | { succeeded: false }

@@ -1,17 +1,19 @@
 import { ARCHIVE_FOLDER, FOLDER_INDEX_NAME, joinVaultPath, type Note } from "#/domain/note"
-import { DONT_FORGET_LABEL, NOTE_LINE_SEPARATOR } from "./constants.ts"
-import type { FolderContents } from "./types.ts"
+import { DONT_FORGET_LABEL, NOTE_LINE_SEPARATOR, PROBLEM_SEPARATOR } from "./constants.ts"
+import type { FolderContents, InvalidNote } from "./types.ts"
 
 export function renderFolderIndex(folder: FolderContents): string {
   const path = linkPathOf(folder)
 
   const subjects = sortAlphabetically(folder.subjects).map((subject) => subjectLine(path, subject))
   const notes = [...folder.notes].sort(byStatement).map((note) => noteLine(path, note))
+  const invalid = [...folder.invalid].sort(byStatement).map((note) => invalidLine(path, note))
 
   const blocks = [
     `# ${titleOf(folder)}`,
     ...section("Subjects", subjects),
     ...section("Notes", notes),
+    ...section("Needs fixing", invalid),
     ...archiveSection(folder),
   ]
 
@@ -56,8 +58,7 @@ function subjectLine(path: string, subject: string): string {
 }
 
 function noteLine(path: string, note: Note): string {
-  const link = `[[${joinVaultPath(path, note.statement)}|${note.statement}]]`
-  const parts = [link, note.frontmatter.type]
+  const parts = [noteLink(path, note.statement), note.frontmatter.type]
 
   if (note.frontmatter.dontForget) {
     parts.push(DONT_FORGET_LABEL)
@@ -66,11 +67,20 @@ function noteLine(path: string, note: Note): string {
   return `- ${parts.join(NOTE_LINE_SEPARATOR)}`
 }
 
+function invalidLine(path: string, note: InvalidNote): string {
+  const parts = [noteLink(path, note.statement), note.problems.join(PROBLEM_SEPARATOR)]
+  return `- ${parts.join(NOTE_LINE_SEPARATOR)}`
+}
+
+function noteLink(path: string, statement: string): string {
+  return `[[${joinVaultPath(path, statement)}|${statement}]]`
+}
+
 function sortAlphabetically(values: string[]): string[] {
   return [...values].sort(compareText)
 }
 
-function byStatement(first: Note, second: Note): number {
+function byStatement(first: { statement: string }, second: { statement: string }): number {
   return compareText(first.statement, second.statement)
 }
 

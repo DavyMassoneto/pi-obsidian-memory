@@ -1,10 +1,16 @@
 import type { Note } from "#/domain/note"
 
+export interface InvalidNote {
+  statement: string
+  problems: string[]
+}
+
 export interface SubjectFolder {
   kind: "subject"
   path: string
   subjects: string[]
   notes: Note[]
+  invalid: InvalidNote[]
 }
 
 export interface RootFolder {
@@ -12,6 +18,7 @@ export interface RootFolder {
   vaultName: string
   subjects: string[]
   notes: Note[]
+  invalid: InvalidNote[]
   hasArchive: boolean
 }
 
