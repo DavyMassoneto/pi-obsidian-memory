@@ -14,6 +14,8 @@ pi → usecases → services → domain. Each layer imports only the one right b
 
 ## Code
 
+- Each module is a folder with an `index.ts` barrel (only `export *`) and one file per kind: `types.ts`, `constants.ts`,
+  `schemas.ts` (TypeBox), `errors.ts`, `styles.ts`; logic in its own files (`render.ts`).
 - Imports (enforced by Biome):
   - same folder: the file itself (`./types.ts`), never `./index.ts`;
   - another folder: its barrel through `#/` (`#/domain/note`), never a file inside it;
