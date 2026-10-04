@@ -22,6 +22,9 @@ vault/
 - The file name is the statement: reading the name tells exactly what the note says.
 - New information about the same point updates that note. A new point in the same subject is a new note in that folder.
 - The frontmatter `type` says what kind of memory the note is.
+- Size limit: the body has at most 1,000 characters by default, configurable by the user.
+  - Written by the LLM: over the limit, the write is refused and the LLM splits the point into smaller notes.
+  - Edited by the user in Obsidian: accepted; `/memory-doctor` lists the notes over the limit.
 
 ## Types
 
@@ -75,4 +78,4 @@ Tasks and TODOs, session logs, secrets, and anything the code or git history alr
 ## Open
 
 - Other frontmatter fields.
-- Note size limit and folder depth.
+- Folder depth.
