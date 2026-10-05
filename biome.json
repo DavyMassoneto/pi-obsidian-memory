@@ -64,24 +64,28 @@
   },
   "overrides": [
     {
+      "includes": ["tests/**"],
+      "plugins": ["./biome/highest-barrel-tests.grit"]
+    },
+    {
       "includes": ["src/shared/**"],
       "plugins": ["./biome/layer-shared.grit"]
     },
     {
       "includes": ["src/domain/**"],
-      "plugins": ["./biome/layer-domain.grit"]
+      "plugins": ["./biome/layer-domain.grit", "./biome/highest-barrel-domain.grit"]
     },
     {
       "includes": ["src/services/**"],
-      "plugins": ["./biome/layer-services.grit"]
+      "plugins": ["./biome/layer-services.grit", "./biome/highest-barrel-services.grit"]
     },
     {
       "includes": ["src/usecases/**"],
-      "plugins": ["./biome/layer-usecases.grit"]
+      "plugins": ["./biome/layer-usecases.grit", "./biome/highest-barrel-usecases.grit"]
     },
     {
       "includes": ["src/pi/**"],
-      "plugins": ["./biome/layer-pi.grit"]
+      "plugins": ["./biome/layer-pi.grit", "./biome/highest-barrel-pi.grit"]
     },
     {
       "includes": ["tests/**"],

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { parseNote, renderNote } from "#/domain/note"
+import { parseNote, renderNote } from "#/domain"
 import { aNote } from "#test-helpers"
 
 const statement = "Use pnpm, never npm"

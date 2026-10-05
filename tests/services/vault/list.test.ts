@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { createNote, listFolder } from "#/services/vault"
+import { createNote, listFolder } from "#/services"
 import { aNote, useTempVault } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }

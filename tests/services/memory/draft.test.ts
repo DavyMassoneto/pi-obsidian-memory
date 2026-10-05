@@ -2,8 +2,8 @@ import { Value } from "typebox/value"
 import { decodeTime } from "ulid"
 import { afterEach, expect, test, vi } from "vitest"
 
-import { NoteFrontmatterSchema } from "#/domain/note"
-import { newNote } from "#/services/memory"
+import { NoteFrontmatterSchema } from "#/domain"
+import { newNote } from "#/services"
 
 const draft = {
   statement: "Use pnpm, never npm",

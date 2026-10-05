@@ -1,0 +1,6 @@
+language js
+
+JsModuleSource() as $source where {
+  $source <: r".#/(?:usecases|shared)/.*.",
+  register_diagnostic(span=$source, message="Another layer is imported through its layer barrel (#/services), never a module inside it (#/services/vault).")
+}

@@ -1,5 +1,4 @@
-import { archiveNote } from "#/domain/lifecycle"
-import type { NoteLimits } from "#/domain/note"
+import { archiveNote, type NoteLimits } from "#/domain"
 import { relocateNote } from "./relocate.ts"
 import type { ArchiveRequest, PlacedResult } from "./types.ts"
 

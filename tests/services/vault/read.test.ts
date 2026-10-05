@@ -4,8 +4,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { renderNote } from "#/domain/note"
-import { readNote } from "#/services/vault"
+import { renderNote } from "#/domain"
+import { readNote } from "#/services"
 import { aNote, useTempVault } from "#test-helpers"
 
 async function putNote(vault: string, folder: string, statement: string, text: string): Promise<void> {

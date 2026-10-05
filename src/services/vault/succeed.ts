@@ -1,5 +1,4 @@
-import { succeedNote } from "#/domain/lifecycle"
-import type { NoteLimits } from "#/domain/note"
+import { type NoteLimits, succeedNote } from "#/domain"
 import { relocateNote } from "./relocate.ts"
 import type { SucceedRequest, SuccessionResult } from "./types.ts"
 

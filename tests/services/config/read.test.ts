@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { readConfig } from "#/services/config"
+import { readConfig } from "#/services"
 import { aConfig, useTempVault } from "#test-helpers"
 
 test("reads a valid config file", async () => {

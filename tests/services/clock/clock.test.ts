@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from "vitest"
 
-import { today } from "#/services/clock"
+import { today } from "#/services"
 
 afterEach(() => {
   vi.useRealTimers()

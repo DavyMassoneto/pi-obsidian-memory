@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { vaultNameOf } from "#/domain/config"
+import { vaultNameOf } from "#/domain"
 
 test.each([
   ["a forward-slash path", "C:/Users/Administrator/OneDrive/Obisidian/Global memory", "Global memory"],

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { checkNote } from "#/domain/note"
+import { checkNote } from "#/domain"
 import { aNote } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }

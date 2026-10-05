@@ -1,7 +1,6 @@
 import { expect, test } from "vitest"
 
-import { renderFolderIndex } from "#/domain/folder-index"
-import type { Note, NoteType } from "#/domain/note"
+import { type Note, type NoteType, renderFolderIndex } from "#/domain"
 import { aNote } from "#test-helpers"
 
 function noteAbout(statement: string, type: NoteType): Note {

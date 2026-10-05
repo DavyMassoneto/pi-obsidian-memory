@@ -1,6 +1,13 @@
-import { readConfig } from "#/services/config"
-import { newNote, targetVault } from "#/services/memory"
-import { createNote, displayNotePath, findNote, refreshIndexes, type VaultRefusal } from "#/services/vault"
+import {
+  createNote,
+  displayNotePath,
+  findNote,
+  newNote,
+  readConfig,
+  refreshIndexes,
+  targetVault,
+  type VaultRefusal,
+} from "#/services"
 import type { AddMemoryRequest, AddMemoryResult, MemoryContext } from "./types.ts"
 
 export async function addMemory(request: AddMemoryRequest, context: MemoryContext): Promise<AddMemoryResult> {

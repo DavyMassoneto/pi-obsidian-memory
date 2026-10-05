@@ -1,2 +1,4 @@
+export * from "./claude-code/index.ts"
 export * from "./extension.ts"
+export * from "./memory-add/index.ts"
 export * from "./types.ts"

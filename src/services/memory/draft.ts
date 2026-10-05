@@ -1,4 +1,4 @@
-import type { Note, NoteFrontmatter } from "#/domain/note"
+import type { Note, NoteFrontmatter } from "#/domain"
 import { today } from "#/services/clock"
 import { newNoteId } from "#/services/id"
 import type { MemoryDraft } from "./types.ts"

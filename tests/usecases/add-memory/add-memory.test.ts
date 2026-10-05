@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { afterEach, expect, test, vi } from "vitest"
 
-import { readNote } from "#/services/vault"
-import { addMemory } from "#/usecases/add-memory"
+import { readNote } from "#/services"
+import { addMemory } from "#/usecases"
 import { aConfig, useTempVault, writeConfig } from "#test-helpers"
 
 const draft = {

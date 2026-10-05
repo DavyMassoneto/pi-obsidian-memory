@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { targetVault } from "#/services/memory"
+import { targetVault } from "#/services"
 import { aConfig } from "#test-helpers"
 
 test("targets the global vault for the global scope, wherever pi runs", () => {

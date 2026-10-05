@@ -2,8 +2,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { registerExtension } from "#/pi"
-import type { MemoryAddTool } from "#/pi/memory-add"
+import { type MemoryAddTool, registerExtension } from "#/pi"
 
 function register(env: NodeJS.ProcessEnv) {
   const tools: MemoryAddTool[] = []

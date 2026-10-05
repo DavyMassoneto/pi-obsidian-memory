@@ -1,6 +1,6 @@
 import { join } from "node:path"
 
-import { joinVaultPath } from "#/domain/note"
+import { joinVaultPath } from "#/domain"
 import { NOTE_EXTENSION } from "./constants.ts"
 
 export function noteFileName(statement: string): string {

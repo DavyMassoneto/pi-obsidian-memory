@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { ancestorFolders, joinVaultPath } from "#/domain/note"
+import { ancestorFolders, joinVaultPath } from "#/domain"
 
 test("joins vault path parts, skipping empty ones", () => {
   expect(joinVaultPath("", "pnpm", "", "index")).toBe("pnpm/index")

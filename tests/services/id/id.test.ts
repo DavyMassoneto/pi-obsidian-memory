@@ -2,8 +2,8 @@ import { Value } from "typebox/value"
 import { decodeTime } from "ulid"
 import { afterEach, expect, test, vi } from "vitest"
 
-import { NoteFrontmatterSchema } from "#/domain/note"
-import { newNoteId } from "#/services/id"
+import { NoteFrontmatterSchema } from "#/domain"
+import { newNoteId } from "#/services"
 
 afterEach(() => {
   vi.useRealTimers()

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { resolveProject } from "#/domain/config"
+import { resolveProject } from "#/domain"
 import { aConfig } from "#test-helpers"
 
 test.each([

@@ -1,7 +1,6 @@
 import { join } from "node:path"
 
-import type { PlacedNote } from "#/domain/lifecycle"
-import { checkNote, type NoteLimits } from "#/domain/note"
+import { checkNote, type NoteLimits, type PlacedNote } from "#/domain"
 import { createNote } from "./create.ts"
 import { findFileIgnoringCase, hashOf, readRawFile, removeFile } from "./files.ts"
 import { displayNotePath, displayPath, noteFileName, notePath } from "./paths.ts"

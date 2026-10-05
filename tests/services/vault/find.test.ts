@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { createNote, findNote } from "#/services/vault"
+import { createNote, findNote } from "#/services"
 import { aNote, useTempVault } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }

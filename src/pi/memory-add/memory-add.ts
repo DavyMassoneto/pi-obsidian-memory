@@ -1,6 +1,6 @@
 import { join } from "node:path"
 
-import { addMemory, type MemoryContext } from "#/usecases/add-memory"
+import { addMemory, type MemoryContext } from "#/usecases"
 import {
   CONFIG_FILE_NAME,
   MEMORY_ADD_TOOL_DESCRIPTION,

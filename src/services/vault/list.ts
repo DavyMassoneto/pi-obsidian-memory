@@ -2,7 +2,7 @@ import type { Dirent } from "node:fs"
 import { readdir } from "node:fs/promises"
 import { join } from "node:path"
 
-import { ARCHIVE_FOLDER, FOLDER_INDEX_NAME, TEMPLATES_FOLDER } from "#/domain/note"
+import { ARCHIVE_FOLDER, FOLDER_INDEX_NAME, TEMPLATES_FOLDER } from "#/domain"
 import { NOTE_EXTENSION } from "./constants.ts"
 import { readNote } from "./read.ts"
 import type { FolderListing } from "./types.ts"

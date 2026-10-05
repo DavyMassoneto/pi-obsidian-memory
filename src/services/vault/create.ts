@@ -1,7 +1,7 @@
 import { mkdir } from "node:fs/promises"
 import { join } from "node:path"
 
-import { checkNote, type Note, type NoteLimits, renderNote } from "#/domain/note"
+import { checkNote, type Note, type NoteLimits, renderNote } from "#/domain"
 import { findFileIgnoringCase, hashOf, writeAtomically } from "./files.ts"
 import { displayPath, noteFileName, notePath } from "./paths.ts"
 import { refuseNotWritable } from "./refusals.ts"

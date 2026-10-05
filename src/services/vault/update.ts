@@ -1,4 +1,4 @@
-import { checkNote, type Note, type NoteLimits, renderNote } from "#/domain/note"
+import { checkNote, type Note, type NoteLimits, renderNote } from "#/domain"
 import { hashOf, readRawFile, writeAtomically } from "./files.ts"
 import { displayNotePath, notePath } from "./paths.ts"
 import { refuseNotWritable } from "./refusals.ts"

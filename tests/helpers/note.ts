@@ -1,4 +1,4 @@
-import type { Note } from "#/domain/note"
+import type { Note } from "#/domain"
 
 export function aNote(): Note {
   return {

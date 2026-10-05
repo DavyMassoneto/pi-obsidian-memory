@@ -1,7 +1,6 @@
 import { expect, test } from "vitest"
 
-import { archiveNote, succeedNote } from "#/domain/lifecycle"
-import type { Note, NoteType } from "#/domain/note"
+import { archiveNote, type Note, type NoteType, succeedNote } from "#/domain"
 import { aNote } from "#test-helpers"
 
 const today = "2026-10-06"

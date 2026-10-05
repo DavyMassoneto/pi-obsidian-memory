@@ -3,9 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import type { Note, NoteType } from "#/domain/note"
-import { renderNote } from "#/domain/note"
-import { createNote, readNote, succeedStoredNote } from "#/services/vault"
+import { type Note, type NoteType, renderNote } from "#/domain"
+import { createNote, readNote, succeedStoredNote } from "#/services"
 import { aNote, useTempVault } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }

@@ -1,4 +1,4 @@
-import { parseConfig } from "#/domain/config"
+import { parseConfig } from "#/domain"
 import { readRawFile } from "#/services/vault"
 import { NOT_CONFIGURED_PROBLEM } from "./constants.ts"
 import type { ReadConfigResult } from "./types.ts"

@@ -1,7 +1,13 @@
 import { join } from "node:path"
 
-import { type FolderContents, renderFolderIndex } from "#/domain/folder-index"
-import { ARCHIVE_FOLDER, ancestorFolders, FOLDER_INDEX_NAME, joinVaultPath } from "#/domain/note"
+import {
+  ARCHIVE_FOLDER,
+  ancestorFolders,
+  FOLDER_INDEX_NAME,
+  type FolderContents,
+  joinVaultPath,
+  renderFolderIndex,
+} from "#/domain"
 import { NOTE_EXTENSION } from "./constants.ts"
 import { findFileIgnoringCase, writeAtomically } from "./files.ts"
 import { listFolder } from "./list.ts"

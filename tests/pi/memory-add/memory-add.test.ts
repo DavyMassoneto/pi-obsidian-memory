@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { MemoryAddParamsSchema, type MemoryAddResponse, memoryConfigPath, runMemoryAdd } from "#/pi/memory-add"
-import { readNote } from "#/services/vault"
+import { MemoryAddParamsSchema, type MemoryAddResponse, memoryConfigPath, runMemoryAdd } from "#/pi"
+import { readNote } from "#/services"
 import { aConfig, useTempVault, writeConfig } from "#test-helpers"
 
 const params = {

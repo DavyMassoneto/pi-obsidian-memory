@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
-import type { MemoryConfig } from "#/domain/config"
+import type { MemoryConfig } from "#/domain"
 
 export function aConfig(): MemoryConfig {
   return {

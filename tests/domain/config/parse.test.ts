@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { parseConfig } from "#/domain/config"
+import { parseConfig } from "#/domain"
 import { aConfig } from "#test-helpers"
 
 function withLimits(limits: object): string {

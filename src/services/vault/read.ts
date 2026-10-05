@@ -1,4 +1,4 @@
-import { parseNote } from "#/domain/note"
+import { parseNote } from "#/domain"
 import { hashOf, readRawFile } from "./files.ts"
 import { displayNotePath, notePath } from "./paths.ts"
 import type { VaultResult } from "./types.ts"

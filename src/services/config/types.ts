@@ -1,5 +1,5 @@
-import type { MemoryConfig } from "#/domain/config"
-import type { Failed, Succeeded } from "#/shared/result"
+import type { MemoryConfig } from "#/domain"
+import type { Failed, Succeeded } from "#/shared"
 
 export type ConfigFailureReason = "not-configured" | "invalid-config"
 
