@@ -51,6 +51,25 @@ How memory is organized inside a vault (global or project). Decided with the use
   nothing. Then the order is: archived copy, successor, and only last the original is removed. A crash in the middle
   can only leave the same note in two places, never lose one; `/memory-doctor` finds duplicate ids.
 
+## Changes made outside the system
+
+The user edits the vault in Obsidian, and a sync tool such as OneDrive brings changes from other machines. The vault
+is the source of truth; the search index lives outside it, one per machine, and can be rebuilt at any time.
+
+- At session start and before each search, every `.md` in the vault is compared with the index: new files, deleted
+  files, moved files (the same `id` at a new path) and changed files (size or date differ, then the content hash is
+  compared).
+- Only content that really changed is indexed again and gets a new embedding. A date-only change (sync tools do this)
+  costs nothing, and a move only updates the path.
+- The `index.md` of every folder touched by those changes is regenerated, with the folders above it.
+- A new note without valid frontmatter (created blank in Obsidian) stays out of search and is listed under
+  `## Needs fixing`. `/memory-doctor` offers to complete it (a new `id`, asking the type) and applies it only after the
+  user confirms.
+- The same `id` in two files (a copied note, a sync conflict copy) is flagged, and `/memory-doctor` points it out.
+- A file that cannot be read right now (cloud-only, still syncing, locked) keeps its previous index entry and is
+  retried at the next check.
+- A note already loaded in the conversation that changes is added again, marked as replacing the earlier one.
+
 ## Templates
 
 - The memory system writes every note from templates defined in its code, so notes are always valid.
