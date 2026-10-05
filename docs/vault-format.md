@@ -39,6 +39,15 @@ How memory is organized inside a vault (global or project). Decided with the use
 
 ## Writing
 
+- Every read and write is checked to stay inside the vault folder, which must exist (it is never created implicitly).
+  - Folder and file names are checked first: `/` between folders, no absolute path, drive letter, empty part, `.` or
+    `..`, and the same name rules as a statement.
+  - A new memory goes in a subject folder: never hidden (`.name`), never `archive/` or `_templates/` at the root
+    (archiving goes through the lifecycle).
+  - Links inside the vault (symbolic links, junctions) are followed only when their real path is inside the real
+    path of the vault; a link that leads outside or does not resolve (missing target, loop) is refused.
+  - Limit: links are checked right before each read or write, not atomically with it. A folder replaced by a link to
+    the outside between the check and the use is not caught.
 - A new note is refused when a note with the same name already exists in the folder, in any case (Windows does not
   tell `Use pnpm` from `use pnpm`).
 - A note is only updated if it did not change on disk since it was read (content hash). If the user edited it in

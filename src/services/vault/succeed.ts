@@ -1,4 +1,4 @@
-import { type NoteLimits, succeedNote } from "#/domain"
+import { checkMemoryFolder, type NoteLimits, succeedNote } from "#/domain"
 import { relocateNote } from "./relocate.ts"
 import type { SucceedRequest, SuccessionResult } from "./types.ts"
 
@@ -8,6 +8,11 @@ export async function succeedStoredNote(
   request: SucceedRequest,
   limits: NoteLimits,
 ): Promise<SuccessionResult> {
+  const problems = checkMemoryFolder(request.successor.folder)
+  if (problems.length > 0) {
+    return { succeeded: false, reason: "invalid", problems }
+  }
+
   const succession = succeedNote(request.previous, request.successor, request.today)
 
   const relocated = await relocateNote(

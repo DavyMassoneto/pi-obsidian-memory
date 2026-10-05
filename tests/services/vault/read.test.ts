@@ -6,7 +6,7 @@ import { expect, test } from "vitest"
 
 import { renderNote } from "#/domain"
 import { readNote } from "#/services"
-import { aNote, useTempVault } from "#test-helpers"
+import { aNote, linkFolder, tryLinkFile, useTempVault } from "#test-helpers"
 
 async function putNote(vault: string, folder: string, statement: string, text: string): Promise<void> {
   await mkdir(join(vault, folder), { recursive: true })
@@ -51,5 +51,37 @@ test("tells when the note on disk is invalid, with every problem", async () => {
     succeeded: false,
     reason: "invalid",
     problems: ["missing frontmatter"],
+  })
+})
+
+test("refuses to read through a link that leads outside the vault", async () => {
+  const vault = await useTempVault()
+  const outside = await useTempVault()
+  const note = aNote()
+  await putNote(outside, "", note.statement, renderNote(note))
+  await linkFolder(outside, join(vault, "escape"))
+
+  expect(await readNote(vault, "escape", note.statement)).toEqual({
+    succeeded: false,
+    reason: "outside-vault",
+    problems: ["escape leads outside the vault"],
+  })
+})
+
+test("refuses to read a note that is a file link leading outside the vault", async (context) => {
+  const vault = await useTempVault()
+  const outside = await useTempVault()
+  const note = aNote()
+  await putNote(outside, "", note.statement, renderNote(note))
+  await mkdir(join(vault, "pnpm"))
+  const linked = await tryLinkFile(join(outside, `${note.statement}.md`), join(vault, "pnpm", `${note.statement}.md`))
+  if (!linked) {
+    context.skip("this system cannot create file links")
+  }
+
+  expect(await readNote(vault, "pnpm", note.statement)).toEqual({
+    succeeded: false,
+    reason: "outside-vault",
+    problems: [`pnpm/${note.statement}.md leads outside the vault`],
   })
 })

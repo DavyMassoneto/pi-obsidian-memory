@@ -1,11 +1,10 @@
-import { join } from "node:path"
-
 import { checkNote, type NoteLimits, type PlacedNote } from "#/domain"
 import { createNote } from "./create.ts"
 import { findFileIgnoringCase, hashOf, readRawFile, removeFile } from "./files.ts"
-import { displayNotePath, displayPath, noteFileName, notePath } from "./paths.ts"
+import { displayNotePath, displayPath, noteFileName } from "./paths.ts"
 import { refreshIndexes } from "./refresh.ts"
 import { refuseNotWritable } from "./refusals.ts"
+import { resolveFile, resolveFolder } from "./resolve.ts"
 import type { CheckResult, RelocationRequest } from "./types.ts"
 
 export async function relocateNote(request: RelocationRequest, limits: NoteLimits): Promise<CheckResult> {
@@ -51,7 +50,12 @@ async function checkRelocation(request: RelocationRequest, limits: NoteLimits): 
 }
 
 async function checkUnchanged(vault: string, placed: PlacedNote, hashWhenRead: string): Promise<CheckResult> {
-  const current = await readRawFile(notePath(vault, placed.folder, placed.note.statement))
+  const path = await resolveFile(vault, placed.folder, noteFileName(placed.note.statement))
+  if (!path.succeeded) {
+    return path
+  }
+
+  const current = await readRawFile(path.output)
   if (!current.succeeded || hashOf(current.output) !== hashWhenRead) {
     const problem = `${displayNotePath(placed.folder, placed.note.statement)} changed on disk since it was read`
     return { succeeded: false, reason: "conflict", problems: [problem] }
@@ -61,7 +65,12 @@ async function checkUnchanged(vault: string, placed: PlacedNote, hashWhenRead: s
 }
 
 async function checkFree(vault: string, placed: PlacedNote): Promise<CheckResult> {
-  const existing = await findFileIgnoringCase(join(vault, placed.folder), noteFileName(placed.note.statement))
+  const directory = await resolveFolder(vault, placed.folder)
+  if (!directory.succeeded) {
+    return directory
+  }
+
+  const existing = await findFileIgnoringCase(directory.output, noteFileName(placed.note.statement))
   if (existing.succeeded) {
     return {
       succeeded: false,
@@ -81,7 +90,12 @@ async function removeOriginal(request: RelocationRequest): Promise<CheckResult> 
     return unchanged
   }
 
-  const removed = await removeFile(notePath(vault, original.folder, original.note.statement))
+  const path = await resolveFile(vault, original.folder, noteFileName(original.note.statement))
+  if (!path.succeeded) {
+    return path
+  }
+
+  const removed = await removeFile(path.output)
   if (!removed.succeeded) {
     return refuseNotWritable(original.folder, original.note.statement, removed.code)
   }

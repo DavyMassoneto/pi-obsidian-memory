@@ -1,5 +1,3 @@
-import { join } from "node:path"
-
 import {
   ARCHIVE_FOLDER,
   ancestorFolders,
@@ -11,25 +9,44 @@ import {
 import { NOTE_EXTENSION } from "./constants.ts"
 import { findFileIgnoringCase, writeAtomically } from "./files.ts"
 import { listFolder } from "./list.ts"
-import type { FolderListing, RefreshResult, WriteResult } from "./types.ts"
+import { resolveFile, resolveFolder } from "./resolve.ts"
+import type { FolderListing, RefreshResult } from "./types.ts"
 
 export async function refreshIndexes(vault: string, folder: string, vaultName: string): Promise<RefreshResult> {
+  const checked = await resolveFolder(vault, folder)
+  if (!checked.succeeded) {
+    return { succeeded: false, problems: checked.problems }
+  }
+
   for (const current of ancestorFolders(folder)) {
     const written = await writeIndex(vault, current, vaultName)
     if (!written.succeeded) {
-      const problem = `${joinVaultPath(current, indexFileName())} cannot be written (${written.code})`
-      return { succeeded: false, problems: [problem] }
+      return written
     }
   }
 
   return { succeeded: true }
 }
 
-async function writeIndex(vault: string, folder: string, vaultName: string): Promise<WriteResult> {
-  const listing = await listFolder(vault, folder)
-  const contents = await contentsOf(vault, folder, vaultName, listing)
+async function writeIndex(vault: string, folder: string, vaultName: string): Promise<RefreshResult> {
+  const path = await resolveFile(vault, folder, indexFileName())
+  if (!path.succeeded) {
+    return { succeeded: false, problems: path.problems }
+  }
 
-  return writeAtomically(join(vault, folder, indexFileName()), renderFolderIndex(contents))
+  const listing = await listFolder(vault, folder)
+  if (!listing.succeeded) {
+    return { succeeded: false, problems: listing.problems }
+  }
+
+  const contents = await contentsOf(vault, folder, vaultName, listing.output)
+  const written = await writeAtomically(path.output, renderFolderIndex(contents))
+  if (!written.succeeded) {
+    const problem = `${joinVaultPath(folder, indexFileName())} cannot be written (${written.code})`
+    return { succeeded: false, problems: [problem] }
+  }
+
+  return { succeeded: true }
 }
 
 async function contentsOf(

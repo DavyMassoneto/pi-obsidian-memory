@@ -1,7 +1,9 @@
+import { join } from "node:path"
+
 import { expect, test } from "vitest"
 
 import { createNote, findNote } from "#/services"
-import { aNote, useTempVault } from "#test-helpers"
+import { aNote, linkFolder, useTempVault } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
 
@@ -20,5 +22,19 @@ test("tells when no note has that statement", async () => {
     succeeded: false,
     reason: "not-found",
     problems: ["pnpm/Missing note.md does not exist"],
+  })
+})
+
+test("refuses to search through a link that leads outside the vault", async () => {
+  const vault = await useTempVault()
+  const outside = await useTempVault()
+  const note = aNote()
+  await createNote(outside, "", note, limits)
+  await linkFolder(outside, join(vault, "escape"))
+
+  expect(await findNote(vault, "escape", note.statement)).toEqual({
+    succeeded: false,
+    reason: "outside-vault",
+    problems: ["escape leads outside the vault"],
   })
 })

@@ -102,3 +102,15 @@ test("refuses an invalid successor, changing nothing", async () => {
   })
   expect(await readdir(vault)).toEqual(["search"])
 })
+
+test("refuses a successor in a folder reserved for the vault, changing nothing", async () => {
+  const { vault, request } = await vaultWithQuestion()
+  const reserved = { ...request, successor: { folder: "archive/search", note: decision } }
+
+  expect(await succeedStoredNote(vault, "Global memory", reserved, limits)).toEqual({
+    succeeded: false,
+    reason: "invalid",
+    problems: ['folder "archive": is reserved for the vault'],
+  })
+  expect(await readdir(vault)).toEqual(["search"])
+})

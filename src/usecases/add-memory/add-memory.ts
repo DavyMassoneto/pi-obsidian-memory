@@ -1,5 +1,5 @@
 import {
-  createNote,
+  createMemoryNote,
   displayNotePath,
   findNote,
   newNote,
@@ -22,7 +22,7 @@ export async function addMemory(request: AddMemoryRequest, context: MemoryContex
   }
 
   const { path, name } = target.output
-  const created = await createNote(path, request.folder, newNote(request.draft), config.output.limits)
+  const created = await createMemoryNote(path, request.folder, newNote(request.draft), config.output.limits)
   if (!created.succeeded) {
     return refuseCreation(path, request, created)
   }

@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile } from "node:fs/promises"
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import { afterEach, expect, test, vi } from "vitest"
@@ -27,6 +27,8 @@ async function setup() {
     global: { vault: globalVault },
     projects: [{ name: "loja", folder: "D:/Projects/loja", vault: projectVault }],
   }
+  await mkdir(globalVault)
+  await mkdir(projectVault)
   const configPath = await writeConfig(root, config)
   return { root, globalVault, projectVault, configPath }
 }
@@ -78,12 +80,13 @@ test("creates the note today with a fresh id and the don't forget mark when aske
 })
 
 test("refuses the project scope in a folder with no registered project, writing nothing", async () => {
-  const { root, configPath } = await setup()
+  const { globalVault, projectVault, configPath } = await setup()
 
   expect(
     await addMemory({ scope: "project", folder: "pnpm", draft }, { configPath, workingFolder: "D:/Downloads" }),
   ).toMatchObject({ succeeded: false, reason: "no-project" })
-  expect(await readdir(root)).toEqual(["config.json"])
+  expect(await readdir(globalVault)).toEqual([])
+  expect(await readdir(projectVault)).toEqual([])
 })
 
 test("tells the memory is not configured when there is no config", async () => {
@@ -98,17 +101,17 @@ test("tells the memory is not configured when there is no config", async () => {
 })
 
 test("refuses when the config is invalid, writing nothing", async () => {
-  const { root, configPath } = await setup()
+  const { globalVault, configPath } = await setup()
   await writeFile(configPath, "{ not json")
 
   expect(
     await addMemory({ scope: "global", folder: "pnpm", draft }, { configPath, workingFolder: "D:/Downloads" }),
   ).toMatchObject({ succeeded: false, reason: "invalid-config" })
-  expect(await readdir(root)).toEqual(["config.json"])
+  expect(await readdir(globalVault)).toEqual([])
 })
 
 test("refuses an invalid note with every problem, writing nothing", async () => {
-  const { root, configPath } = await setup()
+  const { globalVault, configPath } = await setup()
 
   expect(
     await addMemory(
@@ -120,7 +123,7 @@ test("refuses an invalid note with every problem, writing nothing", async () => 
     reason: "invalid",
     problems: ['statement: ":" is not allowed in a file name', "body: is empty"],
   })
-  expect(await readdir(root)).toEqual(["config.json"])
+  expect(await readdir(globalVault)).toEqual([])
 })
 
 test("refuses a note whose name is taken and returns the existing note, untouched", async () => {
@@ -145,4 +148,51 @@ test("refuses a note whose name is taken and returns the existing note, untouche
     existing: first.output.stored,
   })
   expect(await readFile(file, "utf8")).toBe(before)
+})
+
+test.each([
+  ["a folder outside the vault", "../other", ['folder: ".." is not allowed']],
+  ["the parent folder", "..", ['folder: ".." is not allowed']],
+  ["an absolute path", "/pnpm", ["folder: must be relative to the vault"]],
+  ["a drive letter", "C:/pnpm", ["folder: must be relative to the vault"]],
+  ["a backslash", "tools\\pnpm", ['folder: use "/" between folders']],
+  ["a nested hidden folder", "tools/.private", ['folder ".private": is hidden (starts with ".")']],
+  ["a hidden folder", ".private", ['folder ".private": is hidden (starts with ".")']],
+  ["the archive", "Archive/pnpm", ['folder "Archive": is reserved for the vault']],
+  ["the templates", "_templates/pnpm", ['folder "_templates": is reserved for the vault']],
+])("refuses %s, writing nothing", async (_case, folder, problems) => {
+  const { root, globalVault, configPath } = await setup()
+
+  expect(await addMemory({ scope: "global", folder, draft }, { configPath, workingFolder: "D:/Downloads" })).toEqual({
+    succeeded: false,
+    reason: "invalid",
+    problems,
+  })
+  expect(await readdir(globalVault)).toEqual([])
+  expect((await readdir(root)).sort()).toEqual(["Global memory", "config.json", "loja"])
+})
+
+test("lists the folder and note problems together", async () => {
+  const { configPath } = await setup()
+
+  expect(
+    await addMemory(
+      { scope: "global", folder: ".private", draft: { ...draft, body: "" } },
+      { configPath, workingFolder: "D:/Downloads" },
+    ),
+  ).toEqual({
+    succeeded: false,
+    reason: "invalid",
+    problems: ['folder ".private": is hidden (starts with ".")', "body: is empty"],
+  })
+})
+
+test("refuses a vault folder that does not exist, creating nothing", async () => {
+  const { root, globalVault, configPath } = await setup()
+  await rm(globalVault, { recursive: true })
+
+  expect(
+    await addMemory({ scope: "global", folder: "pnpm", draft }, { configPath, workingFolder: "D:/Downloads" }),
+  ).toEqual({ succeeded: false, reason: "vault-missing", problems: [`the vault folder ${globalVault} does not exist`] })
+  expect((await readdir(root)).sort()).toEqual(["config.json", "loja"])
 })

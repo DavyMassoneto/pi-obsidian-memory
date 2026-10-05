@@ -1,10 +1,16 @@
 import { parseNote } from "#/domain"
 import { hashOf, readRawFile } from "./files.ts"
-import { displayNotePath, notePath } from "./paths.ts"
+import { displayNotePath, noteFileName } from "./paths.ts"
+import { resolveFile } from "./resolve.ts"
 import type { VaultResult } from "./types.ts"
 
 export async function readNote(vault: string, folder: string, statement: string): Promise<VaultResult> {
-  const file = await readRawFile(notePath(vault, folder, statement))
+  const path = await resolveFile(vault, folder, noteFileName(statement))
+  if (!path.succeeded) {
+    return path
+  }
+
+  const file = await readRawFile(path.output)
   if (!file.succeeded) {
     const problem = `${displayNotePath(folder, statement)} does not exist`
     return { succeeded: false, reason: "not-found", problems: [problem] }

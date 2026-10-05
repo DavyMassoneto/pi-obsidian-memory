@@ -5,7 +5,7 @@ import { expect, test } from "vitest"
 
 import { renderNote } from "#/domain"
 import { archiveStoredNote, createNote, readNote } from "#/services"
-import { aNote, useTempVault } from "#test-helpers"
+import { aNote, linkFolder, useTempVault } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
 const today = "2026-10-06"
@@ -76,4 +76,25 @@ test("leaves no temporary file behind", async () => {
 
   expect(await readdir(join(vault, "pnpm"))).toEqual(["index.md"])
   expect((await readdir(join(vault, "archive", "pnpm"))).sort()).toEqual([`${aNote().statement}.md`, "index.md"].sort())
+})
+
+test("refuses to archive a note reached through a link that leads outside the vault, changing nothing", async () => {
+  const vault = await useTempVault()
+  const outside = await useTempVault()
+  const note = aNote()
+  const created = await createNote(outside, "pnpm", note, limits)
+  if (!created.succeeded) {
+    throw new Error(`setup failed: ${created.problems.join(", ")}`)
+  }
+  await linkFolder(join(outside, "pnpm"), join(vault, "pnpm"))
+  const request = { note: { folder: "pnpm", note }, hashWhenRead: created.output.hash, today }
+
+  expect(await archiveStoredNote(vault, "Global memory", request, limits)).toEqual({
+    succeeded: false,
+    reason: "outside-vault",
+    problems: ["pnpm leads outside the vault"],
+  })
+  expect(await readdir(vault)).toEqual(["pnpm"])
+  expect(await readdir(join(outside, "pnpm"))).toEqual([`${note.statement}.md`])
+  expect(await readFile(join(outside, "pnpm", `${note.statement}.md`), "utf8")).toBe(renderNote(note))
 })

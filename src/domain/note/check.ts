@@ -1,10 +1,5 @@
-import {
-  CHARACTERS_THAT_BREAK_OBSIDIAN_LINKS,
-  CHARACTERS_WINDOWS_FORBIDS_IN_FILE_NAMES,
-  FIRST_PRINTABLE_CHARACTER_CODE,
-  FOLDER_INDEX_NAME,
-  WINDOWS_RESERVED_NAMES,
-} from "./constants.ts"
+import { FOLDER_INDEX_NAME } from "./constants.ts"
+import { checkEdges, checkFileSystemName, checkLinkCharacters } from "./names.ts"
 import type { Note, NoteLimits } from "./types.ts"
 
 export function checkNote(note: Note, limits: NoteLimits): string[] {
@@ -18,11 +13,10 @@ function checkStatement(statement: string, maxChars: number): string[] {
 
   return [
     ...checkLength("statement", statement, maxChars),
-    ...checkForbiddenCharacters(statement),
-    ...checkControlCharacters(statement),
-    ...checkReservedName(statement),
+    ...checkFileSystemName("statement", statement),
+    ...checkLinkCharacters("statement", statement),
     ...checkFolderIndexName(statement),
-    ...checkEdges(statement),
+    ...checkEdges("statement", statement),
   ]
 }
 
@@ -48,52 +42,9 @@ function countCharacters(text: string): number {
   return [...graphemes].length
 }
 
-function checkForbiddenCharacters(statement: string): string[] {
-  const notAllowed = CHARACTERS_WINDOWS_FORBIDS_IN_FILE_NAMES.filter((character) => statement.includes(character))
-  const breakLinks = CHARACTERS_THAT_BREAK_OBSIDIAN_LINKS.filter((character) => statement.includes(character))
-
-  return [
-    ...notAllowed.map((character) => `statement: "${character}" is not allowed in a file name`),
-    ...breakLinks.map((character) => `statement: "${character}" breaks Obsidian links`),
-  ]
-}
-
-function checkControlCharacters(statement: string): string[] {
-  const hasControlCharacter = [...statement].some(
-    (character) => character.charCodeAt(0) < FIRST_PRINTABLE_CHARACTER_CODE,
-  )
-  if (hasControlCharacter) {
-    return ["statement: has a control character"]
-  }
-
-  return []
-}
-
-function checkReservedName(statement: string): string[] {
-  const name = statement.toUpperCase()
-  const isReserved = WINDOWS_RESERVED_NAMES.some((reserved) => name === reserved || name.startsWith(`${reserved}.`))
-  if (isReserved) {
-    return [`statement: "${statement}" is reserved by Windows`]
-  }
-
-  return []
-}
-
 function checkFolderIndexName(statement: string): string[] {
   if (statement.toLowerCase() === FOLDER_INDEX_NAME) {
     return [`statement: "${statement}" is reserved for folder indexes`]
-  }
-
-  return []
-}
-
-function checkEdges(statement: string): string[] {
-  if (statement !== statement.trim()) {
-    return ["statement: starts or ends with a space"]
-  }
-
-  if (statement.endsWith(".")) {
-    return ["statement: ends with a dot"]
   }
 
   return []

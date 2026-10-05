@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { chmod, readdir, readFile, rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
@@ -5,7 +6,7 @@ import { expect, test } from "vitest"
 
 import { renderNote } from "#/domain"
 import { createNote, readNote, updateNote } from "#/services"
-import { aNote, useTempVault } from "#test-helpers"
+import { aNote, tryLinkFile, useTempVault } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
 
@@ -93,4 +94,24 @@ test("leaves no temporary file behind", async () => {
   await updateNote(vault, "pnpm", { ...note, body: "New body." }, hash, limits)
 
   expect(await readdir(join(vault, "pnpm"))).toEqual([`${note.statement}.md`])
+})
+
+test("refuses to write through a file link that leads outside the vault, leaving the target unchanged", async (context) => {
+  const { vault, note } = await vaultWithNote()
+  const outside = await useTempVault()
+  const secret = join(outside, "Secret.md")
+  const original = renderNote(note)
+  await writeFile(secret, original)
+  const linked = await tryLinkFile(secret, join(vault, "pnpm", "Linked.md"))
+  if (!linked) {
+    context.skip("this system cannot create file links")
+  }
+  const hash = createHash("sha256").update(original).digest("hex")
+
+  expect(await updateNote(vault, "pnpm", { ...note, statement: "Linked", body: "Changed." }, hash, limits)).toEqual({
+    succeeded: false,
+    reason: "outside-vault",
+    problems: ["pnpm/Linked.md leads outside the vault"],
+  })
+  expect(await readFile(secret, "utf8")).toBe(original)
 })

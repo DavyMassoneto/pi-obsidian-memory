@@ -5,7 +5,7 @@ import { expect, test } from "vitest"
 
 import { renderNote } from "#/domain"
 import { createNote, readNote } from "#/services"
-import { aNote, useTempVault } from "#test-helpers"
+import { aNote, linkFolder, useTempVault } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
 
@@ -63,4 +63,42 @@ test("leaves no temporary file behind", async () => {
   await createNote(vault, "pnpm", note, limits)
 
   expect(await readdir(join(vault, "pnpm"))).toEqual([`${note.statement}.md`])
+})
+
+test("refuses a folder that leaves the vault, writing nothing outside", async () => {
+  const root = await useTempVault()
+  const vault = join(root, "vault")
+  await mkdir(vault)
+
+  expect(await createNote(vault, "../other", aNote(), limits)).toEqual({
+    succeeded: false,
+    reason: "invalid",
+    problems: ['folder: ".." is not allowed'],
+  })
+  expect(await readdir(root)).toEqual(["vault"])
+})
+
+test("refuses to write through a link that leads outside the vault, writing nothing outside", async () => {
+  const vault = await useTempVault()
+  const outside = await useTempVault()
+  await linkFolder(outside, join(vault, "escape"))
+
+  expect(await createNote(vault, "escape/pnpm", aNote(), limits)).toEqual({
+    succeeded: false,
+    reason: "outside-vault",
+    problems: ["escape leads outside the vault"],
+  })
+  expect(await readdir(outside)).toEqual([])
+})
+
+test("refuses a vault folder that does not exist, creating nothing", async () => {
+  const root = await useTempVault()
+  const vault = join(root, "missing")
+
+  expect(await createNote(vault, "pnpm", aNote(), limits)).toEqual({
+    succeeded: false,
+    reason: "vault-missing",
+    problems: [`the vault folder ${vault} does not exist`],
+  })
+  expect(await readdir(root)).toEqual([])
 })

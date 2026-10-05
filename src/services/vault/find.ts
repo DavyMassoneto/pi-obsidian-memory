@@ -1,13 +1,17 @@
-import { join } from "node:path"
-
 import { NOTE_EXTENSION } from "./constants.ts"
 import { findFileIgnoringCase } from "./files.ts"
 import { displayNotePath, noteFileName } from "./paths.ts"
 import { readNote } from "./read.ts"
+import { resolveFolder } from "./resolve.ts"
 import type { VaultResult } from "./types.ts"
 
 export async function findNote(vault: string, folder: string, statement: string): Promise<VaultResult> {
-  const existing = await findFileIgnoringCase(join(vault, folder), noteFileName(statement))
+  const directory = await resolveFolder(vault, folder)
+  if (!directory.succeeded) {
+    return directory
+  }
+
+  const existing = await findFileIgnoringCase(directory.output, noteFileName(statement))
   if (!existing.succeeded) {
     return { succeeded: false, reason: "not-found", problems: [`${displayNotePath(folder, statement)} does not exist`] }
   }

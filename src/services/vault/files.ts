@@ -1,15 +1,58 @@
 import { createHash, randomUUID } from "node:crypto"
-import { readdir, readFile, rename, rm, writeFile } from "node:fs/promises"
+import { lstat, readdir, readFile, realpath, rename, rm, writeFile } from "node:fs/promises"
 import { basename, dirname, join } from "node:path"
 
-import { HASH_ALGORITHM, NOT_WRITABLE_ERROR_CODES } from "./constants.ts"
-import type { ErrorCodeResult, ExistingFileResult, RawFileResult, WriteResult } from "./types.ts"
+import { HASH_ALGORITHM, NOT_WRITABLE_ERROR_CODES, UNRESOLVABLE_LINK_ERROR_CODES } from "./constants.ts"
+import type {
+  ErrorCodeResult,
+  ExistingFileResult,
+  LinkStatResult,
+  RawFileResult,
+  RealPathResult,
+  WriteResult,
+} from "./types.ts"
 
 export async function readRawFile(path: string): Promise<RawFileResult> {
   try {
     return { succeeded: true, output: await readFile(path) }
   } catch (error) {
     if (error instanceof Error && isMissingFile(error)) {
+      return { succeeded: false }
+    }
+
+    throw error
+  }
+}
+
+export async function linkStatOf(path: string): Promise<LinkStatResult> {
+  try {
+    return { succeeded: true, output: await lstat(path) }
+  } catch (error) {
+    if (error instanceof Error && isMissingFile(error)) {
+      return { succeeded: false }
+    }
+
+    throw error
+  }
+}
+
+export async function realPathOf(path: string): Promise<RealPathResult> {
+  try {
+    return { succeeded: true, output: await realpath(path) }
+  } catch (error) {
+    if (error instanceof Error && isMissingFile(error)) {
+      return { succeeded: false }
+    }
+
+    throw error
+  }
+}
+
+export async function linkTargetOf(path: string): Promise<RealPathResult> {
+  try {
+    return { succeeded: true, output: await realpath(path) }
+  } catch (error) {
+    if (error instanceof Error && isUnresolvableLink(error)) {
       return { succeeded: false }
     }
 
@@ -84,6 +127,10 @@ async function entriesOf(directory: string): Promise<string[]> {
 
 function isMissingFile(error: Error): boolean {
   return "code" in error && error.code === "ENOENT"
+}
+
+function isUnresolvableLink(error: Error): boolean {
+  return "code" in error && UNRESOLVABLE_LINK_ERROR_CODES.some((code) => error.code === code)
 }
 
 function notWritableCodeOf(error: Error): ErrorCodeResult {

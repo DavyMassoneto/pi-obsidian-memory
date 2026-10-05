@@ -1,3 +1,5 @@
+import type { Stats } from "node:fs"
+
 import type { InvalidNote, Note, PlacedNote, Succession } from "#/domain"
 import type { Absent, Done, Failed, Succeeded } from "#/shared"
 
@@ -33,7 +35,14 @@ export interface RelocationRequest {
   written: PlacedNote[]
 }
 
-export type VaultFailureReason = "not-found" | "invalid" | "exists" | "conflict" | "not-writable"
+export type VaultFailureReason =
+  | "not-found"
+  | "invalid"
+  | "exists"
+  | "conflict"
+  | "not-writable"
+  | "outside-vault"
+  | "vault-missing"
 
 export interface VaultRefusal extends Failed {
   reason: VaultFailureReason
@@ -54,7 +63,15 @@ export type SuccessionResult = Succeeded<Succession> | VaultRefusal
 
 export type RefreshResult = Done | Failed
 
+export type ResolveResult = Succeeded<string> | VaultRefusal
+
+export type ListResult = Succeeded<FolderListing> | VaultRefusal
+
 export type RawFileResult = Succeeded<Buffer> | Absent
+
+export type LinkStatResult = Succeeded<Stats> | Absent
+
+export type RealPathResult = Succeeded<string> | Absent
 
 export type ExistingFileResult = Succeeded<string> | Absent
 

@@ -1,14 +1,19 @@
 import type { Dirent } from "node:fs"
 import { readdir } from "node:fs/promises"
-import { join } from "node:path"
 
 import { ARCHIVE_FOLDER, FOLDER_INDEX_NAME, TEMPLATES_FOLDER } from "#/domain"
 import { NOTE_EXTENSION } from "./constants.ts"
 import { readNote } from "./read.ts"
-import type { FolderListing } from "./types.ts"
+import { resolveFolder } from "./resolve.ts"
+import type { FolderListing, ListResult } from "./types.ts"
 
-export async function listFolder(vault: string, folder: string): Promise<FolderListing> {
-  const entries = await readdir(join(vault, folder), { withFileTypes: true })
+export async function listFolder(vault: string, folder: string): Promise<ListResult> {
+  const directory = await resolveFolder(vault, folder)
+  if (!directory.succeeded) {
+    return directory
+  }
+
+  const entries = await readdir(directory.output, { withFileTypes: true })
   const visible = entries.filter((entry) => !entry.name.startsWith("."))
 
   const subjects = visible.filter((entry) => isSubject(folder, entry)).map((entry) => entry.name)
@@ -24,7 +29,7 @@ export async function listFolder(vault: string, folder: string): Promise<FolderL
     }
   }
 
-  return listing
+  return { succeeded: true, output: listing }
 }
 
 function isSubject(folder: string, entry: Dirent): boolean {

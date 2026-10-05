@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises"
+import { mkdir, readdir } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
@@ -23,6 +23,7 @@ async function setup() {
     global: { vault: join(root, "Global memory") },
     projects: [],
   }
+  await mkdir(config.global.vault)
   return { root, context: { configPath: await writeConfig(root, config), workingFolder: "D:/Downloads" } }
 }
 
@@ -96,6 +97,7 @@ test("shows the existing note and asks to check with the user when the name is t
 
 test("lists every problem of an invalid note", async () => {
   const { root, context } = await setup()
+  const vault = join(root, "Global memory")
 
   const response = await runMemoryAdd({ ...params, statement: "Use a: b", body: "" }, context)
 
@@ -103,7 +105,7 @@ test("lists every problem of an invalid note", async () => {
   expect(textOf(response)).toBe(
     ["Not saved. Fix and call again:", '- statement: ":" is not allowed in a file name', "- body: is empty"].join("\n"),
   )
-  expect(await readdir(root)).toEqual(["config.json"])
+  expect(await readdir(vault)).toEqual([])
 })
 
 test("asks the model to check with the user when the folder has no project", async () => {
