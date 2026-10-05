@@ -31,15 +31,28 @@ lives in any folder they choose.
      and the extension offers `/memory-setup`.
    - **Project:** `/memory-init` records a manual map (working folder → project → vault).
      An unregistered folder gets global memory only.
-4. **Prompt injection.** At session start, a short summary of global + project memory
-   (~3k tokens, configurable). The **"Don't forget"** list is always injected in full,
-   outside that budget. Everything else is reached through search.
+4. **Context that grows with the conversation.**
+   - At session start, every **"Don't forget"** note is loaded in full, with no limit. The
+     memory agent also loads the memories relevant to the project and folder, within a
+     configurable character budget (12,000 characters by default).
+   - On each user message, a fast decision model (configurable: Laya locally, or Jev by API)
+     decides whether memory is needed. If it is, a small configurable LLM (the memory agent)
+     searches (text + embeddings) and reads notes; the decision model re-ranks the candidates
+     so only the relevant ones reach the main LLM.
+   - What is found is added at that point of the conversation. What is already in the
+     conversation is never rewritten, so the prompt cache holds. A loaded note that changes is
+     added again, marked as replacing the earlier one: a stale memory causes mistakes.
+   - Every memory block says it is only part of the memory; the main LLM can search and read
+     more with the memory tools.
+   - Choosing Jev sends user messages and candidate notes to TypeSafe, and `/memory-setup`
+     warns about that.
 5. **Direct, detailed updates.** No consolidation and no approval step. The agent writes
    and updates memory notes directly, with full detail. New information about an existing
    point updates that note instead of creating a new one. Format: [vault-format.md](vault-format.md).
    Memory is captured, updated, archived and succeeded automatically, by a background process
-   that reviews the conversation. The memory tools exist only for explicit user requests
-   ("remember this"), and nothing in the prompt nudges the LLM to save on its own.
+   that reviews the conversation. The tools that write memory exist only for explicit user
+   requests ("remember this"), and nothing in the prompt nudges the LLM to save on its own. The
+   tools that read memory (search, get) let the main LLM look further than what was loaded.
    While the extension is active it is the only memory: it sets `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`
    in pi's process, so Claude Code sessions started by pi (pi-claude-bridge) do not use their own
    auto-memory. A Claude Code run outside pi is untouched.
