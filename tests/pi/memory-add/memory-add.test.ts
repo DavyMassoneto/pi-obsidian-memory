@@ -48,6 +48,14 @@ test("asks for every parameter, with a description for the model", () => {
   expect(MemoryAddParamsSchema.properties.type.enum).toHaveLength(12)
 })
 
+test("asks for the folder, the statement and the body in English", () => {
+  const { folder, statement, body } = MemoryAddParamsSchema.properties
+
+  for (const schema of [folder, statement, body]) {
+    expect(schema.description).toContain("in English")
+  }
+})
+
 test("tells the model where the memory was saved", async () => {
   const { context } = await setup()
 

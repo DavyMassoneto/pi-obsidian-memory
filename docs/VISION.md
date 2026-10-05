@@ -40,6 +40,9 @@ lives in any folder they choose.
    Memory is captured, updated, archived and succeeded automatically, by a background process
    that reviews the conversation. The memory tools exist only for explicit user requests
    ("remember this"), and nothing in the prompt nudges the LLM to save on its own.
+   While the extension is active it is the only memory: it sets `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`
+   in pi's process, so Claude Code sessions started by pi (pi-claude-bridge) do not use their own
+   auto-memory. A Claude Code run outside pi is untouched.
 6. **Search.** Text search **and** semantic search in v1. The embedding provider is the
    user's choice: a local model, OpenAI, Google, and so on. Choosing a remote provider sends
    note content (secrets included) to it, and `/memory-setup` warns about that. The search
