@@ -1,6 +1,7 @@
 export * from "./config.ts"
 export * from "./note.ts"
 export * from "./pi.ts"
+export * from "./search-index.ts"
 export * from "./stream.ts"
 export * from "./types.ts"
 export * from "./vault.ts"
