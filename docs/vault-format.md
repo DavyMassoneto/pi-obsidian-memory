@@ -188,4 +188,7 @@ risk may become an issue or a lesson. A note can also go to `archive/` with no s
 
 ## Not memory
 
-Tasks and TODOs, session logs, secrets, and anything the code or git history already records.
+Tasks and TODOs, session logs, and anything the code or git history already records.
+
+Secrets (keys, passwords, tokens) are memory: the vault is the user's own safe, so they are saved like any other note,
+with no masking or blocking.
