@@ -1,24 +1,9 @@
-import { join } from "node:path"
-
 import { expect, test } from "vitest"
 
-import { type MemoryAddTool, registerExtension } from "#/pi"
-
-function register(env: NodeJS.ProcessEnv) {
-  const tools: MemoryAddTool[] = []
-  const events: string[] = []
-
-  registerExtension(
-    { registerTool: (tool) => tools.push(tool), on: (event) => events.push(event) },
-    join("C:", "agent"),
-    env,
-  )
-
-  return { tools, events }
-}
+import { registerWithFakePi } from "#test-helpers"
 
 test("registers the memory_add tool for explicit requests only", () => {
-  const { tools, events } = register({})
+  const { tools, events } = registerWithFakePi({})
 
   expect(tools).toEqual([
     expect.objectContaining({
@@ -32,7 +17,7 @@ test("registers the memory_add tool for explicit requests only", () => {
 test("turns off Claude Code's own memory in pi's environment", () => {
   const env: NodeJS.ProcessEnv = {}
 
-  register(env)
+  registerWithFakePi(env)
 
   expect(env.CLAUDE_CODE_DISABLE_AUTO_MEMORY).toBe("1")
 })

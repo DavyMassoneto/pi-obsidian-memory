@@ -4,6 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 
+import { type MemoryAddResponse, type MemoryAddTool, registerExtension } from "#/pi"
 import type { PiRun } from "./types.ts"
 
 const repoRoot = resolve(import.meta.dirname, "..", "..")
@@ -29,4 +30,29 @@ export async function withIsolatedPi(run: PiRun): Promise<void> {
     await exited
     await rm(isolatedAgentDir, { recursive: true, force: true })
   }
+}
+
+export function registerWithFakePi(env: NodeJS.ProcessEnv) {
+  const tools: MemoryAddTool[] = []
+  const events: string[] = []
+
+  registerExtension(
+    { registerTool: (tool) => tools.push(tool), on: (event) => events.push(event) },
+    join("C:", "agent"),
+    env,
+  )
+
+  return { tools, events }
+}
+
+export function textOf(response: MemoryAddResponse): string {
+  const texts = response.content.flatMap((part) => {
+    if (part.type === "text") {
+      return [part.text]
+    }
+
+    return []
+  })
+
+  return texts.join("")
 }
