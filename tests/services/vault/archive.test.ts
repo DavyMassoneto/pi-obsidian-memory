@@ -5,35 +5,26 @@ import { expect, test } from "vitest"
 
 import { renderNote } from "#/domain"
 import { archiveStoredNote, createNote, readNote } from "#/services"
-import { aNote, linkFolder, useTempVault } from "#test-helpers"
+import { aNote, linkFolder, useTempVault, vaultWithNoteToArchive } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
 const today = "2026-10-06"
 
-async function vaultWithNote() {
-  const vault = await useTempVault()
-  const note = aNote()
-  const created = await createNote(vault, "pnpm", note, limits)
-  if (!created.succeeded) {
-    throw new Error(`setup failed: ${created.problems.join(", ")}`)
-  }
-  const request = { note: { folder: "pnpm", note }, hashWhenRead: created.output.hash, today }
-  return { vault, note, request, file: join(vault, "pnpm", `${note.statement}.md`) }
-}
-
 test("moves the note to archive/ under the same subject, with the archived date", async () => {
-  const { vault, note, request } = await vaultWithNote()
+  const { vault, note, request } = await vaultWithNoteToArchive(today)
 
   const archived = await archiveStoredNote(vault, "Global memory", request, limits)
 
   const expectedNote = { ...note, frontmatter: { ...note.frontmatter, archived: today } }
   expect(archived).toEqual({ succeeded: true, output: { folder: "archive/pnpm", note: expectedNote } })
-  expect(await readNote(vault, "archive/pnpm", note.statement)).toMatchObject({ output: { note: expectedNote } })
-  expect(await readNote(vault, "pnpm", note.statement)).toMatchObject({ reason: "not-found" })
+  expect(await readNote(vault, "archive/pnpm", note.statement, limits)).toMatchObject({
+    output: { note: expectedNote },
+  })
+  expect(await readNote(vault, "pnpm", note.statement, limits)).toMatchObject({ reason: "not-found" })
 })
 
 test("refreshes the indexes on both sides", async () => {
-  const { vault, note, request } = await vaultWithNote()
+  const { vault, note, request } = await vaultWithNoteToArchive(today)
 
   await archiveStoredNote(vault, "Global memory", request, limits)
 
@@ -43,7 +34,7 @@ test("refreshes the indexes on both sides", async () => {
 })
 
 test("refuses with a conflict when the note changed since it was read, changing nothing", async () => {
-  const { vault, note, request, file } = await vaultWithNote()
+  const { vault, note, request, file } = await vaultWithNoteToArchive(today)
   const edited = renderNote({ ...note, body: "Edited in Obsidian." })
   await writeFile(file, edited)
 
@@ -57,7 +48,7 @@ test("refuses with a conflict when the note changed since it was read, changing 
 })
 
 test("refuses when the archive already has a note with that name, changing nothing", async () => {
-  const { vault, note, request, file } = await vaultWithNote()
+  const { vault, note, request, file } = await vaultWithNoteToArchive(today)
   await createNote(vault, "archive/pnpm", note, limits)
   const before = await readFile(file, "utf8")
 
@@ -70,7 +61,7 @@ test("refuses when the archive already has a note with that name, changing nothi
 })
 
 test("leaves no temporary file behind", async () => {
-  const { vault, request } = await vaultWithNote()
+  const { vault, request } = await vaultWithNoteToArchive(today)
 
   await archiveStoredNote(vault, "Global memory", request, limits)
 
@@ -97,4 +88,25 @@ test("refuses to archive a note reached through a link that leads outside the va
   expect(await readdir(vault)).toEqual(["pnpm"])
   expect(await readdir(join(outside, "pnpm"))).toEqual([`${note.statement}.md`])
   expect(await readFile(join(outside, "pnpm", `${note.statement}.md`), "utf8")).toBe(renderNote(note))
+})
+
+test("keeps the body byte for byte, indentation and blank lines included", async () => {
+  const vault = await useTempVault()
+  const note = { ...aNote(), body: "    pnpm install\n\n  then run the tests  \n" }
+  const created = await createNote(vault, "pnpm", note, limits)
+  if (!created.succeeded) {
+    throw new Error(`setup failed: ${created.problems.join(", ")}`)
+  }
+
+  const read = await readNote(vault, "pnpm", note.statement, limits)
+  if (!read.succeeded) {
+    throw new Error(`setup failed: ${read.problems.join(", ")}`)
+  }
+
+  const request = { note: { folder: "pnpm", note: read.output.note }, hashWhenRead: read.output.hash, today }
+
+  await archiveStoredNote(vault, "Global memory", request, limits)
+
+  const archived = { ...note, frontmatter: { ...note.frontmatter, archived: today } }
+  expect(await readFile(join(vault, "archive", "pnpm", `${note.statement}.md`), "utf8")).toBe(renderNote(archived))
 })

@@ -12,13 +12,13 @@ test("finds a note by its statement in any case, returning its real statement", 
   const note = aNote()
   const created = await createNote(vault, "pnpm", note, limits)
 
-  expect(await findNote(vault, "pnpm", note.statement.toUpperCase())).toEqual(created)
+  expect(await findNote(vault, "pnpm", note.statement.toUpperCase(), limits)).toEqual(created)
 })
 
 test("tells when no note has that statement", async () => {
   const vault = await useTempVault()
 
-  expect(await findNote(vault, "pnpm", "Missing note")).toEqual({
+  expect(await findNote(vault, "pnpm", "Missing note", limits)).toEqual({
     succeeded: false,
     reason: "not-found",
     problems: ["pnpm/Missing note.md does not exist"],
@@ -32,7 +32,7 @@ test("refuses to search through a link that leads outside the vault", async () =
   await createNote(outside, "", note, limits)
   await linkFolder(outside, join(vault, "escape"))
 
-  expect(await findNote(vault, "escape", note.statement)).toEqual({
+  expect(await findNote(vault, "escape", note.statement, limits)).toEqual({
     succeeded: false,
     reason: "outside-vault",
     problems: ["escape leads outside the vault"],

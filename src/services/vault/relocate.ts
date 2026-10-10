@@ -25,7 +25,7 @@ export async function relocateNote(request: RelocationRequest, limits: NoteLimit
     return removed
   }
 
-  return refreshFolders(request)
+  return refreshFolders(request, limits)
 }
 
 async function checkRelocation(request: RelocationRequest, limits: NoteLimits): Promise<CheckResult> {
@@ -103,11 +103,11 @@ async function removeOriginal(request: RelocationRequest): Promise<CheckResult> 
   return { succeeded: true }
 }
 
-async function refreshFolders(request: RelocationRequest): Promise<CheckResult> {
+async function refreshFolders(request: RelocationRequest, limits: NoteLimits): Promise<CheckResult> {
   const folders = new Set([request.original.folder, ...request.written.map((placed) => placed.folder)])
 
   for (const folder of folders) {
-    const refreshed = await refreshIndexes(request.vault, folder, request.vaultName)
+    const refreshed = await refreshIndexes(request.vault, folder, request.vaultName, limits)
     if (!refreshed.succeeded) {
       return { succeeded: false, reason: "not-writable", problems: refreshed.problems }
     }

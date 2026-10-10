@@ -110,6 +110,12 @@ vault/
 - An invalid note is refused with every reason; nothing is fixed silently.
   - Written by the LLM: the write is refused and the LLM rewrites the note or splits it into smaller notes.
   - Edited by the user in Obsidian: accepted; `/memory-doctor` lists the notes with problems.
+  - Reading reports every problem at once: frontmatter (YAML included), name and body together. A note that breaks
+    any rule (including a limit lowered later) is still read: its content comes back with the problems, and its folder
+    index lists it under `Needs fixing`. Only a file without a closed `---` frontmatter block cannot be read at all.
+- The body is kept exactly as written: indentation, blank lines and trailing spaces included. Writing puts one blank
+  line after the closing `---` and appends one newline after the body (a body that already ends with newlines keeps
+  them all). Reading removes only that blank line and that appended newline. Line endings are read as LF.
 
 ## Frontmatter
 
@@ -137,6 +143,12 @@ Use pnpm for every install and script. In CI: `pnpm install --frozen-lockfile`.
 | `replacedBy` | only in a replaced note | link to its successor (`"[[search/New]]"`) |
 
 No `tags` (the folders already group notes), no `source`, no `schemaVersion` until the format first changes.
+
+The frontmatter holds only the fields above, each once, each a single text value in its own format (`dontForget` is
+the literal `true`, or left out). Any YAML presentation works: block or flow style, quoted names, comments, values
+folded over several lines. Numbers, `false`, lists, sets of fields, empty values, aliases (`*name`), tags
+(`!!timestamp`, `!custom`), unknown and repeated fields are problems that name the field; the note is still read and
+listed under `Needs fixing`.
 
 A field that is not in this table makes the note invalid; `/memory-doctor` lists invalid notes.
 

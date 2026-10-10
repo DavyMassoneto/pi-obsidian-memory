@@ -23,7 +23,7 @@ test("returns the hash of what it wrote, the same a later read sees", async () =
   const note = aNote()
 
   const created = await createNote(vault, "pnpm", note, limits)
-  const read = await readNote(vault, "pnpm", note.statement)
+  const read = await readNote(vault, "pnpm", note.statement, limits)
 
   expect(created).toEqual(read)
 })
@@ -101,4 +101,17 @@ test("refuses a vault folder that does not exist, creating nothing", async () =>
     problems: [`the vault folder ${vault} does not exist`],
   })
   expect(await readdir(root)).toEqual([])
+})
+
+test("refuses a frontmatter the format does not allow, writing nothing", async () => {
+  const vault = await useTempVault()
+  const note = aNote()
+  const invalid = { ...note, frontmatter: { ...note.frontmatter, id: "not-a-ulid" } }
+
+  expect(await createNote(vault, "pnpm", invalid, limits)).toEqual({
+    succeeded: false,
+    reason: "invalid",
+    problems: [expect.stringMatching(/^id: must match pattern/)],
+  })
+  expect(await readdir(vault)).toEqual([])
 })

@@ -1,6 +1,6 @@
 import type { Static } from "typebox"
 
-import type { Failed, Succeeded } from "#/shared"
+import type { Absent, Failed, Succeeded } from "#/shared"
 import type { NoteFrontmatterSchema, NoteTypeSchema } from "./schemas.ts"
 
 export type NoteType = Static<typeof NoteTypeSchema>
@@ -18,13 +18,31 @@ export interface NoteLimits {
   maxStatementChars: number
 }
 
-export interface NoteParts {
+export interface ParsedNote {
+  statement: string
   frontmatter: string
   body: string
 }
 
-export type ParseNoteResult = Succeeded<Note> | Failed
+export type ParseNoteResult = Succeeded<ParsedNote> | Failed
 
-export type SplitNoteResult = Succeeded<NoteParts> | Failed
+export type ValidateNoteResult = Succeeded<Note> | Failed
 
 export type ReadFrontmatterResult = Succeeded<NoteFrontmatter> | Failed
+
+export type FieldResult<Value> = Succeeded<Value> | Failed
+
+export type OptionalFieldResult<Value> = Succeeded<Value> | Failed | Absent
+
+export type FieldNameResult = Succeeded<string> | Absent
+
+export interface FrontmatterReadings {
+  id: FieldResult<string>
+  type: FieldResult<NoteType>
+  created: FieldResult<string>
+  updated: FieldResult<string>
+  dontForget: OptionalFieldResult<true>
+  archived: OptionalFieldResult<string>
+  replaces: OptionalFieldResult<string>
+  replacedBy: OptionalFieldResult<string>
+}

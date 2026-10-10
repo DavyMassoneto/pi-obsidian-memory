@@ -1,13 +1,13 @@
 import type { Dirent } from "node:fs"
 import { readdir } from "node:fs/promises"
 
-import { ARCHIVE_FOLDER, FOLDER_INDEX_NAME, TEMPLATES_FOLDER } from "#/domain"
+import { ARCHIVE_FOLDER, FOLDER_INDEX_NAME, type NoteLimits, TEMPLATES_FOLDER } from "#/domain"
 import { NOTE_EXTENSION } from "./constants.ts"
 import { readNote } from "./read.ts"
 import { resolveFolder } from "./resolve.ts"
-import type { FolderListing, ListResult } from "./types.ts"
+import type { FolderListing, ListResult, ReadNoteResult } from "./types.ts"
 
-export async function listFolder(vault: string, folder: string): Promise<ListResult> {
+export async function listFolder(vault: string, folder: string, limits: NoteLimits): Promise<ListResult> {
   const directory = await resolveFolder(vault, folder)
   if (!directory.succeeded) {
     return directory
@@ -21,15 +21,22 @@ export async function listFolder(vault: string, folder: string): Promise<ListRes
 
   const listing: FolderListing = { subjects, notes: [], invalid: [] }
   for (const statement of statements) {
-    const read = await readNote(vault, folder, statement)
-    if (read.succeeded) {
-      listing.notes.push(read.output.note)
-    } else if (read.reason === "invalid") {
-      listing.invalid.push({ statement, problems: read.problems })
-    }
+    const read = await readNote(vault, folder, statement, limits)
+    addToListing(listing, statement, read)
   }
 
   return { succeeded: true, output: listing }
+}
+
+function addToListing(listing: FolderListing, statement: string, read: ReadNoteResult): void {
+  if (read.succeeded) {
+    listing.notes.push(read.output.note)
+    return
+  }
+
+  if (read.reason === "invalid" || read.reason === "needs-fixing") {
+    listing.invalid.push({ statement, problems: read.problems })
+  }
 }
 
 function isSubject(folder: string, entry: Dirent): boolean {

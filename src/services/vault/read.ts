@@ -1,10 +1,15 @@
-import { parseNote } from "#/domain"
+import { type NoteLimits, parseNote, validateNote } from "#/domain"
 import { hashOf, readRawFile } from "./files.ts"
 import { displayNotePath, noteFileName } from "./paths.ts"
 import { resolveFile } from "./resolve.ts"
-import type { VaultResult } from "./types.ts"
+import type { ReadNoteResult } from "./types.ts"
 
-export async function readNote(vault: string, folder: string, statement: string): Promise<VaultResult> {
+export async function readNote(
+  vault: string,
+  folder: string,
+  statement: string,
+  limits: NoteLimits,
+): Promise<ReadNoteResult> {
   const path = await resolveFile(vault, folder, noteFileName(statement))
   if (!path.succeeded) {
     return path
@@ -21,5 +26,11 @@ export async function readNote(vault: string, folder: string, statement: string)
     return { succeeded: false, reason: "invalid", problems: parsed.problems }
   }
 
-  return { succeeded: true, output: { note: parsed.output, hash: hashOf(file.output) } }
+  const hash = hashOf(file.output)
+  const validated = validateNote(parsed.output, limits)
+  if (!validated.succeeded) {
+    return { succeeded: false, reason: "needs-fixing", problems: validated.problems, parsed: parsed.output, hash }
+  }
+
+  return { succeeded: true, output: { note: validated.output, hash } }
 }

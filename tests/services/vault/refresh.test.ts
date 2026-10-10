@@ -3,59 +3,66 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
+import { renderNote } from "#/domain"
 import { createNote, refreshIndexes } from "#/services"
-import { aNote, linkFolder, tryLinkFile, useTempVault } from "#test-helpers"
+import {
+  aNote,
+  linkFolder,
+  noteText,
+  readIndexOf,
+  tryLinkFile,
+  useTempVault,
+  validFrontmatterLines,
+} from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
-
-async function readIndex(vault: string, folder: string): Promise<string> {
-  return readFile(join(vault, folder, "index.md"), "utf8")
-}
 
 test("writes the index of the folder and of every folder above it, up to the root", async () => {
   const vault = await useTempVault()
   const note = aNote()
   await createNote(vault, "tools/pnpm", note, limits)
 
-  expect(await refreshIndexes(vault, "tools/pnpm", "Global memory")).toEqual({ succeeded: true })
+  expect(await refreshIndexes(vault, "tools/pnpm", "Global memory", limits)).toEqual({ succeeded: true })
 
-  expect(await readIndex(vault, "tools/pnpm")).toContain(`- [[tools/pnpm/${note.statement}|${note.statement}]] · rule`)
-  expect(await readIndex(vault, "tools")).toContain("- [[tools/pnpm/index|pnpm]]")
-  expect(await readIndex(vault, "")).toContain("# Global memory\n\n## Subjects\n\n- [[tools/index|tools]]")
+  expect(await readIndexOf(vault, "tools/pnpm")).toContain(
+    `- [[tools/pnpm/${note.statement}|${note.statement}]] · rule`,
+  )
+  expect(await readIndexOf(vault, "tools")).toContain("- [[tools/pnpm/index|pnpm]]")
+  expect(await readIndexOf(vault, "")).toContain("# Global memory\n\n## Subjects\n\n- [[tools/index|tools]]")
 })
 
 test("adds the Archive section to the root index when the vault has an archive", async () => {
   const vault = await useTempVault()
   await mkdir(join(vault, "archive"))
 
-  await refreshIndexes(vault, "", "Global memory")
+  await refreshIndexes(vault, "", "Global memory", limits)
 
-  expect(await readIndex(vault, "")).toContain("## Archive\n\n- [[archive/index|archive]]")
+  expect(await readIndexOf(vault, "")).toContain("## Archive\n\n- [[archive/index|archive]]")
 })
 
 test("overwrites an index edited by hand", async () => {
   const vault = await useTempVault()
   await writeFile(join(vault, "index.md"), "edited by hand")
 
-  await refreshIndexes(vault, "", "Global memory")
+  await refreshIndexes(vault, "", "Global memory", limits)
 
-  expect(await readIndex(vault, "")).toBe("# Global memory\n")
+  expect(await readIndexOf(vault, "")).toBe("# Global memory\n")
 })
 
 test("lists invalid notes under Needs fixing", async () => {
   const vault = await useTempVault()
   await writeFile(join(vault, "Broken.md"), "No frontmatter.\n")
 
-  await refreshIndexes(vault, "", "Global memory")
+  await refreshIndexes(vault, "", "Global memory", limits)
 
-  expect(await readIndex(vault, "")).toContain("## Needs fixing\n\n- [[Broken|Broken]] · missing frontmatter")
+  expect(await readIndexOf(vault, "")).toContain("## Needs fixing\n\n- [[Broken|Broken]] · missing frontmatter")
 })
 
 test("leaves no temporary file behind", async () => {
   const vault = await useTempVault()
   await createNote(vault, "pnpm", aNote(), limits)
 
-  await refreshIndexes(vault, "pnpm", "Global memory")
+  await refreshIndexes(vault, "pnpm", "Global memory", limits)
 
   expect((await readdir(join(vault, "pnpm"))).sort()).toEqual([`${aNote().statement}.md`, "index.md"].sort())
 })
@@ -65,7 +72,7 @@ test("refuses to write an index through a link that leads outside the vault", as
   const outside = await useTempVault()
   await linkFolder(outside, join(vault, "escape"))
 
-  expect(await refreshIndexes(vault, "escape", "Global memory")).toEqual({
+  expect(await refreshIndexes(vault, "escape", "Global memory", limits)).toEqual({
     succeeded: false,
     problems: ["escape leads outside the vault"],
   })
@@ -82,7 +89,7 @@ test("refuses to replace an index that is a link leading outside the vault, leav
     context.skip("this system cannot create file links")
   }
 
-  expect(await refreshIndexes(vault, "", "Global memory")).toEqual({
+  expect(await refreshIndexes(vault, "", "Global memory", limits)).toEqual({
     succeeded: false,
     problems: ["index.md leads outside the vault"],
   })
@@ -102,8 +109,77 @@ test.each([
     await writeFile(join(vault, indexFolder, "index.md"), `edited ${indexFolder}`)
   }
 
-  expect(await refreshIndexes(vault, folder, "Global memory")).toEqual({ succeeded: false, problems: [problem] })
+  expect(await refreshIndexes(vault, folder, "Global memory", limits)).toEqual({
+    succeeded: false,
+    problems: [problem],
+  })
+
   for (const indexFolder of ["", "tools", "tools/pnpm"]) {
-    expect(await readIndex(vault, indexFolder)).toBe(`edited ${indexFolder}`)
+    expect(await readIndexOf(vault, indexFolder)).toBe(`edited ${indexFolder}`)
   }
+})
+
+test("lists a note with an empty body under Needs fixing", async () => {
+  const vault = await useTempVault()
+  const note = { ...aNote(), body: "" }
+  await writeFile(join(vault, `${note.statement}.md`), renderNote(note))
+
+  await refreshIndexes(vault, "", "Global memory", limits)
+
+  expect(await readIndexOf(vault, "")).toContain(
+    `## Needs fixing\n\n- [[${note.statement}|${note.statement}]] · body: is empty`,
+  )
+})
+
+test("indexes the other notes when one note uses an alias in its frontmatter", async () => {
+  const vault = await useTempVault()
+  const note = aNote()
+  await createNote(vault, "", note, limits)
+  await writeFile(join(vault, "Aliased.md"), noteText([...validFrontmatterLines(), "replaces: *missing"], "Body."))
+
+  expect(await refreshIndexes(vault, "", "Global memory", limits)).toEqual({ succeeded: true })
+
+  const index = await readIndexOf(vault, "")
+  expect(index).toContain(`- [[${note.statement}|${note.statement}]] · rule`)
+  expect(index).toContain("## Needs fixing\n\n- [[Aliased|Aliased]] · replaces: is an alias (*missing)")
+})
+
+test("indexes the other notes when one note has a tagged value in its frontmatter", async () => {
+  const vault = await useTempVault()
+  const note = aNote()
+  await createNote(vault, "", note, limits)
+  const repeatedKey = "extra: !!omap [ { &k same: 1 }, { *k : 2 } ]"
+  await writeFile(join(vault, "Ordered.md"), noteText([...validFrontmatterLines(), repeatedKey], "Body."))
+
+  expect(await refreshIndexes(vault, "", "Global memory", limits)).toEqual({ succeeded: true })
+
+  const index = await readIndexOf(vault, "")
+  expect(index).toContain(`- [[${note.statement}|${note.statement}]] · rule`)
+  expect(index).toContain("## Needs fixing\n\n- [[Ordered|Ordered]] · extra: remove the tag !!omap")
+})
+
+test("indexes the other notes when one note has tags on its whole frontmatter and on a field name", async () => {
+  const vault = await useTempVault()
+  const note = aNote()
+  await createNote(vault, "", note, limits)
+  await writeFile(join(vault, "Tagged.md"), noteText(["!!map", ...validFrontmatterLines(), "!!str extra: 1"], "Body."))
+
+  expect(await refreshIndexes(vault, "", "Global memory", limits)).toEqual({ succeeded: true })
+
+  const index = await readIndexOf(vault, "")
+  expect(index).toContain(`- [[${note.statement}|${note.statement}]] · rule`)
+  expect(index).toContain("- [[Tagged|Tagged]] · frontmatter: remove the tag !!map")
+})
+
+test("indexes the other notes when one note has a second document in its frontmatter", async () => {
+  const vault = await useTempVault()
+  const note = aNote()
+  await createNote(vault, "", note, limits)
+  await writeFile(join(vault, "Split.md"), noteText([...validFrontmatterLines(), "...", "type: rule"], "Body."))
+
+  expect(await refreshIndexes(vault, "", "Global memory", limits)).toEqual({ succeeded: true })
+
+  const index = await readIndexOf(vault, "")
+  expect(index).toContain(`- [[${note.statement}|${note.statement}]] · rule`)
+  expect(index).toContain("- [[Split|Split]] · frontmatter: ")
 })

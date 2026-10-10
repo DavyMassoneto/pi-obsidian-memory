@@ -5,20 +5,10 @@ import { join } from "node:path"
 import { expect, test } from "vitest"
 
 import { renderNote } from "#/domain"
-import { createNote, readNote, updateNote } from "#/services"
-import { aNote, tryLinkFile, useTempVault } from "#test-helpers"
+import { readNote, updateNote } from "#/services"
+import { tryLinkFile, useTempVault, vaultWithNote } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
-
-async function vaultWithNote() {
-  const vault = await useTempVault()
-  const note = aNote()
-  const created = await createNote(vault, "pnpm", note, limits)
-  if (!created.succeeded) {
-    throw new Error(`setup failed: ${created.problems.join(", ")}`)
-  }
-  return { vault, note, file: join(vault, "pnpm", `${note.statement}.md`), hash: created.output.hash }
-}
 
 test("writes the new content when the file did not change since it was read", async () => {
   const { vault, note, file, hash } = await vaultWithNote()
@@ -27,7 +17,7 @@ test("writes the new content when the file did not change since it was read", as
   const updated = await updateNote(vault, "pnpm", changed, hash, limits)
 
   expect(await readFile(file, "utf8")).toBe(renderNote(changed))
-  expect(updated).toEqual(await readNote(vault, "pnpm", note.statement))
+  expect(updated).toEqual(await readNote(vault, "pnpm", note.statement, limits))
 })
 
 test("refuses with a conflict when the file changed on disk, keeping that change", async () => {
@@ -106,6 +96,7 @@ test("refuses to write through a file link that leads outside the vault, leaving
   if (!linked) {
     context.skip("this system cannot create file links")
   }
+
   const hash = createHash("sha256").update(original).digest("hex")
 
   expect(await updateNote(vault, "pnpm", { ...note, statement: "Linked", body: "Changed." }, hash, limits)).toEqual({

@@ -1,11 +1,17 @@
+import type { NoteLimits } from "#/domain"
 import { NOTE_EXTENSION } from "./constants.ts"
 import { findFileIgnoringCase } from "./files.ts"
 import { displayNotePath, noteFileName } from "./paths.ts"
 import { readNote } from "./read.ts"
 import { resolveFolder } from "./resolve.ts"
-import type { VaultResult } from "./types.ts"
+import type { ReadNoteResult } from "./types.ts"
 
-export async function findNote(vault: string, folder: string, statement: string): Promise<VaultResult> {
+export async function findNote(
+  vault: string,
+  folder: string,
+  statement: string,
+  limits: NoteLimits,
+): Promise<ReadNoteResult> {
   const directory = await resolveFolder(vault, folder)
   if (!directory.succeeded) {
     return directory
@@ -17,5 +23,5 @@ export async function findNote(vault: string, folder: string, statement: string)
   }
 
   const realStatement = existing.output.slice(0, -NOTE_EXTENSION.length)
-  return readNote(vault, folder, realStatement)
+  return readNote(vault, folder, realStatement, limits)
 }

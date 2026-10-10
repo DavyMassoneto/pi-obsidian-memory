@@ -1,6 +1,6 @@
 import type { Stats } from "node:fs"
 
-import type { InvalidNote, Note, PlacedNote, Succession } from "#/domain"
+import type { InvalidNote, Note, ParsedNote, PlacedNote, Succession } from "#/domain"
 import type { Absent, Done, Failed, Succeeded } from "#/shared"
 
 export interface StoredNote {
@@ -53,7 +53,15 @@ export interface NotWritable {
   code: string
 }
 
+export interface NeedsFixingNote extends Failed {
+  reason: "needs-fixing"
+  parsed: ParsedNote
+  hash: string
+}
+
 export type VaultResult = Succeeded<StoredNote> | VaultRefusal
+
+export type ReadNoteResult = VaultResult | NeedsFixingNote
 
 export type CheckResult = Done | VaultRefusal
 

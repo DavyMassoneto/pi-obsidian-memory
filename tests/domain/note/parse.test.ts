@@ -1,60 +1,62 @@
 import { expect, test } from "vitest"
 
 import { parseNote, renderNote } from "#/domain"
-import { aNote } from "#test-helpers"
+import { aNote, noteText, validFrontmatterLines } from "#test-helpers"
 
 const statement = "Use pnpm, never npm"
 
-function frontmatterWith(lines: string[]): string {
-  return ["---", ...lines, "---", "", "Body.", ""].join("\n")
-}
-
-const validLines = ["id: 01JABCDE7XKQ2M9V3RTN8WPZ5F", "type: rule", "created: 2026-10-04", "updated: 2026-10-04"]
-
-test("reads back exactly the note that renderNote wrote", () => {
-  const note = aNote()
-  const full = { ...note, frontmatter: { ...note.frontmatter, dontForget: true as const, archived: "2026-10-05" } }
-
-  expect(parseNote(note.statement, renderNote(note))).toEqual({ succeeded: true, output: note })
-  expect(parseNote(full.statement, renderNote(full))).toEqual({ succeeded: true, output: full })
+test("splits the frontmatter text from the body", () => {
+  expect(parseNote(statement, noteText(validFrontmatterLines(), "Body."))).toEqual({
+    succeeded: true,
+    output: { statement, frontmatter: validFrontmatterLines().join("\n"), body: "Body." },
+  })
 })
 
-test("accepts a note written by hand in Obsidian", () => {
-  const text =
-    "---\r\nupdated:   2026-10-05\r\ncreated: 2026-10-04\r\ntype: lesson\r\nid: 01JABCDE7XKQ2M9V3RTN8WPZ5F\r\n---\r\nBody.\r\n"
+test.each([
+  ["an indented code block as the first line", "    pnpm install\n    pnpm test"],
+  ["leading blank lines", "\n\nUse pnpm."],
+  ["trailing spaces", "Use pnpm.  "],
+  ["several trailing newlines", "Use pnpm.\n\n\n"],
+  ["a leading space", " Use pnpm."],
+  ["nothing", ""],
+])("keeps a body with %s exactly as renderNote wrote it", (_case, body) => {
+  const note = { ...aNote(), body }
+
+  expect(parseNote(note.statement, renderNote(note))).toMatchObject({ succeeded: true, output: { body } })
+})
+
+test("removes only the blank line after the frontmatter and the final newline", () => {
+  const text = ["---", ...validFrontmatterLines(), "---", "", "  Body.  ", "", ""].join("\n")
+
+  expect(parseNote(statement, text)).toMatchObject({ output: { body: "  Body.  \n" } })
+})
+
+test("reads a body that has no final newline", () => {
+  const text = ["---", ...validFrontmatterLines(), "---", "", "Body.  "].join("\n")
+
+  expect(parseNote(statement, text)).toMatchObject({ output: { body: "Body.  " } })
+})
+
+test("reads a body that starts right after the frontmatter", () => {
+  const text = ["---", ...validFrontmatterLines(), "---", "Body.", ""].join("\n")
+
+  expect(parseNote(statement, text)).toMatchObject({ output: { body: "Body." } })
+})
+
+test("turns CRLF line endings into LF", () => {
+  const text = ["---", ...validFrontmatterLines(), "---", "", "Line one", "Line two", ""].join("\r\n")
 
   expect(parseNote(statement, text)).toEqual({
     succeeded: true,
-    output: {
-      statement,
-      frontmatter: { id: "01JABCDE7XKQ2M9V3RTN8WPZ5F", type: "lesson", created: "2026-10-04", updated: "2026-10-05" },
-      body: "Body.",
-    },
+    output: { statement, frontmatter: validFrontmatterLines().join("\n"), body: "Line one\nLine two" },
   })
 })
 
-test("reads the lifecycle links", () => {
-  const lines = [...validLines, 'replaces: "[[archive/search/Old]]"', 'replacedBy: "[[search/New]]"']
-
-  expect(parseNote(statement, frontmatterWith(lines))).toMatchObject({
+test("keeps frontmatter text that is not valid YAML, for validation to report", () => {
+  expect(parseNote(statement, noteText(["id: [unclosed"], "Body."))).toMatchObject({
     succeeded: true,
-    output: { frontmatter: { replaces: "[[archive/search/Old]]", replacedBy: "[[search/New]]" } },
+    output: { frontmatter: "id: [unclosed", body: "Body." },
   })
-})
-
-test("refuses a lifecycle link that is not a wikilink", () => {
-  const lines = [...validLines, 'replaces: "archive/search/Old"']
-
-  expect(parseNote(statement, frontmatterWith(lines))).toEqual({
-    succeeded: false,
-    problems: [expect.stringMatching(/^replaces: must match pattern/)],
-  })
-})
-
-test("keeps dates as YYYY-MM-DD text", () => {
-  const result = parseNote(statement, frontmatterWith(validLines))
-
-  expect(result).toMatchObject({ succeeded: true, output: { frontmatter: { created: "2026-10-04" } } })
 })
 
 test("fails without frontmatter", () => {
@@ -68,39 +70,26 @@ test("fails when the frontmatter is not closed", () => {
   })
 })
 
-test.each([
-  ["an id that is not a ULID", "id: 12345", "id:"],
-  ["a type outside the list", "type: wish", "type:"],
-  ["an impossible date", "created: 2026-02-30", "created:"],
-  ["a date in another format", "updated: 04/10/2026", "updated:"],
-  ["a field that is not in the format", "tags: [important]", "tags:"],
-])("fails with %s", (_case, line, problemPrefix) => {
-  const field = line.split(":")[0]
-  const lines = [...validLines.filter((validLine) => !validLine.startsWith(`${field}:`)), line]
+test("ends the frontmatter at the first line that is exactly ---", () => {
+  const text = ["---", "id: x", "---", "more: y", "---", "Body.", ""].join("\n")
 
-  expect(parseNote(statement, frontmatterWith(lines))).toEqual({
-    succeeded: false,
-    problems: [expect.stringMatching(new RegExp(`^${problemPrefix}`))],
+  expect(parseNote(statement, text)).toEqual({
+    succeeded: true,
+    output: { statement, frontmatter: "id: x", body: "more: y\n---\nBody." },
   })
 })
 
-test("lists every problem at once", () => {
-  const result = parseNote(statement, frontmatterWith(["id: 12345", "type: wish", "created: 2026-02-30"]))
+test("keeps a line that only starts with --- inside the frontmatter", () => {
+  const text = ["---", "id: x", "--- not a fence", "---", "Body.", ""].join("\n")
 
-  expect(result).toEqual({
-    succeeded: false,
-    problems: expect.arrayContaining([
-      expect.stringMatching(/^id:/),
-      expect.stringMatching(/^type:/),
-      expect.stringMatching(/^created:/),
-      expect.stringMatching(/^frontmatter:.*updated/),
-    ]),
-  })
+  expect(parseNote(statement, text)).toMatchObject({ output: { frontmatter: "id: x\n--- not a fence", body: "Body." } })
 })
 
-test("fails when the frontmatter is not valid YAML", () => {
-  expect(parseNote(statement, frontmatterWith(["id: [unclosed"]))).toMatchObject({
-    succeeded: false,
-    problems: [expect.stringMatching(/^frontmatter:/)],
+test("reads an empty frontmatter when the closing --- comes right after the opening one", () => {
+  const text = ["---", "---", "id: x", "Body.", ""].join("\n")
+
+  expect(parseNote(statement, text)).toEqual({
+    succeeded: true,
+    output: { statement, frontmatter: "", body: "id: x\nBody." },
   })
 })

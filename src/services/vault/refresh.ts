@@ -4,6 +4,7 @@ import {
   FOLDER_INDEX_NAME,
   type FolderContents,
   joinVaultPath,
+  type NoteLimits,
   renderFolderIndex,
 } from "#/domain"
 import { NOTE_EXTENSION } from "./constants.ts"
@@ -12,14 +13,19 @@ import { listFolder } from "./list.ts"
 import { resolveFile, resolveFolder } from "./resolve.ts"
 import type { FolderListing, RefreshResult } from "./types.ts"
 
-export async function refreshIndexes(vault: string, folder: string, vaultName: string): Promise<RefreshResult> {
+export async function refreshIndexes(
+  vault: string,
+  folder: string,
+  vaultName: string,
+  limits: NoteLimits,
+): Promise<RefreshResult> {
   const checked = await resolveFolder(vault, folder)
   if (!checked.succeeded) {
     return { succeeded: false, problems: checked.problems }
   }
 
   for (const current of ancestorFolders(folder)) {
-    const written = await writeIndex(vault, current, vaultName)
+    const written = await writeIndex(vault, current, vaultName, limits)
     if (!written.succeeded) {
       return written
     }
@@ -28,13 +34,18 @@ export async function refreshIndexes(vault: string, folder: string, vaultName: s
   return { succeeded: true }
 }
 
-async function writeIndex(vault: string, folder: string, vaultName: string): Promise<RefreshResult> {
+async function writeIndex(
+  vault: string,
+  folder: string,
+  vaultName: string,
+  limits: NoteLimits,
+): Promise<RefreshResult> {
   const path = await resolveFile(vault, folder, indexFileName())
   if (!path.succeeded) {
     return { succeeded: false, problems: path.problems }
   }
 
-  const listing = await listFolder(vault, folder)
+  const listing = await listFolder(vault, folder, limits)
   if (!listing.succeeded) {
     return { succeeded: false, problems: listing.problems }
   }

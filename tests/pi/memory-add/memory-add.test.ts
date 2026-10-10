@@ -1,11 +1,11 @@
-import { mkdir, readdir } from "node:fs/promises"
+import { readdir } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { MemoryAddParamsSchema, type MemoryAddResponse, memoryConfigPath, runMemoryAdd } from "#/pi"
+import { MemoryAddParamsSchema, memoryConfigPath, runMemoryAdd } from "#/pi"
 import { readNote } from "#/services"
-import { aConfig, useTempVault, writeConfig } from "#test-helpers"
+import { aConfig, setupMemoryAdd, textOf } from "#test-helpers"
 
 const params = {
   scope: "global" as const,
@@ -14,29 +14,6 @@ const params = {
   type: "rule" as const,
   body: "Use pnpm everywhere.",
   dontForget: false,
-}
-
-async function setup() {
-  const root = await useTempVault()
-  const config = {
-    ...aConfig(),
-    global: { vault: join(root, "Global memory") },
-    projects: [],
-  }
-  await mkdir(config.global.vault)
-  return { root, context: { configPath: await writeConfig(root, config), workingFolder: "D:/Downloads" } }
-}
-
-function textOf(response: MemoryAddResponse): string {
-  const texts = response.content.flatMap((part) => {
-    if (part.type === "text") {
-      return [part.text]
-    }
-
-    return []
-  })
-
-  return texts.join("")
 }
 
 test("asks for every parameter, with a description for the model", () => {
@@ -58,7 +35,7 @@ test("asks for the folder, the statement and the body in English", () => {
 })
 
 test("tells the model where the memory was saved", async () => {
-  const { context } = await setup()
+  const { context } = await setupMemoryAdd()
 
   const response = await runMemoryAdd(params, context)
 
@@ -67,17 +44,17 @@ test("tells the model where the memory was saved", async () => {
 })
 
 test("passes every parameter on to the note", async () => {
-  const { root, context } = await setup()
+  const { root, context } = await setupMemoryAdd()
 
   await runMemoryAdd({ ...params, type: "lesson", dontForget: true }, context)
 
-  expect(await readNote(join(root, "Global memory"), "tools/pnpm", params.statement)).toMatchObject({
+  expect(await readNote(join(root, "Global memory"), "tools/pnpm", params.statement, aConfig().limits)).toMatchObject({
     output: { note: { body: params.body, frontmatter: { type: "lesson", dontForget: true } } },
   })
 })
 
 test("shows the existing note and asks to check with the user when the name is taken", async () => {
-  const { context } = await setup()
+  const { context } = await setupMemoryAdd()
   await runMemoryAdd(params, context)
 
   const response = await runMemoryAdd({ ...params, body: "Something else." }, context)
@@ -96,7 +73,7 @@ test("shows the existing note and asks to check with the user when the name is t
 })
 
 test("lists every problem of an invalid note", async () => {
-  const { root, context } = await setup()
+  const { root, context } = await setupMemoryAdd()
   const vault = join(root, "Global memory")
 
   const response = await runMemoryAdd({ ...params, statement: "Use a: b", body: "" }, context)
@@ -109,7 +86,7 @@ test("lists every problem of an invalid note", async () => {
 })
 
 test("asks the model to check with the user when the folder has no project", async () => {
-  const { context } = await setup()
+  const { context } = await setupMemoryAdd()
 
   const response = await runMemoryAdd({ ...params, scope: "project" }, context)
 
@@ -123,7 +100,7 @@ test("asks the model to check with the user when the folder has no project", asy
 })
 
 test("passes other refusals on as they come", async () => {
-  const { root } = await setup()
+  const { root } = await setupMemoryAdd()
 
   const response = await runMemoryAdd(params, {
     configPath: join(root, "missing.json"),

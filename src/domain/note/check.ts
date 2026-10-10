@@ -1,9 +1,25 @@
+import { Value } from "typebox/value"
+
+import { describeSchemaErrors } from "#/domain/validation"
 import { FOLDER_INDEX_NAME } from "./constants.ts"
 import { checkEdges, checkFileSystemName, checkLinkCharacters } from "./names.ts"
-import type { Note, NoteLimits } from "./types.ts"
+import { NoteFrontmatterSchema } from "./schemas.ts"
+import type { Note, NoteFrontmatter, NoteLimits } from "./types.ts"
 
 export function checkNote(note: Note, limits: NoteLimits): string[] {
-  return [...checkStatement(note.statement, limits.maxStatementChars), ...checkBody(note.body, limits.maxBodyChars)]
+  return [...checkFrontmatter(note.frontmatter), ...checkNoteText(note.statement, note.body, limits)]
+}
+
+export function checkNoteText(statement: string, body: string, limits: NoteLimits): string[] {
+  return [...checkStatement(statement, limits.maxStatementChars), ...checkBody(body, limits.maxBodyChars)]
+}
+
+function checkFrontmatter(frontmatter: NoteFrontmatter): string[] {
+  if (Value.Check(NoteFrontmatterSchema, frontmatter)) {
+    return []
+  }
+
+  return describeSchemaErrors(Value.Errors(NoteFrontmatterSchema, frontmatter), "frontmatter")
 }
 
 function checkStatement(statement: string, maxChars: number): string[] {

@@ -1,30 +1,8 @@
-import { Value } from "typebox/value"
-import { parseDocument } from "yaml"
-
-import { describeSchemaErrors } from "#/domain/validation"
-import { FRONTMATTER_FENCE } from "./constants.ts"
-import { NoteFrontmatterSchema } from "./schemas.ts"
-import type { ParseNoteResult, ReadFrontmatterResult, SplitNoteResult } from "./types.ts"
+import { FRONTMATTER_FENCE, LINE_BREAK } from "./constants.ts"
+import type { ParseNoteResult } from "./types.ts"
 
 export function parseNote(statement: string, text: string): ParseNoteResult {
-  const parts = splitNote(text)
-  if (!parts.succeeded) {
-    return parts
-  }
-
-  const frontmatter = readFrontmatter(parts.output.frontmatter)
-  if (!frontmatter.succeeded) {
-    return frontmatter
-  }
-
-  return {
-    succeeded: true,
-    output: { statement, frontmatter: frontmatter.output, body: parts.output.body },
-  }
-}
-
-function splitNote(text: string): SplitNoteResult {
-  const lines = text.replaceAll("\r\n", "\n").split("\n")
+  const lines = text.replaceAll("\r\n", LINE_BREAK).split(LINE_BREAK)
 
   if (lines[0] !== FRONTMATTER_FENCE) {
     return { succeeded: false, problems: ["missing frontmatter"] }
@@ -35,26 +13,29 @@ function splitNote(text: string): SplitNoteResult {
     return { succeeded: false, problems: ["frontmatter is not closed"] }
   }
 
-  const frontmatter = lines.slice(1, closingFence).join("\n")
-  const body = lines
-    .slice(closingFence + 1)
-    .join("\n")
-    .trim()
+  const frontmatter = lines.slice(1, closingFence).join(LINE_BREAK)
+  const afterFrontmatter = lines.slice(closingFence + 1).join(LINE_BREAK)
 
-  return { succeeded: true, output: { frontmatter, body } }
+  return { succeeded: true, output: { statement, frontmatter, body: withoutFraming(afterFrontmatter) } }
 }
 
-function readFrontmatter(yaml: string): ReadFrontmatterResult {
-  const document = parseDocument(yaml)
-  if (document.errors.length > 0) {
-    return { succeeded: false, problems: document.errors.map((error) => `frontmatter: ${error.message}`) }
+function withoutFraming(text: string): string {
+  const withoutBlankLine = withoutPrefix(text, LINE_BREAK)
+  return withoutSuffix(withoutBlankLine, LINE_BREAK)
+}
+
+function withoutPrefix(text: string, prefix: string): string {
+  if (text.startsWith(prefix)) {
+    return text.slice(prefix.length)
   }
 
-  const frontmatter = document.toJS()
-  if (!Value.Check(NoteFrontmatterSchema, frontmatter)) {
-    const errors = Value.Errors(NoteFrontmatterSchema, frontmatter)
-    return { succeeded: false, problems: describeSchemaErrors(errors, "frontmatter") }
+  return text
+}
+
+function withoutSuffix(text: string, suffix: string): string {
+  if (text.endsWith(suffix)) {
+    return text.slice(0, -suffix.length)
   }
 
-  return { succeeded: true, output: frontmatter }
+  return text
 }

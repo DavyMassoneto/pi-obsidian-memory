@@ -3,6 +3,7 @@ import {
   displayNotePath,
   findNote,
   newNote,
+  type ReadNoteResult,
   readConfig,
   refreshIndexes,
   targetVault,
@@ -22,12 +23,18 @@ export async function addMemory(request: AddMemoryRequest, context: MemoryContex
   }
 
   const { path, name } = target.output
-  const created = await createMemoryNote(path, request.folder, newNote(request.draft), config.output.limits)
-  if (!created.succeeded) {
-    return refuseCreation(path, request, created)
+  const { limits } = config.output
+  const created = await createMemoryNote(path, request.folder, newNote(request.draft), limits)
+  if (!created.succeeded && created.reason === "exists") {
+    const existing = await findNote(path, request.folder, request.draft.statement, limits)
+    return refuseExisting(created, existing)
   }
 
-  const refreshed = await refreshIndexes(path, request.folder, name)
+  if (!created.succeeded) {
+    return created
+  }
+
+  const refreshed = await refreshIndexes(path, request.folder, name, limits)
   if (!refreshed.succeeded) {
     return { succeeded: false, reason: "not-writable", problems: refreshed.problems }
   }
@@ -36,16 +43,7 @@ export async function addMemory(request: AddMemoryRequest, context: MemoryContex
   return { succeeded: true, output: { vaultName: name, folder: request.folder, notePath, stored: created.output } }
 }
 
-async function refuseCreation(
-  vault: string,
-  request: AddMemoryRequest,
-  refusal: VaultRefusal,
-): Promise<AddMemoryResult> {
-  if (refusal.reason !== "exists") {
-    return refusal
-  }
-
-  const existing = await findNote(vault, request.folder, request.draft.statement)
+function refuseExisting(refusal: VaultRefusal, existing: ReadNoteResult): AddMemoryResult {
   if (!existing.succeeded) {
     return refusal
   }
