@@ -48,3 +48,7 @@ What each layer's tests prove, and how:
 - pi: a fake pi proves each tool, event and command reaches the right usecase and translates its input and output.
   One smoke test in the real pi (`npm run test:pi`, outside `npm test`) proves pi loads the extension; run it before
   each release and after updating pi.
+
+## Roadmap
+
+- Whenever an item is completed, mark it as done in [docs/ROADMAP.md](docs/ROADMAP.md).
