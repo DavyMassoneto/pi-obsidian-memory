@@ -1,17 +1,10 @@
-import { mkdtemp, rm, stat } from "node:fs/promises"
-import { tmpdir } from "node:os"
+import { stat } from "node:fs/promises"
 import { join } from "node:path"
 
-import { expect, onTestFinished, test } from "vitest"
+import { expect, test } from "vitest"
 
 import { indexFileFor, openIndex, putNote, searchText } from "#/services"
-import { anEntry } from "#test-helpers"
-
-async function useTempFolder(): Promise<string> {
-  const folder = await mkdtemp(join(tmpdir(), "index-"))
-  onTestFinished(() => rm(folder, { recursive: true, force: true }))
-  return folder
-}
+import { anEntry, useTempFolder } from "#test-helpers"
 
 test("creates the index file and its folders", async () => {
   const folder = await useTempFolder()

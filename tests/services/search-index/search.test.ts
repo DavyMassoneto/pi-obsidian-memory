@@ -1,17 +1,9 @@
 import { expect, test } from "vitest"
 
-import { putNote, removeNote, type SearchHit, searchText } from "#/services"
-import { anEntry, useTempIndex } from "#test-helpers"
+import { putNote, removeNote, searchText } from "#/services"
+import { anEntry, entryWith, statementsOf, useTempIndex } from "#test-helpers"
 
 const defaults = { limit: 10, includeArchived: false }
-
-function entryWith(id: string, statement: string, body: string) {
-  return { ...anEntry(), id, statement, body }
-}
-
-function statementsOf(hits: SearchHit[]): string[] {
-  return hits.map((hit) => hit.statement)
-}
 
 test("finds a note by a word of its statement or of its body", async () => {
   const index = await useTempIndex()

@@ -4,7 +4,7 @@ import { join } from "node:path"
 
 import { onTestFinished } from "vitest"
 
-import { type IndexEntry, openIndex, type SearchIndex } from "#/services"
+import { type IndexEntry, openIndex, type SearchHit, type SearchIndex } from "#/services"
 
 export async function useTempIndex(): Promise<SearchIndex> {
   const folder = await mkdtemp(join(tmpdir(), "index-"))
@@ -31,4 +31,18 @@ export function anEntry(): IndexEntry {
     modifiedMs: 1_790_000_000_000,
     hash: "a".repeat(64),
   }
+}
+
+export async function useTempFolder(): Promise<string> {
+  const folder = await mkdtemp(join(tmpdir(), "index-"))
+  onTestFinished(() => rm(folder, { recursive: true, force: true }))
+  return folder
+}
+
+export function entryWith(id: string, statement: string, body: string): IndexEntry {
+  return { ...anEntry(), id, statement, body }
+}
+
+export function statementsOf(hits: SearchHit[]): string[] {
+  return hits.map((hit) => hit.statement)
 }
