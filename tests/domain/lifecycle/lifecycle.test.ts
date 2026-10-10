@@ -1,17 +1,12 @@
 import { expect, test } from "vitest"
 
-import { archiveNote, type Note, type NoteType, succeedNote } from "#/domain"
-import { aNote } from "#test-helpers"
+import { archiveNote, type NoteType, succeedNote } from "#/domain"
+import { aDecision, aQuestion, noteAbout } from "#test-helpers"
 
 const today = "2026-10-06"
 
-function noteAbout(statement: string, type: NoteType): Note {
-  const note = aNote()
-  return { ...note, statement, frontmatter: { ...note.frontmatter, type } }
-}
-
-const question = { folder: "search", note: noteAbout("Local or remote embeddings", "question") }
-const decision = { folder: "search", note: noteAbout("Chose local embeddings", "decision") }
+const question = { folder: "search", note: aQuestion() }
+const decision = { folder: "search", note: aDecision() }
 
 test("archives a note under archive/, keeping its subject path and everything but the archived date", () => {
   const archived = archiveNote(question, today)

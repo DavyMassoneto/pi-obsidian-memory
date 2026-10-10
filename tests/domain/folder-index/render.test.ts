@@ -1,24 +1,14 @@
 import { expect, test } from "vitest"
 
-import { type Note, type NoteType, renderFolderIndex } from "#/domain"
-import { aNote } from "#test-helpers"
-
-function noteAbout(statement: string, type: NoteType): Note {
-  const note = aNote()
-  return { ...note, statement, frontmatter: { ...note.frontmatter, type } }
-}
-
-function markedNote(statement: string): Note {
-  const note = noteAbout(statement, "rule")
-  return { ...note, frontmatter: { ...note.frontmatter, dontForget: true } }
-}
+import { renderFolderIndex } from "#/domain"
+import { aDontForgetNote, aNote, noteAbout } from "#test-helpers"
 
 test("lists the subjects and notes of a folder", () => {
   const index = renderFolderIndex({
     kind: "subject",
     path: "typescript",
     subjects: ["testing"],
-    notes: [noteAbout("No ternaries", "rule"), markedNote("Strict mode always on")],
+    notes: [noteAbout("No ternaries", "rule"), aDontForgetNote("Strict mode always on")],
     invalid: [],
   })
 
