@@ -18,6 +18,10 @@ pi → usecases → services → domain. Each layer imports only the one right b
 
 - No comments. Make the code explain itself with descriptive names; if something still seems to need a comment, ask
   the user.
+- No catch-all types. A type that accepts any shape (a recursive union of every JSON or YAML value, `Record` of
+  anything, a generic used only to dodge a type) is `any` under another name, as is passing a library's `any` on.
+  Validate external data at the boundary: read only the shape the format allows, refuse the rest as a problem, and
+  give the result a type that says exactly that shape.
 
 ## Tests
 
