@@ -2,6 +2,7 @@ import { writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import type { MemoryConfig } from "#/domain"
+import type { LimitsInput } from "./types.ts"
 
 export function aConfig(): MemoryConfig {
   return {
@@ -18,4 +19,8 @@ export async function writeConfig(folder: string, config: MemoryConfig): Promise
   const path = join(folder, "config.json")
   await writeFile(path, JSON.stringify(config, null, 2))
   return path
+}
+
+export function configTextWithLimits(limits: LimitsInput): string {
+  return JSON.stringify({ ...aConfig(), limits })
 }

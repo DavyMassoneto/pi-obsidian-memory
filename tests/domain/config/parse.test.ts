@@ -1,11 +1,7 @@
 import { expect, test } from "vitest"
 
 import { parseConfig } from "#/domain"
-import { aConfig } from "#test-helpers"
-
-function withLimits(limits: object): string {
-  return JSON.stringify({ ...aConfig(), limits })
-}
+import { aConfig, configTextWithLimits } from "#test-helpers"
 
 test("reads a complete config", () => {
   expect(parseConfig(JSON.stringify(aConfig()))).toEqual({ succeeded: true, output: aConfig() })
@@ -34,7 +30,7 @@ test("refuses a config without limits, since every value must be written in the 
 })
 
 test("names a nested field with its full path", () => {
-  expect(parseConfig(withLimits({ maxBodyChars: "mil", maxStatementChars: 100 }))).toEqual({
+  expect(parseConfig(configTextWithLimits({ maxBodyChars: "mil", maxStatementChars: 100 }))).toEqual({
     succeeded: false,
     problems: [expect.stringMatching(/^limits\.maxBodyChars: /)],
   })
@@ -45,7 +41,7 @@ test.each([
   ["negative", -5],
   ["fractional", 10.5],
 ])("refuses a %s limit", (_case, value) => {
-  expect(parseConfig(withLimits({ maxBodyChars: value, maxStatementChars: 100 }))).toEqual({
+  expect(parseConfig(configTextWithLimits({ maxBodyChars: value, maxStatementChars: 100 }))).toEqual({
     succeeded: false,
     problems: [expect.stringMatching(/^limits\.maxBodyChars: /)],
   })
@@ -66,7 +62,7 @@ test("refuses a field that is not in the format", () => {
 })
 
 test("names an unknown nested field with its full path", () => {
-  expect(parseConfig(withLimits({ maxBodyChars: 1000, maxStatementChars: 100, maxTags: 3 }))).toEqual({
+  expect(parseConfig(configTextWithLimits({ maxBodyChars: 1000, maxStatementChars: 100, maxTags: 3 }))).toEqual({
     succeeded: false,
     problems: ["limits.maxTags: not a known field"],
   })
