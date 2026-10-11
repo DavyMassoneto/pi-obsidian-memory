@@ -1,0 +1,110 @@
+import { createServer } from "node:http"
+
+import { vi } from "vitest"
+
+import type { JevClassifierResult, JevContext, LayaContext } from "#/services"
+
+export interface SyntheticDecisionResponse {
+  body: string
+  status: number
+  delayMs: number
+  location?: string
+}
+
+export async function decisionServer(reply: SyntheticDecisionResponse) {
+  const requests: string[] = []
+  const server = createServer((request, response) => {
+    let body = ""
+    request.setEncoding("utf8")
+    request.on("data", (chunk: string) => {
+      body += chunk
+    })
+    request.on("end", () => {
+      requests.push(body)
+      const timer = setTimeout(() => {
+        response.statusCode = reply.status
+        if (reply.location) response.setHeader("location", reply.location)
+        response.end(reply.body)
+      }, reply.delayMs)
+      response.on("close", () => clearTimeout(timer))
+    })
+  })
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
+  const address = server.address()
+  if (!address || typeof address === "string") throw new Error("No synthetic server address")
+  const endpoint = `http://127.0.0.1:${address.port}/v1/systemone`
+  return {
+    requests,
+    context: layaContext(endpoint),
+    async close() {
+      server.closeAllConnections()
+      await new Promise<void>((resolve, reject) =>
+        server.close((error) => {
+          if (error) reject(error)
+          else resolve()
+        }),
+      )
+    },
+  }
+}
+
+export function layaContext(endpoint: string): LayaContext {
+  return {
+    provider: "laya",
+    endpoint,
+    model: "multilingual",
+    maxTokens: 8192,
+    headMaxTokens: 192,
+    deadlineMs: Date.now() + 5000,
+    signal: new AbortController().signal,
+  }
+}
+
+export function layaReply(probability: number): string {
+  return JSON.stringify({
+    model: "laya-rl-agent",
+    answers: { needed: { type: "noul", noul: probability, action: { act_probability: 0.01 } } },
+    usage: {
+      input_tokens: 14,
+      output_tokens: 0,
+      state_tokens: 5,
+      state_tokens_dropped: 0,
+      truncated: false,
+      truncated_questions: [],
+    },
+    routing: {
+      model: "multilingual",
+      repo: "convaiinnovations/laya-multilingual",
+      reason: "explicit model='multilingual'",
+      detection: null,
+      workflow: null,
+    },
+  })
+}
+
+export function jevContext(result: JevClassifierResult): JevContext {
+  return {
+    provider: "typesafe",
+    model: "jev-latest",
+    consent: "messages-and-candidates",
+    deadlineMs: Date.now() + 5000,
+    signal: new AbortController().signal,
+    classifier: { classify: vi.fn().mockResolvedValue(result) },
+  }
+}
+
+export function jevReply(probability: number): JevClassifierResult {
+  return {
+    stopReason: "stop",
+    model: "jev-latest",
+    answer: { type: "bool", probability },
+    usage: { input: 10, output: 0 },
+  }
+}
+
+export const memoryDecisionRequest = { message: "Qual gerenciador uso?", project: "shop", folder: "src" }
+export const candidateDecisionRequest = {
+  message: "Qual gerenciador uso?",
+  identity: { vault: "global" as const, id: "stable-note", revision: "hash" },
+  candidate: { statement: "Use pnpm", body: "Secret sample-token stays literal." },
+}
