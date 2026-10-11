@@ -48,6 +48,53 @@ test("refreshes logical and physical ancestors of a directory alias", async () =
   expect(await readIndexOf(vault, "alias")).toContain(aNote().statement)
 })
 
+test("refreshes physical ancestors reached through every logical ancestor of nested directory aliases", async () => {
+  const vault = await useTempFolder()
+  await mkdir(join(vault, "physical", "subject"), { recursive: true })
+  await mkdir(join(vault, "other", "deep"), { recursive: true })
+  await linkFolder(join(vault, "physical", "subject"), join(vault, "alias"))
+  await linkFolder(join(vault, "other", "deep"), join(vault, "physical", "subject", "child"))
+  const note = aNote()
+  await writeFile(join(vault, "other", "deep", `${note.statement}.md`), renderNote(note))
+  for (const folder of ["", "physical", "physical/subject", "other", "other/deep"]) {
+    await writeFile(join(vault, folder, "index.md"), `STALE INDEX ${folder}`)
+  }
+
+  expect(await refreshIndexes({ path: vault, name: "Memory", limits }, "alias/child")).toEqual({ succeeded: true })
+
+  expect(await readIndexOf(vault, "physical")).toBe(
+    "# physical\n\n## Subjects\n\n- [[physical/subject/index|subject]]\n",
+  )
+  expect(await readIndexOf(vault, "physical/subject")).toBe("# alias\n\n## Subjects\n\n- [[alias/child/index|child]]\n")
+  expect(await readIndexOf(vault, "other")).toBe("# other\n\n## Subjects\n\n- [[other/deep/index|deep]]\n")
+  expect(await readIndexOf(vault, "other/deep")).toBe(
+    `# other/deep\n\n## Notes\n\n- [[other/deep/${note.statement}|${note.statement}]] · rule\n`,
+  )
+  expect(await readIndexOf(vault, "")).toBe(
+    "# Memory\n\n## Subjects\n\n- [[alias/index|alias]]\n- [[other/index|other]]\n- [[physical/index|physical]]\n",
+  )
+  expect(await readIndexOf(vault, "alias")).toBe(await readIndexOf(vault, "physical/subject"))
+  expect(await readIndexOf(vault, "alias/child")).toBe(await readIndexOf(vault, "other/deep"))
+})
+
+test("finishes ancestor closure through a junction back to the root without rewriting resolved indexes", async () => {
+  const vault = await useTempFolder()
+  await mkdir(join(vault, "subject"))
+  await linkFolder(vault, join(vault, "subject", "back"))
+  await writeFile(join(vault, "index.md"), "STALE ROOT")
+  await writeFile(join(vault, "subject", "index.md"), "STALE SUBJECT")
+
+  expect(await refreshIndexes({ path: vault, name: "Memory", limits }, "subject/back/subject/back")).toEqual({
+    succeeded: true,
+  })
+
+  expect(await readIndexOf(vault, "")).toBe("# Memory\n\n## Subjects\n\n- [[subject/index|subject]]\n")
+  expect(await readIndexOf(vault, "subject")).toBe(
+    "# subject/back/subject\n\n## Subjects\n\n- [[subject/back/subject/back/index|back]]\n",
+  )
+  expect(await readIndexOf(vault, "subject/back")).toBe(await readIndexOf(vault, ""))
+})
+
 test("renders problematic folders and whitespace-only note names in the final index", async () => {
   const vault = await useTempFolder()
   const outside = await useTempFolder()

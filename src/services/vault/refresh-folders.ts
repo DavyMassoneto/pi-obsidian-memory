@@ -2,35 +2,23 @@ import { relative, sep } from "node:path"
 
 import { ARCHIVE_FOLDER, ancestorFolders, type FolderContents, renderFolderIndex } from "#/domain"
 import { findFileIgnoringCase, linkStatOf, writeAtomically } from "#/services/vault/filesystem"
+import type { Succeeded } from "#/shared"
 import { FOLDER_INDEX_FILE_NAME } from "./constants.ts"
 import { listFolder } from "./list.ts"
 import { refuseWrite } from "./refusals.ts"
 import { resolveFile, resolveFolder } from "./resolve.ts"
-import type { FolderListing, NamedVaultContext, RefreshRefusal, RefreshResult } from "./types.ts"
+import type { FolderListing, NamedVaultContext, RefreshRefusal, RefreshResult, ResolveRefusal } from "./types.ts"
 
 export async function refreshFolders(context: NamedVaultContext, folders: string[]): Promise<RefreshResult> {
   const maintenanceProblems: string[] = []
   try {
-    const root = await resolveFolder(context.path, "")
-    if (!root.succeeded) {
-      return root
-    }
-
-    const ancestors = new Set<string>()
-    for (const folder of folders) {
-      const checked = await resolveFolder(context.path, folder)
-      if (!checked.succeeded) {
-        return checked
-      }
-
-      const physical = relative(root.output, checked.output).split(sep).join("/")
-      for (const ancestor of [...ancestorFolders(physical), ...ancestorFolders(folder)]) {
-        ancestors.add(ancestor)
-      }
+    const planned = await planRefreshFolders(context.path, folders)
+    if (!planned.succeeded) {
+      return planned
     }
 
     const writtenPaths = new Set<string>()
-    for (const folder of ancestors) {
+    for (const folder of planned.output) {
       const written = await writeIndex(context, folder, writtenPaths)
       if (!written.succeeded) {
         return { ...written, problems: [...written.problems, ...maintenanceProblems] }
@@ -51,6 +39,30 @@ export async function refreshFolders(context: NamedVaultContext, folders: string
     return { succeeded: true, maintenanceProblems }
   }
   return { succeeded: true }
+}
+
+async function planRefreshFolders(vault: string, folders: string[]): Promise<Succeeded<Set<string>> | ResolveRefusal> {
+  const root = await resolveFolder(vault, "")
+  if (!root.succeeded) {
+    return root
+  }
+
+  const discoveredFolders = new Set(folders)
+  const ancestors = new Set<string>()
+  for (const folder of discoveredFolders) {
+    const checked = await resolveFolder(vault, folder)
+    if (!checked.succeeded) {
+      return checked
+    }
+
+    const physical = relative(root.output, checked.output).split(sep).join("/")
+    for (const ancestor of [...ancestorFolders(physical), ...ancestorFolders(folder)]) {
+      ancestors.add(ancestor)
+      discoveredFolders.add(ancestor)
+    }
+  }
+
+  return { succeeded: true, output: ancestors }
 }
 
 function maintenanceFailure(error: Error, maintenanceProblems: string[]): RefreshRefusal {
