@@ -1,3 +1,7 @@
+export * from "./canonicalize.ts"
 export * from "./read.ts"
+export * from "./registration.ts"
+export * from "./snapshot.ts"
 export * from "./target.ts"
 export * from "./types.ts"
+export * from "./write.ts"

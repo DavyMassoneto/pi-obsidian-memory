@@ -1,12 +1,16 @@
 import Type from "typebox"
 
-export const ConfigPathSchema = Type.String({ minLength: 1 })
+export const ConfigPathSchema = Type.String({
+  pattern: "^(?:[A-Za-z]:[/\\\\]|/(?!/)|[/\\\\]{2}[^/\\\\]+[/\\\\][^/\\\\]+)",
+})
+
+export const ProjectNameSchema = Type.String({ minLength: 1, pattern: "\\S" })
 
 export const ConfigLimitSchema = Type.Integer({ minimum: 1 })
 
 export const ProjectEntrySchema = Type.Object(
   {
-    name: Type.String({ minLength: 1 }),
+    name: ProjectNameSchema,
     folder: ConfigPathSchema,
     vault: ConfigPathSchema,
   },
