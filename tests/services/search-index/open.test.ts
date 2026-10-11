@@ -1,32 +1,63 @@
-import { stat } from "node:fs/promises"
+import { readFile, rm, stat, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
 import { indexFileFor, openIndex, putNote, searchText } from "#/services"
-import { anEntry, useTempFolder } from "#test-helpers"
+import { anEntry, changeIndexFile, openedIndex, statementsOf, useTempFolder } from "#test-helpers"
 
-test("creates the index file and its folders", async () => {
+test("creates the index file and its folders, reporting that it needs population", async () => {
   const folder = await useTempFolder()
   const path = join(folder, "index", "vault.sqlite")
-
-  openIndex(path).close()
-
+  const result = openIndex(path)
+  expect(result).toMatchObject({ succeeded: true, rebuilt: true })
+  if (!result.succeeded) throw new Error("open failed")
+  expect(result.output.close()).toEqual({ succeeded: true })
   expect((await stat(path)).isFile()).toBe(true)
 })
 
 test("keeps the notes after the index is closed and opened again", async () => {
-  const folder = await useTempFolder()
-  const path = join(folder, "vault.sqlite")
-  const first = openIndex(path)
-  putNote(first, anEntry())
+  const path = join(await useTempFolder(), "vault.sqlite")
+  const first = openedIndex(path)
+  expect(putNote(first, anEntry())).toEqual({ succeeded: true })
   first.close()
 
   const again = openIndex(path)
-  const hits = searchText(again, "pnpm", { limit: 10, includeArchived: false })
-  again.close()
+  expect(again).toMatchObject({ succeeded: true, rebuilt: false })
+  if (!again.succeeded) throw new Error("reopen failed")
+  const hits = searchText(again.output, "pnpm", { limit: 10, includeArchived: false })
+  again.output.close()
 
-  expect(hits.map((hit) => hit.id)).toEqual([anEntry().id])
+  expect(statementsOf(hits)).toEqual([anEntry().statement])
+})
+
+test("reports a corrupt database without replacing it or leaking its connection", async () => {
+  const path = join(await useTempFolder(), "vault.sqlite")
+  await writeFile(path, "not a SQLite database")
+
+  expect(openIndex(path)).toMatchObject({ succeeded: false, reason: "corrupted", problems: [expect.any(String)] })
+  expect(await readFile(path, "utf8")).toBe("not a SQLite database")
+  await rm(path)
+  const fresh = openedIndex(path)
+  expect(putNote(fresh, anEntry())).toEqual({ succeeded: true })
+})
+
+test("reports inaccessible index paths as unavailable", async () => {
+  const file = join(await useTempFolder(), "file")
+  await writeFile(file, "occupied")
+
+  expect(openIndex(join(file, "vault.sqlite"))).toMatchObject({ succeeded: false, reason: "unavailable" })
+  expect(await readFile(file, "utf8")).toBe("occupied")
+})
+
+test("closes a connection when statement preparation fails", async () => {
+  const path = join(await useTempFolder(), "vault.sqlite")
+  openedIndex(path).close()
+  changeIndexFile(path, "DROP TABLE notes_fts")
+
+  expect(openIndex(path)).toMatchObject({ succeeded: false, reason: "corrupted" })
+  await rm(path)
+  expect(putNote(openedIndex(path), anEntry())).toEqual({ succeeded: true })
 })
 
 test("gives the same vault the same index file, however its path is written", () => {
