@@ -3,7 +3,6 @@ import { Value } from "typebox/value"
 import { checkAgentVault, checkReadAction, hasReadIdentity, type MemoryIdentity } from "#/domain/memory-agent"
 import { checkNoteText } from "#/domain/note"
 import { checkMemoryFolder, checkVaultPath, joinVaultPath } from "#/domain/vault-path"
-import { EXCLUDED_MEMORY_MARKERS } from "./constants.ts"
 import { CaptureActionSchema } from "./schemas.ts"
 import type { CaptureAction, CaptureAdd, CaptureDraft, CaptureInput, CaptureResult } from "./types.ts"
 
@@ -59,11 +58,7 @@ function checkMutation(identity: MemoryIdentity, input: CaptureInput): string[] 
 }
 
 function checkDraft(note: CaptureDraft, input: CaptureInput): string[] {
-  const problems = [...checkNoteText(note.statement, note.body, input.limits), ...checkMemoryFolder(note.folder)]
-  if (EXCLUDED_MEMORY_MARKERS.test(note.statement) || EXCLUDED_MEMORY_MARKERS.test(note.body)) {
-    problems.push("Task, TODO, session-log or code-history marker is not memory")
-  }
-  return problems
+  return [...checkNoteText(note.statement, note.body, input.limits), ...checkMemoryFolder(note.folder)]
 }
 
 function checkDuplicate(action: CaptureAdd, input: CaptureInput): string[] {

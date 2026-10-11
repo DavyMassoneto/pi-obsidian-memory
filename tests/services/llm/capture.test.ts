@@ -18,6 +18,20 @@ describe("captureStep", () => {
     expect(sent?.system).toContain("explicitSaves")
   })
 
+  it("instructs semantic classification, task exclusion and clarification rather than prefix filtering", async () => {
+    const complete = completionPort('{"action":"finish"}')
+    await captureStep(captureRequest(), complete)
+    const system = complete.mock.calls[0]?.[0].system
+    expect(system).toContain(
+      "Do not store tasks, TODOs, session logs, transcripts or facts already recorded by code or git history.",
+    )
+    expect(system).toContain("When uncertain about whether it is memory,")
+    expect(system).toContain(
+      "the vault, folder or type, return clarify with a concrete question, never a guessed write.",
+    )
+    expect(system).toContain("without translating or masking secret strings.")
+  })
+
   it.each([
     "",
     "not JSON",

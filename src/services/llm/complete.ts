@@ -18,7 +18,7 @@ export async function completeStep(
   const lifetime = completionLifetime(request, duration)
   try {
     const response = await Promise.race([complete({ ...request, signal: lifetime.signal }), lifetime.stopped])
-    if (lifetime.signal.aborted || Date.now() >= request.deadline) {
+    if (lifetime.signal.aborted || Date.now() >= lifetime.deadline) {
       return { succeeded: false, problems: ["Model request aborted or expired"] }
     }
     if (!Value.Check(CompletionResponseSchema, response) || response.status !== "completed") {

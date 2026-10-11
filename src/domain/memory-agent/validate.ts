@@ -49,11 +49,10 @@ export function checkAgentVault(vault: "global" | "project", context: AgentConte
 
 export function hasReadIdentity(identity: MemoryIdentity, observations: readonly MemoryObservation[]): boolean {
   const latest = observations.findLast(
-    (read) =>
-      read.kind === "read" && read.vault === identity.vault && (read.path === identity.path || read.id === identity.id),
+    (read) => read.kind === "read" && read.vault === identity.vault && read.path === identity.path,
   )
   if (latest?.kind !== "read") return false
-  return latest.path === identity.path && latest.id === identity.id && latest.hash === identity.hash
+  return latest.id === identity.id && latest.hash === identity.hash
 }
 
 function canSelectNote(identity: MemoryIdentity, input: RetrievalInput): boolean {

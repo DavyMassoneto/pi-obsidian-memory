@@ -1,8 +1,10 @@
 import type { CompletionLifetime, CompletionTiming, FailedResponse } from "./types.ts"
 
 export function completionLifetime(context: CompletionTiming, duration: number): CompletionLifetime {
+  const start = Date.now()
+  const deadline = Math.min(context.deadline, start + duration)
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), Math.min(duration, context.deadline - Date.now()))
+  const timeout = setTimeout(() => controller.abort(), deadline - start)
   const onAbort = () => controller.abort()
   context.signal.addEventListener("abort", onAbort, { once: true })
   const stopped = new Promise<FailedResponse>((resolve) => {
@@ -10,6 +12,7 @@ export function completionLifetime(context: CompletionTiming, duration: number):
   })
   if (context.signal.aborted) controller.abort()
   return {
+    deadline,
     signal: controller.signal,
     stopped,
     dispose: () => {

@@ -44,8 +44,7 @@ export type CompletionPort = (request: CompletionRequest) => Promise<CompletedRe
 export type CompletionResult = Succeeded<string> | Failed
 export type DisposeCompletion = () => void
 
-export interface CompletionLifetime {
-  signal: AbortSignal
+export interface CompletionLifetime extends CompletionTiming {
   stopped: Promise<FailedResponse>
   dispose: DisposeCompletion
 }

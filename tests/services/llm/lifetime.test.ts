@@ -24,6 +24,26 @@ describe("completion lifetime", () => {
     expect(vi.getTimerCount()).toBe(0)
   })
 
+  it.each([
+    { callerDuration: 120000, elapsed: 30001 },
+    { callerDuration: 15, elapsed: 16 },
+  ])(
+    "rejects late retrieval without timer delivery: $callerDuration ms deadline",
+    async ({ callerDuration, elapsed }) => {
+      vi.useFakeTimers()
+      const start = Date.now()
+      const complete = completionPort("")
+      complete.mockImplementation(async () => {
+        vi.setSystemTime(start + elapsed)
+        return { status: "completed", text: '{"action":"finish","notes":[]}' }
+      })
+      const result = await retrieveStep({ ...retrievalRequest(), deadline: start + callerDuration }, complete)
+      expect(result).toEqual({ succeeded: false, problems: ["Model request aborted or expired"] })
+      expect(complete.mock.calls[0]?.[0].signal.aborted).toBe(false)
+      expect(vi.getTimerCount()).toBe(0)
+    },
+  )
+
   it("caps capture at 120 seconds", async () => {
     vi.useFakeTimers()
     const complete = pendingCompletion()

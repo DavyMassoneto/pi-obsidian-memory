@@ -13,9 +13,36 @@ describe("parseCaptureAction", () => {
     "- [ ] fix it",
     "  TODOs: rotate keys",
     "Tasks: ship release",
-  ])("rejects objectively marked non-memory %s", (body) => {
-    const action = { action: "add", vault: "global", note: { ...memoryDraft(), body } }
+    "TODO-abc123",
+  ])("preserves literal task-like reference values without classifying semantics: %s", (body) => {
+    const action = { action: "add", vault: "global", note: { ...memoryDraft(), type: "reference", body } }
+    expect(parseCaptureAction(JSON.stringify(action), captureRequest())).toEqual({ succeeded: true, output: action })
+  })
+
+  it("preserves a rule about TODO comments", () => {
+    const note = { ...memoryDraft(), type: "rule", statement: "TODO comments require issue links" }
+    const action = { action: "add", vault: "global", note }
+    expect(parseCaptureAction(JSON.stringify(action), captureRequest())).toEqual({ succeeded: true, output: action })
+  })
+
+  it.each(["task", "todo"])("rejects unsupported note type %s", (type) => {
+    const action = { action: "add", vault: "global", note: { ...memoryDraft(), type } }
     expect(parseCaptureAction(JSON.stringify(action), captureRequest()).succeeded).toBe(false)
+  })
+
+  it.each(["archive", "succeed", "update"])("authorizes %s independently for copied ULIDs", (action) => {
+    const original = readObservation()
+    const copy = { ...original, path: "profile/Copied token.md", statement: "Copied token", hash: "b".repeat(64) }
+    const input = { ...captureRequest(), observations: [original, copy] }
+    for (const read of input.observations) {
+      const proposal = { action, vault: read.vault, path: read.path, id: read.id, expectedHash: read.hash }
+      if (action === "archive") {
+        expect(parseCaptureAction(JSON.stringify(proposal), input)).toEqual({ succeeded: true, output: proposal })
+        continue
+      }
+      const mutation = { ...proposal, note: { ...memoryDraft(), statement: read.statement } }
+      expect(parseCaptureAction(JSON.stringify(mutation), input)).toEqual({ succeeded: true, output: mutation })
+    }
   })
 
   it.each(["archive", "succeed", "update"])("requires exact latest read for %s", (action) => {
