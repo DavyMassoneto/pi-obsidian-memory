@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { expect, test } from "vitest"
 
 import { canonicalizeConfigLocation, canonicalizeRegistration } from "#/services"
-import { registrationFixture, useTempFolder } from "#test-helpers"
+import { productSettings, registrationFixture, useTempFolder } from "#test-helpers"
 
 test("reports every independent filesystem failure with its config field", async () => {
   const root = await useTempFolder()
@@ -21,7 +21,7 @@ test("reports every independent filesystem failure with its config field", async
       { name: "first", folder, vault },
       { name: "second", folder: join(root, "other-work"), vault: otherVault },
     ],
-    limits: { maxBodyChars: 1000, maxStatementChars: 100 },
+    ...productSettings(),
   }
 
   expect(await canonicalizeConfigLocation({ config, configPath: join(root, "config.json") })).toEqual({
@@ -48,7 +48,7 @@ test("keeps genuine link diagnostics alongside independent registration and infr
     config: {
       global: { vault: broken },
       projects: [{ name: "project", folder: join(root, "work"), vault: file }],
-      limits: { maxBodyChars: 1000, maxStatementChars: 100 },
+      ...productSettings(),
     },
     configPath: join(file, "config.json"),
     indexPath: file,

@@ -1,4 +1,5 @@
 export type {
+  ChatModelReference,
   ConfigFields,
   ConfigRepairDraft,
   InitProposal,

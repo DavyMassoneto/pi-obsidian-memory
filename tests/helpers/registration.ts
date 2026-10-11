@@ -3,13 +3,14 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 import type { MemoryConfig } from "#/domain"
+import { productSettings } from "./settings.ts"
 
 export async function registrationFixture() {
   const root = await mkdtemp(join(tmpdir(), "memory-registration-"))
   const config: MemoryConfig = {
     global: { vault: join(root, "global") },
     projects: [{ name: "project", folder: join(root, "work"), vault: join(root, "project") }],
-    limits: { maxBodyChars: 1000, maxStatementChars: 100 },
+    ...productSettings(),
   }
   await mkdir(config.global.vault)
   await mkdir(join(root, "project"))

@@ -23,7 +23,13 @@ Every milestone:
   maintenance fails; warnings do not mean the note should be saved again. Refresh propagates programming errors
   rather than disguising them as I/O failures.
 - pi sets `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` for its own process.
-- The config is read and validated, and a folder is matched to its project. Nothing writes the config.
+- The complete product config is read strictly, and a folder is matched to its project. Config resources provide
+  snapshots, repair drafts, setting-preserving setup/init proposals and guarded publication. There are no setup/init
+  commands or registration usecases yet. Setup-only defaults require an explicitly supplied chat model; old incomplete
+  files are invalid at runtime, never silently migrated.
+- Embedding, decision-model and bounded capture/retrieval model resources exist, but these settings do not connect
+  them to product operations or prove live-provider/local-inference availability. Disclosures and consent UI remain
+  unimplemented; registration and later milestones are not complete.
 - Built but not reachable by any tool or command: updating, archiving and succeeding notes. Lifecycle reports partial
   progress after late failures; update/removal hash checks and link checks still have check/use windows.
 - The text search resource has a private SQLite connection, prepared statements and transactional rowid-linked FTS5

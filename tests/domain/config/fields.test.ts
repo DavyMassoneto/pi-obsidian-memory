@@ -1,9 +1,10 @@
 import { expect, test } from "vitest"
 
 import { readConfigFields } from "#/domain"
+import { emptyConfigFields } from "#test-helpers"
 
 test.each(["null", "false", "42", "[]", '"text"'])("malformed root %s retains no fields", (text) => {
-  expect(readConfigFields(text)).toEqual({ global: {}, projects: [], limits: {} })
+  expect(readConfigFields(text)).toEqual(emptyConfigFields())
 })
 
 test("validates every supported field independently across many damaged registrations", () => {
@@ -24,6 +25,7 @@ test("validates every supported field independently across many damaged registra
   })
 
   expect(readConfigFields(text)).toEqual({
+    ...emptyConfigFields(),
     global: { vault: "C:/global" },
     limits: { maxStatementChars: 90 },
     projects: [...projects, { folder: "D:/keep" }, { name: "keep", vault: "C:/keep" }, {}],
@@ -41,6 +43,7 @@ test("extracts only exact supported valid fields, preserving entry positions for
     projects: [null, { name: "app", folder: "D:/app", vault: "C:/vault", extra: 5 }, { name: "", folder: 5 }],
   })
   expect(readConfigFields(text)).toEqual({
+    ...emptyConfigFields(),
     global: {},
     projects: [{}, { name: "app", folder: "D:/app", vault: "C:/vault" }, {}],
     limits: { maxBodyChars: 70 },

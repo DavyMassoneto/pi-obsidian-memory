@@ -3,11 +3,12 @@ import { dirname, join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { proposeInit, readConfigSnapshot, writeConfig } from "#/services"
-import { registrationFixture } from "#test-helpers"
+import { proposeInit, proposeSetup, readConfigSnapshot, writeConfig } from "#/services"
+import { customizedSettings, registrationFixture } from "#test-helpers"
 
 test("publishes only once, replaces only matching bytes and never touches old vault files", async () => {
   const fixture = await registrationFixture()
+  Object.assign(fixture.config, customizedSettings())
   try {
     const note = join(fixture.config.global.vault, "keep.md")
     await writeFile(note, "user bytes\r\n")
@@ -22,7 +23,10 @@ test("publishes only once, replaces only matching bytes and never touches old va
       reason: "conflict",
     })
     expect(await readFile(fixture.path)).toEqual(bytes)
-    const config = { ...fixture.config, global: { vault: join(fixture.root, "new-vault") } }
+    const proposal = proposeSetup({ config: fixture.config, vault: join(fixture.root, "new-vault") })
+    if (!proposal.succeeded) throw new Error("setup proposal failed")
+    const config = proposal.output
+    expect(config).toEqual({ ...fixture.config, global: { vault: join(fixture.root, "new-vault") } })
     expect(await writeConfig({ ...fixture, config, expectedHash: initial.output.hash })).toMatchObject({
       succeeded: true,
       warnings: [],
@@ -81,6 +85,15 @@ test("actual writes reject unsafe infrastructure and malformed proposals without
     expect(await readdir(fixture.config.global.vault)).toEqual([])
     const config = { ...fixture.config, global: { vault: "relative" } }
     expect(await writeConfig({ ...fixture, config, expectedHash: null })).toMatchObject({ succeeded: false })
+    const withCredentials = {
+      ...fixture.config,
+      embeddings: { ...fixture.config.embeddings, apiKey: "must-not-be-serialized" },
+    }
+    expect(await writeConfig({ ...fixture, config: withCredentials, expectedHash: null })).toMatchObject({
+      succeeded: false,
+      reason: "invalid-config",
+      problems: ["embeddings.apiKey: not a known field"],
+    })
     expect(await readdir(fixture.root)).not.toContain("machine")
   } finally {
     await rm(fixture.root, { recursive: true, force: true })
@@ -89,6 +102,7 @@ test("actual writes reject unsafe infrastructure and malformed proposals without
 
 test("init from a registered subfolder repoints only that entry and preserves old project bytes", async () => {
   const fixture = await registrationFixture()
+  Object.assign(fixture.config, customizedSettings())
   try {
     const project = fixture.config.projects[0]
     if (!project) {
@@ -115,7 +129,11 @@ test("init from a registered subfolder repoints only that entry and preserves ol
         succeeded: true,
       },
     )
-    expect(proposal.output.projects).toEqual([{ ...project, vault: join(fixture.root, "new-project") }])
+    expect(proposal.output).toEqual({
+      ...fixture.config,
+      projects: [{ ...project, vault: join(fixture.root, "new-project") }],
+    })
+    expect(JSON.parse(await readFile(fixture.path, "utf8"))).toEqual(proposal.output)
     expect(await readFile(note)).toEqual(bytes)
     expect(await readdir(project.vault)).toEqual(["keep.md"])
     expect(await readdir(fixture.root)).not.toContain("new-project")
@@ -134,12 +152,12 @@ test("competing writers never both publish against the same snapshot", async () 
     const results = await Promise.all([
       writeConfig({
         ...fixture,
-        config: { ...fixture.config, limits: { maxBodyChars: 11, maxStatementChars: 22 } },
+        config: { ...fixture.config, limits: { ...fixture.config.limits, maxBodyChars: 11, maxStatementChars: 22 } },
         expectedHash: initial.output.hash,
       }),
       writeConfig({
         ...fixture,
-        config: { ...fixture.config, limits: { maxBodyChars: 33, maxStatementChars: 44 } },
+        config: { ...fixture.config, limits: { ...fixture.config.limits, maxBodyChars: 33, maxStatementChars: 44 } },
         expectedHash: initial.output.hash,
       }),
     ])

@@ -207,7 +207,7 @@ test("refuses a vault folder that does not exist, creating nothing", async () =>
 
 test("refreshes the index with the limits from the config", async () => {
   const { root, globalVault, config: originalConfig, unregisteredFolder } = await setupVaults()
-  const config = { ...originalConfig, limits: { ...aLimits(), maxBodyChars: 30 } }
+  const config = { ...originalConfig, limits: { ...originalConfig.limits, maxBodyChars: 30 } }
   const configPath = await writeConfig(root, config)
   const long = { ...aNote(), statement: "Long note", body: "a".repeat(40) }
   await mkdir(join(globalVault, "pnpm"))

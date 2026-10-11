@@ -7,6 +7,11 @@ export function proposeSetup(request: SetupProposal): ParseConfigResult {
     global: { vault: request.vault },
     projects: request.config.projects,
     limits: request.config.limits,
+    capture: request.config.capture,
+    memoryAgent: request.config.memoryAgent,
+    context: request.config.context,
+    embeddings: request.config.embeddings,
+    decisionModel: request.config.decisionModel,
   }
   return parseConfig(JSON.stringify(config))
 }

@@ -1,10 +1,5 @@
-import type { CaptureInput, RetrievalInput } from "#/domain"
+import type { CaptureInput, ChatModelReference, RetrievalInput } from "#/domain"
 import type { Failed, Succeeded } from "#/shared"
-
-export interface ChatModelReference {
-  provider: string
-  id: string
-}
 
 export interface CompletionTiming {
   signal: AbortSignal
@@ -56,6 +51,7 @@ export type {
   CaptureInput,
   CaptureObservation,
   CaptureResult,
+  ChatModelReference,
   MemoryIdentity,
   MemoryObservation,
   ReadObservation,

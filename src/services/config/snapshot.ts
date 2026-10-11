@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import { readFile } from "node:fs/promises"
 
-import { inspectConfigForRepair, parseConfig } from "#/domain"
+import { assessConfig } from "#/domain"
 import type { ConfigLocation, ReadConfigSnapshotResult } from "./types.ts"
 
 export async function readConfigSnapshot(request: ConfigLocation): Promise<ReadConfigSnapshotResult> {
@@ -14,8 +14,7 @@ export async function readConfigSnapshot(request: ConfigLocation): Promise<ReadC
         state: "present",
         hash: createHash("sha256").update(bytes).digest("hex"),
         text,
-        lexicalParse: parseConfig(text),
-        repair: inspectConfigForRepair(text),
+        ...assessConfig(text),
       },
     }
   } catch (error) {

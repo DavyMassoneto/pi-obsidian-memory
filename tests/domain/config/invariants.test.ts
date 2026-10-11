@@ -28,7 +28,7 @@ test("infrastructure excludes roots inside vaults and vaults inside the index", 
 })
 
 test("partial repair entries keep source field identities even when their siblings are absent", () => {
-  expect(registeredVaults({ global: {}, projects: [{}, { vault: "C:/vault" }], limits: {} })).toEqual([
+  expect(registeredVaults({ global: {}, projects: [{}, { vault: "C:/vault" }] })).toEqual([
     { field: "projects.1.vault", path: "C:/vault" },
   ])
 })

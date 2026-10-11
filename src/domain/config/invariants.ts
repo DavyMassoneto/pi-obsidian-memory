@@ -1,7 +1,7 @@
 import { comparablePath, isInside, pathsOverlap } from "./paths.ts"
-import type { ConfigFields, ConfigInfrastructure, ConfigLocationPaths, VaultRegistration } from "./types.ts"
+import type { ConfigInfrastructure, ConfigLocationPaths, ConfigRegistrations, VaultRegistration } from "./types.ts"
 
-export function registrationProblems(config: ConfigFields): string[] {
+export function registrationProblems(config: ConfigRegistrations): string[] {
   const problems: string[] = []
   const names = new Map<string, string>()
   const folders = new Map<string, string>()
@@ -24,7 +24,7 @@ export function registrationProblems(config: ConfigFields): string[] {
   return problems
 }
 
-export function registeredVaults(config: ConfigFields): VaultRegistration[] {
+export function registeredVaults(config: ConfigRegistrations): VaultRegistration[] {
   const vaults: VaultRegistration[] = []
   if (typeof config.global.vault === "string") {
     vaults.push({ field: "global.vault", path: config.global.vault })

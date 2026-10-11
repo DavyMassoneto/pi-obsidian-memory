@@ -2,7 +2,7 @@ import { writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import type { MemoryConfig } from "#/domain"
-import { aLimits } from "./limits.ts"
+import { productSettings } from "./settings.ts"
 import type { LimitsInput } from "./types.ts"
 
 export function aConfig(): MemoryConfig {
@@ -12,7 +12,7 @@ export function aConfig(): MemoryConfig {
       { name: "loja", folder: "D:/Projects/loja", vault: "C:/vaults/loja" },
       { name: "loja-admin", folder: "D:/Projects/loja/admin", vault: "C:/vaults/loja-admin" },
     ],
-    limits: aLimits(),
+    ...productSettings(),
   }
 }
 
@@ -20,7 +20,7 @@ export function memoryConfigAt(root: string): MemoryConfig {
   return {
     global: { vault: join(root, "Global memory") },
     projects: [{ name: "loja", folder: join(root, "work", "loja"), vault: join(root, "loja") }],
-    limits: aLimits(),
+    ...productSettings(),
   }
 }
 
@@ -31,5 +31,5 @@ export async function writeConfig(folder: string, config: MemoryConfig): Promise
 }
 
 export function configTextWithLimits(limits: LimitsInput): string {
-  return JSON.stringify({ ...aConfig(), limits })
+  return JSON.stringify({ ...aConfig(), limits: { maxNotesPerFolder: 20, ...limits } })
 }

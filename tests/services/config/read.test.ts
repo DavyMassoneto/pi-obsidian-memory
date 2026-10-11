@@ -4,7 +4,36 @@ import { join } from "node:path"
 import { expect, test } from "vitest"
 
 import { readConfig } from "#/services"
-import { memoryConfigAt, registrationFixture, useTempFolder } from "#test-helpers"
+import { customizedSettings, memoryConfigAt, registrationFixture, useTempFolder } from "#test-helpers"
+
+test("old config is refused without migration or partial settings while its exact bytes survive", async () => {
+  const folder = await useTempFolder()
+  const path = join(folder, "config.json")
+  const text = JSON.stringify({
+    global: { vault: join(folder, "vault") },
+    projects: [],
+    limits: { maxBodyChars: 1000, maxStatementChars: 100 },
+  })
+  await writeFile(path, text)
+  const result = await readConfig(path)
+  expect(result).toMatchObject({ succeeded: false, reason: "invalid-config" })
+  expect(result).not.toHaveProperty("output")
+  if (result.succeeded) throw new Error("old config accepted")
+  for (const field of ["maxNotesPerFolder", "capture", "memoryAgent", "context", "embeddings", "decisionModel"]) {
+    expect(result.problems.join(" ")).toContain(field)
+  }
+  expect(await readFile(path, "utf8")).toBe(text)
+})
+
+test("reading configured remote choices neither defaults nor requires credentials", async () => {
+  const folder = await useTempFolder()
+  const config = { ...memoryConfigAt(folder), ...customizedSettings() }
+  const path = join(folder, "config.json")
+  const text = JSON.stringify(config)
+  await writeFile(path, text)
+  expect(await readConfig(path)).toEqual({ succeeded: true, output: config })
+  expect(await readFile(path, "utf8")).toBe(text)
+})
 
 test("reads a valid config file", async () => {
   const fixture = await registrationFixture()

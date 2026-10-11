@@ -1,7 +1,101 @@
 import { expect, test } from "vitest"
 
-import { inspectConfigForRepair } from "#/domain"
+import { inspectConfigForRepair, parseConfig, proposeSetup } from "#/domain"
 import { aConfig } from "#test-helpers"
+
+test.each([
+  { provider: "local", model: "text-embedding-3-small" },
+  { provider: "local", model: "gemini-embedding-001" },
+  { provider: "openai", model: "Xenova/multilingual-e5-small" },
+  { provider: "openai", model: "gemini-embedding-001" },
+  { provider: "google", model: "Xenova/multilingual-e5-small" },
+  { provider: "google", model: "text-embedding-3-small" },
+])("preservation: recognized contradictory embeddings remain unresolved: %j", (embeddings) => {
+  const draft = inspectConfigForRepair(JSON.stringify({ ...aConfig(), embeddings }))
+  expect(draft.embeddings).toEqual(embeddings)
+  expect(draft.problems).toEqual([expect.stringContaining("embeddings.model")])
+  expect(proposeSetup({ config: draft, vault: "C:/replacement" }).succeeded).toBe(false)
+})
+
+test.each([
+  { provider: "typesafe", model: "multilingual" },
+  {
+    provider: "laya",
+    model: "jev-latest",
+    endpoint: "http://127.0.0.1:9000/v1/systemone",
+    maxTokens: 4000,
+    headMaxTokens: 100,
+  },
+])("preservation: recognized contradictory decision choices remain unresolved: %j", (decisionModel) => {
+  const draft = inspectConfigForRepair(JSON.stringify({ ...aConfig(), decisionModel }))
+  expect(draft.decisionModel).toEqual(decisionModel)
+  expect(draft.problems).toEqual([expect.stringContaining("decisionModel.model")])
+  expect(proposeSetup({ config: draft, vault: "C:/replacement" }).succeeded).toBe(false)
+})
+
+test.each(["Xenova/multilingual-e5-small", "text-embedding-3-small", "gemini-embedding-001"])(
+  "preservation: missing embedding provider retains recognized model %s with explicit local repair default",
+  (model) => {
+    const draft = inspectConfigForRepair(JSON.stringify({ ...aConfig(), embeddings: { model } }))
+    expect(draft.embeddings).toEqual({ provider: "local", model })
+    expect(draft.problems).toEqual(["embeddings: must have required properties provider"])
+    expect(proposeSetup({ config: draft, vault: "C:/replacement" }).succeeded).toBe(
+      model === "Xenova/multilingual-e5-small",
+    )
+  },
+)
+
+test.each(["multilingual", "jev-latest"])(
+  "preservation: missing decision provider retains model %s and independently valid Laya siblings",
+  (model) => {
+    const decisionModel = { model, endpoint: "http://127.0.0.1:9000/v1/systemone", maxTokens: 4000, headMaxTokens: 100 }
+    const draft = inspectConfigForRepair(JSON.stringify({ ...aConfig(), decisionModel }))
+    expect(draft.decisionModel).toEqual({ provider: "laya", ...decisionModel })
+    expect(draft.problems).toEqual(["decisionModel: must have required properties provider"])
+    expect(proposeSetup({ config: draft, vault: "C:/replacement" }).succeeded).toBe(model === "multilingual")
+  },
+)
+
+test("old configuration is invalid at runtime and repair never invents a chat model", () => {
+  const old = { global: { vault: "C:/global" }, projects: [], limits: { maxBodyChars: 777, maxStatementChars: 77 } }
+  const text = JSON.stringify(old)
+  const parsed = parseConfig(text)
+  expect(parsed.succeeded).toBe(false)
+  expect(parsed).not.toHaveProperty("output")
+  if (parsed.succeeded) throw new Error("old config accepted")
+  for (const field of ["maxNotesPerFolder", "capture", "memoryAgent", "context", "embeddings", "decisionModel"]) {
+    expect(parsed.problems.join(" ")).toContain(field)
+  }
+  expect(inspectConfigForRepair(text)).toMatchObject({
+    ...old,
+    limits: { ...old.limits, maxNotesPerFolder: 20 },
+    capture: { model: {}, when: "after-each-turn" },
+    memoryAgent: { model: {} },
+  })
+})
+
+test("repair retains independently valid nested siblings and names discarded unknown fields", () => {
+  const text = JSON.stringify({
+    ...aConfig(),
+    capture: { model: { provider: "keep", id: " ", apiKey: "discard-secret" }, when: "at-session-end", extra: 1 },
+    memoryAgent: { model: { provider: false, id: "keep-id" } },
+    limits: { maxBodyChars: 700, maxStatementChars: 0, maxNotesPerFolder: 31 },
+    context: { budgetChars: 5678, extra: 1 },
+  })
+  const draft = inspectConfigForRepair(text)
+  expect(draft.capture).toEqual({ model: { provider: "keep" }, when: "at-session-end" })
+  expect(draft.memoryAgent).toEqual({ model: { id: "keep-id" } })
+  expect(draft.limits).toEqual({ maxBodyChars: 700, maxStatementChars: 100, maxNotesPerFolder: 31 })
+  expect(draft.context).toEqual({ budgetChars: 5678 })
+  expect(draft.problems).toEqual(
+    expect.arrayContaining([
+      "capture.model.apiKey: not a known field",
+      "capture.extra: not a known field",
+      "context.extra: not a known field",
+    ]),
+  )
+  expect(JSON.stringify(draft)).not.toContain("discard-secret")
+})
 
 test("repair retains supported sibling values and names invalid, missing and unknown fields", () => {
   const input = { ...aConfig(), limits: { maxBodyChars: 700, extra: 5 }, surprise: true }
