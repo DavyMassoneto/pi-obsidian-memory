@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { resolveProject } from "#/domain"
+import { comparablePath, resolveProject, vaultNameOf } from "#/domain"
 import { aConfig } from "#test-helpers"
 
 test.each([
@@ -12,6 +12,25 @@ test.each([
   ["the folder with a trailing separator", "D:/Projects/loja/", "loja"],
 ])("finds the project for %s", (_case, folder, name) => {
   expect(resolveProject(aConfig(), folder)).toMatchObject({ succeeded: true, output: { name } })
+})
+
+test.each([
+  ["C:/Users/Administrator/OneDrive/Obisidian/Global memory", "Global memory"],
+  ["C:\\vaults\\loja", "loja"],
+  ["C:/vaults/loja/", "loja"],
+])("names the vault after its folder: %s", (path, name) => {
+  expect(vaultNameOf(path)).toBe(name)
+})
+
+test.each(["C:\\Vaults\\Memory\\", "c:/vaults/memory", "C:/VAULTS/Memory///"])(
+  "compares equivalent vault paths identically: %s",
+  (path) => {
+    expect(comparablePath(path)).toBe("c:/vaults/memory")
+  },
+)
+
+test("does not collapse distinct vault folder names", () => {
+  expect(comparablePath("C:/vaults/memory-old")).not.toBe(comparablePath("C:/vaults/memory"))
 })
 
 test("finds a project registered with Windows separators", () => {

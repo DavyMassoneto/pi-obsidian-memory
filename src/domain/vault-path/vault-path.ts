@@ -1,11 +1,5 @@
-import {
-  DRIVE_LETTER,
-  HIDDEN_NAME_PREFIX,
-  RELATIVE_NAMES,
-  RESERVED_ROOT_FOLDERS,
-  VAULT_PATH_SEPARATOR,
-} from "./constants.ts"
-import { checkEdges, checkFileSystemName, checkLinkCharacters, checkTrailingEdge } from "./names.ts"
+import { checkEdges, checkFileSystemName, checkLinkCharacters, RELATIVE_NAMES } from "#/domain/names"
+import { DRIVE_LETTER, HIDDEN_NAME_PREFIX, RESERVED_ROOT_FOLDERS, VAULT_PATH_SEPARATOR } from "./constants.ts"
 
 export function joinVaultPath(...parts: string[]): string {
   return parts.filter((part) => part.length > 0).join(VAULT_PATH_SEPARATOR)
@@ -42,19 +36,6 @@ export function checkMemoryFolder(folder: string): string[] {
   }
 
   return folder.split(VAULT_PATH_SEPARATOR).flatMap(checkMemoryFolderPart)
-}
-
-export function checkFileName(fileName: string): string[] {
-  if (fileName.length === 0) {
-    return ["file name: is empty"]
-  }
-
-  if (RELATIVE_NAMES.includes(fileName)) {
-    return [`file name: "${fileName}" is not allowed`]
-  }
-
-  const label = `file name "${fileName}"`
-  return [...checkFileSystemName(label, fileName), ...checkTrailingEdge(label, fileName)]
 }
 
 function checkFolderPart(part: string): string[] {

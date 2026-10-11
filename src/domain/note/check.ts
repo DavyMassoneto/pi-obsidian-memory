@@ -1,8 +1,9 @@
 import { Value } from "typebox/value"
 
-import { describeSchemaErrors } from "#/domain/validation"
-import { FOLDER_INDEX_NAME } from "./constants.ts"
-import { checkEdges, checkFileSystemName, checkLinkCharacters } from "./names.ts"
+import { checkEdges, checkFileSystemName, checkLinkCharacters } from "#/domain/names"
+import { FOLDER_INDEX_NAME } from "#/domain/vault-path"
+import { NOTE_CHARACTER_SEGMENTER } from "./constants.ts"
+import { describeNoteSchemaErrors } from "./schema-errors.ts"
 import { NoteFrontmatterSchema } from "./schemas.ts"
 import type { Note, NoteFrontmatter, NoteLimits } from "./types.ts"
 
@@ -19,7 +20,7 @@ function checkFrontmatter(frontmatter: NoteFrontmatter): string[] {
     return []
   }
 
-  return describeSchemaErrors(Value.Errors(NoteFrontmatterSchema, frontmatter), "frontmatter")
+  return describeNoteSchemaErrors(Value.Errors(NoteFrontmatterSchema, frontmatter), "frontmatter")
 }
 
 function checkStatement(statement: string, maxChars: number): string[] {
@@ -54,7 +55,7 @@ function checkLength(label: string, text: string, maxChars: number): string[] {
 }
 
 function countCharacters(text: string): number {
-  const graphemes = new Intl.Segmenter("en", { granularity: "grapheme" }).segment(text)
+  const graphemes = NOTE_CHARACTER_SEGMENTER.segment(text)
   return [...graphemes].length
 }
 

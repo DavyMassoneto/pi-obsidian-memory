@@ -141,6 +141,85 @@ test("lists invalid notes in a Needs fixing section, with their problems, before
   )
 })
 
+test.each(["Bad#name", "Bad^name", "Bad[name", "Bad]name", "Bad|name", "Bad`#name", "Bad``#name", " Bad#name "])(
+  "displays an invalid note name faithfully without a wikilink: %s",
+  (statement) => {
+    const index = renderFolderIndex({
+      kind: "subject",
+      path: "tools",
+      subjects: [],
+      notes: [],
+      invalid: [{ statement, problems: ["invalid name"] }],
+    })
+
+    expect(index).not.toContain("[[")
+    expect(index).toContain(statement)
+    expect(index).toContain(" · invalid name")
+  },
+)
+
+test.each(["Bad#folder", "Bad^folder", "Bad[folder", "Bad]folder", "Bad|folder", "Bad`#folder"])(
+  "displays an invalid subject name with diagnostics instead of a misleading link: %s",
+  (subject) => {
+    const index = renderFolderIndex({ kind: "subject", path: "tools", subjects: [subject], notes: [], invalid: [] })
+
+    expect(index).not.toContain("[[")
+    expect(index).toContain(subject)
+    expect(index).toMatch(/breaks Obsidian links|not allowed in a file name/)
+  },
+)
+
+test("does not link notes or subjects through an invalid parent path", () => {
+  const index = renderFolderIndex({
+    kind: "subject",
+    path: "Bad#folder",
+    subjects: ["valid"],
+    notes: [aNote()],
+    invalid: [],
+  })
+
+  expect(index).not.toContain("[[")
+  expect(index).toContain(aNote().statement)
+  expect(index).toContain("valid")
+})
+
+test("displays problem folders separately from invalid notes with no clickable target", () => {
+  const index = renderFolderIndex({
+    kind: "root",
+    vaultName: "Memory",
+    subjects: [],
+    notes: [],
+    invalid: [],
+    hasArchive: false,
+    problemFolders: [
+      { folder: "Bad#folder", problems: ["leads outside the vault"] },
+      { folder: "Alias", problems: ["target is missing"] },
+    ],
+  })
+
+  expect(index).toContain(
+    "## Needs fixing\n\n- Folder `Alias` · target is missing\n- Folder `Bad#folder` · leads outside the vault",
+  )
+  expect(index).not.toContain("[[")
+})
+
+test("keeps names non-clickable even when repeated in diagnostics and headings", () => {
+  const name = "Bad[[target]]"
+  const problem = `folder "${name}": "]" breaks Obsidian links`
+  const index = renderFolderIndex({
+    kind: "subject",
+    path: name,
+    subjects: [],
+    notes: [],
+    invalid: [{ statement: name, problems: [problem] }],
+    problemFolders: [{ folder: name, problems: [problem] }],
+  })
+
+  expect(index).toContain(`# \`${name}\`\n`)
+  expect(index).toContain(`- \`${name}\` · \`${problem}\``)
+  expect(index).toContain(`- Folder \`${name}\` · \`${problem}\``)
+})
+
 test("omits the Needs fixing section when every note is valid", () => {
   const index = renderFolderIndex({ kind: "subject", path: "pnpm", subjects: [], notes: [aNote()], invalid: [] })
 

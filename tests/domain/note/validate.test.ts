@@ -1,9 +1,9 @@
 import { expect, test } from "vitest"
 
 import { renderNote, validateNote } from "#/domain"
-import { aNote, aParsedNote, frontmatterLinesWith, readBack, validFrontmatterLines } from "#test-helpers"
+import { aConfig, aNote, aParsedNote, frontmatterLinesWith, readBack, validFrontmatterLines } from "#test-helpers"
 
-const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
+const limits = aConfig().limits
 
 test("reads back exactly the note that renderNote wrote", () => {
   const note = aNote()
@@ -83,7 +83,7 @@ test("reports a repeated field with every other frontmatter, statement and body 
     succeeded: false,
     problems: [
       "id: appears more than once",
-      expect.stringMatching(/^created: must match format/),
+      "created: must be a date (YYYY-MM-DD)",
       "bogus: not a known field",
       'statement: ":" is not allowed in a file name',
       "body: is empty",

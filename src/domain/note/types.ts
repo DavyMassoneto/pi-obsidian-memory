@@ -1,4 +1,5 @@
 import type { Static } from "typebox"
+import type { Pair, ParsedNode } from "yaml"
 
 import type { Absent, Failed, Succeeded } from "#/shared"
 import type { NoteFrontmatterSchema, NoteTypeSchema } from "./schemas.ts"
@@ -35,6 +36,10 @@ export type FieldResult<Value> = Succeeded<Value> | Failed
 export type OptionalFieldResult<Value> = Succeeded<Value> | Failed | Absent
 
 export type FieldNameResult = Succeeded<string> | Absent
+
+export type FrontmatterPairs = Pair<ParsedNode, ParsedNode | null>[]
+
+export type FieldReader<Value> = (node: ParsedNode | null) => FieldResult<Value>
 
 export interface FrontmatterReadings {
   id: FieldResult<string>

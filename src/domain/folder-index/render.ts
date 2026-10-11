@@ -1,5 +1,7 @@
-import { ARCHIVE_FOLDER, FOLDER_INDEX_NAME, joinVaultPath, type Note } from "#/domain/note"
-import { DONT_FORGET_LABEL, NOTE_LINE_SEPARATOR, PROBLEM_SEPARATOR } from "./constants.ts"
+import type { Note } from "#/domain/note"
+import { ARCHIVE_FOLDER, checkVaultPath, FOLDER_INDEX_NAME, joinVaultPath } from "#/domain/vault-path"
+import { DONT_FORGET_LABEL, INDEX_TEXT_COLLATOR, NOTE_LINE_SEPARATOR, PROBLEM_SEPARATOR } from "./constants.ts"
+import { displayIndexName, displayIndexText } from "./display.ts"
 import type { FolderContents, InvalidNote, Titled } from "./types.ts"
 
 export function renderFolderIndex(folder: FolderContents): string {
@@ -10,10 +12,10 @@ export function renderFolderIndex(folder: FolderContents): string {
   const invalid = [...folder.invalid].sort(byStatement).map((note) => invalidLine(path, note))
 
   const blocks = [
-    `# ${titleOf(folder)}`,
+    `# ${displayIndexText(titleOf(folder))}`,
     ...section("Subjects", subjects),
     ...section("Notes", notes),
-    ...section("Needs fixing", invalid),
+    ...section("Needs fixing", [...invalid, ...problemFolderLines(folder)]),
     ...archiveSection(folder),
   ]
 
@@ -54,6 +56,11 @@ function archiveSection(folder: FolderContents): string[] {
 
 function subjectLine(path: string, subject: string): string {
   const target = joinVaultPath(path, subject, FOLDER_INDEX_NAME)
+  const problems = checkVaultPath(target)
+  if (problems.length > 0) {
+    return `- ${displayIndexName(subject)}${NOTE_LINE_SEPARATOR}${problems.map(displayIndexName).join(PROBLEM_SEPARATOR)}`
+  }
+
   return `- [[${target}|${subject}]]`
 }
 
@@ -68,12 +75,30 @@ function noteLine(path: string, note: Note): string {
 }
 
 function invalidLine(path: string, note: InvalidNote): string {
-  const parts = [noteLink(path, note.statement), note.problems.join(PROBLEM_SEPARATOR)]
+  const parts = [noteLink(path, note.statement), note.problems.map(displayIndexText).join(PROBLEM_SEPARATOR)]
   return `- ${parts.join(NOTE_LINE_SEPARATOR)}`
 }
 
 function noteLink(path: string, statement: string): string {
-  return `[[${joinVaultPath(path, statement)}|${statement}]]`
+  const target = joinVaultPath(path, statement)
+  if (statement.length === 0 || checkVaultPath(target).length > 0) {
+    return displayIndexName(statement)
+  }
+
+  return `[[${target}|${statement}]]`
+}
+
+function problemFolderLines(folder: FolderContents): string[] {
+  if (!folder.problemFolders) {
+    return []
+  }
+
+  return [...folder.problemFolders]
+    .sort((first, second) => compareText(first.folder, second.folder))
+    .map(
+      (problem) =>
+        `- Folder ${displayIndexName(problem.folder)}${NOTE_LINE_SEPARATOR}${problem.problems.map(displayIndexText).join(PROBLEM_SEPARATOR)}`,
+    )
 }
 
 function sortAlphabetically(values: string[]): string[] {
@@ -85,5 +110,5 @@ function byStatement(first: Titled, second: Titled): number {
 }
 
 function compareText(first: string, second: string): number {
-  return new Intl.Collator("en", { sensitivity: "base" }).compare(first, second)
+  return INDEX_TEXT_COLLATOR.compare(first, second)
 }

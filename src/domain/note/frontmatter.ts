@@ -1,4 +1,4 @@
-import { type Document, isMap, type Pair, type ParsedNode, parseDocument } from "yaml"
+import { type Document, isMap, type ParsedNode, parseDocument } from "yaml"
 
 import {
   KNOWN_FRONTMATTER_FIELDS,
@@ -9,6 +9,7 @@ import {
 import {
   fieldNameOf,
   occurrencesOf,
+  problemsOf,
   readDontForget,
   readOptionalField,
   readRequiredField,
@@ -17,7 +18,7 @@ import {
   unknownValueProblems,
 } from "./frontmatter-fields.ts"
 import { NoteDateSchema, NoteIdSchema, NoteLinkSchema, NoteTypeSchema } from "./schemas.ts"
-import type { FrontmatterReadings, NoteFrontmatter, OptionalFieldResult, ReadFrontmatterResult } from "./types.ts"
+import type { FrontmatterPairs, FrontmatterReadings, NoteFrontmatter, ReadFrontmatterResult } from "./types.ts"
 
 export function readFrontmatter(yaml: string): ReadFrontmatterResult {
   const document = parseDocument(yaml)
@@ -38,14 +39,14 @@ export function readFrontmatter(yaml: string): ReadFrontmatterResult {
     ...yamlProblems,
     ...tagProblems(document, "frontmatter", root.tag),
     ...nameProblems(document, pairs),
-    ...fieldProblems(readings),
+    ...Object.values(readings).flatMap((field) => problemsOf<string | true>(field)),
     ...unknownFieldProblems(document, pairs),
   ]
 
   return buildFrontmatter(readings, problems)
 }
 
-function readFields(document: Document.Parsed, pairs: Pair<ParsedNode, ParsedNode | null>[]): FrontmatterReadings {
+function readFields(document: Document.Parsed, pairs: FrontmatterPairs): FrontmatterReadings {
   return {
     id: readRequiredField(document, pairs, "id", NoteIdSchema),
     type: readRequiredField(document, pairs, "type", NoteTypeSchema),
@@ -56,19 +57,6 @@ function readFields(document: Document.Parsed, pairs: Pair<ParsedNode, ParsedNod
     replaces: readOptionalField(document, pairs, "replaces", NoteLinkSchema),
     replacedBy: readOptionalField(document, pairs, "replacedBy", NoteLinkSchema),
   }
-}
-
-function fieldProblems(readings: FrontmatterReadings): string[] {
-  return [
-    ...problemsOf(readings.id),
-    ...problemsOf(readings.type),
-    ...problemsOf(readings.created),
-    ...problemsOf(readings.updated),
-    ...problemsOf(readings.dontForget),
-    ...problemsOf(readings.archived),
-    ...problemsOf(readings.replaces),
-    ...problemsOf(readings.replacedBy),
-  ]
 }
 
 function buildFrontmatter(readings: FrontmatterReadings, problems: string[]): ReadFrontmatterResult {
@@ -103,7 +91,7 @@ function buildFrontmatter(readings: FrontmatterReadings, problems: string[]): Re
   return { succeeded: true, output: frontmatter }
 }
 
-function nameProblems(document: Document.Parsed, pairs: Pair<ParsedNode, ParsedNode | null>[]): string[] {
+function nameProblems(document: Document.Parsed, pairs: FrontmatterPairs): string[] {
   const hasNameThatIsNotText = pairs.some((pair) => !fieldNameOf(pair.key).succeeded)
   const tagged = pairs.flatMap((pair) => nameTagProblems(document, pair.key))
 
@@ -123,18 +111,14 @@ function nameTagProblems(document: Document.Parsed, key: ParsedNode): string[] {
   return tagProblems(document, name.output, key.tag).map((problem) => `${problem} from the name`)
 }
 
-function unknownFieldProblems(document: Document.Parsed, pairs: Pair<ParsedNode, ParsedNode | null>[]): string[] {
+function unknownFieldProblems(document: Document.Parsed, pairs: FrontmatterPairs): string[] {
   const names = pairs.flatMap((pair) => textNamesOf(pair.key))
   const unknown = [...new Set(names)].filter((name) => !KNOWN_FRONTMATTER_FIELDS.includes(name))
 
   return unknown.flatMap((name) => unknownProblems(document, occurrencesOf(pairs, name), name))
 }
 
-function unknownProblems(
-  document: Document.Parsed,
-  occurrences: Pair<ParsedNode, ParsedNode | null>[],
-  name: string,
-): string[] {
+function unknownProblems(document: Document.Parsed, occurrences: FrontmatterPairs, name: string): string[] {
   const shape = occurrences.flatMap((pair) => unknownValueProblems(document, name, pair.value))
 
   if (occurrences.length > 1) {
@@ -148,14 +132,6 @@ function textNamesOf(key: ParsedNode): string[] {
   const name = fieldNameOf(key)
   if (name.succeeded) {
     return [name.output]
-  }
-
-  return []
-}
-
-function problemsOf<Value>(field: OptionalFieldResult<Value>): string[] {
-  if ("problems" in field) {
-    return field.problems
   }
 
   return []

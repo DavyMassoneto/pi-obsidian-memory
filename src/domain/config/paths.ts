@@ -25,7 +25,7 @@ function byDeepestFolder(first: ProjectEntry, second: ProjectEntry): number {
   return comparablePath(second.folder).length - comparablePath(first.folder).length
 }
 
-function comparablePath(path: string): string {
+export function comparablePath(path: string): string {
   return normalizedPath(path).toLowerCase()
 }
 
