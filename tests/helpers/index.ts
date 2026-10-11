@@ -1,5 +1,6 @@
 export * from "./config.ts"
 export * from "./limits.ts"
+export * from "./llm.ts"
 export * from "./memory.ts"
 export * from "./note.ts"
 export * from "./pi.ts"
