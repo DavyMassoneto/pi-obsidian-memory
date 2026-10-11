@@ -4,6 +4,23 @@ import { parseRetrievalAction } from "#/domain"
 import { readObservation, retrievalRequest } from "#test-helpers"
 
 describe("parseRetrievalAction", () => {
+  it.each(["MD", "mD", "Md"])("keeps the exact get path with a %s extension", (extension) => {
+    const action = { action: "get", vault: "global", path: `profile/Access token.${extension}` }
+    expect(parseRetrievalAction(JSON.stringify(action), retrievalRequest())).toEqual({
+      succeeded: true,
+      output: action,
+    })
+  })
+
+  it("does not case-fold read receipt identities", () => {
+    const read = { ...readObservation(), path: "profile/Access token.MD" }
+    const input = { ...retrievalRequest(), observations: [read] }
+    for (const path of ["profile/Access token.md", "Profile/Access token.MD", "profile/access token.MD"]) {
+      const action = { action: "finish", notes: [{ vault: read.vault, path, id: read.id, hash: read.hash }] }
+      expect(parseRetrievalAction(JSON.stringify(action), input).succeeded).toBe(false)
+    }
+  })
+
   it("selects only identities actually read", () => {
     const read = readObservation()
     const identity = { vault: read.vault, path: read.path, id: read.id, hash: read.hash }

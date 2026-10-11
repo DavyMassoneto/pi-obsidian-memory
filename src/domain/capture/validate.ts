@@ -39,7 +39,11 @@ function checkCaptureAction(action: CaptureAction, input: CaptureInput): string[
   if ((action.action === "add" || action.action === "succeed") && action.note.folder.length === 0) {
     problems.push("New capture notes require a subject folder")
   }
-  if (action.action === "update" && action.path !== joinVaultPath(action.note.folder, `${action.note.statement}.md`)) {
+  if (
+    action.action === "update" &&
+    (action.path.slice(-3).toLowerCase() !== ".md" ||
+      action.path.slice(0, -3) !== joinVaultPath(action.note.folder, action.note.statement))
+  ) {
     problems.push("Update must keep the read note's folder and statement")
   }
   return problems

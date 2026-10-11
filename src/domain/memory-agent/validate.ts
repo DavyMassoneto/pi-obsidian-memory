@@ -35,7 +35,7 @@ export function checkReadAction(action: ReadAction, context: AgentContext): stri
   const problems = checkAgentVault(action.vault, context)
   if (action.action === "get") {
     problems.push(...checkVaultPath(action.path))
-    if (!action.path.endsWith(".md")) problems.push("get requires a note path ending in .md")
+    if (action.path.slice(-3).toLowerCase() !== ".md") problems.push("get requires a note path ending in .md")
   }
   if (action.action === "list") problems.push(...checkVaultPath(action.folder))
   if (action.action === "search" && action.query.trim().length === 0) problems.push("Search query is empty")
