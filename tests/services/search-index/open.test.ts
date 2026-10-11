@@ -42,6 +42,26 @@ test("reports a corrupt database without replacing it or leaking its connection"
   expect(putNote(fresh, anEntry())).toEqual({ succeeded: true })
 })
 
+test("refuses FTS content divergence without replacing the database and releases its transaction", async () => {
+  const path = join(await useTempFolder(), "vault.sqlite")
+  const index = openedIndex(path)
+  expect(putNote(index, anEntry())).toEqual({ succeeded: true })
+  index.close()
+  changeIndexFile(path, "INSERT INTO notes_fts(notes_fts) VALUES ('delete-all')")
+  const before = await readFile(path)
+
+  const result = openIndex(path)
+  if (result.succeeded) result.output.close()
+  expect(result).toMatchObject({ succeeded: false, reason: "corrupted" })
+  expect(await readFile(path)).toEqual(before)
+
+  changeIndexFile(path, "INSERT INTO notes_fts(notes_fts) VALUES ('rebuild')")
+  const repaired = openedIndex(path)
+  expect(statementsOf(searchText(repaired, "pnpm", { limit: 10, includeArchived: false }))).toEqual([
+    anEntry().statement,
+  ])
+})
+
 test("reports inaccessible index paths as unavailable", async () => {
   const file = join(await useTempFolder(), "file")
   await writeFile(file, "occupied")
@@ -50,7 +70,7 @@ test("reports inaccessible index paths as unavailable", async () => {
   expect(await readFile(file, "utf8")).toBe("occupied")
 })
 
-test("closes a connection when statement preparation fails", async () => {
+test("closes a connection when the FTS table is missing", async () => {
   const path = join(await useTempFolder(), "vault.sqlite")
   openedIndex(path).close()
   changeIndexFile(path, "DROP TABLE notes_fts")

@@ -8,6 +8,7 @@ export function catalogFolder(path: string): string {
 
 export function confirmedMissing(path: string, scan: CatalogScan): boolean {
   if (scan.failedPaths.some((failed) => failed === "" || path === failed || path.startsWith(`${failed}/`))) return false
+  if (scan.completeDirectories.includes(path)) return true
   if (scan.observedPaths.includes(path) || scan.entries.some((entry) => entry.path === path)) return false
 
   let child = path

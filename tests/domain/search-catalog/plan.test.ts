@@ -14,6 +14,49 @@ test("keys copies by path and deletes only covered missing children", () => {
   expect(result.population).toBe("ready")
 })
 
+test("deletes a cached note when successful enumeration proves its path is now a directory", () => {
+  const old = catalogEntry("tools/Old.md")
+  const scan = {
+    ...catalogScan([]),
+    observedPaths: ["tools", old.path],
+    completeDirectories: ["", "tools", old.path],
+  }
+  const plan = planCatalogChanges(catalogSnapshot([old]), scan)
+
+  expect(plan.deletes).toEqual([old.path])
+  expect(plan.upserts).toEqual([])
+  expect(plan.touchedFolders).toEqual(["tools"])
+  expect(plan.population).toBe("ready")
+})
+
+test("retains a cached note when enumeration of its replacement directory fails", () => {
+  const old = catalogEntry("tools/Old.md")
+  const scan = {
+    ...catalogScan([]),
+    observedPaths: ["tools", old.path],
+    failedPaths: [old.path],
+    complete: false,
+  }
+  const plan = planCatalogChanges(catalogSnapshot([old]), scan)
+
+  expect(plan.deletes).toEqual([])
+  expect(plan.upserts).toEqual([])
+  expect(plan.touchedFolders).toEqual([])
+})
+
+test("failed ancestors protect notes even when successful directory coverage overlaps", () => {
+  const old = catalogEntry("tools/Old.md")
+  const scan = {
+    ...catalogScan([]),
+    observedPaths: ["tools", old.path],
+    completeDirectories: ["", "tools", old.path],
+    failedPaths: ["tools"],
+    complete: false,
+  }
+
+  expect(planCatalogChanges(catalogSnapshot([old]), scan).deletes).toEqual([])
+})
+
 test("retains unreadable files and descendants even if an ancestor listing completed", () => {
   const cached = [catalogEntry("tools/Old.md"), catalogEntry("tools/nested/Old.md")]
   const scan = { ...catalogScan([]), observedPaths: ["tools/Old.md"], failedPaths: ["tools/nested"], complete: false }

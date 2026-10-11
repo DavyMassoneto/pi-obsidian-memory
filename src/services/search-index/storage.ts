@@ -58,6 +58,7 @@ export class SqliteSearchIndex implements SearchIndex {
 
   inventory(): InventoryResult {
     if (!this.#usable || !this.#database.isOpen) return closedIndex()
+
     try {
       this.#database.exec("BEGIN")
       const result = readInventory(this.#catalog)
@@ -71,6 +72,7 @@ export class SqliteSearchIndex implements SearchIndex {
 
   vectors(): VectorCacheResult {
     if (!this.#usable || !this.#database.isOpen) return closedIndex()
+
     try {
       this.#database.exec("BEGIN")
       const result = readVectors(this.#vectors)
@@ -87,6 +89,7 @@ export class SqliteSearchIndex implements SearchIndex {
 
   searchCatalog(request: CatalogQuery): CatalogSearchResult {
     if (!this.#usable || !this.#database.isOpen) return closedIndex()
+
     try {
       return readCatalogHits(this.#catalog.search, request)
     } catch (error) {
@@ -97,6 +100,7 @@ export class SqliteSearchIndex implements SearchIndex {
 
   search(query: string, options: SearchOptions): SearchResult {
     if (!this.#usable || !this.#database.isOpen) return closedIndex()
+
     try {
       return readSearchHits(this.#statements.search, query, options)
     } catch (error) {
@@ -107,6 +111,7 @@ export class SqliteSearchIndex implements SearchIndex {
 
   close(): IndexWriteResult {
     if (!this.#database.isOpen) return { succeeded: true }
+
     try {
       this.#database.close()
       return { succeeded: true }
@@ -118,12 +123,14 @@ export class SqliteSearchIndex implements SearchIndex {
 
   #write(work: IndexWork): IndexWriteResult {
     if (!this.#usable || !this.#database.isOpen) return closedIndex()
+
     try {
       this.#database.exec("BEGIN IMMEDIATE")
     } catch (error) {
       if (!(error instanceof Error)) throw error
       return indexFailure(error)
     }
+
     return this.#commit(work)
   }
 
@@ -131,6 +138,7 @@ export class SqliteSearchIndex implements SearchIndex {
     try {
       const result = work()
       if (!result.succeeded) return this.#rollBack(result)
+
       this.#database.exec("COMMIT")
       return result
     } catch (error) {
@@ -141,6 +149,7 @@ export class SqliteSearchIndex implements SearchIndex {
 
   #rollBack(failure: SearchIndexRefusal): SearchIndexRefusal {
     if (!this.#database.isTransaction) return failure
+
     try {
       this.#database.exec("ROLLBACK")
     } catch (error) {
