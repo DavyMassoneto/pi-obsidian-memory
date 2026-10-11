@@ -9,12 +9,18 @@ export interface InvalidNote {
   problems: string[]
 }
 
+export interface ProblemFolder {
+  folder: string
+  problems: string[]
+}
+
 export interface SubjectFolder {
   kind: "subject"
   path: string
   subjects: string[]
   notes: Note[]
   invalid: InvalidNote[]
+  problemFolders?: ProblemFolder[]
 }
 
 export interface RootFolder {
@@ -24,6 +30,7 @@ export interface RootFolder {
   notes: Note[]
   invalid: InvalidNote[]
   hasArchive: boolean
+  problemFolders?: ProblemFolder[]
 }
 
 export type FolderContents = SubjectFolder | RootFolder

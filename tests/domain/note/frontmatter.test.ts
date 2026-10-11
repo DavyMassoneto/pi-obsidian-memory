@@ -118,7 +118,7 @@ test.each([
 test("never lets a field name that is not text stand in for a known field", () => {
   expect(readFrontmatterLines(frontmatterLinesWithListKey())).toEqual({
     succeeded: false,
-    problems: ["frontmatter: a field name is not text", expect.stringMatching(/^id: must match pattern/)],
+    problems: ["frontmatter: a field name is not text", "id: must be a ULID"],
   })
 })
 
@@ -135,9 +135,9 @@ test("reports the shape, type, format, missing and unknown problems together", (
   expect(readFrontmatterLines(lines)).toEqual({
     succeeded: false,
     problems: [
-      expect.stringMatching(/^id: must match pattern/),
+      "id: must be a ULID",
       "type: must be a single value, not a list",
-      expect.stringMatching(/^created: must match format/),
+      "created: must be a date (YYYY-MM-DD)",
       "updated: is missing",
       "dontForget: must be true (or left out)",
       "bogus: not a known field",

@@ -1,10 +1,10 @@
 import type { Static, TSchema } from "typebox"
 import { Value } from "typebox/value"
-import { type Document, isAlias, isMap, isNode, isPair, isScalar, isSeq, type Pair, type ParsedNode } from "yaml"
+import { type Document, isAlias, isMap, isNode, isPair, isScalar, isSeq, type ParsedNode } from "yaml"
 
-import { describeSchemaErrors } from "#/domain/validation"
+import { describeNoteSchemaErrors } from "./schema-errors.ts"
 import { DontForgetSchema } from "./schemas.ts"
-import type { FieldNameResult, FieldResult, OptionalFieldResult } from "./types.ts"
+import type { FieldNameResult, FieldReader, FieldResult, FrontmatterPairs, OptionalFieldResult } from "./types.ts"
 
 export function fieldNameOf(key: ParsedNode): FieldNameResult {
   if (isScalar(key) && typeof key.value === "string") {
@@ -14,16 +14,13 @@ export function fieldNameOf(key: ParsedNode): FieldNameResult {
   return { succeeded: false }
 }
 
-export function occurrencesOf(
-  pairs: Pair<ParsedNode, ParsedNode | null>[],
-  name: string,
-): Pair<ParsedNode, ParsedNode | null>[] {
+export function occurrencesOf(pairs: FrontmatterPairs, name: string): FrontmatterPairs {
   return pairs.filter((pair) => isNamed(pair.key, name))
 }
 
 export function readRequiredField<Schema extends TSchema>(
   document: Document.Parsed,
-  pairs: Pair<ParsedNode, ParsedNode | null>[],
+  pairs: FrontmatterPairs,
   name: string,
   schema: Schema,
 ): FieldResult<Static<Schema>> {
@@ -37,28 +34,22 @@ export function readRequiredField<Schema extends TSchema>(
 
 export function readOptionalField<Schema extends TSchema>(
   document: Document.Parsed,
-  pairs: Pair<ParsedNode, ParsedNode | null>[],
+  pairs: FrontmatterPairs,
   name: string,
   schema: Schema,
 ): OptionalFieldResult<Static<Schema>> {
-  const [first, ...others] = occurrencesOf(pairs, name)
-  if (!isPair(first)) {
-    return { succeeded: false }
-  }
-
-  if (others.length > 0) {
-    const readings = [first, ...others].map((pair) => readText(document, name, pair.value, schema))
-    return repeatedField(name, readings)
-  }
-
-  return readText(document, name, first.value, schema)
+  return readFieldOccurrences(pairs, name, (node) => readText(document, name, node, schema))
 }
 
-export function readDontForget(
-  document: Document.Parsed,
-  pairs: Pair<ParsedNode, ParsedNode | null>[],
-): OptionalFieldResult<true> {
-  const name = "dontForget"
+export function readDontForget(document: Document.Parsed, pairs: FrontmatterPairs): OptionalFieldResult<true> {
+  return readFieldOccurrences(pairs, "dontForget", (node) => readFlag(document, "dontForget", node))
+}
+
+function readFieldOccurrences<Value>(
+  pairs: FrontmatterPairs,
+  name: string,
+  read: FieldReader<Value>,
+): OptionalFieldResult<Value> {
   const [first, ...others] = occurrencesOf(pairs, name)
   if (!isPair(first)) {
     return { succeeded: false }
@@ -67,11 +58,11 @@ export function readDontForget(
   if (others.length > 0) {
     return repeatedField(
       name,
-      [first, ...others].map((pair) => readFlag(document, name, pair.value)),
+      [first, ...others].map((pair) => read(pair.value)),
     )
   }
 
-  return readFlag(document, name, first.value)
+  return read(first.value)
 }
 
 export function shapeProblems(document: Document.Parsed, label: string, node: ParsedNode | null): string[] {
@@ -149,7 +140,7 @@ function readText<Schema extends TSchema>(
     return { succeeded: true, output: text }
   }
 
-  return { succeeded: false, problems: describeSchemaErrors(Value.Errors(schema, text), name) }
+  return { succeeded: false, problems: describeNoteSchemaErrors(Value.Errors(schema, text), name) }
 }
 
 function readFlag(document: Document.Parsed, name: string, node: ParsedNode | null): FieldResult<true> {
@@ -170,12 +161,12 @@ function repeatedField<Value>(name: string, readings: FieldResult<Value>[]): Fie
   return { succeeded: false, problems: [repeatedProblem(name), ...new Set(problems)] }
 }
 
-function problemsOf<Value>(reading: FieldResult<Value>): string[] {
-  if (reading.succeeded) {
-    return []
+export function problemsOf<Value>(reading: OptionalFieldResult<Value>): string[] {
+  if ("problems" in reading) {
+    return reading.problems
   }
 
-  return reading.problems
+  return []
 }
 
 function isNamed(key: ParsedNode, name: string): boolean {

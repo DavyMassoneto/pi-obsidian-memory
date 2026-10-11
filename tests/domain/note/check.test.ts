@@ -1,12 +1,16 @@
 import { expect, test } from "vitest"
 
 import { checkNote } from "#/domain"
-import { aNote, aNoteWithBody, aNoteWithStatement } from "#test-helpers"
+import { aConfig, aNote, aNoteWithBody, aNoteWithStatement } from "#test-helpers"
 
-const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
+const limits = aConfig().limits
 
 test("finds no problems in a valid note", () => {
   expect(checkNote(aNote(), limits)).toEqual([])
+})
+
+test("accepts dot-prefixed statements", () => {
+  expect(checkNote(aNoteWithStatement(".Visible"), limits)).toEqual([])
 })
 
 test("accepts a body exactly at the limit and refuses one character more", () => {
@@ -100,8 +104,8 @@ test("refuses a frontmatter that the format does not allow, with the other probl
   const invalid = { ...note, frontmatter: { ...note.frontmatter, id: "not-a-ulid", created: "2026-02-30" }, body: "" }
 
   expect(checkNote(invalid, limits)).toEqual([
-    expect.stringMatching(/^id: must match pattern/),
-    expect.stringMatching(/^created: must match format/),
+    "id: must be a ULID",
+    "created: must be a date (YYYY-MM-DD)",
     "body: is empty",
   ])
 })

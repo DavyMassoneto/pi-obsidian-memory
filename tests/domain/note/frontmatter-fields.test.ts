@@ -4,13 +4,14 @@ import { frontmatterLinesWith, readFrontmatterLines, validFrontmatterLines } fro
 
 const ulid = "01JABCDE7XKQ2M9V3RTN8WPZ5F"
 const otherUlid = "01JABCDE7XKQ2M9V3RTN8WPZ60"
+
 test.each([
-  ["an id that is not a ULID", "id: not-a-ulid", /^id: must match pattern/],
+  ["an id that is not a ULID", "id: not-a-ulid", /^id: must be a ULID$/],
   ["a type outside the list", "type: wish", /^type: /],
-  ["an impossible date", "created: 2026-02-30", /^created: must match format/],
-  ["a date in another format", "updated: 04/10/2026", /^updated: must match format/],
-  ["a lifecycle link that is not a wikilink", 'replaces: "archive/search/Old"', /^replaces: must match pattern/],
-  ["an archived date in another format", "archived: yesterday", /^archived: must match format/],
+  ["an impossible date", "created: 2026-02-30", /^created: must be a date \(YYYY-MM-DD\)$/],
+  ["a date in another format", "updated: 04/10/2026", /^updated: must be a date \(YYYY-MM-DD\)$/],
+  ["a lifecycle link that is not a wikilink", 'replaces: "archive/search/Old"', /^replaces: must be a wikilink/],
+  ["an archived date in another format", "archived: yesterday", /^archived: must be a date \(YYYY-MM-DD\)$/],
 ])("reports %s", (_case, line, problem) => {
   expect(readFrontmatterLines(frontmatterLinesWith(line))).toEqual({
     succeeded: false,
@@ -48,12 +49,12 @@ test.each([
   [
     "a valid value, then an invalid one",
     [`id: ${ulid}`, "id: not-a-ulid"],
-    ["id: appears more than once", expect.stringMatching(/^id: must match pattern/)],
+    ["id: appears more than once", "id: must be a ULID"],
   ],
   [
     "an invalid value, then a valid one",
     ["id: not-a-ulid", `id: ${ulid}`],
-    ["id: appears more than once", expect.stringMatching(/^id: must match pattern/)],
+    ["id: appears more than once", "id: must be a ULID"],
   ],
 ])("reports a repeated field with %s, choosing no value", (_case, ids, problems) => {
   expect(readFrontmatterLines([...ids, ...validFrontmatterLines().slice(1)])).toEqual({ succeeded: false, problems })

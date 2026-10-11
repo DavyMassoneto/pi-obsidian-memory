@@ -48,6 +48,27 @@ test("writes the lifecycle links quoted, after archived", () => {
   )
 })
 
+test("orders all frontmatter fields regardless of their insertion order", () => {
+  const note = aNote()
+  const shuffled = {
+    ...note,
+    frontmatter: {
+      replacedBy: "[[New]]",
+      replaces: "[[Old]]",
+      archived: "2026-10-05",
+      dontForget: true as const,
+      updated: note.frontmatter.updated,
+      created: note.frontmatter.created,
+      type: note.frontmatter.type,
+      id: note.frontmatter.id,
+    },
+  }
+
+  expect(renderNote(shuffled)).toContain(
+    'updated: 2026-10-04\ndontForget: true\narchived: 2026-10-05\nreplaces: "[[Old]]"\nreplacedBy: "[[New]]"\n---',
+  )
+})
+
 test("writes archived only when the note is archived", () => {
   const note = aNote()
   const archived = { ...note, frontmatter: { ...note.frontmatter, archived: "2026-10-05" } }

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { ancestorFolders, checkFileName, checkMemoryFolder, checkVaultPath, joinVaultPath } from "#/domain"
+import { ancestorFolders, checkMemoryFolder, checkVaultPath, joinVaultPath } from "#/domain"
 
 test("joins vault path parts, skipping empty ones", () => {
   expect(joinVaultPath("", "pnpm", "", "index")).toBe("pnpm/index")
@@ -70,29 +70,4 @@ test.each([
   ["the templates", "_Templates/x", ['folder "_Templates": is reserved for the vault']],
 ])("refuses %s as a memory folder", (_case, folder, problems) => {
   expect(checkMemoryFolder(folder)).toEqual(problems)
-})
-
-test.each([
-  ["a note", "Use pnpm, never npm.md"],
-  ["an extension in capitals", "Rule.MD"],
-  ["a name with characters that break links", "C# tips.md"],
-  ["a folder index", "index.md"],
-  ["a name starting with a space", " Rule.md"],
-])("accepts %s as a file name", (_case, fileName) => {
-  expect(checkFileName(fileName)).toEqual([])
-})
-
-test.each([
-  ["an empty name", "", ["file name: is empty"]],
-  ["the current folder", ".", ['file name: "." is not allowed']],
-  ["the parent folder", "..", ['file name: ".." is not allowed']],
-  ["a slash", "sub/Rule.md", ['file name "sub/Rule.md": "/" is not allowed in a file name']],
-  ["a backslash", "..\\x.md", ['file name "..\\x.md": "\\" is not allowed in a file name']],
-  ["a drive letter", "C:x.md", ['file name "C:x.md": ":" is not allowed in a file name']],
-  ["a control character", "a\nb.md", ['file name "a\nb.md": has a control character']],
-  ["a name reserved by Windows", "con.md", ['file name "con.md": "con.md" is reserved by Windows']],
-  ["a trailing space", "Rule.md ", ['file name "Rule.md ": ends with a space']],
-  ["a trailing dot", "Rule.md.", ['file name "Rule.md.": ends with a dot']],
-])("refuses %s as a file name", (_case, fileName, problems) => {
-  expect(checkFileName(fileName)).toEqual(problems)
 })

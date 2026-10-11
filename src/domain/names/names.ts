@@ -2,8 +2,22 @@ import {
   CHARACTERS_THAT_BREAK_OBSIDIAN_LINKS,
   CHARACTERS_WINDOWS_FORBIDS_IN_FILE_NAMES,
   FIRST_PRINTABLE_CHARACTER_CODE,
+  RELATIVE_NAMES,
   WINDOWS_RESERVED_NAMES,
 } from "./constants.ts"
+
+export function checkFileName(fileName: string): string[] {
+  if (fileName.length === 0) {
+    return ["file name: is empty"]
+  }
+
+  if (RELATIVE_NAMES.includes(fileName)) {
+    return [`file name: "${fileName}" is not allowed`]
+  }
+
+  const label = `file name "${fileName}"`
+  return [...checkFileSystemName(label, fileName), ...checkTrailingEdge(label, fileName)]
+}
 
 export function checkFileSystemName(label: string, name: string): string[] {
   return [
