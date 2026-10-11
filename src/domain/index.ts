@@ -1,6 +1,7 @@
 export * from "./config/index.ts"
 export * from "./folder-index/index.ts"
 export * from "./lifecycle/index.ts"
+export * from "./memory/index.ts"
 export * from "./names/index.ts"
 export * from "./note/index.ts"
 export * from "./validation/index.ts"

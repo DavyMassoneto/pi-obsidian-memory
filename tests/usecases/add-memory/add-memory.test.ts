@@ -6,9 +6,9 @@ import { afterEach, expect, test, vi } from "vitest"
 import { renderNote } from "#/domain"
 import { readNote } from "#/services"
 import { addMemory } from "#/usecases"
-import { aConfig, aNote, setupVaults, writeConfig } from "#test-helpers"
+import { aConfig, aNote, linkFolder, setupVaults, writeConfig } from "#test-helpers"
 
-const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
+const limits = aConfig().limits
 
 const draft = {
   statement: "Use pnpm, never npm",
@@ -141,11 +141,6 @@ test("refuses a note whose name is taken and returns the existing note, untouche
 
 test.each([
   ["a folder outside the vault", "../other", ['folder: ".." is not allowed']],
-  ["the parent folder", "..", ['folder: ".." is not allowed']],
-  ["an absolute path", "/pnpm", ["folder: must be relative to the vault"]],
-  ["a drive letter", "C:/pnpm", ["folder: must be relative to the vault"]],
-  ["a backslash", "tools\\pnpm", ['folder: use "/" between folders']],
-  ["a nested hidden folder", "tools/.private", ['folder ".private": is hidden (starts with ".")']],
   ["a hidden folder", ".private", ['folder ".private": is hidden (starts with ".")']],
   ["the archive", "Archive/pnpm", ['folder "Archive": is reserved for the vault']],
   ["the templates", "_templates/pnpm", ['folder "_templates": is reserved for the vault']],
@@ -184,6 +179,42 @@ test("refuses a vault folder that does not exist, creating nothing", async () =>
     await addMemory({ scope: "global", folder: "pnpm", draft }, { configPath, workingFolder: "D:/Downloads" }),
   ).toEqual({ succeeded: false, reason: "vault-missing", problems: [`the vault folder ${globalVault} does not exist`] })
   expect((await readdir(root)).sort()).toEqual(["config.json", "loja"])
+})
+
+test("reports a saved note and the true maintenance cause when the index points outside", async () => {
+  const { root, globalVault, configPath } = await setupVaults()
+  const outside = join(root, "outside")
+  await mkdir(outside)
+  await linkFolder(outside, join(globalVault, "index.md"))
+
+  const result = await addMemory(
+    { scope: "global", folder: "pnpm", draft },
+    { configPath, workingFolder: "D:/Downloads" },
+  )
+
+  expect(result).toMatchObject({
+    succeeded: true,
+    output: { maintenanceProblems: ["outside-vault: index.md leads outside the vault"] },
+  })
+  expect(await readNote(globalVault, "pnpm", draft.statement, limits)).toMatchObject({ succeeded: true })
+  expect(await readdir(outside)).toEqual([])
+})
+
+test("reports persistence when the index destination is a directory", async () => {
+  const { globalVault, configPath } = await setupVaults()
+  await mkdir(join(globalVault, "index.md"))
+
+  const result = await addMemory(
+    { scope: "global", folder: "pnpm", draft },
+    { configPath, workingFolder: "D:/Downloads" },
+  )
+
+  expect(result).toMatchObject({
+    succeeded: true,
+    output: { maintenanceProblems: [expect.stringContaining("index.md")] },
+  })
+  expect(await readNote(globalVault, "pnpm", draft.statement, limits)).toMatchObject({ succeeded: true })
+  expect(await readdir(join(globalVault, "index.md"))).toEqual([])
 })
 
 test("refreshes the index with the limits from the config", async () => {

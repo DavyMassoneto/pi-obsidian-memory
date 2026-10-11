@@ -1,17 +1,28 @@
+import { readFile } from "node:fs/promises"
+
 import { parseConfig } from "#/domain"
-import { readRawFile } from "#/services/vault"
-import { NOT_CONFIGURED_PROBLEM } from "./constants.ts"
 import type { ReadConfigResult } from "./types.ts"
 
 export async function readConfig(path: string): Promise<ReadConfigResult> {
-  const file = await readRawFile(path)
-  if (!file.succeeded) {
-    return { succeeded: false, reason: "not-configured", problems: [NOT_CONFIGURED_PROBLEM] }
+  let text: string
+  try {
+    text = await readFile(path, "utf8")
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return {
+        succeeded: false,
+        reason: "not-configured",
+        configPath: path,
+        problems: ["memory is not configured"],
+      }
+    }
+
+    throw error
   }
 
-  const parsed = parseConfig(file.output.toString("utf8"))
+  const parsed = parseConfig(text)
   if (!parsed.succeeded) {
-    return { succeeded: false, reason: "invalid-config", problems: parsed.problems }
+    return { succeeded: false, reason: "invalid-config", configPath: path, problems: parsed.problems }
   }
 
   return parsed

@@ -1,26 +1,41 @@
-import type { AddMemoryResult, ExistingMemoryRefusal } from "#/usecases"
+import type { AddedMemory, AddMemoryResult, ExistingMemoryRefusal } from "#/usecases"
 import { NO_PROJECT_GUIDANCE, SAME_POINT_GUIDANCE } from "./constants.ts"
 import type { MemoryAddResponse } from "./types.ts"
 
 export function respondTo(result: AddMemoryResult): MemoryAddResponse {
   if (result.succeeded) {
-    return reply(`Saved in ${result.output.vaultName}: ${result.output.notePath}`, false)
+    return reply(describeSaved(result.output), false)
   }
 
-  if ("existing" in result) {
-    return reply(describeExisting(result), true)
+  switch (result.reason) {
+    case "exists":
+      if ("existing" in result) {
+        return reply(describeExisting(result), true)
+      }
+      return reply(result.problems.join("\n"), true)
+    case "invalid":
+      return reply(
+        ["Not saved. Fix and call again:", ...result.problems.map((problem) => `- ${problem}`)].join("\n"),
+        true,
+      )
+    case "no-project":
+      return reply([...result.problems, `Config: ${result.configPath}`, NO_PROJECT_GUIDANCE].join("\n"), true)
+    case "not-configured":
+    case "invalid-config":
+      return reply([...result.problems, `Ask the user to configure memory in ${result.configPath}.`].join("\n"), true)
+    case "not-directory":
+    case "not-readable":
+    case "not-writable":
+    case "outside-vault":
+    case "vault-missing":
+    case "not-found":
+      return reply(result.problems.join("\n"), true)
   }
+}
 
-  if (result.reason === "invalid") {
-    const lines = result.problems.map((problem) => `- ${problem}`)
-    return reply(["Not saved. Fix and call again:", ...lines].join("\n"), true)
-  }
-
-  if (result.reason === "no-project") {
-    return reply([...result.problems, NO_PROJECT_GUIDANCE].join("\n"), true)
-  }
-
-  return reply(result.problems.join("\n"), true)
+function describeSaved(memory: AddedMemory): string {
+  const warnings = memory.maintenanceProblems.map((problem) => `Maintenance warning: ${problem}`)
+  return [`Saved in ${memory.vaultName}: ${memory.notePath}`, ...warnings].join("\n")
 }
 
 function describeExisting(refusal: ExistingMemoryRefusal): string {

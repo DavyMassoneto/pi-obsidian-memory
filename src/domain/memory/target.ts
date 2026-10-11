@@ -1,4 +1,4 @@
-import { type MemoryConfig, resolveProject, vaultNameOf } from "#/domain"
+import { type MemoryConfig, resolveProject, vaultNameOf } from "#/domain/config"
 import type { MemoryScope, TargetVaultResult } from "./types.ts"
 
 export function targetVault(config: MemoryConfig, scope: MemoryScope, workingFolder: string): TargetVaultResult {
@@ -9,8 +9,12 @@ export function targetVault(config: MemoryConfig, scope: MemoryScope, workingFol
 
   const project = resolveProject(config, workingFolder)
   if (!project.succeeded) {
-    const problem = `${workingFolder} has no registered project: run /memory-init, or use the global scope`
-    return { succeeded: false, reason: "no-project", problems: [problem] }
+    return {
+      succeeded: false,
+      reason: "no-project",
+      workingFolder,
+      problems: [`${workingFolder} has no registered project`],
+    }
   }
 
   return { succeeded: true, output: { path: project.output.vault, name: vaultNameOf(project.output.vault) } }
