@@ -1,7 +1,8 @@
 import { checkMemoryFolder, checkNote, type Note } from "#/domain"
+import type { VaultContext } from "#/services/vault/context"
 import { resolveMemoryFolder } from "./memory-folder.ts"
 import { writeValidatedNote } from "./publish.ts"
-import type { CreateResult, VaultContext } from "./types.ts"
+import type { CreateResult } from "./types.ts"
 
 export async function createMemoryNote(vault: VaultContext, folder: string, note: Note): Promise<CreateResult> {
   const problems = [...checkMemoryFolder(folder), ...checkNote(note, vault.limits)]

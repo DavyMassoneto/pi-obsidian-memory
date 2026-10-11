@@ -1,14 +1,33 @@
-import type { InvalidNote, Note, NoteLimits, ParsedNote, PlacedNote, ProblemFolder, Succession } from "#/domain"
+import type {
+  InvalidNote,
+  Note,
+  ParsedNote,
+  PlacedNote,
+  ProblemFolder,
+  Succession,
+  VaultCatalogFailure,
+} from "#/domain"
 import type { Done, Failed, Succeeded } from "#/shared"
 
-export interface VaultContext {
-  path: string
-  limits: NoteLimits
+export interface UpdateFileRequest {
+  folder: string
+  fileName: string
+  note: Note
+  expectedHash: string
 }
 
-export interface NamedVaultContext extends VaultContext {
-  name: string
+export interface CompleteBlankRequest {
+  path: string
+  expectedHash: string
+  note: Note
+  confirmed: true
 }
+
+export interface BlankCompletionRefusal extends Failed {
+  reason: "not-blank" | "path-mismatch"
+}
+
+export type CompleteBlankResult = UpdateResult | BlankCompletionRefusal | VaultCatalogFailure
 
 export interface StoredNote {
   note: Note

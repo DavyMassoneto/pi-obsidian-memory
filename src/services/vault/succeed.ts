@@ -1,7 +1,8 @@
 import { checkMemoryFolder, succeedNote } from "#/domain"
+import type { NamedVaultContext } from "#/services/vault/context"
 import { resolveMemoryFolder } from "./memory-folder.ts"
 import { relocateNote } from "./relocate.ts"
-import type { NamedVaultContext, SucceedRequest, SuccessionResult } from "./types.ts"
+import type { SucceedRequest, SuccessionResult } from "./types.ts"
 
 export async function succeedStoredNote(vault: NamedVaultContext, request: SucceedRequest): Promise<SuccessionResult> {
   const problems = checkMemoryFolder(request.successor.folder)

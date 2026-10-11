@@ -1,5 +1,6 @@
 import { dirname, relative, sep } from "node:path"
 
+import type { NamedVaultContext } from "#/services/vault/context"
 import { linkStatOf } from "#/services/vault/filesystem"
 import { noteFileName } from "./paths.ts"
 import { writeValidatedNote } from "./publish.ts"
@@ -7,7 +8,6 @@ import { refreshFolders } from "./refresh-folders.ts"
 import { checkRelocation, removeOriginal } from "./relocation-checks.ts"
 import { resolveFile, resolveFolder } from "./resolve.ts"
 import type {
-  NamedVaultContext,
   PartialRelocation,
   RelocationProgress,
   RelocationRequest,

@@ -1,9 +1,10 @@
 import { parseNote, validateNote } from "#/domain"
+import type { VaultContext } from "#/services/vault/context"
 import { hashOf, readRawFile } from "#/services/vault/filesystem"
 import { displayNotePath } from "./display.ts"
 import { noteFileName } from "./paths.ts"
 import { resolveFile } from "./resolve.ts"
-import type { ReadNoteResult, VaultContext } from "./types.ts"
+import type { ReadNoteResult } from "./types.ts"
 
 export async function readNote(vault: VaultContext, folder: string, statement: string): Promise<ReadNoteResult> {
   const path = await resolveFile(vault.path, folder, noteFileName(statement))

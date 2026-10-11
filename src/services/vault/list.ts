@@ -1,11 +1,12 @@
 import type { Dirent } from "node:fs"
 
 import { ARCHIVE_FOLDER, joinVaultPath, TEMPLATES_FOLDER } from "#/domain"
+import type { VaultContext } from "#/services/vault/context"
 import { directoryEntriesOf, linkStatOf } from "#/services/vault/filesystem"
 import { FOLDER_INDEX_FILE_NAME, NOTE_EXTENSION } from "./constants.ts"
 import { readNote } from "./read.ts"
 import { resolveFile, resolveFolder } from "./resolve.ts"
-import type { FolderListing, ListResult, ReadNoteResult, VaultContext } from "./types.ts"
+import type { FolderListing, ListResult, ReadNoteResult } from "./types.ts"
 
 export async function listFolder(vault: VaultContext, folder: string): Promise<ListResult> {
   const directory = await resolveFolder(vault.path, folder)

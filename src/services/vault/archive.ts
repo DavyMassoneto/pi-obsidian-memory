@@ -1,6 +1,7 @@
 import { archiveNote } from "#/domain"
+import type { NamedVaultContext } from "#/services/vault/context"
 import { relocateNote } from "./relocate.ts"
-import type { ArchiveRequest, NamedVaultContext, PlacedResult } from "./types.ts"
+import type { ArchiveRequest, PlacedResult } from "./types.ts"
 
 export async function archiveStoredNote(vault: NamedVaultContext, request: ArchiveRequest): Promise<PlacedResult> {
   const archived = archiveNote(request.note, request.today)

@@ -1,10 +1,11 @@
+import type { VaultContext } from "#/services/vault/context"
 import { findFileIgnoringCase } from "#/services/vault/filesystem"
 import { NOTE_EXTENSION } from "./constants.ts"
 import { displayNotePath } from "./display.ts"
 import { noteFileName } from "./paths.ts"
 import { readNote } from "./read.ts"
 import { resolveFolder } from "./resolve.ts"
-import type { ReadNoteResult, VaultContext } from "./types.ts"
+import type { ReadNoteResult } from "./types.ts"
 
 export async function findNote(vault: VaultContext, folder: string, statement: string): Promise<ReadNoteResult> {
   const directory = await resolveFolder(vault.path, folder)

@@ -1,10 +1,11 @@
 import { checkNote, type PlacedNote } from "#/domain"
+import type { VaultContext } from "#/services/vault/context"
 import { findFileIgnoringCase, hashOf, readRawFile, removeFile } from "#/services/vault/filesystem"
 import { displayNotePath } from "./display.ts"
 import { noteFileName } from "./paths.ts"
 import { refuseExisting, refuseWrite } from "./refusals.ts"
 import { resolveFile, resolveFolder } from "./resolve.ts"
-import type { CheckResult, RelocationRequest, RemovalResult, VaultContext } from "./types.ts"
+import type { CheckResult, RelocationRequest, RemovalResult } from "./types.ts"
 
 export async function checkRelocation(vault: VaultContext, request: RelocationRequest): Promise<CheckResult> {
   const unchanged = await checkUnchanged(vault.path, request.original, request.hashWhenRead)
