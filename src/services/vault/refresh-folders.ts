@@ -1,10 +1,11 @@
 import { ARCHIVE_FOLDER, ancestorFolders, type FolderContents, renderFolderIndex } from "#/domain"
+import type { NamedVaultContext } from "#/services/vault/context"
 import { findFileIgnoringCase, linkStatOf, writeAtomically } from "#/services/vault/filesystem"
 import { FOLDER_INDEX_FILE_NAME } from "./constants.ts"
 import { listFolder } from "./list.ts"
 import { refuseWrite } from "./refusals.ts"
 import { resolveFile, resolveFolder } from "./resolve.ts"
-import type { FolderListing, NamedVaultContext, RefreshResult } from "./types.ts"
+import type { FolderListing, RefreshResult } from "./types.ts"
 
 export async function refreshFolders(context: NamedVaultContext, folders: string[]): Promise<RefreshResult> {
   const ancestors = new Set(folders.flatMap(ancestorFolders))
