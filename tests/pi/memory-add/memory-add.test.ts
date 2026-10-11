@@ -1,3 +1,5 @@
+import { join } from "node:path"
+
 import { expect, test } from "vitest"
 
 import { memoryConfigPath } from "#/pi"
@@ -17,13 +19,13 @@ test.each([
   ["project", "loja", true],
   ["global", "Global memory", false],
 ] as const)("the registered execute maps %s scope and every draft field", async (scope, vaultName, dontForget) => {
-  const { agentDir, configPath } = await setupRegisteredMemoryAdd()
+  const { agentDir, configPath, projectFolder } = await setupRegisteredMemoryAdd()
   const { tools } = registerFakePiAt(agentDir, {})
   const tool = tools[0]
   if (!tool) {
     throw new Error("memory tool was not registered")
   }
-  const context = fakeToolContext("D:/Projects/loja/src")
+  const context = fakeToolContext(join(projectFolder, "src"))
 
   const input = { ...params, scope, dontForget }
   const response = await tool.execute("call-1", input, undefined, undefined, context)
@@ -55,17 +57,17 @@ test.each([
 })
 
 test("the registered execute translates refusals without hiding their cause", async () => {
-  const { agentDir } = await setupRegisteredMemoryAdd()
+  const { agentDir, unregisteredFolder } = await setupRegisteredMemoryAdd()
   const { tools } = registerFakePiAt(agentDir, {})
   const tool = tools[0]
   if (!tool) {
     throw new Error("memory tool was not registered")
   }
 
-  const response = await tool.execute("call-2", params, undefined, undefined, fakeToolContext("D:/Downloads"))
+  const response = await tool.execute("call-2", params, undefined, undefined, fakeToolContext(unregisteredFolder))
 
   expect(response.isError).toBe(true)
-  expect(textOf(response)).toContain("D:/Downloads has no registered project")
+  expect(textOf(response)).toContain(`${unregisteredFolder} has no registered project`)
   expect(textOf(response)).toContain(memoryConfigPath(agentDir))
   expect(textOf(response)).toContain("global scope")
 })

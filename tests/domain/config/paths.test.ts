@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { comparablePath, resolveProject, vaultNameOf } from "#/domain"
+import { comparablePath, isInside, pathsOverlap, resolveProject, vaultNameOf } from "#/domain"
 import { aConfig } from "#test-helpers"
 
 test.each([
@@ -18,6 +18,7 @@ test.each([
   ["C:/Users/Administrator/OneDrive/Obisidian/Global memory", "Global memory"],
   ["C:\\vaults\\loja", "loja"],
   ["C:/vaults/loja/", "loja"],
+  ["C:/", "C:"],
 ])("names the vault after its folder: %s", (path, name) => {
   expect(vaultNameOf(path)).toBe(name)
 })
@@ -31,6 +32,14 @@ test.each(["C:\\Vaults\\Memory\\", "c:/vaults/memory", "C:/VAULTS/Memory///"])(
 
 test("does not collapse distinct vault folder names", () => {
   expect(comparablePath("C:/vaults/memory-old")).not.toBe(comparablePath("C:/vaults/memory"))
+})
+
+test("root boundaries and dot segments do not evade containment", () => {
+  expect(isInside("C:/work/project", "C:/")).toBe(true)
+  expect(isInside("/work/project", "/")).toBe(true)
+  expect(isInside("C:/work-old", "C:/work")).toBe(false)
+  expect(pathsOverlap("C:/work/child/..", "c:\\work\\nested")).toBe(true)
+  expect(comparablePath("\\\\server\\share\\folder\\..")).toBe("//server/share")
 })
 
 test("finds a project registered with Windows separators", () => {

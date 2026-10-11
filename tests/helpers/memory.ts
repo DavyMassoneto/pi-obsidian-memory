@@ -2,22 +2,24 @@ import { copyFile, mkdir } from "node:fs/promises"
 import { dirname, join } from "node:path"
 
 import { memoryConfigPath } from "#/pi"
-import { aConfig, writeConfig } from "./config.ts"
+import { memoryConfigAt, writeConfig } from "./config.ts"
 import { useTempFolder } from "./temp-folder.ts"
 
 export async function setupVaults() {
   const root = await useTempFolder()
   const globalVault = join(root, "Global memory")
   const projectVault = join(root, "loja")
-  const config = {
-    ...aConfig(),
-    global: { vault: globalVault },
-    projects: [{ name: "loja", folder: "D:/Projects/loja", vault: projectVault }],
-  }
+  const config = memoryConfigAt(root)
+  const projectFolder = join(root, "work", "loja")
+  const unregisteredFolder = join(root, "work", "unregistered")
+
   await mkdir(globalVault)
   await mkdir(projectVault)
+  await mkdir(join(projectFolder, "src"), { recursive: true })
+  await mkdir(unregisteredFolder)
   const configPath = await writeConfig(root, config)
-  return { root, globalVault, projectVault, configPath }
+
+  return { root, globalVault, projectVault, configPath, config, projectFolder, unregisteredFolder }
 }
 
 export async function setupRegisteredMemoryAdd() {

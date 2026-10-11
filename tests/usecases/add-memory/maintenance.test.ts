@@ -15,14 +15,14 @@ const draft = {
 }
 
 test("reports a saved note and the true maintenance cause when the index points outside", async () => {
-  const { root, globalVault, configPath } = await setupVaults()
+  const { root, globalVault, configPath, unregisteredFolder } = await setupVaults()
   const outside = join(root, "outside")
   await mkdir(outside)
   await linkFolder(outside, join(globalVault, "index.md"))
 
   const result = await addMemory(
     { scope: "global", folder: "pnpm", draft },
-    { configPath, workingFolder: "D:/Downloads" },
+    { configPath, workingFolder: unregisteredFolder },
   )
 
   expect(result).toMatchObject({
@@ -36,12 +36,12 @@ test("reports a saved note and the true maintenance cause when the index points 
 })
 
 test("reports persistence when the index destination is a directory", async () => {
-  const { globalVault, configPath } = await setupVaults()
+  const { globalVault, configPath, unregisteredFolder } = await setupVaults()
   await mkdir(join(globalVault, "index.md"))
 
   const result = await addMemory(
     { scope: "global", folder: "pnpm", draft },
-    { configPath, workingFolder: "D:/Downloads" },
+    { configPath, workingFolder: unregisteredFolder },
   )
 
   expect(result).toMatchObject({
