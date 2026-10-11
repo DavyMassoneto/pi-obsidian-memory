@@ -2,8 +2,9 @@
 
 One local JSON file on the machine, outside the vaults (`~/.pi/agent/pi-obsidian-memory/config.json`). The user can
 edit it by hand. Strict reading, repair drafts, registration proposals and guarded publication are implemented as
-resources. `/memory-setup` and `/memory-init` are planned commands, not currently registered. Preparing settings does
-not execute models, download anything, look up credentials or collect consent.
+resources. Registration usecases now prepare settings and bootstrap the selected vault before publishing config last.
+`/memory-setup` and `/memory-init` are planned commands, not currently registered. Preparing settings does not execute
+models, download anything, look up credentials or collect consent.
 
 ## Complete format
 
@@ -100,7 +101,11 @@ reading, repairing, proposing or publishing configuration.
   and registrations and refuse unresolved values. Publication validates again and checks the expected snapshot hash.
 - Setup proposals change only the global vault registration. Init proposals add a project or repoint the most
   specific matching project, retaining its original working-folder mapping. Both preserve all settings. Repointing
-  does not copy, move or delete the old vault. Command orchestration and vault creation remain future work.
+  does not copy, move or delete the old vault. Registration usecases create missing target assets without replacing
+  existing templates or dashboard edits. Setup requires caller-supplied disclosure confirmation; consent UI remains
+  future work. Preparation creates nothing. Failed bootstrap or publication retains created assets and reports progress,
+  not rollback. A session lease serializes local registration; external hash/path check-use windows remain. Cancellation
+  stops before the next resource write, not one already started; successful config publication remains success.
 - Vault paths must not be equal or nested across registrations; the global and project layers must not mix. Resource
   validation also checks physical aliases and keeps configuration/index infrastructure outside vaults.
 - A vault is named after its folder (`.../Global memory` is "Global memory").

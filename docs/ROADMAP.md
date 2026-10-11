@@ -24,9 +24,11 @@ Every milestone:
   rather than disguising them as I/O failures.
 - pi sets `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` for its own process.
 - The complete product config is read strictly, and a folder is matched to its project. Config resources provide
-  snapshots, repair drafts, setting-preserving setup/init proposals and guarded publication. There are no setup/init
-  commands or registration usecases yet. Setup-only defaults require an explicitly supplied chat model; old incomplete
-  files are invalid at runtime, never silently migrated.
+  snapshots, repair drafts, setting-preserving setup/init proposals and guarded publication. Registration usecases
+  prepare settings without writes and bootstrap only the selected global/project target before guarded config-last
+  publication, retaining partial asset progress on failure. Setup/init commands and consent UI are not wired; milestone
+  1 remains incomplete. Setup-only defaults require an explicitly supplied chat model; old incomplete files are invalid
+  at runtime, never silently migrated.
 - Embedding, decision-model and bounded capture/retrieval model resources exist, but these settings do not connect
   them to product operations or prove live-provider/local-inference availability. Disclosures and consent UI remain
   unimplemented; registration and later milestones are not complete.

@@ -14,6 +14,11 @@ export interface ConfigLocation {
   path: string
 }
 
+export interface RegistrationVaultInput {
+  vault: string
+  workingFolder: string
+}
+
 export interface MissingConfigSnapshot {
   state: "missing"
   hash: null

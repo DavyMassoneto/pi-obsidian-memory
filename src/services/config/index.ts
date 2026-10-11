@@ -1,6 +1,7 @@
 export * from "./canonicalize.ts"
 export * from "./read.ts"
 export * from "./registration.ts"
+export * from "./resolve-input.ts"
 export * from "./snapshot.ts"
 export * from "./target.ts"
 export * from "./types.ts"

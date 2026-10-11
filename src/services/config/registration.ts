@@ -10,3 +10,4 @@ export type {
   SetupProposal,
 } from "#/domain"
 export { inspectConfigForRepair, prepareSetupDefaults, proposeInit, proposeSetup, resolveProject } from "#/domain"
+export { checkConfigSnapshot } from "./publication.ts"
