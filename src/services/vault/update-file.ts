@@ -4,9 +4,14 @@ import { hashOf, readRawFile, writeAtomically } from "#/services/vault/filesyste
 import { displayNotePath } from "./display.ts"
 import { refuseWrite } from "./refusals.ts"
 import { resolveFile } from "./resolve.ts"
-import type { UpdateFileRequest, UpdateResult } from "./types.ts"
+import { resolveStoredFile } from "./resolve-stored-file.ts"
+import type { ResolveResult, UpdateFileRequest, UpdateResult } from "./types.ts"
 
-export async function updateNoteFile(vault: VaultContext, request: UpdateFileRequest): Promise<UpdateResult> {
+export async function updateNoteFile(
+  vault: VaultContext,
+  request: UpdateFileRequest,
+  exactPath?: string,
+): Promise<UpdateResult> {
   const { folder, fileName, note, expectedHash } = request
   const problems = [...checkNote(note, vault.limits), ...checkFileName(fileName)]
   if (fileName.slice(-3).toLowerCase() !== ".md" || fileName.slice(0, -3) !== note.statement) {
@@ -16,7 +21,7 @@ export async function updateNoteFile(vault: VaultContext, request: UpdateFileReq
     return { succeeded: false, reason: "invalid", problems }
   }
 
-  const path = await resolveFile(vault.path, folder, fileName)
+  const path = await resolveUpdatePath(vault.path, request, exactPath)
   if (!path.succeeded) {
     return path
   }
@@ -41,4 +46,13 @@ export async function updateNoteFile(vault: VaultContext, request: UpdateFileReq
     result.maintenanceProblems = written.maintenanceProblems
   }
   return result
+}
+
+async function resolveUpdatePath(
+  vault: string,
+  request: UpdateFileRequest,
+  exactPath: string | undefined,
+): Promise<ResolveResult> {
+  if (typeof exactPath === "string") return resolveStoredFile(vault, exactPath, request.note.statement)
+  return resolveFile(vault, request.folder, request.fileName)
 }

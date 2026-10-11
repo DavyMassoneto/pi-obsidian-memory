@@ -4,11 +4,12 @@ import { findFileIgnoringCase, hashOf, readRawFile, removeFile } from "#/service
 import { displayNotePath } from "./display.ts"
 import { noteFileName } from "./paths.ts"
 import { refuseExisting, refuseWrite } from "./refusals.ts"
-import { resolveFile, resolveFolder } from "./resolve.ts"
-import type { CheckResult, RelocationRequest, RemovalResult } from "./types.ts"
+import { resolveFolder } from "./resolve.ts"
+import { resolveOriginalFile } from "./resolve-stored-file.ts"
+import type { CheckResult, FileRelocationRequest, RemovalResult } from "./types.ts"
 
-export async function checkRelocation(vault: VaultContext, request: RelocationRequest): Promise<CheckResult> {
-  const unchanged = await checkUnchanged(vault.path, request.original, request.hashWhenRead)
+export async function checkRelocation(vault: VaultContext, request: FileRelocationRequest): Promise<CheckResult> {
+  const unchanged = await checkUnchanged(vault.path, request)
   if (!unchanged.succeeded) {
     return unchanged
   }
@@ -27,12 +28,12 @@ export async function checkRelocation(vault: VaultContext, request: RelocationRe
   return { succeeded: true }
 }
 
-async function checkUnchanged(vault: string, placed: PlacedNote, hashWhenRead: string): Promise<CheckResult> {
-  const path = await resolveFile(vault, placed.folder, noteFileName(placed.note.statement))
+async function checkUnchanged(vault: string, request: FileRelocationRequest): Promise<CheckResult> {
+  const path = await resolveOriginalFile(vault, request)
   if (!path.succeeded) {
     return path
   }
-  return checkHash(path.output, placed, hashWhenRead)
+  return checkHash(path.output, request.original, request.hashWhenRead)
 }
 
 async function checkHash(path: string, placed: PlacedNote, hashWhenRead: string): Promise<CheckResult> {
@@ -63,9 +64,9 @@ async function checkFree(vault: string, placed: PlacedNote): Promise<CheckResult
   return { succeeded: true }
 }
 
-export async function removeOriginal(vault: string, request: RelocationRequest): Promise<RemovalResult> {
+export async function removeOriginal(vault: string, request: FileRelocationRequest): Promise<RemovalResult> {
   const { original, hashWhenRead } = request
-  const path = await resolveFile(vault, original.folder, noteFileName(original.note.statement))
+  const path = await resolveOriginalFile(vault, request)
   if (!path.succeeded) {
     return path
   }

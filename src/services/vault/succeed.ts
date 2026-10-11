@@ -2,9 +2,24 @@ import { checkMemoryFolder, succeedNote } from "#/domain"
 import type { NamedVaultContext } from "#/services/vault/context"
 import { resolveMemoryFolder } from "./memory-folder.ts"
 import { relocateNote } from "./relocate.ts"
-import type { SucceedRequest, SuccessionResult } from "./types.ts"
+import type { ExactSucceedRequest, SucceedRequest, SuccessionResult } from "./types.ts"
 
 export async function succeedStoredNote(vault: NamedVaultContext, request: SucceedRequest): Promise<SuccessionResult> {
+  return succeedOriginal(vault, request, null)
+}
+
+export async function succeedStoredFile(
+  vault: NamedVaultContext,
+  request: ExactSucceedRequest,
+): Promise<SuccessionResult> {
+  return succeedOriginal(vault, request, request.path)
+}
+
+async function succeedOriginal(
+  vault: NamedVaultContext,
+  request: SucceedRequest,
+  originalPath: string | null,
+): Promise<SuccessionResult> {
   const problems = checkMemoryFolder(request.successor.folder)
   if (problems.length > 0) {
     return { succeeded: false, reason: "invalid", problems }
@@ -18,6 +33,7 @@ export async function succeedStoredNote(vault: NamedVaultContext, request: Succe
   const succession = succeedNote(request.previous, request.successor, request.today)
   const relocated = await relocateNote(vault, {
     original: request.previous,
+    originalPath,
     hashWhenRead: request.hashWhenRead,
     written: [succession.archived, succession.successor],
   })

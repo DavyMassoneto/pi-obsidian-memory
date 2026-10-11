@@ -2,20 +2,23 @@ import { dirname, relative, sep } from "node:path"
 
 import type { NamedVaultContext } from "#/services/vault/context"
 import { linkStatOf } from "#/services/vault/filesystem"
-import { noteFileName } from "./paths.ts"
 import { writeValidatedNote } from "./publish.ts"
 import { refreshFolders } from "./refresh-folders.ts"
 import { checkRelocation, removeOriginal } from "./relocation-checks.ts"
-import { resolveFile, resolveFolder } from "./resolve.ts"
+import { resolveFolder } from "./resolve.ts"
+import { resolveOriginalFile } from "./resolve-stored-file.ts"
 import type {
+  FileRelocationRequest,
   PartialRelocation,
   RelocationProgress,
-  RelocationRequest,
   RelocationResult,
   RelocationWriteResult,
 } from "./types.ts"
 
-export async function relocateNote(vault: NamedVaultContext, request: RelocationRequest): Promise<RelocationResult> {
+export async function relocateNote(
+  vault: NamedVaultContext,
+  request: FileRelocationRequest,
+): Promise<RelocationResult> {
   const checked = await checkRelocation(vault, request)
   if (!checked.succeeded) {
     return checked
@@ -63,7 +66,7 @@ export async function relocateNote(vault: NamedVaultContext, request: Relocation
 
 async function writeAndRemove(
   vault: string,
-  request: RelocationRequest,
+  request: FileRelocationRequest,
   progress: RelocationProgress,
 ): Promise<RelocationWriteResult> {
   for (const placed of request.written) {
@@ -90,7 +93,7 @@ async function writeAndRemove(
 
 async function partialOutcome(
   vault: string,
-  request: RelocationRequest,
+  request: FileRelocationRequest,
   progress: RelocationProgress,
   cause: PartialRelocation["cause"],
 ): Promise<PartialRelocation> {
@@ -104,10 +107,12 @@ async function partialOutcome(
   }
 }
 
-async function originalState(vault: string, request: RelocationRequest): Promise<PartialRelocation["originalState"]> {
+async function originalState(
+  vault: string,
+  request: FileRelocationRequest,
+): Promise<PartialRelocation["originalState"]> {
   try {
-    const original = request.original
-    const path = await resolveFile(vault, original.folder, noteFileName(original.note.statement))
+    const path = await resolveOriginalFile(vault, request)
     if (!path.succeeded) {
       return "unknown"
     }

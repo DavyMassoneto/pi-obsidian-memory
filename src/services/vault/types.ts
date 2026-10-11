@@ -9,6 +9,17 @@ import type {
 } from "#/domain"
 import type { Done, Failed, Succeeded } from "#/shared"
 
+export interface ExactUpdateRequest {
+  path: string
+  note: Note
+  expectedHash: string
+}
+
+export interface StoredFilePath {
+  folder: string
+  fileName: string
+}
+
 export interface UpdateFileRequest {
   folder: string
   fileName: string
@@ -51,11 +62,23 @@ export interface ArchiveRequest {
   today: string
 }
 
+export interface ExactArchiveRequest extends ArchiveRequest {
+  path: string
+}
+
 export interface SucceedRequest {
   previous: PlacedNote
   hashWhenRead: string
   successor: PlacedNote
   today: string
+}
+
+export interface ExactSucceedRequest extends SucceedRequest {
+  path: string
+}
+
+export interface FileRelocationRequest extends RelocationRequest {
+  originalPath: string | null
 }
 
 export interface RelocationRequest {
