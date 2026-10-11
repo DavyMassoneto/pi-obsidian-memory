@@ -1,4 +1,4 @@
-import { catalogFileKind, isCatalogHidden, isRootArchive, isRootTemplate } from "#/domain"
+import { catalogFileKind, isCatalogHidden, isCatalogNotePath, isRootArchive, isRootTemplate } from "#/domain"
 import { catalogFailure } from "./failures.ts"
 import { resolveCatalogEntry } from "./resolve.ts"
 import type { CatalogWalk, ResolvedCatalogEntry } from "./types.ts"
@@ -11,6 +11,8 @@ export async function visitCatalogEntry(walk: CatalogWalk, path: string): Promis
   }
 
   const entry = result.output
+  if (entry.kind === "directory" && isCatalogHidden(path)) return
+
   if (entry.canonicalPath !== path) {
     recordAlias(walk, path, entry)
     return
@@ -47,7 +49,8 @@ function recordAlias(walk: CatalogWalk, path: string, entry: ResolvedCatalogEntr
     )
     return
   }
-  if (isCatalogHidden(target)) {
+  const memoryNote = walk.mode === "memory" && entry.kind === "file" && isCatalogNotePath(target)
+  if (isCatalogHidden(target) && !memoryNote) {
     walk.inventory.failures.push(
       catalogFailure({ path, scope: "entry", reason: "excluded", problem: "Alias leads to a hidden path" }),
     )

@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises"
 
-import { catalogFileKind, isCatalogHidden, type VaultEnumerationResult } from "#/domain"
+import { catalogFileKind, isCatalogHidden, isCatalogNotePath, type VaultEnumerationResult } from "#/domain"
 import type { VaultContext } from "#/services/vault/context"
 import { catalogIoFailure } from "./failures.ts"
 import { resolveCatalogEntry, resolveCatalogRoot } from "./resolve.ts"
@@ -52,5 +52,5 @@ async function enumerateDirectory(walk: CatalogWalk, folder: string): Promise<vo
 function skipEntry(walk: CatalogWalk, path: string, directory: boolean): boolean {
   if (walk.mode === "export") return isCatalogHidden(path) || catalogFileKind(path) === "temporary"
   if (directory) return isCatalogHidden(path)
-  return isCatalogHidden(path) && catalogFileKind(path) !== "temporary"
+  return isCatalogHidden(path) && !isCatalogNotePath(path) && catalogFileKind(path) !== "temporary"
 }

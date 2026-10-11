@@ -33,6 +33,26 @@ test("retains exact byte hash and stat while parsed invalid names and bodies rem
   expect(await readFile(join(vault.path, "[bad].md"), "utf8")).toBe(text)
 })
 
+test("inspects dot Markdown files and the empty statement without admitting hidden parents or directories", async () => {
+  const vault = await catalogVault()
+  const text = noteText(validFrontmatterLines(), "kept")
+  for (const path of [".Rule.md", ".md", ".hidden/Note.md", ".Directory.md/Note.md"]) {
+    await putCatalogFile(vault, path, text)
+  }
+  expect(await inspectVaultFile(vault, { path: ".Rule.md" })).toMatchObject({
+    succeeded: true,
+    output: { text, analysis: { searchable: true, needsFixing: false, parsed: { statement: ".Rule" } } },
+  })
+  expect(await inspectVaultFile(vault, { path: ".md" })).toMatchObject({
+    succeeded: true,
+    output: { text, analysis: { searchable: true, needsFixing: true, nameProblems: ["statement: is empty"] } },
+  })
+  for (const path of [".hidden/Note.md", ".Directory.md", ".Directory.md/Note.md"]) {
+    expect(await inspectVaultFile(vault, { path })).toMatchObject({ succeeded: false, reason: "excluded" })
+  }
+  expect(await readFile(join(vault.path, ".Rule.md"), "utf8")).toBe(text)
+})
+
 test("invalid and unclosed frontmatter stay inspectable but not searchable; all problems survive", async () => {
   const vault = await catalogVault()
   await putCatalogFile(vault, "bad.md", noteText([...validFrontmatterLines(), "unknown: x"], ""))

@@ -1,7 +1,55 @@
+import { mkdir, rm, stat } from "node:fs/promises"
+import { join } from "node:path"
+
 import { expect, test } from "vitest"
 
-import { applyIndexChanges, readIndexInventory, searchCatalog } from "#/services"
-import { catalogChanges, catalogEntry, changeIndexFile, holdIndexLock, useIndexFile } from "#test-helpers"
+import { applyIndexChanges, enumerateVault, readIndexInventory, reconcileCatalog, searchCatalog } from "#/services"
+import {
+  catalogChanges,
+  catalogEntry,
+  catalogVault,
+  changeIndexFile,
+  holdIndexLock,
+  noteText,
+  putCatalogFile,
+  useIndexFile,
+  validFrontmatterLines,
+} from "#test-helpers"
+
+test("real vault directory replacement removes a cached note using actual enumeration coverage", async () => {
+  const vault = await catalogVault()
+  const { index } = await useIndexFile()
+  const entry = catalogEntry("tools/First.md")
+  await putCatalogFile(vault, entry.path, noteText(validFrontmatterLines(), "Install packages with pnpm."))
+  expect(applyIndexChanges(index, catalogChanges([entry], 0))).toEqual({ succeeded: true })
+  expect(searchCatalog(index, { query: "pnpm", limit: 10 })).toMatchObject({
+    succeeded: true,
+    output: [{ path: entry.path }],
+  })
+  await rm(join(vault.path, entry.path))
+  await mkdir(join(vault.path, entry.path))
+  const enumeration = await enumerateVault(vault)
+  const inventory = readIndexInventory(index)
+  if (!enumeration.succeeded || !inventory.succeeded) throw new Error("Expected both resources")
+  expect(enumeration.output.failures).toEqual([])
+  const plan = reconcileCatalog(inventory.output, {
+    entries: [],
+    observedPaths: enumeration.output.observedPaths,
+    completeDirectories: enumeration.output.completeDirectories,
+    failedPaths: enumeration.output.failures.map((failure) => failure.path),
+    validationFingerprint: entry.validationFingerprint,
+    complete: true,
+  })
+  expect(plan.deletes).toEqual([entry.path])
+  expect(plan.touchedFolders).toEqual(["tools"])
+  expect(applyIndexChanges(index, plan)).toEqual({ succeeded: true })
+  expect(readIndexInventory(index)).toEqual({
+    succeeded: true,
+    output: { entries: [], revision: 2, population: "ready" },
+  })
+  expect(searchCatalog(index, { query: "pnpm", limit: 10 })).toEqual({ succeeded: true, output: [] })
+  expect((await stat(join(vault.path, entry.path))).isDirectory()).toBe(true)
+})
 
 test("stat-only changes leave the text index untouched", async () => {
   const { index, path } = await useIndexFile()

@@ -23,6 +23,11 @@ export function catalogFileKind(path: string): Exclude<VaultEntryKind, "folder">
   return "other"
 }
 
+export function isCatalogNotePath(path: string): boolean {
+  const parent = path.slice(0, path.lastIndexOf("/") + 1)
+  return !isCatalogHidden(parent) && catalogFileKind(path) === "note"
+}
+
 export function isSafeCatalogPath(path: string): boolean {
   return path.length > 0 && path.split("/").every(isSafeCatalogPart)
 }

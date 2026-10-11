@@ -13,6 +13,8 @@ test("export collects exact visible bytes including attachments, archive, templa
     ".obsidian/config.json",
     "folder/.hidden/file.md",
     ".secret",
+    ".Rule.md",
+    ".md",
     ".Memory.base.tmp-stale",
     ".Memory.base.tmp-directory/nested.md",
     ".a.md.tmp-123",

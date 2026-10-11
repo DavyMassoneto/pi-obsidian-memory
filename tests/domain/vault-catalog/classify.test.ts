@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { catalogFileKind, isCatalogHidden, isRootArchive, isRootTemplate } from "#/domain"
+import { catalogFileKind, isCatalogHidden, isCatalogNotePath, isRootArchive, isRootTemplate } from "#/domain"
 
 test("classifies reserved roots case-insensitively, but nested names are ordinary subjects", () => {
   expect(catalogFileKind("INDEX.MD")).toBe("index")
@@ -13,6 +13,16 @@ test("classifies reserved roots case-insensitively, but nested names are ordinar
   expect(isRootArchive("Archive/a.md")).toBe(true)
   expect(isRootArchive("topic/archive/a.md")).toBe(false)
   expect(isRootTemplate("_Templates")).toBe(true)
+})
+
+test("memory paths allow dot Markdown basenames but exclude hidden parents and reserved files", () => {
+  for (const path of [".md", ".Rule.md", "subject/.Rule.MD"]) {
+    expect(isCatalogNotePath(path)).toBe(true)
+  }
+  for (const path of [".hidden/Rule.md", ".Rule.md/Note.md", "_templates/.Rule.md", "index.md", ".a.md.tmp-1"]) {
+    expect(isCatalogNotePath(path)).toBe(false)
+  }
+  expect(isCatalogHidden("subject/.Rule.md")).toBe(true)
 })
 
 test("recognizes dashboard publication temporaries without treating ordinary hidden names as temporaries", () => {

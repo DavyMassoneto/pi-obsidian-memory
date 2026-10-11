@@ -109,6 +109,25 @@ test("dashboard publication leftovers are diagnostics while ordinary hidden file
   expect(await readFile(join(vault.path, temporary), "utf8")).toBe("unpublished dashboard")
 })
 
+test("inventories dot Markdown files without entering hidden or dot Markdown directories", async () => {
+  const vault = await catalogVault()
+  const text = noteText(validFrontmatterLines(), "kept")
+  for (const path of [".Rule.md", ".md", ".hidden/Note.md", ".Directory.md/Note.md"]) {
+    await putCatalogFile(vault, path, text)
+  }
+
+  const result = await enumerateVault(vault)
+  if (!result.succeeded) throw new Error("Expected enumeration")
+  expect(result.output.entries.map(({ path, kind }) => ({ path, kind }))).toEqual([
+    { path: ".md", kind: "note" },
+    { path: ".Rule.md", kind: "note" },
+  ])
+  expect(result.output.observedPaths.sort()).toEqual([".Rule.md", ".md"])
+  expect(result.output.completeDirectories).toEqual([""])
+  expect(result.output.failures).toEqual([])
+  expect(await readFile(join(vault.path, ".Rule.md"), "utf8")).toBe(text)
+})
+
 test("missing roots are refused without creation", async () => {
   const vault = await catalogVault()
   const missing = { ...vault, path: join(vault.path, "missing") }

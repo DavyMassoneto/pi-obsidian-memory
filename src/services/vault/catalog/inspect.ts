@@ -1,8 +1,7 @@
 import {
   analyzeVaultNote,
-  catalogFileKind,
   type InspectedVaultFile,
-  isCatalogHidden,
+  isCatalogNotePath,
   isRootArchive,
   type VaultExportFile,
   type VaultFileRequest,
@@ -19,7 +18,7 @@ export async function inspectVaultFile(vault: VaultContext, request: VaultFileRe
   const resolved = await resolveCatalogEntry({ root: root.output, path: request.path })
   if (!resolved.succeeded) return resolved
   const canonicalPath = resolved.output.canonicalPath
-  if ([request.path, canonicalPath].some((path) => isCatalogHidden(path) || catalogFileKind(path) !== "note")) {
+  if (resolved.output.kind !== "file" || ![request.path, canonicalPath].every(isCatalogNotePath)) {
     return catalogFailure({
       path: request.path,
       scope: "file",
