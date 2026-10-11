@@ -49,7 +49,7 @@ export interface RelocationRequest {
   vaultName: string
   original: PlacedNote
   hashWhenRead: string
-  written: PlacedNote[]
+  written: [PlacedNote, ...PlacedNote[]]
 }
 
 export interface ResolveRefusal extends Failed {
@@ -81,13 +81,13 @@ export interface RefreshRefusal extends Failed {
   reason: CreateRefusal["reason"] | "io-error"
 }
 
-export type LifecycleRefusal = UpdateRefusal | ExistingNoteRefusal | IoRefusal
-export type VaultRefusal = LifecycleRefusal
+export type LifecycleRefusal = UpdateRefusal | ExistingNoteRefusal
+export type VaultRefusal = LifecycleRefusal | IoRefusal
 export type VaultFailureReason = VaultRefusal["reason"]
 
 export interface PartialRelocation extends Failed {
   reason: "partial"
-  cause: LifecycleRefusal
+  cause: LifecycleRefusal | IoRefusal
   written: PlacedNote[]
   originalState: "present" | "missing" | "unknown"
 }

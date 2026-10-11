@@ -5,13 +5,7 @@ import { writeValidatedNote } from "./publish.ts"
 import { refreshFolders } from "./refresh-folders.ts"
 import { checkRelocation, removeOriginal } from "./relocation-checks.ts"
 import { resolveFile } from "./resolve.ts"
-import type {
-  LifecycleRefusal,
-  PartialRelocation,
-  RelocationProgress,
-  RelocationRequest,
-  RelocationResult,
-} from "./types.ts"
+import type { PartialRelocation, RelocationProgress, RelocationRequest, RelocationResult } from "./types.ts"
 
 export async function relocateNote(request: RelocationRequest, limits: NoteLimits): Promise<RelocationResult> {
   const checked = await checkRelocation(request, limits)
@@ -39,7 +33,10 @@ export async function relocateNote(request: RelocationRequest, limits: NoteLimit
 async function writeAndRemove(request: RelocationRequest, progress: RelocationProgress): Promise<RelocationResult> {
   for (const placed of request.written) {
     const created = await writeValidatedNote(request.vault, placed.folder, placed.note)
-    if (!created.succeeded) return partialOutcome(request, progress, created)
+    if (!created.succeeded) {
+      if (progress.written.length === 0) return created
+      return partialOutcome(request, progress, created)
+    }
     progress.written.push(placed)
     if (created.maintenanceProblems) progress.maintenanceProblems.push(...created.maintenanceProblems)
   }
@@ -51,9 +48,8 @@ async function writeAndRemove(request: RelocationRequest, progress: RelocationPr
 async function partialOutcome(
   request: RelocationRequest,
   progress: RelocationProgress,
-  cause: LifecycleRefusal,
-): Promise<RelocationResult> {
-  if (progress.written.length === 0) return cause
+  cause: PartialRelocation["cause"],
+): Promise<PartialRelocation> {
   return {
     succeeded: false,
     reason: "partial",
