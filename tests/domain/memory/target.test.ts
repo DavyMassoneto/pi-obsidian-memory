@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { targetVault } from "#/services"
+import { targetVault } from "#/domain"
 import { aConfig } from "#test-helpers"
 
 test("targets the global vault for the global scope, wherever pi runs", () => {
@@ -17,10 +17,11 @@ test("targets the vault of the project pi runs in", () => {
   })
 })
 
-test("refuses the project scope in a folder with no registered project", () => {
+test("refuses an unregistered project with its working folder, without UI instructions", () => {
   expect(targetVault(aConfig(), "project", "D:/Downloads")).toEqual({
     succeeded: false,
     reason: "no-project",
-    problems: ["D:/Downloads has no registered project: run /memory-init, or use the global scope"],
+    workingFolder: "D:/Downloads",
+    problems: ["D:/Downloads has no registered project"],
   })
 })

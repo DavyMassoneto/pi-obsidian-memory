@@ -1,14 +1,17 @@
 import {
   createMemoryNote,
   displayNotePath,
-  findNote,
+  type ExistingNoteRefusal,
   newNote,
+  newNoteId,
   type ReadNoteResult,
   readConfig,
+  readNote,
   refreshIndexes,
   targetVault,
-  type VaultRefusal,
+  today,
 } from "#/services"
+import { maintenanceProblemsOf } from "./maintenance.ts"
 import type { AddMemoryRequest, AddMemoryResult, MemoryContext } from "./types.ts"
 
 export async function addMemory(request: AddMemoryRequest, context: MemoryContext): Promise<AddMemoryResult> {
@@ -19,14 +22,14 @@ export async function addMemory(request: AddMemoryRequest, context: MemoryContex
 
   const target = targetVault(config.output, request.scope, context.workingFolder)
   if (!target.succeeded) {
-    return target
+    return { ...target, configPath: context.configPath }
   }
 
   const { path, name } = target.output
   const { limits } = config.output
-  const created = await createMemoryNote(path, request.folder, newNote(request.draft), limits)
+  const created = await createMemoryNote(path, request.folder, newNote(request.draft, newNoteId(), today()), limits)
   if (!created.succeeded && created.reason === "exists") {
-    const existing = await findNote(path, request.folder, request.draft.statement, limits)
+    const existing = await readNote(path, request.folder, created.existingStatement, limits)
     return refuseExisting(created, existing)
   }
 
@@ -35,18 +38,18 @@ export async function addMemory(request: AddMemoryRequest, context: MemoryContex
   }
 
   const refreshed = await refreshIndexes(path, request.folder, name, limits)
-  if (!refreshed.succeeded) {
-    return { succeeded: false, reason: "not-writable", problems: refreshed.problems }
-  }
-
+  const maintenanceProblems = [...maintenanceProblemsOf(created), ...maintenanceProblemsOf(refreshed)]
   const notePath = displayNotePath(request.folder, created.output.note.statement)
-  return { succeeded: true, output: { vaultName: name, folder: request.folder, notePath, stored: created.output } }
+  return {
+    succeeded: true,
+    output: { vaultName: name, folder: request.folder, notePath, stored: created.output, maintenanceProblems },
+  }
 }
 
-function refuseExisting(refusal: VaultRefusal, existing: ReadNoteResult): AddMemoryResult {
+function refuseExisting(refusal: ExistingNoteRefusal, existing: ReadNoteResult): AddMemoryResult {
   if (!existing.succeeded) {
     return refusal
   }
 
-  return { ...refusal, reason: "exists", existing: existing.output }
+  return { succeeded: false, reason: "exists", problems: refusal.problems, existing: existing.output }
 }

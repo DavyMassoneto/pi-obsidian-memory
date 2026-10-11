@@ -11,7 +11,7 @@ test("registers the memory_add tool for explicit requests only", () => {
       description: "Use only when the user explicitly asks to remember something.",
     }),
   ])
-  expect(events).toEqual(["session_start"])
+  expect(events).toEqual([])
 })
 
 test("turns off Claude Code's own memory in pi's environment", () => {

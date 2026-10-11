@@ -1,48 +1,99 @@
-import { spawn } from "node:child_process"
-import { once } from "node:events"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 
+import { DefaultResourceLoader, type ExtensionToolContext, SettingsManager } from "@earendil-works/pi-coding-agent"
+
 import { type MemoryAddResponse, type MemoryAddTool, registerExtension } from "#/pi"
-import type { PiRun } from "./types.ts"
 
 const repoRoot = resolve(import.meta.dirname, "..", "..")
-const piCli = join(repoRoot, "node_modules", "@earendil-works", "pi-coding-agent", "dist", "cli.js")
-const killPiBeforeVitestTimeoutMs = 20_000
 
-export async function withIsolatedPi(run: PiRun): Promise<void> {
-  const isolatedAgentDir = await mkdtemp(join(tmpdir(), "pi-smoke-"))
-  const pi = spawn(
-    process.execPath,
-    [piCli, "--mode", "rpc", "--no-session", "--offline", "--no-extensions", "-e", repoRoot],
-    {
-      cwd: isolatedAgentDir,
-      env: { ...process.env, PI_CODING_AGENT_DIR: isolatedAgentDir },
-      timeout: killPiBeforeVitestTimeoutMs,
+export function registerWithFakePi(env: NodeJS.ProcessEnv) {
+  return registerFakePiAt(join("C:", "agent"), env)
+}
+
+export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
+  const tools: MemoryAddTool[] = []
+  const events: string[] = []
+  const commands: string[] = []
+
+  const registrar = {
+    registerTool: (tool: MemoryAddTool) => tools.push(tool),
+    on: (event: string) => events.push(event),
+    registerCommand: (name: string) => commands.push(name),
+  }
+  registerExtension(registrar, agentDir, env)
+
+  return { tools, events, commands }
+}
+
+export function fakeToolContext(cwd: string): ExtensionToolContext {
+  return {
+    cwd,
+    mode: "rpc",
+    hasUI: false,
+    model: undefined,
+    scopedModels: [],
+    signal: undefined,
+    tools: [],
+    get ui(): never {
+      throw new Error("Unexpected UI access")
     },
-  )
-  const exited = once(pi, "exit")
-  try {
-    await run(pi)
-  } finally {
-    pi.kill()
-    await exited
-    await rm(isolatedAgentDir, { recursive: true, force: true })
+    get sessionManager(): never {
+      throw new Error("Unexpected session access")
+    },
+    get modelRegistry(): never {
+      throw new Error("Unexpected model access")
+    },
+    isIdle: () => true,
+    isProjectTrusted: () => false,
+    abort: () => {
+      throw new Error("Unexpected abort")
+    },
+    hasPendingMessages: () => false,
+    shutdown: () => {
+      throw new Error("Unexpected shutdown")
+    },
+    getContextUsage: () => undefined,
+    compact: () => {
+      throw new Error("Unexpected compaction")
+    },
+    getSystemPrompt: () => "",
+    executeTool: () => {
+      throw new Error("Unexpected nested tool call")
+    },
   }
 }
 
-export function registerWithFakePi(env: NodeJS.ProcessEnv) {
-  const tools: MemoryAddTool[] = []
-  const events: string[] = []
-
-  registerExtension(
-    { registerTool: (tool) => tools.push(tool), on: (event) => events.push(event) },
-    join("C:", "agent"),
-    env,
-  )
-
-  return { tools, events }
+export async function loadIsolatedPiToolNames(): Promise<string[]> {
+  const isolatedAgentDir = await mkdtemp(join(tmpdir(), "pi-smoke-"))
+  const previousAutoMemory = process.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY
+  const loader = new DefaultResourceLoader({
+    cwd: isolatedAgentDir,
+    agentDir: isolatedAgentDir,
+    settingsManager: SettingsManager.inMemory(),
+    additionalExtensionPaths: [repoRoot],
+    noExtensions: true,
+    noSkills: true,
+    noPromptTemplates: true,
+    noThemes: true,
+    noContextFiles: true,
+  })
+  try {
+    await loader.reload()
+    const loaded = loader.getExtensions()
+    if (loaded.errors.length > 0) {
+      throw new Error(loaded.errors.map((error) => error.error).join("\n"))
+    }
+    return loaded.extensions.flatMap((extension) => [...extension.tools.keys()])
+  } finally {
+    if (typeof previousAutoMemory !== "string") {
+      delete process.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY
+    } else {
+      process.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY = previousAutoMemory
+    }
+    await rm(isolatedAgentDir, { recursive: true, force: true })
+  }
 }
 
 export function textOf(response: MemoryAddResponse): string {

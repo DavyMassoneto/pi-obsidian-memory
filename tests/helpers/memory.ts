@@ -1,11 +1,12 @@
-import { mkdir } from "node:fs/promises"
-import { join } from "node:path"
+import { copyFile, mkdir } from "node:fs/promises"
+import { dirname, join } from "node:path"
 
+import { memoryConfigPath } from "#/pi"
 import { aConfig, writeConfig } from "./config.ts"
-import { useTempVault } from "./vault.ts"
+import { useTempFolder } from "./search-index.ts"
 
 export async function setupVaults() {
-  const root = await useTempVault()
+  const root = await useTempFolder()
   const globalVault = join(root, "Global memory")
   const projectVault = join(root, "loja")
   const config = {
@@ -19,13 +20,10 @@ export async function setupVaults() {
   return { root, globalVault, projectVault, configPath }
 }
 
-export async function setupMemoryAdd() {
-  const root = await useTempVault()
-  const config = {
-    ...aConfig(),
-    global: { vault: join(root, "Global memory") },
-    projects: [],
-  }
-  await mkdir(config.global.vault)
-  return { root, context: { configPath: await writeConfig(root, config), workingFolder: "D:/Downloads" } }
+export async function setupRegisteredMemoryAdd() {
+  const vaults = await setupVaults()
+  const configPath = memoryConfigPath(vaults.root)
+  await mkdir(dirname(configPath))
+  await copyFile(vaults.configPath, configPath)
+  return { ...vaults, configPath, agentDir: vaults.root }
 }

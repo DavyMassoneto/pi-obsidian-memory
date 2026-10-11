@@ -14,6 +14,7 @@ export interface VaultTarget {
 
 export interface NoProjectRefusal extends Failed {
   reason: "no-project"
+  workingFolder: string
 }
 
 export type TargetVaultResult = Succeeded<VaultTarget> | NoProjectRefusal

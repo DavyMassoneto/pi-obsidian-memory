@@ -1,6 +1,6 @@
 import type { Static } from "typebox"
 
-import type { ConfigRefusal, NoProjectRefusal, StoredNote, VaultRefusal } from "#/services"
+import type { ConfigRefusal, CreateResult, NoProjectRefusal, StoredNote } from "#/services"
 import type { Failed, Succeeded } from "#/shared"
 import type { AddMemoryRequestSchema } from "./schemas.ts"
 
@@ -16,6 +16,11 @@ export interface AddedMemory {
   folder: string
   notePath: string
   stored: StoredNote
+  maintenanceProblems: string[]
+}
+
+export interface UnregisteredProjectRefusal extends NoProjectRefusal {
+  configPath: string
 }
 
 export interface ExistingMemoryRefusal extends Failed {
@@ -26,6 +31,6 @@ export interface ExistingMemoryRefusal extends Failed {
 export type AddMemoryResult =
   | Succeeded<AddedMemory>
   | ConfigRefusal
-  | NoProjectRefusal
-  | VaultRefusal
+  | UnregisteredProjectRefusal
+  | Extract<CreateResult, Failed>
   | ExistingMemoryRefusal

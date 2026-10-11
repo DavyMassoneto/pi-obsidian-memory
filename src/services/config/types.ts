@@ -5,6 +5,7 @@ export type ConfigFailureReason = "not-configured" | "invalid-config"
 
 export interface ConfigRefusal extends Failed {
   reason: ConfigFailureReason
+  configPath: string
 }
 
 export type ReadConfigResult = Succeeded<MemoryConfig> | ConfigRefusal
