@@ -1,6 +1,7 @@
 import { type NoteLimits, parseNote, validateNote } from "#/domain"
-import { hashOf, readRawFile } from "./files.ts"
-import { displayNotePath, noteFileName } from "./paths.ts"
+import { hashOf, readRawFile } from "#/services/vault/filesystem"
+import { displayNotePath } from "./display.ts"
+import { noteFileName } from "./paths.ts"
 import { resolveFile } from "./resolve.ts"
 import type { ReadNoteResult } from "./types.ts"
 
@@ -17,6 +18,7 @@ export async function readNote(
 
   const file = await readRawFile(path.output)
   if (!file.succeeded) {
+    if (file.reason !== "not-found") return file
     const problem = `${displayNotePath(folder, statement)} does not exist`
     return { succeeded: false, reason: "not-found", problems: [problem] }
   }

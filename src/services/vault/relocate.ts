@@ -1,117 +1,79 @@
-import { checkNote, type NoteLimits, type PlacedNote } from "#/domain"
-import { createNote } from "./create.ts"
-import { findFileIgnoringCase, hashOf, readRawFile, removeFile } from "./files.ts"
-import { displayNotePath, displayPath, noteFileName } from "./paths.ts"
-import { refreshIndexes } from "./refresh.ts"
-import { refuseNotWritable } from "./refusals.ts"
-import { resolveFile, resolveFolder } from "./resolve.ts"
-import type { CheckResult, RelocationRequest } from "./types.ts"
+import type { NoteLimits } from "#/domain"
+import { linkStatOf } from "#/services/vault/filesystem"
+import { noteFileName } from "./paths.ts"
+import { writeValidatedNote } from "./publish.ts"
+import { refreshFolders } from "./refresh-folders.ts"
+import { checkRelocation, removeOriginal } from "./relocation-checks.ts"
+import { resolveFile } from "./resolve.ts"
+import type {
+  LifecycleRefusal,
+  PartialRelocation,
+  RelocationProgress,
+  RelocationRequest,
+  RelocationResult,
+} from "./types.ts"
 
-export async function relocateNote(request: RelocationRequest, limits: NoteLimits): Promise<CheckResult> {
+export async function relocateNote(request: RelocationRequest, limits: NoteLimits): Promise<RelocationResult> {
   const checked = await checkRelocation(request, limits)
-  if (!checked.succeeded) {
-    return checked
+  if (!checked.succeeded) return checked
+  const progress: RelocationProgress = { written: [], maintenanceProblems: [] }
+  try {
+    const moved = await writeAndRemove(request, progress)
+    if (!moved.succeeded) return moved
+  } catch (error) {
+    if (progress.written.length === 0) throw error
+    let problem = "Lifecycle I/O failed after publishing notes"
+    if (error instanceof Error) problem = error.message
+    return partialOutcome(request, progress, { succeeded: false, reason: "io-error", problems: [problem] })
   }
+  const context = { path: request.vault, name: request.vaultName, limits }
+  const folders = [request.original.folder, ...request.written.map((placed) => placed.folder)]
+  const refreshed = await refreshFolders(context, folders)
+  if (!refreshed.succeeded) progress.maintenanceProblems.push(...refreshed.problems)
+  else if (refreshed.maintenanceProblems) progress.maintenanceProblems.push(...refreshed.maintenanceProblems)
+  if (progress.maintenanceProblems.length > 0)
+    return { succeeded: true, maintenanceProblems: progress.maintenanceProblems }
+  return { succeeded: true }
+}
 
+async function writeAndRemove(request: RelocationRequest, progress: RelocationProgress): Promise<RelocationResult> {
   for (const placed of request.written) {
-    const created = await createNote(request.vault, placed.folder, placed.note, limits)
-    if (!created.succeeded) {
-      return created
-    }
+    const created = await writeValidatedNote(request.vault, placed.folder, placed.note)
+    if (!created.succeeded) return partialOutcome(request, progress, created)
+    progress.written.push(placed)
+    if (created.maintenanceProblems) progress.maintenanceProblems.push(...created.maintenanceProblems)
   }
-
   const removed = await removeOriginal(request)
-  if (!removed.succeeded) {
-    return removed
-  }
-
-  return refreshFolders(request, limits)
-}
-
-async function checkRelocation(request: RelocationRequest, limits: NoteLimits): Promise<CheckResult> {
-  const unchanged = await checkUnchanged(request.vault, request.original, request.hashWhenRead)
-  if (!unchanged.succeeded) {
-    return unchanged
-  }
-
-  for (const placed of request.written) {
-    const problems = checkNote(placed.note, limits)
-    if (problems.length > 0) {
-      return { succeeded: false, reason: "invalid", problems }
-    }
-
-    const free = await checkFree(request.vault, placed)
-    if (!free.succeeded) {
-      return free
-    }
-  }
-
+  if (!removed.succeeded) return partialOutcome(request, progress, removed)
   return { succeeded: true }
 }
 
-async function checkUnchanged(vault: string, placed: PlacedNote, hashWhenRead: string): Promise<CheckResult> {
-  const path = await resolveFile(vault, placed.folder, noteFileName(placed.note.statement))
-  if (!path.succeeded) {
-    return path
+async function partialOutcome(
+  request: RelocationRequest,
+  progress: RelocationProgress,
+  cause: LifecycleRefusal,
+): Promise<RelocationResult> {
+  if (progress.written.length === 0) return cause
+  return {
+    succeeded: false,
+    reason: "partial",
+    cause,
+    problems: [...cause.problems, ...progress.maintenanceProblems],
+    written: progress.written,
+    originalState: await originalState(request),
   }
-
-  const current = await readRawFile(path.output)
-  if (!current.succeeded || hashOf(current.output) !== hashWhenRead) {
-    const problem = `${displayNotePath(placed.folder, placed.note.statement)} changed on disk since it was read`
-    return { succeeded: false, reason: "conflict", problems: [problem] }
-  }
-
-  return { succeeded: true }
 }
 
-async function checkFree(vault: string, placed: PlacedNote): Promise<CheckResult> {
-  const directory = await resolveFolder(vault, placed.folder)
-  if (!directory.succeeded) {
-    return directory
+async function originalState(request: RelocationRequest): Promise<PartialRelocation["originalState"]> {
+  try {
+    const original = request.original
+    const path = await resolveFile(request.vault, original.folder, noteFileName(original.note.statement))
+    if (!path.succeeded) return "unknown"
+    const stat = await linkStatOf(path.output)
+    if (stat.succeeded) return "present"
+    if (stat.reason === "not-found") return "missing"
+    return "unknown"
+  } catch {
+    return "unknown"
   }
-
-  const existing = await findFileIgnoringCase(directory.output, noteFileName(placed.note.statement))
-  if (existing.succeeded) {
-    return {
-      succeeded: false,
-      reason: "exists",
-      problems: [`${displayPath(placed.folder, existing.output)} already exists`],
-    }
-  }
-
-  return { succeeded: true }
-}
-
-async function removeOriginal(request: RelocationRequest): Promise<CheckResult> {
-  const { vault, original, hashWhenRead } = request
-
-  const unchanged = await checkUnchanged(vault, original, hashWhenRead)
-  if (!unchanged.succeeded) {
-    return unchanged
-  }
-
-  const path = await resolveFile(vault, original.folder, noteFileName(original.note.statement))
-  if (!path.succeeded) {
-    return path
-  }
-
-  const removed = await removeFile(path.output)
-  if (!removed.succeeded) {
-    return refuseNotWritable(original.folder, original.note.statement, removed.code)
-  }
-
-  return { succeeded: true }
-}
-
-async function refreshFolders(request: RelocationRequest, limits: NoteLimits): Promise<CheckResult> {
-  const folders = new Set([request.original.folder, ...request.written.map((placed) => placed.folder)])
-
-  for (const folder of folders) {
-    const refreshed = await refreshIndexes(request.vault, folder, request.vaultName, limits)
-    if (!refreshed.succeeded) {
-      return { succeeded: false, reason: "not-writable", problems: refreshed.problems }
-    }
-  }
-
-  return { succeeded: true }
 }

@@ -65,6 +65,7 @@ test("refuses when the successor's name is taken, changing nothing", async () =>
   expect(await succeedStoredNote(vault, "Global memory", request, limits)).toEqual({
     succeeded: false,
     reason: "exists",
+    existingStatement: decision.statement,
     problems: [`search/${decision.statement}.md already exists`],
   })
   expect(await readFile(file, "utf8")).toBe(before)

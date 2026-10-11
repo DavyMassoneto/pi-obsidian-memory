@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto"
-import { chmod, readdir, readFile, rm, writeFile } from "node:fs/promises"
+import { chmod, lstat, readdir, readFile, rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
@@ -9,6 +9,19 @@ import { readNote, updateNote } from "#/services"
 import { tryLinkFile, useTempVault, vaultWithNote } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
+
+test("updates an internal file alias target and preserves the alias", async (context) => {
+  const { vault, note, file, hash } = await vaultWithNote()
+  const alias = join(vault, "pnpm", "Alias.md")
+  if (!(await tryLinkFile(file, alias))) {
+    context.skip("this system cannot create file links")
+    return
+  }
+  const changed = { ...note, statement: "Alias", body: "Updated target" }
+  expect(await updateNote(vault, "pnpm", changed, hash, limits)).toMatchObject({ succeeded: true })
+  expect((await lstat(alias)).isSymbolicLink()).toBe(true)
+  expect(await readFile(file, "utf8")).toBe(renderNote(changed))
+})
 
 test("writes the new content when the file did not change since it was read", async () => {
   const { vault, note, file, hash } = await vaultWithNote()
