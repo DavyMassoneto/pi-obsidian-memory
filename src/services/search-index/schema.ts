@@ -20,6 +20,7 @@ export function initializeSchema(database: DatabaseSync): SchemaResult {
     if (rebuilt) {
       database.exec(REBUILD_SCHEMA_SQL)
     }
+    database.exec("INSERT INTO notes_fts(notes_fts, rank) VALUES ('integrity-check', 1)")
     database.exec("COMMIT")
     return { succeeded: true, output: rebuilt }
   } catch (error) {

@@ -1,12 +1,60 @@
 import type { Static } from "typebox"
 
+import type { CatalogChanges, CatalogSnapshot, VectorCache, VectorReplacement } from "#/domain"
 import type { Done, Failed, Succeeded } from "#/shared"
-import type { IndexEntrySchema, SearchHitSchema, SearchOptionsSchema } from "./schemas.ts"
+import type {
+  CatalogHitSchema,
+  CatalogRowSchema,
+  IndexEntrySchema,
+  SearchHitSchema,
+  SearchOptionsSchema,
+} from "./schemas.ts"
+
+export type {
+  CatalogChanges,
+  CatalogEntry,
+  CatalogPlan,
+  CatalogScan,
+  CatalogSnapshot,
+  SemanticContent,
+  VectorCache,
+  VectorChunk,
+  VectorGeneration,
+  VectorReplacement,
+} from "#/domain"
+export type CatalogHit = Static<typeof CatalogHitSchema>
+export type CatalogRow = Static<typeof CatalogRowSchema>
+export type InventoryResult = Succeeded<CatalogSnapshot> | SearchIndexRefusal
+export type CatalogSearchResult = Succeeded<CatalogHit[]> | SearchIndexRefusal
+export type VectorCacheResult = Succeeded<VectorCache> | SearchIndexRefusal
+
+export interface IndexLocation {
+  path: string
+}
+
+export interface IndexReplacement {
+  path: string
+  temporaryPath: string
+}
+
+export interface CatalogQuery {
+  query: string
+  limit: number
+}
+
+export interface CatalogWriteRow extends CatalogRow {
+  folder: string
+}
 
 export interface SearchIndex {
   put(entry: IndexEntry): IndexWriteResult
   remove(id: string): IndexWriteResult
   search(query: string, options: SearchOptions): SearchResult
+  inventory(): InventoryResult
+  apply(changes: CatalogChanges): IndexWriteResult
+  searchCatalog(request: CatalogQuery): CatalogSearchResult
+  vectors(): VectorCacheResult
+  replaceVectors(request: VectorReplacement): IndexWriteResult
   close(): IndexWriteResult
 }
 
@@ -17,7 +65,7 @@ export type IndexEntry = Static<typeof IndexEntrySchema>
 export type SearchOptions = Static<typeof SearchOptionsSchema>
 
 export interface SearchIndexRefusal extends Failed {
-  reason: "corrupted" | "unavailable" | "closed" | "invalid"
+  reason: "corrupted" | "unavailable" | "closed" | "invalid" | "conflict"
 }
 
 export interface OpenedIndex extends Succeeded<SearchIndex> {
@@ -32,4 +80,4 @@ export type IndexWriteResult = Done | SearchIndexRefusal
 
 export type SchemaResult = Succeeded<boolean> | SearchIndexRefusal
 
-export type IndexWork = () => void
+export type IndexWork = () => IndexWriteResult

@@ -32,7 +32,7 @@ export function readSearchHits(statement: StatementSync, query: string, options:
   return { succeeded: true, output: hits }
 }
 
-function searchTermsOf(query: string): string[] {
+export function searchTermsOf(query: string): string[] {
   const words = query.toLowerCase().match(WORD_PATTERN)
   if (!words) return []
 
