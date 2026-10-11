@@ -1,5 +1,6 @@
 export * from "./config.ts"
 export * from "./decision-model.ts"
+export * from "./embeddings.ts"
 export * from "./limits.ts"
 export * from "./llm.ts"
 export * from "./memory.ts"

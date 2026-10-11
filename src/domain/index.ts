@@ -1,6 +1,7 @@
 export * from "./capture/index.ts"
 export * from "./config/index.ts"
 export * from "./decision-model/index.ts"
+export * from "./embeddings/index.ts"
 export * from "./folder-index/index.ts"
 export * from "./lifecycle/index.ts"
 export * from "./memory/index.ts"

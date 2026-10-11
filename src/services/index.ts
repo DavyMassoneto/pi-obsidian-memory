@@ -1,6 +1,7 @@
 export * from "./clock/index.ts"
 export * from "./config/index.ts"
 export * from "./decision-model/index.ts"
+export * from "./embeddings/index.ts"
 export * from "./id/index.ts"
 export * from "./llm/index.ts"
 export * from "./search-index/index.ts"
