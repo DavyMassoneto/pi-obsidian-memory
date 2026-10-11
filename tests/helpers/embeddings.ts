@@ -110,7 +110,7 @@ export function googleResponse(): string {
 export function localModelDouble() {
   const loads: LocalModelOptions[] = []
   const texts: string[] = []
-  let disposed = false
+  let disposalCount = 0
   const model: LocalModel = {
     countTokens(text) {
       return [...text].length + 2
@@ -120,14 +120,33 @@ export function localModelDouble() {
       return embeddingVector(384)
     },
     async dispose() {
-      disposed = true
+      disposalCount += 1
     },
   }
   const loader: LocalModelLoader = async (options) => {
     loads.push(options)
     return model
   }
-  return { loads, texts, model, loader, isDisposed: () => disposed }
+  return { loads, texts, model, loader, isDisposed: () => disposalCount > 0, disposalCount: () => disposalCount }
+}
+
+export function controlledLocalModelLoader() {
+  const first = localModelDouble()
+  const next = localModelDouble()
+  const firstLoad = Promise.withResolvers<LocalModel>()
+  const started = Promise.withResolvers<void>()
+  const loads: LocalModelOptions[] = []
+  const disposalsBeforeNextLoad: number[] = []
+  const loader: LocalModelLoader = async (options) => {
+    loads.push(options)
+    if (loads.length === 1) {
+      started.resolve()
+      return firstLoad.promise
+    }
+    disposalsBeforeNextLoad.push(first.disposalCount())
+    return next.model
+  }
+  return { first, next, firstLoad, started: started.promise, loads, disposalsBeforeNextLoad, loader }
 }
 
 export function syntheticModelAsset(text: string): ModelAsset {

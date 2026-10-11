@@ -24,10 +24,12 @@ async function embedGoogleBatch(
   if (!chunks.succeeded) {
     return chunks
   }
+
   const vectors = await requestGoogleChunks(context, request.purpose, chunks.output, signal)
   if (!vectors.succeeded) {
     return vectors
   }
+
   return finishEmbeddingBatch(googleEmbeddingConfiguration, request, chunks.output, vectors.output)
 }
 
@@ -62,10 +64,12 @@ async function requestGoogle(
   if (typeof context.endpoint === "string") {
     endpoint = context.endpoint
   }
+
   let taskType = "RETRIEVAL_DOCUMENT"
   if (purpose === "query") {
     taskType = "RETRIEVAL_QUERY"
   }
+
   const response = await postEmbedding({
     endpoint,
     apiKey: context.apiKey,
@@ -81,5 +85,6 @@ async function requestGoogle(
   if (!response.succeeded) {
     return response
   }
+
   return parseGoogleEmbedding(response.output)
 }

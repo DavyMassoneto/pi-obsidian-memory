@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -88,7 +88,9 @@ describe("createLocalEmbedder", () => {
       const corrupt = createLocalEmbedder(options)
       try {
         expect(await corrupt.embed(embeddingOperation(), request)).toEqual({ succeeded: false, status: "unavailable" })
+        expect(await corrupt.embed(embeddingOperation(), request)).toEqual({ succeeded: false, status: "unavailable" })
         expect(await readdir(modelPath)).toEqual(["config.json"])
+        expect(await readFile(join(modelPath, "config.json"), "utf8")).toBe("corrupt")
       } finally {
         await corrupt.dispose()
       }

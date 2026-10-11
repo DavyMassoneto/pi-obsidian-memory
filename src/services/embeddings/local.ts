@@ -46,19 +46,36 @@ function enqueueLocalEmbedding(
 }
 
 async function getLocalModel(state: LocalEmbeddingState, signal: AbortSignal): Promise<LocalModel> {
-  if (!state.model) {
-    let loader = loadLocalModel
-    if (state.options.loadModel) {
-      loader = state.options.loadModel
-    }
-    const options = { cachePath: state.options.cachePath, downloadConsent: state.options.downloadConsent, signal }
-    if (state.options.onProgress) {
-      state.model = loader({ ...options, onProgress: state.options.onProgress })
-    } else {
-      state.model = loader(options)
-    }
+  if (state.model) {
+    return state.model
   }
-  return state.model
+
+  let loader = loadLocalModel
+  if (state.options.loadModel) {
+    loader = state.options.loadModel
+  }
+  const options = { cachePath: state.options.cachePath, downloadConsent: state.options.downloadConsent, signal }
+  if (state.options.onProgress) {
+    state.model = loader({ ...options, onProgress: state.options.onProgress })
+  } else {
+    state.model = loader(options)
+  }
+
+  const pending = state.model
+  try {
+    const model = await pending
+    if (signal.aborted || state.disposed) {
+      await model.dispose()
+      signal.throwIfAborted()
+      throw new Error("Local embedder disposed")
+    }
+    return model
+  } catch (error) {
+    if (state.model === pending) {
+      state.model = null
+    }
+    throw error
+  }
 }
 
 async function embedLocally(
@@ -70,16 +87,20 @@ async function embedLocally(
   if (state.disposed || state.options.cachePath.trim().length === 0) {
     return { succeeded: false, status: "unavailable" }
   }
+
   const invalid = validateEmbeddingRequest(request)
   if (invalid) {
     return invalid
   }
+
   const model = await getLocalModel(state, signal)
   signal.throwIfAborted()
+
   let prefix = "passage: "
   if (request.purpose === "query") {
     prefix = "query: "
   }
+
   const chunks = prepareChunks(request, {
     maximum: 512,
     overlap: 32,
@@ -89,10 +110,12 @@ async function embedLocally(
   if (!chunks.succeeded) {
     return chunks
   }
+
   const vectors = await extractLocalChunks(model, chunks.output, signal)
   if (!vectors.succeeded) {
     return vectors
   }
+
   return finishEmbeddingBatch(localEmbeddingConfiguration, request, chunks.output, vectors.output)
 }
 
