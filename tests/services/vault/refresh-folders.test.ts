@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises"
+import { mkdir, readdir, realpath, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
@@ -8,6 +8,33 @@ import { createMemoryNote, refreshIndexes } from "#/services"
 import { aLimits, aNote, linkFolder, readIndexOf, useTempFolder } from "#test-helpers"
 
 const limits = aLimits()
+
+test("does not disguise invalid filesystem arguments as maintenance I/O failures", async () => {
+  const vault = await useTempFolder()
+
+  await expect(refreshIndexes({ path: `${vault}\0`, name: "Memory", limits }, "")).rejects.toMatchObject({
+    name: "TypeError",
+    code: "ERR_INVALID_ARG_VALUE",
+  })
+  expect(await readdir(vault)).toEqual([])
+})
+
+test("reports unexpected filesystem system failures without writing indexes", async () => {
+  const vault = await useTempFolder()
+  const path = join(vault, "a".repeat(32768))
+
+  await expect(realpath(path)).rejects.toMatchObject({
+    code: expect.any(String),
+    syscall: expect.any(String),
+    errno: expect.any(Number),
+  })
+  expect(await refreshIndexes({ path, name: "Memory", limits }, "")).toMatchObject({
+    succeeded: false,
+    reason: "io-error",
+    problems: [expect.stringContaining("ENAMETOOLONG")],
+  })
+  expect(await readdir(vault)).toEqual([])
+})
 
 test("refreshes logical and physical ancestors of a directory alias", async () => {
   const vault = await useTempFolder()

@@ -70,8 +70,10 @@ Only `memory_add` is currently a pi tool; see [ROADMAP.md](ROADMAP.md).
   removed. Hash checks are not compare-and-swap transactions, and link checks are not atomic confinement.
 - Temporary-file cleanup is attempted after publication. A successful publication remains successful if cleanup
   fails, with maintenance diagnostics; a primary failure stays primary if cleanup also fails. A temporary may remain.
-- A successful note write or completed lifecycle movement remains success when only index maintenance fails, with
-  warnings retaining the cause. A warning means an index may be stale, not that the note should be saved again.
+- A successful note write or completed lifecycle movement remains success when only filesystem index maintenance
+  fails, with warnings retaining the cause. A warning means an index may be stale, not that the note should be saved
+  again. Refresh propagates programming errors instead of labeling them I/O failures; such an exception does not
+  undo an already-persisted note or movement.
 - Lifecycle preflight reduces refusals but cannot guarantee later steps will succeed. The order is archived copy,
   successor if any, then removal of the checked resolved original. A later failure reports already-published notes
   and an observed original state (`present`, `missing` or `unknown`), not proof of preserved original content.

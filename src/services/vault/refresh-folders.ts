@@ -6,7 +6,7 @@ import { FOLDER_INDEX_FILE_NAME } from "./constants.ts"
 import { listFolder } from "./list.ts"
 import { refuseWrite } from "./refusals.ts"
 import { resolveFile, resolveFolder } from "./resolve.ts"
-import type { FolderListing, NamedVaultContext, RefreshResult } from "./types.ts"
+import type { FolderListing, NamedVaultContext, RefreshRefusal, RefreshResult } from "./types.ts"
 
 export async function refreshFolders(context: NamedVaultContext, folders: string[]): Promise<RefreshResult> {
   const maintenanceProblems: string[] = []
@@ -40,18 +40,33 @@ export async function refreshFolders(context: NamedVaultContext, folders: string
       }
     }
   } catch (error) {
-    let problem = "Index maintenance failed"
-    if (error instanceof Error) {
-      problem = error.message
+    if (!(error instanceof Error)) {
+      throw error
     }
 
-    return { succeeded: false, reason: "io-error", problems: [problem, ...maintenanceProblems] }
+    return maintenanceFailure(error, maintenanceProblems)
   }
 
   if (maintenanceProblems.length > 0) {
     return { succeeded: true, maintenanceProblems }
   }
   return { succeeded: true }
+}
+
+function maintenanceFailure(error: Error, maintenanceProblems: string[]): RefreshRefusal {
+  if (
+    !("code" in error) ||
+    typeof error.code !== "string" ||
+    !("syscall" in error) ||
+    typeof error.syscall !== "string" ||
+    !("errno" in error) ||
+    typeof error.errno !== "number" ||
+    !Number.isFinite(error.errno)
+  ) {
+    throw error
+  }
+
+  return { succeeded: false, reason: "io-error", problems: [error.message, ...maintenanceProblems] }
 }
 
 async function writeIndex(

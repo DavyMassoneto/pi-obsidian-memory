@@ -19,8 +19,9 @@ Every milestone:
 - One tool, `memory_add`, for explicit requests to remember. It writes a valid note to the global or project vault,
   refuses invalid notes, existing names (in any case) and unregistered projects, and refreshes the folder indexes up to
   the root, including resolved physical ancestors for directory aliases. When the name is taken, it reads the exact
-  existing disk statement to show the note. Persistence remains success with warnings if index/cleanup maintenance
-  fails; warnings do not mean the note should be saved again.
+  existing disk statement to show the note. Persistence remains success with warnings if filesystem index/cleanup
+  maintenance fails; warnings do not mean the note should be saved again. Refresh propagates programming errors
+  rather than disguising them as I/O failures.
 - pi sets `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` for its own process.
 - The config is read and validated, and a folder is matched to its project. Nothing writes the config.
 - Built but not reachable by any tool or command: updating, archiving and succeeding notes. Lifecycle reports partial
@@ -49,9 +50,10 @@ Every milestone:
   path ownership, with no cross-resource service imports (7–10, 12–14).
 - [x] Private search resource, precise boundary types, exhaustive presentation, shared schema/path definitions,
   rowid-linked transactional FTS and cached Intl/statements (11, 15, 17–18, 20–24, 26).
-- [x] Source-named behavioral regressions, shared fixture cleanup, accurate current docs, SDK peer pin to tested 1.0.1
-  and silent registration smoke (27–29). Independent integrated review is still an acceptance gate, not implied by
-  these implementation checkmarks.
+- [x] Source-named behavioral regressions, shared fixture cleanup, accurate current docs and silent registration
+  smoke (27–29). Pi SDK and TypeBox follow the host's wildcard peer contract, with tested development pins 1.0.1 and
+  1.3.34. The review's wildcard SDK peer objection is not a defect under that contract. Independent integrated review
+  is still an acceptance gate, not implied by these implementation checkmarks.
 
 ## Settled behaviour
 
