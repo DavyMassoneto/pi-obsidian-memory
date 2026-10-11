@@ -1,6 +1,13 @@
 import type { InvalidNote, Note, ParsedNote, PlacedNote, Succession, VaultCatalogFailure } from "#/domain"
 import type { Done, Failed, Succeeded } from "#/shared"
 
+export interface UpdateFileRequest {
+  folder: string
+  fileName: string
+  note: Note
+  expectedHash: string
+}
+
 export interface CompleteBlankRequest {
   path: string
   expectedHash: string

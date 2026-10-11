@@ -15,7 +15,7 @@ export function isCatalogHidden(path: string): boolean {
 export function catalogFileKind(path: string): Exclude<VaultEntryKind, "folder"> {
   const lower = path.toLowerCase()
   const name = lower.split("/").at(-1)
-  if (/\.md\.tmp-[^/]+$/i.test(path)) return "temporary"
+  if (/\.md\.tmp-[^/]+$/i.test(path) || /^\.memory\.base\.tmp-[^/]+$/.test(lower)) return "temporary"
   if (isRootTemplate(path)) return "template"
   if (name === "index.md") return "index"
   if (lower === "memory.base") return "dashboard"

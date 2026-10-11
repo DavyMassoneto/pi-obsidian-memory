@@ -89,6 +89,26 @@ test("copied ULIDs remain separate path-keyed records including archive", async 
   }
 })
 
+test("dashboard publication leftovers are diagnostics while ordinary hidden files and directories stay excluded", async () => {
+  const vault = await catalogVault()
+  const temporary = ".Memory.base.tmp-stale"
+  const hidden = [".secret", ".Other.base.tmp-stale", ".Memory.base.tmp-", ".obsidian", ".Memory.base.tmp-directory"]
+  await putCatalogFile(vault, temporary, "unpublished dashboard")
+  for (const path of hidden.slice(0, 3)) await putCatalogFile(vault, path, "hidden")
+  await putCatalogFile(vault, ".obsidian/.Memory.base.tmp-stale", "hidden")
+  await putCatalogFile(vault, ".Memory.base.tmp-directory/note.md", "hidden")
+  const result = await enumerateVault(vault)
+  if (!result.succeeded) throw new Error("Expected enumeration")
+  expect(result.output.entries.map(({ path, kind }) => ({ path, kind }))).toEqual([
+    { path: temporary, kind: "temporary" },
+  ])
+  expect(result.output.observedPaths).toEqual([temporary])
+  expect(result.output.completeDirectories).toEqual([""])
+  expect(result.output.failures).toEqual([])
+  for (const path of hidden) expect(result.output.observedPaths).not.toContain(path)
+  expect(await readFile(join(vault.path, temporary), "utf8")).toBe("unpublished dashboard")
+})
+
 test("missing roots are refused without creation", async () => {
   const vault = await catalogVault()
   const missing = { ...vault, path: join(vault.path, "missing") }

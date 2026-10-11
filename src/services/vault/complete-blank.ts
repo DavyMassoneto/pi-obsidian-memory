@@ -2,7 +2,7 @@ import { checkMemoryFolder } from "#/domain"
 import { inspectVaultFile } from "#/services/vault/catalog"
 import type { VaultContext } from "#/services/vault/context"
 import type { CompleteBlankRequest, CompleteBlankResult } from "./types.ts"
-import { updateNote } from "./update.ts"
+import { updateNoteFile } from "./update-file.ts"
 
 export async function completeBlankFile(
   vault: VaultContext,
@@ -32,7 +32,11 @@ async function completeInspectedBlank(
   if (problems.length > 0) return { succeeded: false, reason: "invalid", problems }
   const fileName = canonicalPath.slice(canonicalPath.lastIndexOf("/") + 1)
   const requestedName = request.path.slice(request.path.lastIndexOf("/") + 1)
-  if (fileName !== `${request.note.statement}.md` || requestedName !== fileName) {
+  if (
+    fileName.slice(-3).toLowerCase() !== ".md" ||
+    fileName.slice(0, -3) !== request.note.statement ||
+    requestedName !== fileName
+  ) {
     return {
       succeeded: false,
       reason: "path-mismatch",
@@ -40,5 +44,5 @@ async function completeInspectedBlank(
     }
   }
 
-  return updateNote(vault.path, folder, request.note, request.expectedHash, vault.limits)
+  return updateNoteFile(vault, { folder, fileName, note: request.note, expectedHash: request.expectedHash })
 }

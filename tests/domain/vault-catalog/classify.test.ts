@@ -14,3 +14,12 @@ test("classifies reserved roots case-insensitively, but nested names are ordinar
   expect(isRootArchive("topic/archive/a.md")).toBe(false)
   expect(isRootTemplate("_Templates")).toBe(true)
 })
+
+test("recognizes dashboard publication temporaries without treating ordinary hidden names as temporaries", () => {
+  expect(catalogFileKind(".Memory.base.tmp-stale")).toBe("temporary")
+  expect(catalogFileKind(".MEMORY.BASE.tmp-123")).toBe("temporary")
+  expect(catalogFileKind(".Memory.base.tmp-")).toBe("other")
+  expect(catalogFileKind(".Other.base.tmp-stale")).toBe("other")
+  expect(catalogFileKind(".prefix.Memory.base.tmp-stale")).toBe("other")
+  expect(catalogFileKind("Memory.base.tmp-stale")).toBe("other")
+})
