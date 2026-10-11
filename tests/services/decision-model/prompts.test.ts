@@ -5,7 +5,7 @@ import { candidateDecisionRequest, decisionServer, layaReply } from "#test-helpe
 
 describe("Decision prompt state", () => {
   it("scores a candidate independently and keeps stable identity outside model text", async () => {
-    const body = layaReply(0.6).replaceAll("needed", "relevant")
+    const body = layaReply(0.6, "custom-multilingual").replaceAll("needed", "relevant")
     const server = await decisionServer({ body, status: 200, delayMs: 0 })
     try {
       const result = await scoreCandidate({
@@ -14,7 +14,10 @@ describe("Decision prompt state", () => {
       })
       expect(result).toMatchObject({
         succeeded: true,
-        output: { probability: 0.6, diagnostics: { requestedModel: "custom-multilingual" } },
+        output: {
+          probability: 0.6,
+          diagnostics: { requestedModel: "custom-multilingual", reportedModel: "custom-multilingual" },
+        },
       })
       const sent = server.requests[0]
       expect(sent).toContain("sample-token")

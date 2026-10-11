@@ -1,6 +1,6 @@
 import { Value } from "typebox/value"
 
-import type { DecisionResult } from "#/domain"
+import type { DecisionDiagnostics, DecisionResult } from "#/domain"
 import { maxDecisionResponseBytes } from "./constants.ts"
 import { LayaResponseSchema } from "./schemas.ts"
 import type { LayaReadRequest, LayaResponse } from "./types.ts"
@@ -26,9 +26,42 @@ async function readBoundedText(response: Response): Promise<string | null> {
   }
 }
 
+function requestedCheckpoint(model: string): string | null {
+  const name = model.toLowerCase()
+  if (["en", "laya", "default"].includes(name)) return "english"
+  if (["multi", "ml", "laya-multilingual", "convaiinnovations/laya-multilingual"].includes(name)) {
+    return "multilingual"
+  }
+  if (
+    [
+      "typed",
+      "typed_decisions",
+      "laya-typed-decisions",
+      "decisions",
+      "convaiinnovations/laya-typed-decisions",
+    ].includes(name)
+  ) {
+    return "typed-decisions"
+  }
+  if (name === "auto" || !/^[a-z0-9][a-z0-9._-]*$/.test(name)) return null
+  return name
+}
+
 function interpretResponse(parsed: LayaResponse, request: LayaReadRequest): DecisionResult {
-  const { diagnostics, question } = request
+  const { question } = request
   const usage = parsed.usage
+  const routing = parsed.routing
+  const diagnostics: DecisionDiagnostics = {
+    ...request.diagnostics,
+    reportedModel: null,
+    usage: { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens },
+  }
+  if (routing) diagnostics.reportedModel = routing.model
+
+  const checkpoint = requestedCheckpoint(diagnostics.requestedModel)
+  if (!routing || routing.model !== checkpoint || routing.reason !== `explicit model='${checkpoint}'`) {
+    return { succeeded: false, code: "invalid-response", diagnostics }
+  }
   if (usage.truncated || usage.state_tokens_dropped > 0 || usage.truncated_questions.length > 0) {
     return { succeeded: false, code: "truncated", diagnostics }
   }
@@ -42,17 +75,7 @@ function interpretResponse(parsed: LayaResponse, request: LayaReadRequest): Deci
   if (answer.low_confidence || answer.abstention === "abstained" || answer.abstention === "unevaluated") {
     return { succeeded: false, code: "invalid-response", diagnostics }
   }
-  return {
-    succeeded: true,
-    output: {
-      probability: answer.noul,
-      diagnostics: {
-        ...diagnostics,
-        reportedModel: parsed.model,
-        usage: { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens },
-      },
-    },
-  }
+  return { succeeded: true, output: { probability: answer.noul, diagnostics } }
 }
 
 export async function readLayaResponse(request: LayaReadRequest): Promise<DecisionResult> {

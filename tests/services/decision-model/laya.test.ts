@@ -15,7 +15,7 @@ describe("Laya System One adapter", () => {
           diagnostics: {
             provider: "laya",
             requestedModel: "multilingual",
-            reportedModel: "laya-rl-agent",
+            reportedModel: "multilingual",
             usage: { inputTokens: 14, outputTokens: 0 },
           },
         },

@@ -4,6 +4,103 @@ import { decideMemory } from "#/services"
 import { decisionServer, layaReply, memoryDecisionRequest } from "#test-helpers"
 
 describe("Laya response validation", () => {
+  it.each([
+    ["custom-multilingual", "multilingual"],
+    ["multilingual", "english"],
+    ["en", "multilingual"],
+    ["convaiinnovations/laya", "english"],
+    ["auto", "multilingual"],
+    ["auto", "auto"],
+    ["ml", "ml"],
+    ["laya_multilingual", "multilingual"],
+    ["convaiinnovations/laya/multilingual", "multilingual"],
+  ])("refuses requested %s routed to %s and retains the selected checkpoint", async (model, checkpoint) => {
+    const server = await decisionServer({ body: layaReply(0.9, checkpoint), status: 200, delayMs: 0 })
+    try {
+      const result = await decideMemory({
+        context: { ...server.context, model },
+        request: memoryDecisionRequest,
+      })
+      expect(result).toMatchObject({
+        succeeded: false,
+        code: "invalid-response",
+        diagnostics: { requestedModel: model, reportedModel: checkpoint },
+      })
+      expect(result).not.toHaveProperty("output")
+      expect(server.requests).toHaveLength(1)
+    } finally {
+      await server.close()
+    }
+  })
+
+  it.each(["custom-multilingual", "multilingual", "auto", "jev-1", "convaiinnovations/laya"])(
+    "refuses automatic language-hint routing for %s even without detection or workflow",
+    async (model) => {
+      const body = layaReply(0.9).replace(
+        "explicit model='multilingual'",
+        "Router(lang_guess=...): the caller identified this as non-English text",
+      )
+      const server = await decisionServer({ body, status: 200, delayMs: 0 })
+      try {
+        expect(
+          await decideMemory({ context: { ...server.context, model }, request: memoryDecisionRequest }),
+        ).toMatchObject({
+          succeeded: false,
+          code: "invalid-response",
+          diagnostics: { requestedModel: model, reportedModel: "multilingual" },
+        })
+      } finally {
+        await server.close()
+      }
+    },
+  )
+
+  it("refuses missing routing even when the engine claims the requested model", async () => {
+    const body = layaReply(0.9)
+      .replace(/,"routing":\{[^}]*\}/, "")
+      .replace("laya-rl-agent", "multilingual")
+    const server = await decisionServer({ body, status: 200, delayMs: 0 })
+    try {
+      expect(await decideMemory({ context: server.context, request: memoryDecisionRequest })).toMatchObject({
+        succeeded: false,
+        code: "invalid-response",
+        diagnostics: { reportedModel: null },
+      })
+    } finally {
+      await server.close()
+    }
+  })
+
+  it.each([
+    ["en", "english"],
+    ["laya", "english"],
+    ["default", "english"],
+    ["multi", "multilingual"],
+    ["ml", "multilingual"],
+    ["laya-multilingual", "multilingual"],
+    ["typed", "typed-decisions"],
+    ["typed_decisions", "typed-decisions"],
+    ["laya-typed-decisions", "typed-decisions"],
+    ["decisions", "typed-decisions"],
+    ["convaiinnovations/laya-multilingual", "multilingual"],
+    ["convaiinnovations/laya-typed-decisions", "typed-decisions"],
+    ["ML", "multilingual"],
+    ["Custom-Multilingual", "custom-multilingual"],
+  ])("accepts pinned-source spelling %s explicitly routed to %s", async (model, checkpoint) => {
+    const server = await decisionServer({ body: layaReply(0.9, checkpoint), status: 200, delayMs: 0 })
+    try {
+      expect(
+        await decideMemory({ context: { ...server.context, model }, request: memoryDecisionRequest }),
+      ).toMatchObject({
+        succeeded: true,
+        output: { probability: 0.9, diagnostics: { requestedModel: model, reportedModel: checkpoint } },
+      })
+      expect(server.requests[0]).toContain(`"model":"${model}"`)
+    } finally {
+      await server.close()
+    }
+  })
+
   it("accepts a native passed abstention gate without treating confidence as probability", async () => {
     const body = layaReply(0.9).replace(
       '"noul":0.9',
@@ -23,6 +120,12 @@ describe("Laya response validation", () => {
   it.each([
     ["missing", '{"model":"laya","answers":{}}', "invalid-response"],
     ["wrong type", layaReply(0.5).replace('"noul"', '"score"'), "invalid-response"],
+    ["unverifiable routing", layaReply(0.5).replace("explicit model='multilingual'", ""), "invalid-response"],
+    [
+      "wrong explicit route",
+      layaReply(0.5).replace("explicit model='multilingual'", "explicit model='ml'"),
+      "invalid-response",
+    ],
     ["negative", layaReply(-0.1), "invalid-response"],
     ["too large", layaReply(1.1), "invalid-response"],
     ["nonfinite", layaReply(0.5).replace('"noul":0.5', '"noul":1e999'), "invalid-response"],

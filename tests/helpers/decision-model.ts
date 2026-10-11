@@ -60,7 +60,10 @@ export function layaContext(endpoint: string): LayaContext {
   }
 }
 
-export function layaReply(probability: number): string {
+export function layaReply(probability: number, checkpoint?: string): string {
+  let selectedCheckpoint = "multilingual"
+  if (typeof checkpoint === "string") selectedCheckpoint = checkpoint
+
   return JSON.stringify({
     model: "laya-rl-agent",
     answers: { needed: { type: "noul", noul: probability, action: { act_probability: 0.01 } } },
@@ -73,9 +76,9 @@ export function layaReply(probability: number): string {
       truncated_questions: [],
     },
     routing: {
-      model: "multilingual",
-      repo: "convaiinnovations/laya-multilingual",
-      reason: "explicit model='multilingual'",
+      model: selectedCheckpoint,
+      repo: null,
+      reason: `explicit model='${selectedCheckpoint}'`,
       detection: null,
       workflow: null,
     },
