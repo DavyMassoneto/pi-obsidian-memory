@@ -18,5 +18,5 @@ export async function archiveStoredNote(
     return relocated
   }
 
-  return { succeeded: true, output: archived }
+  return { ...relocated, output: archived }
 }

@@ -1,14 +1,31 @@
-import { readdir, readFile, writeFile } from "node:fs/promises"
+import { lstat, readdir, readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
 import { renderNote } from "#/domain"
-import { archiveStoredNote, createNote, readNote } from "#/services"
-import { aNote, linkFolder, useTempVault, vaultWithNoteToArchive } from "#test-helpers"
+import { archiveStoredNote, createMemoryNote, readNote } from "#/services"
+import { aNote, linkFolder, putNoteFile, tryLinkFile, useTempVault, vaultWithNoteToArchive } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
 const today = "2026-10-06"
+
+test("archives the resolved file target while retaining its alias entry", async (context) => {
+  const { vault, note, request, file } = await vaultWithNoteToArchive(today)
+  const alias = join(vault, "pnpm", "Alias.md")
+  if (!(await tryLinkFile(file, alias))) {
+    context.skip("this system cannot create file links")
+    return
+  }
+  const aliased = { ...request, note: { folder: "pnpm", note: { ...note, statement: "Alias" } } }
+  expect(await archiveStoredNote(vault, "Memory", aliased, limits)).toMatchObject({ succeeded: true })
+  expect((await lstat(alias)).isSymbolicLink()).toBe(true)
+  await expect(readFile(file)).rejects.toMatchObject({ code: "ENOENT" })
+  expect(await readNote(vault, "archive/pnpm", "Alias", limits)).toMatchObject({
+    succeeded: true,
+    output: { note: { body: note.body, frontmatter: { id: note.frontmatter.id, archived: today } } },
+  })
+})
 
 test("moves the note to archive/ under the same subject, with the archived date", async () => {
   const { vault, note, request } = await vaultWithNoteToArchive(today)
@@ -49,12 +66,13 @@ test("refuses with a conflict when the note changed since it was read, changing 
 
 test("refuses when the archive already has a note with that name, changing nothing", async () => {
   const { vault, note, request, file } = await vaultWithNoteToArchive(today)
-  await createNote(vault, "archive/pnpm", note, limits)
+  await putNoteFile(vault, "archive/pnpm", note.statement, renderNote(note))
   const before = await readFile(file, "utf8")
 
   expect(await archiveStoredNote(vault, "Global memory", request, limits)).toEqual({
     succeeded: false,
     reason: "exists",
+    existingStatement: note.statement,
     problems: [`archive/pnpm/${note.statement}.md already exists`],
   })
   expect(await readFile(file, "utf8")).toBe(before)
@@ -73,7 +91,7 @@ test("refuses to archive a note reached through a link that leads outside the va
   const vault = await useTempVault()
   const outside = await useTempVault()
   const note = aNote()
-  const created = await createNote(outside, "pnpm", note, limits)
+  const created = await createMemoryNote(outside, "pnpm", note, limits)
   if (!created.succeeded) {
     throw new Error(`setup failed: ${created.problems.join(", ")}`)
   }
@@ -93,7 +111,7 @@ test("refuses to archive a note reached through a link that leads outside the va
 test("keeps the body byte for byte, indentation and blank lines included", async () => {
   const vault = await useTempVault()
   const note = { ...aNote(), body: "    pnpm install\n\n  then run the tests  \n" }
-  const created = await createNote(vault, "pnpm", note, limits)
+  const created = await createMemoryNote(vault, "pnpm", note, limits)
   if (!created.succeeded) {
     throw new Error(`setup failed: ${created.problems.join(", ")}`)
   }

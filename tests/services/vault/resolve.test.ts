@@ -1,184 +1,136 @@
-import { mkdir, rm, writeFile } from "node:fs/promises"
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { resolveFile, resolveFolder } from "#/services"
-import { linkFolder, otherDriveRoots, tryLinkFile, useTempVault } from "#test-helpers"
+import { renderNote } from "#/domain"
+import { createMemoryNote, listFolder, readNote } from "#/services"
+import { aConfig, aNote, linkFolder, otherDriveRoots, tryLinkFile, useTempVault } from "#test-helpers"
 
-test("resolves a file inside the vault, even in folders that do not exist yet", async () => {
+test("creates missing folders under the resolved vault", async () => {
   const vault = await useTempVault()
-
-  expect(await resolveFile(vault, "tools/pnpm", "Rule.md")).toEqual({
-    succeeded: true,
-    output: join(vault, "tools", "pnpm", "Rule.md"),
-  })
+  const note = aNote()
+  expect(await createMemoryNote(vault, "tools/pnpm", note, aConfig().limits)).toMatchObject({ succeeded: true })
+  expect(await readFile(join(vault, "tools", "pnpm", `${note.statement}.md`), "utf8")).toBe(renderNote(note))
 })
 
-test("resolves the vault root as a folder", async () => {
+test("refuses invalid folder and file names before reading", async () => {
   const vault = await useTempVault()
-
-  expect(await resolveFolder(vault, "")).toEqual({ succeeded: true, output: join(vault) })
-})
-
-test("refuses an invalid folder or file name with every problem", async () => {
-  const vault = await useTempVault()
-
-  expect(await resolveFile(vault, "../other", "sub/Rule.md")).toEqual({
+  expect(await readNote(vault, "../other", "sub/Rule", aConfig().limits)).toEqual({
     succeeded: false,
     reason: "invalid",
     problems: ['folder: ".." is not allowed', 'file name "sub/Rule.md": "/" is not allowed in a file name'],
   })
-  expect(await resolveFolder(vault, "C:/other")).toEqual({
-    succeeded: false,
-    reason: "invalid",
-    problems: ["folder: must be relative to the vault"],
-  })
+  expect(await listFolder(vault, "C:/other", aConfig().limits)).toMatchObject({ reason: "invalid" })
 })
 
-test("refuses a vault folder that does not exist, creating nothing", async () => {
+test("refuses a missing vault", async () => {
   const root = await useTempVault()
-  const vault = join(root, "missing")
-
-  expect(await resolveFile(vault, "pnpm", "Rule.md")).toEqual({
-    succeeded: false,
-    reason: "vault-missing",
-    problems: [`the vault folder ${vault} does not exist`],
-  })
+  expect(await readNote(join(root, "missing"), "", "Rule", aConfig().limits)).toMatchObject({ reason: "vault-missing" })
 })
 
-test("refuses a folder link that leads outside the vault", async () => {
+test("refuses a file configured as a vault without modifying it", async () => {
+  const root = await useTempVault()
+  const vault = join(root, "file")
+  await writeFile(vault, "user file")
+  expect(await listFolder(vault, "", aConfig().limits)).toMatchObject({ reason: "not-directory" })
+  expect(await readFile(vault, "utf8")).toBe("user file")
+})
+
+test("refuses a folder link leading outside", async () => {
   const vault = await useTempVault()
   const outside = await useTempVault()
   await linkFolder(outside, join(vault, "escape"))
-
-  expect(await resolveFile(vault, "escape/pnpm", "Rule.md")).toEqual({
+  expect(await readNote(vault, "escape/pnpm", "Rule", aConfig().limits)).toEqual({
     succeeded: false,
     reason: "outside-vault",
     problems: ["escape leads outside the vault"],
   })
 })
 
-test("refuses a link to a sibling folder whose name starts with the vault name", async () => {
+test("refuses a sibling whose name starts with the vault name", async () => {
   const vault = await useTempVault()
   const sibling = `${vault}-other`
   await mkdir(sibling)
   await linkFolder(sibling, join(vault, "tools"))
-
   try {
-    expect(await resolveFolder(vault, "tools")).toMatchObject({ succeeded: false, reason: "outside-vault" })
+    expect(await listFolder(vault, "tools", aConfig().limits)).toMatchObject({ reason: "outside-vault" })
   } finally {
-    await rm(sibling, { recursive: true, force: true })
+    await rm(sibling, { recursive: true })
   }
 })
 
-test("refuses a link to the folder that holds the vault", async () => {
+test("refuses a link to the parent folder", async () => {
   const root = await useTempVault()
   const vault = join(root, "vault")
   await mkdir(vault)
   await linkFolder(root, join(vault, "up"))
-
-  expect(await resolveFolder(vault, "up")).toEqual({
-    succeeded: false,
-    reason: "outside-vault",
-    problems: ["up leads outside the vault"],
-  })
+  expect(await listFolder(vault, "up", aConfig().limits)).toMatchObject({ reason: "outside-vault" })
 })
 
 test("refuses a link to another drive", async (context) => {
   const vault = await useTempVault()
-  const [driveRoot] = otherDriveRoots()
-  if (!driveRoot) {
+  const [drive] = otherDriveRoots()
+  if (!drive) {
     context.skip("this system has a single drive")
     return
   }
-  await linkFolder(driveRoot, join(vault, "drive"))
-
-  expect(await resolveFolder(vault, "drive")).toEqual({
-    succeeded: false,
-    reason: "outside-vault",
-    problems: ["drive leads outside the vault"],
-  })
+  await linkFolder(drive, join(vault, "drive"))
+  expect(await listFolder(vault, "drive", aConfig().limits)).toMatchObject({ reason: "outside-vault" })
 })
 
-test("refuses a link that does not resolve", async () => {
+test("refuses a broken folder link", async () => {
   const vault = await useTempVault()
-  const outside = await useTempVault()
-  const gone = join(outside, "gone")
-  await mkdir(gone)
-  await linkFolder(gone, join(vault, "tools"))
-  await rm(gone, { recursive: true })
-
-  expect(await resolveFile(vault, "tools", "Rule.md")).toEqual({
-    succeeded: false,
+  const target = join(vault, "gone")
+  await mkdir(target)
+  await linkFolder(target, join(vault, "alias"))
+  await rm(target, { recursive: true })
+  expect(await readNote(vault, "alias", "Rule", aConfig().limits)).toMatchObject({
     reason: "outside-vault",
-    problems: ["tools is a link that does not resolve"],
+    problems: ["alias is a link that does not resolve"],
   })
 })
 
-test("refuses a link to itself", async () => {
+test.each(["self", "pair"])("refuses a %s link loop", async (kind) => {
   const vault = await useTempVault()
-  await linkFolder(join(vault, "self"), join(vault, "self"))
-
-  expect(await resolveFile(vault, "self", "Rule.md")).toEqual({
-    succeeded: false,
-    reason: "outside-vault",
-    problems: ["self is a link that does not resolve"],
-  })
+  if (kind === "self") await linkFolder(join(vault, "a"), join(vault, "a"))
+  else {
+    await linkFolder(join(vault, "b"), join(vault, "a"))
+    await linkFolder(join(vault, "a"), join(vault, "b"))
+  }
+  expect(await listFolder(vault, "a", aConfig().limits)).toMatchObject({ reason: "outside-vault" })
 })
 
-test("refuses two links that point at each other", async () => {
-  const vault = await useTempVault()
-  await linkFolder(join(vault, "b"), join(vault, "a"))
-  await linkFolder(join(vault, "a"), join(vault, "b"))
-
-  expect(await resolveFile(vault, "a", "Rule.md")).toEqual({
-    succeeded: false,
-    reason: "outside-vault",
-    problems: ["a is a link that does not resolve"],
-  })
-})
-
-test("does not take a vault that is a link loop for a missing vault", async () => {
+test("reports an unreadable vault link loop rather than calling it missing", async () => {
   const root = await useTempVault()
-  const vault = join(root, "vault")
+  const vault = join(root, "loop")
   await linkFolder(vault, vault)
-
-  await expect(resolveFolder(vault, "pnpm")).rejects.toMatchObject({ code: "ELOOP" })
+  expect(await listFolder(vault, "", aConfig().limits)).toMatchObject({ reason: "not-readable" })
 })
 
-test("accepts a folder link that stays inside the vault", async () => {
+test("preserves a permitted folder alias while writing to its target", async () => {
   const vault = await useTempVault()
   await mkdir(join(vault, "real"))
   await linkFolder(join(vault, "real"), join(vault, "alias"))
-
-  expect(await resolveFile(vault, "alias", "Rule.md")).toEqual({
-    succeeded: true,
-    output: join(vault, "alias", "Rule.md"),
-  })
+  expect(await createMemoryNote(vault, "alias/deep", aNote(), aConfig().limits)).toMatchObject({ succeeded: true })
+  expect(await readFile(join(vault, "real", "deep", `${aNote().statement}.md`), "utf8")).toBe(renderNote(aNote()))
 })
 
 test("accepts a vault reached through a link", async () => {
   const root = await useTempVault()
-  await mkdir(join(root, "real vault"))
-  await linkFolder(join(root, "real vault"), join(root, "vault"))
-
-  expect(await resolveFolder(join(root, "vault"), "pnpm")).toMatchObject({ succeeded: true })
+  await mkdir(join(root, "real"))
+  await linkFolder(join(root, "real"), join(root, "vault"))
+  expect(await createMemoryNote(join(root, "vault"), "", aNote(), aConfig().limits)).toMatchObject({ succeeded: true })
+  expect(await readFile(join(root, "real", `${aNote().statement}.md`), "utf8")).toBe(renderNote(aNote()))
 })
 
-test("refuses a file link that leads outside the vault", async (context) => {
+test("refuses an external file link", async (context) => {
   const vault = await useTempVault()
   const outside = await useTempVault()
   await writeFile(join(outside, "secret.md"), "outside")
-  await mkdir(join(vault, "pnpm"))
-  const linked = await tryLinkFile(join(outside, "secret.md"), join(vault, "pnpm", "Rule.md"))
-  if (!linked) {
+  if (!(await tryLinkFile(join(outside, "secret.md"), join(vault, "Rule.md")))) {
     context.skip("this system cannot create file links")
+    return
   }
-
-  expect(await resolveFile(vault, "pnpm", "Rule.md")).toEqual({
-    succeeded: false,
-    reason: "outside-vault",
-    problems: ["pnpm/Rule.md leads outside the vault"],
-  })
+  expect(await readNote(vault, "", "Rule", aConfig().limits)).toMatchObject({ reason: "outside-vault" })
 })

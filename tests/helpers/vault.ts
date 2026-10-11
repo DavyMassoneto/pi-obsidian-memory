@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { existsSync } from "node:fs"
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
@@ -5,8 +6,7 @@ import { join, parse } from "node:path"
 
 import { onTestFinished } from "vitest"
 
-import { createNote } from "#/services"
-import { aConfig } from "./config.ts"
+import { renderNote } from "#/domain"
 import { aDecision, aNote, aQuestion } from "./note.ts"
 
 export async function useTempVault(): Promise<string> {
@@ -51,12 +51,10 @@ export async function readIndexOf(vault: string, folder: string): Promise<string
 export async function vaultWithNote() {
   const vault = await useTempVault()
   const note = aNote()
-  const created = await createNote(vault, "pnpm", note, aConfig().limits)
-  if (!created.succeeded) {
-    throw new Error(`setup failed: ${created.problems.join(", ")}`)
-  }
-
-  return { vault, note, file: join(vault, "pnpm", `${note.statement}.md`), hash: created.output.hash }
+  const text = renderNote(note)
+  await putNoteFile(vault, "pnpm", note.statement, text)
+  const hash = createHash("sha256").update(text).digest("hex")
+  return { vault, note, file: join(vault, "pnpm", `${note.statement}.md`), hash }
 }
 
 export async function vaultWithNoteToArchive(today: string) {
@@ -69,14 +67,13 @@ export async function vaultWithNoteToArchive(today: string) {
 export async function vaultWithQuestion(today: string) {
   const vault = await useTempVault()
   const question = aQuestion()
-  const created = await createNote(vault, "search", question, aConfig().limits)
-  if (!created.succeeded) {
-    throw new Error(`setup failed: ${created.problems.join(", ")}`)
-  }
+  const text = renderNote(question)
+  await putNoteFile(vault, "search", question.statement, text)
+  const hash = createHash("sha256").update(text).digest("hex")
 
   const request = {
     previous: { folder: "search", note: question },
-    hashWhenRead: created.output.hash,
+    hashWhenRead: hash,
     successor: { folder: "search", note: aDecision() },
     today,
   }

@@ -1,17 +1,34 @@
-import type { Stats } from "node:fs"
+import type { InvalidNote, Note, NoteLimits, ParsedNote, PlacedNote, Succession } from "#/domain"
+import type { Done, Failed, Succeeded } from "#/shared"
 
-import type { InvalidNote, Note, ParsedNote, PlacedNote, Succession } from "#/domain"
-import type { Absent, Done, Failed, Succeeded } from "#/shared"
+export interface VaultContext {
+  path: string
+  limits: NoteLimits
+}
+
+export interface NamedVaultContext extends VaultContext {
+  name: string
+}
 
 export interface StoredNote {
   note: Note
   hash: string
 }
 
+export interface MaintenanceWarnings {
+  maintenanceProblems?: string[]
+}
+
+export interface ProblemFolder {
+  folder: string
+  problems: string[]
+}
+
 export interface FolderListing {
   subjects: string[]
   notes: Note[]
   invalid: InvalidNote[]
+  problemFolders?: ProblemFolder[]
 }
 
 export interface ArchiveRequest {
@@ -32,25 +49,52 @@ export interface RelocationRequest {
   vaultName: string
   original: PlacedNote
   hashWhenRead: string
+  written: [PlacedNote, ...PlacedNote[]]
+}
+
+export interface ResolveRefusal extends Failed {
+  reason: "invalid" | "outside-vault" | "vault-missing" | "not-directory" | "not-readable"
+}
+
+export interface ReadRefusal extends Failed {
+  reason: ResolveRefusal["reason"] | "not-found"
+}
+
+export interface CreateRefusal extends Failed {
+  reason: ResolveRefusal["reason"] | "not-writable" | "not-found"
+}
+
+export interface ExistingNoteRefusal extends Failed {
+  reason: "exists"
+  existingStatement: string
+}
+
+export interface UpdateRefusal extends Failed {
+  reason: CreateRefusal["reason"] | "conflict"
+}
+
+export interface IoRefusal extends Failed {
+  reason: "io-error"
+}
+
+export interface RefreshRefusal extends Failed {
+  reason: CreateRefusal["reason"] | "io-error"
+}
+
+export type LifecycleRefusal = UpdateRefusal | ExistingNoteRefusal
+export type VaultRefusal = LifecycleRefusal | IoRefusal
+export type VaultFailureReason = VaultRefusal["reason"]
+
+export interface PartialRelocation extends Failed {
+  reason: "partial"
+  cause: LifecycleRefusal | IoRefusal
   written: PlacedNote[]
+  originalState: "present" | "missing" | "unknown"
 }
 
-export type VaultFailureReason =
-  | "not-found"
-  | "invalid"
-  | "exists"
-  | "conflict"
-  | "not-writable"
-  | "outside-vault"
-  | "vault-missing"
-
-export interface VaultRefusal extends Failed {
-  reason: VaultFailureReason
-}
-
-export interface NotWritable {
-  succeeded: false
-  code: string
+export interface RelocationProgress {
+  written: PlacedNote[]
+  maintenanceProblems: string[]
 }
 
 export interface NeedsFixingNote extends Failed {
@@ -59,30 +103,14 @@ export interface NeedsFixingNote extends Failed {
   hash: string
 }
 
-export type VaultResult = Succeeded<StoredNote> | VaultRefusal
-
-export type ReadNoteResult = VaultResult | NeedsFixingNote
-
-export type CheckResult = Done | VaultRefusal
-
-export type PlacedResult = Succeeded<PlacedNote> | VaultRefusal
-
-export type SuccessionResult = Succeeded<Succession> | VaultRefusal
-
-export type RefreshResult = Done | Failed
-
-export type ResolveResult = Succeeded<string> | VaultRefusal
-
-export type ListResult = Succeeded<FolderListing> | VaultRefusal
-
-export type RawFileResult = Succeeded<Buffer> | Absent
-
-export type LinkStatResult = Succeeded<Stats> | Absent
-
-export type RealPathResult = Succeeded<string> | Absent
-
-export type ExistingFileResult = Succeeded<string> | Absent
-
-export type ErrorCodeResult = Succeeded<string> | Absent
-
-export type WriteResult = Done | NotWritable
+export type CreateResult = (Succeeded<StoredNote> & MaintenanceWarnings) | CreateRefusal | ExistingNoteRefusal
+export type UpdateResult = (Succeeded<StoredNote> & MaintenanceWarnings) | UpdateRefusal
+export type VaultResult = CreateResult | UpdateResult
+export type ReadNoteResult = Succeeded<StoredNote> | ReadRefusal | NeedsFixingNote
+export type CheckResult = Done | LifecycleRefusal
+export type RelocationResult = (Done & MaintenanceWarnings) | LifecycleRefusal | PartialRelocation
+export type PlacedResult = (Succeeded<PlacedNote> & MaintenanceWarnings) | LifecycleRefusal | PartialRelocation
+export type SuccessionResult = (Succeeded<Succession> & MaintenanceWarnings) | LifecycleRefusal | PartialRelocation
+export type RefreshResult = (Done & MaintenanceWarnings) | RefreshRefusal
+export type ResolveResult = Succeeded<string> | ResolveRefusal
+export type ListResult = Succeeded<FolderListing> | ReadRefusal

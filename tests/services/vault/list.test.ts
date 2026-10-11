@@ -1,25 +1,83 @@
-import { mkdir, writeFile } from "node:fs/promises"
+import { mkdir, rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
 import { renderNote } from "#/domain"
-import { createNote, listFolder } from "#/services"
+import { createMemoryNote, listFolder } from "#/services"
 import {
   aNote,
   frontmatterLinesWithListKey,
   linkFolder,
   noteText,
+  tryLinkFile,
   useTempVault,
   validFrontmatterLines,
 } from "#test-helpers"
 
 const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
 
+test("returns a refusal for a missing folder", async () => {
+  const vault = await useTempVault()
+  expect(await listFolder(vault, "missing", limits)).toMatchObject({ succeeded: false, reason: "not-found" })
+})
+
+test.each(["blocker", "blocker/deep"])("refuses a file in folder path %s", async (folder) => {
+  const vault = await useTempVault()
+  await writeFile(join(vault, "blocker"), "user file")
+  expect(await listFolder(vault, folder, limits)).toMatchObject({ succeeded: false, reason: "not-directory" })
+})
+
+test("lists internal folder junctions as subjects", async () => {
+  const vault = await useTempVault()
+  await mkdir(join(vault, "target"))
+  await linkFolder(join(vault, "target"), join(vault, "alias"))
+  expect(await listFolder(vault, "", limits)).toMatchObject({ output: { subjects: ["alias", "target"] } })
+})
+
+test("lists internal file aliases and reports external file aliases", async (context) => {
+  const vault = await useTempVault()
+  const outside = await useTempVault()
+  await writeFile(join(vault, "Target.md"), renderNote(aNote()))
+  await writeFile(join(outside, "Secret.md"), "outside")
+  if (!(await tryLinkFile(join(vault, "Target.md"), join(vault, "Alias.md")))) {
+    context.skip("this system cannot create file links")
+    return
+  }
+  await tryLinkFile(join(outside, "Secret.md"), join(vault, "External.md"))
+  expect(await listFolder(vault, "", limits)).toMatchObject({
+    output: {
+      notes: [expect.objectContaining({ statement: "Alias" }), expect.objectContaining({ statement: "Target" })],
+      invalid: [{ statement: "External", problems: ["External.md leads outside the vault"] }],
+    },
+  })
+})
+
+test("reports external and broken folder links without inventing note entries", async () => {
+  const vault = await useTempVault()
+  const outside = await useTempVault()
+  await linkFolder(outside, join(vault, "external"))
+  await mkdir(join(vault, "gone"))
+  await linkFolder(join(vault, "gone"), join(vault, "broken"))
+  await rm(join(vault, "gone"), { recursive: true })
+  expect(await listFolder(vault, "", limits)).toEqual({
+    succeeded: true,
+    output: {
+      subjects: [],
+      notes: [],
+      invalid: [],
+      problemFolders: [
+        { folder: "broken", problems: ["broken is a link that does not resolve"] },
+        { folder: "external", problems: ["external leads outside the vault"] },
+      ],
+    },
+  })
+})
+
 test("lists the subfolders as subjects and the valid notes of a folder", async () => {
   const vault = await useTempVault()
   const note = aNote()
-  await createNote(vault, "tools", note, limits)
+  await createMemoryNote(vault, "tools", note, limits)
   await mkdir(join(vault, "tools", "pnpm"))
 
   expect(await listFolder(vault, "tools", limits)).toEqual({
@@ -121,7 +179,7 @@ test("lists a note with a broken frontmatter and an empty body with both problem
 test("lists a note whose frontmatter uses an alias, and still lists the other notes", async () => {
   const vault = await useTempVault()
   const note = aNote()
-  await createNote(vault, "", note, limits)
+  await createMemoryNote(vault, "", note, limits)
   await writeFile(join(vault, "Aliased.md"), noteText([...validFrontmatterLines(), "replaces: *missing"], "Body."))
 
   expect(await listFolder(vault, "", limits)).toEqual({
@@ -137,7 +195,7 @@ test("lists a note whose frontmatter uses an alias, and still lists the other no
 test("lists a note whose frontmatter has a tagged value, and still lists the other notes", async () => {
   const vault = await useTempVault()
   const note = aNote()
-  await createNote(vault, "", note, limits)
+  await createMemoryNote(vault, "", note, limits)
   const repeatedKey = "extra: !!omap [ { &k same: 1 }, { *k : 2 } ]"
   await writeFile(join(vault, "Ordered.md"), noteText([...validFrontmatterLines(), repeatedKey], "Body."))
 
