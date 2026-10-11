@@ -1,3 +1,7 @@
 export * from "./add-memory/index.ts"
+export * from "./get-memory/index.ts"
+export * from "./list-memory/index.ts"
+export * from "./operation-context/index.ts"
 export * from "./registration/index.ts"
+export * from "./resolve-memory/index.ts"
 export * from "./session/index.ts"

@@ -89,6 +89,10 @@ async function canonicalConfig(config: MemoryConfig): Promise<CanonicalConfigRes
   return { succeeded: true, output: { ...config, global: { vault: global.output }, projects } }
 }
 
+export function canonicalizeWorkingFolder(path: string): Promise<CanonicalPathResult> {
+  return canonicalField(path, "workingFolder", "directory")
+}
+
 async function canonicalField(path: string, field: string, kind: "file" | "directory"): Promise<CanonicalPathResult> {
   try {
     if (kind === "directory") {

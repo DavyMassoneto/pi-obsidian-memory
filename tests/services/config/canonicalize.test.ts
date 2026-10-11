@@ -3,8 +3,26 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { canonicalizeConfigLocation, canonicalizeRegistration } from "#/services"
+import { canonicalizeConfigLocation, canonicalizeRegistration, canonicalizeWorkingFolder } from "#/services"
 import { productSettings, registrationFixture, useTempFolder } from "#test-helpers"
+
+test("working-folder resolution uses supplied absolute paths and rejects files and broken aliases", async () => {
+  const root = await useTempFolder()
+  await mkdir(join(root, "work"))
+  await symlink(join(root, "work"), join(root, "alias"), "junction")
+  expect(await canonicalizeWorkingFolder(join(root, "alias", "future"))).toEqual({
+    succeeded: true,
+    output: join(await realpath(root), "work", "future"),
+  })
+  await writeFile(join(root, "file"), "preserve")
+  await symlink(join(root, "missing"), join(root, "broken"), "junction")
+  for (const path of ["relative", "C:relative", join(root, "file"), join(root, "broken")]) {
+    expect(await canonicalizeWorkingFolder(path)).toMatchObject({
+      succeeded: false,
+      problems: [expect.stringContaining("workingFolder:")],
+    })
+  }
+})
 
 test("reports every independent filesystem failure with its config field", async () => {
   const root = await useTempFolder()

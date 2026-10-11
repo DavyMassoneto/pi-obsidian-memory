@@ -32,6 +32,9 @@ Every milestone:
 - Embedding, decision-model and bounded capture/retrieval model resources exist, but these settings do not connect
   them to product operations or prove live-provider/local-inference availability. Disclosures and consent UI remain
   unimplemented; registration and later milestones are not complete.
+- Read usecases resolve strict configured global/current-project scope, get exact full diagnostic notes with session
+  receipts, and read existing folder indexes without generating assets. They are not pi tools. Synchronization,
+  search wiring, mandatory context and universal vault isolation remain incomplete; milestone 2 is not complete.
 - Built but not reachable by any tool or command: updating, archiving and succeeding notes. Lifecycle reports partial
   progress after late failures; update/removal hash checks and link checks still have check/use windows.
 - The text search resource has a private SQLite connection, prepared statements and transactional rowid-linked FTS5
@@ -48,6 +51,13 @@ Every milestone:
 - Shared temporary-folder and limits fixtures live by topic under `tests/helpers`; no filesystem mocks are used.
 
 ## Completed correction work
+
+- [x] Bounded exact-read usecase slice: canonical scope/infrastructure validation, raw config-snapshot session binding,
+  full closed-frontmatter get receipts and read-only folder-index listing. Invalid closed metadata stays diagnostic,
+  not mutation permission. An admitted, current, noncancelled get discards its prior same-path receipt before reading;
+  failure requires a new successful get. Folder reads never grant receipts. Changed config requires a fresh stamp;
+  missing/unreadable config invalidates the current authority. Reads use one observed config snapshot, not a live watch;
+  unchanged config bytes do not detect later root/link retargeting. Existing filesystem check/use limits remain.
 
 - [x] Missing/non-directory paths return refusals; enumeration includes dot-notes, permitted aliases and diagnostic
   entries for refused notes/folders. Unsafe names render without misleading links (review 1, 5, 30, 31, 33, 34).
