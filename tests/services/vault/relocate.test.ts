@@ -5,15 +5,17 @@ import { expect, test } from "vitest"
 
 import { renderNote } from "#/domain"
 import { archiveStoredNote, readNote, succeedStoredNote } from "#/services"
-import { aConfig, linkFolder, useTempVault, vaultWithNoteToArchive, vaultWithQuestion } from "#test-helpers"
+import { aLimits, linkFolder, useTempFolder, vaultWithNoteToArchive, vaultWithQuestion } from "#test-helpers"
 
 test("reports completed relocation with a warning when index maintenance is refused", async () => {
   const { vault, note, request, file } = await vaultWithNoteToArchive("2026-10-06")
-  const outside = await useTempVault()
+  const outside = await useTempFolder()
   await linkFolder(outside, join(vault, "index.md"))
-  const result = await archiveStoredNote(vault, "Memory", request, aConfig().limits)
+  const result = await archiveStoredNote({ path: vault, name: "Memory", limits: aLimits() }, request)
   expect(result).toMatchObject({ succeeded: true, maintenanceProblems: ["index.md leads outside the vault"] })
-  expect(await readNote(vault, "archive/pnpm", note.statement, aConfig().limits)).toMatchObject({ succeeded: true })
+  expect(await readNote({ path: vault, limits: aLimits() }, "archive/pnpm", note.statement)).toMatchObject({
+    succeeded: true,
+  })
   await expect(readFile(file)).rejects.toMatchObject({ code: "ENOENT" })
 })
 
@@ -25,7 +27,7 @@ test.runIf(process.platform === "win32")(
     const destination = join(vault, folder)
     const succession = { ...request, successor: { ...request.successor, folder } }
 
-    const result = await succeedStoredNote(vault, "Memory", succession, aConfig().limits)
+    const result = await succeedStoredNote({ path: vault, name: "Memory", limits: aLimits() }, succession)
     expect(result).toMatchObject({
       succeeded: false,
       reason: "partial",
@@ -34,7 +36,9 @@ test.runIf(process.platform === "win32")(
       written: [{ folder: "archive/search", note: { statement: request.previous.note.statement } }],
     })
     expect(await readFile(file, "utf8")).toBe(renderNote(request.previous.note))
-    expect(await readNote(vault, "archive/search", request.previous.note.statement, aConfig().limits)).toMatchObject({
+    expect(
+      await readNote({ path: vault, limits: aLimits() }, "archive/search", request.previous.note.statement),
+    ).toMatchObject({
       succeeded: true,
     })
     await expect(readFile(join(destination, `${request.successor.note.statement}.md`))).rejects.toMatchObject({

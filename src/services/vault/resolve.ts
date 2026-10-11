@@ -19,23 +19,34 @@ async function resolveParts(
   parts: string[],
   kind: "directory" | "file",
 ): Promise<ResolveResult> {
-  if (problems.length > 0) return { succeeded: false, reason: "invalid", problems }
+  if (problems.length > 0) {
+    return { succeeded: false, reason: "invalid", problems }
+  }
+
   const root = await resolveRoot(vault)
-  if (!root.succeeded) return root
+  if (!root.succeeded) {
+    return root
+  }
+
   let current = root.output
   for (const [depth, part] of parts.entries()) {
     const path = join(current, part)
     const target = await resolveEntry(root.output, path, joinVaultPath(...parts.slice(0, depth + 1)))
-    if (!target.succeeded) return target
+    if (!target.succeeded) {
+      return target
+    }
+
     const stat = await linkStatOf(target.output)
     if (!stat.succeeded) {
-      if (stat.reason === "not-found")
+      if (stat.reason === "not-found") {
         return { succeeded: true, output: join(target.output, ...parts.slice(depth + 1)) }
+      }
       return stat
     }
     if ((depth < parts.length - 1 || kind === "directory") && !stat.output.isDirectory()) {
       return { succeeded: false, reason: "not-directory", problems: [`${path} is not a directory`] }
     }
+
     current = target.output
   }
   return { succeeded: true, output: current }
@@ -49,9 +60,12 @@ async function resolveRoot(vault: string): Promise<ResolveResult> {
     }
     return root
   }
+
   const stat = await linkStatOf(root.output)
   if (!stat.succeeded) {
-    if (stat.reason === "not-found") return { succeeded: false, reason: "vault-missing", problems: stat.problems }
+    if (stat.reason === "not-found") {
+      return { succeeded: false, reason: "vault-missing", problems: stat.problems }
+    }
     return stat
   }
   if (!stat.output.isDirectory()) {
@@ -63,10 +77,15 @@ async function resolveRoot(vault: string): Promise<ResolveResult> {
 async function resolveEntry(root: string, path: string, displayPath: string): Promise<ResolveResult> {
   const stat = await linkStatOf(path)
   if (!stat.succeeded) {
-    if (stat.reason === "not-found") return { succeeded: true, output: path }
+    if (stat.reason === "not-found") {
+      return { succeeded: true, output: path }
+    }
     return stat
   }
-  if (!stat.output.isSymbolicLink()) return { succeeded: true, output: path }
+  if (!stat.output.isSymbolicLink()) {
+    return { succeeded: true, output: path }
+  }
+
   const target = await realPathOf(path)
   if (!target.succeeded) {
     if (target.reason === "not-found" || target.code === "ELOOP") {

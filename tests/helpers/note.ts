@@ -8,6 +8,7 @@ import {
   type ValidateNoteResult,
   validateNote,
 } from "#/domain"
+import { aLimits } from "./limits.ts"
 
 export function aNote(): Note {
   return {
@@ -44,7 +45,7 @@ export function aParsedNote(frontmatterLines: string[], body: string): ParsedNot
 }
 
 export function readBack(text: string): ValidateNoteResult {
-  const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
+  const limits = aLimits()
   const parsed = parseNote(aNote().statement, text)
   if (!parsed.succeeded) {
     return parsed
@@ -72,8 +73,7 @@ export function aDontForgetNote(statement: string): Note {
 }
 
 export function aQuestion(): Note {
-  const note = noteAbout("Local or remote embeddings", "question")
-  return { ...note, frontmatter: { ...note.frontmatter, id: "01JABCDE7XKQ2M9V3RTN8WPZ5F" } }
+  return noteAbout("Local or remote embeddings", "question")
 }
 
 export function aDecision(): Note {

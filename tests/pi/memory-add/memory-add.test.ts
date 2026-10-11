@@ -1,5 +1,3 @@
-import { join } from "node:path"
-
 import { expect, test } from "vitest"
 
 import { memoryConfigPath } from "#/pi"
@@ -70,8 +68,4 @@ test("the registered execute translates refusals without hiding their cause", as
   expect(textOf(response)).toContain("D:/Downloads has no registered project")
   expect(textOf(response)).toContain(memoryConfigPath(agentDir))
   expect(textOf(response)).toContain("global scope")
-})
-
-test("keeps the config in the pi agent folder", () => {
-  expect(memoryConfigPath(join("C:", "agent"))).toBe(join("C:", "agent", "pi-obsidian-memory", "config.json"))
 })

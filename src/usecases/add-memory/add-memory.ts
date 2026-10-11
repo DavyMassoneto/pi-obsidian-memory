@@ -7,11 +7,10 @@ import {
   type ReadNoteResult,
   readConfig,
   readNote,
-  refreshIndexes,
   targetVault,
   today,
 } from "#/services"
-import { maintenanceProblemsOf } from "./maintenance.ts"
+import { maintainAddedMemory } from "./maintenance.ts"
 import type { AddMemoryRequest, AddMemoryResult, MemoryContext } from "./types.ts"
 
 export async function addMemory(request: AddMemoryRequest, context: MemoryContext): Promise<AddMemoryResult> {
@@ -27,9 +26,10 @@ export async function addMemory(request: AddMemoryRequest, context: MemoryContex
 
   const { path, name } = target.output
   const { limits } = config.output
-  const created = await createMemoryNote(path, request.folder, newNote(request.draft, newNoteId(), today()), limits)
+  const vault = { path, name, limits }
+  const created = await createMemoryNote(vault, request.folder, newNote(request.draft, newNoteId(), today()))
   if (!created.succeeded && created.reason === "exists") {
-    const existing = await readNote(path, request.folder, created.existingStatement, limits)
+    const existing = await readNote(vault, request.folder, created.existingStatement)
     return refuseExisting(created, existing)
   }
 
@@ -37,8 +37,7 @@ export async function addMemory(request: AddMemoryRequest, context: MemoryContex
     return created
   }
 
-  const refreshed = await refreshIndexes(path, request.folder, name, limits)
-  const maintenanceProblems = [...maintenanceProblemsOf(created), ...maintenanceProblemsOf(refreshed)]
+  const maintenanceProblems = await maintainAddedMemory(vault, request.folder, created)
   const notePath = displayNotePath(request.folder, created.output.note.statement)
   return {
     succeeded: true,

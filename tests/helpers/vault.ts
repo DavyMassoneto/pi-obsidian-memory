@@ -1,19 +1,12 @@
 import { createHash } from "node:crypto"
 import { existsSync } from "node:fs"
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises"
+import { mkdir, readFile, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, parse } from "node:path"
 
-import { onTestFinished } from "vitest"
-
 import { renderNote } from "#/domain"
 import { aDecision, aNote, aQuestion } from "./note.ts"
-
-export async function useTempVault(): Promise<string> {
-  const vault = await mkdtemp(join(tmpdir(), "vault-"))
-  onTestFinished(() => rm(vault, { recursive: true, force: true }))
-  return vault
-}
+import { useTempFolder } from "./temp-folder.ts"
 
 export async function linkFolder(target: string, link: string): Promise<void> {
   await symlink(target, link, "junction")
@@ -49,7 +42,7 @@ export async function readIndexOf(vault: string, folder: string): Promise<string
 }
 
 export async function vaultWithNote() {
-  const vault = await useTempVault()
+  const vault = await useTempFolder()
   const note = aNote()
   const text = renderNote(note)
   await putNoteFile(vault, "pnpm", note.statement, text)
@@ -65,7 +58,7 @@ export async function vaultWithNoteToArchive(today: string) {
 }
 
 export async function vaultWithQuestion(today: string) {
-  const vault = await useTempVault()
+  const vault = await useTempFolder()
   const question = aQuestion()
   const text = renderNote(question)
   await putNoteFile(vault, "search", question.statement, text)

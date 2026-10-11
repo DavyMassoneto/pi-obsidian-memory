@@ -1,11 +1,10 @@
-import { mkdtemp, rm } from "node:fs/promises"
-import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { DatabaseSync } from "node:sqlite"
 
 import { onTestFinished } from "vitest"
 
 import { type IndexEntry, openIndex, type SearchHit, type SearchIndex, type SearchResult } from "#/services"
+import { useTempFolder } from "./temp-folder.ts"
 
 export async function useTempIndex(): Promise<SearchIndex> {
   const { index } = await useIndexFile()
@@ -46,10 +45,16 @@ export function changeIndexFile(path: string, sql: string): void {
 export function holdIndexLock(path: string, mode: "read" | "write") {
   const database = new DatabaseSync(path)
   onTestFinished(() => {
-    if (database.isOpen) database.close()
+    if (database.isOpen) {
+      database.close()
+    }
   })
-  if (mode === "read") database.exec("BEGIN; SELECT * FROM notes")
-  else database.exec("BEGIN IMMEDIATE")
+
+  if (mode === "read") {
+    database.exec("BEGIN; SELECT * FROM notes")
+  } else {
+    database.exec("BEGIN IMMEDIATE")
+  }
 
   return () => database.close()
 }
@@ -85,12 +90,6 @@ export function anEntry(): IndexEntry {
     modifiedMs: 1_790_000_000_000,
     hash: "a".repeat(64),
   }
-}
-
-export async function useTempFolder(): Promise<string> {
-  const folder = await mkdtemp(join(tmpdir(), "index-"))
-  onTestFinished(() => rm(folder, { recursive: true, force: true }))
-  return folder
 }
 
 export function entryWith(id: string, statement: string, body: string): IndexEntry {

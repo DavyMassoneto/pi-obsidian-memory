@@ -1,4 +1,14 @@
-import type { CreateResult, RefreshResult } from "#/services"
+import { type CreateResult, type NamedVaultContext, type RefreshResult, refreshIndexes } from "#/services"
+import type { Done } from "#/shared"
+
+export async function maintainAddedMemory(
+  vault: NamedVaultContext,
+  folder: string,
+  created: Extract<CreateResult, Done>,
+): Promise<string[]> {
+  const refreshed = await refreshIndexes(vault, folder)
+  return [...maintenanceProblemsOf(created), ...maintenanceProblemsOf(refreshed)]
+}
 
 export function maintenanceProblemsOf(result: CreateResult | RefreshResult): string[] {
   if (!result.succeeded) {

@@ -19,17 +19,27 @@ async function publish(path: string, text: string, mode: "create" | "replace"): 
   let cleanupProblems: string[] = []
   try {
     await writeFile(temporary, text, { flag: "wx" })
-    if (mode === "create") await link(temporary, path)
-    else await rename(temporary, path)
+    if (mode === "create") {
+      await link(temporary, path)
+    } else {
+      await rename(temporary, path)
+    }
     result = { succeeded: true }
   } catch (error) {
-    if (!(error instanceof Error)) throw error
+    if (!(error instanceof Error)) {
+      throw error
+    }
     result = writeFailure(error, path)
   } finally {
     cleanupProblems = await cleanupTemporary(temporary)
   }
-  if (cleanupProblems.length === 0) return result
-  if (result.succeeded) return { ...result, maintenanceProblems: cleanupProblems }
+
+  if (cleanupProblems.length === 0) {
+    return result
+  }
+  if (result.succeeded) {
+    return { ...result, maintenanceProblems: cleanupProblems }
+  }
   return { ...result, problems: [...result.problems, ...cleanupProblems] }
 }
 
@@ -38,7 +48,9 @@ async function cleanupTemporary(path: string): Promise<string[]> {
     await rm(path, { force: true })
     return []
   } catch (error) {
-    if (error instanceof Error) return [`Temporary file ${path} could not be removed: ${error.message}`]
+    if (error instanceof Error) {
+      return [`Temporary file ${path} could not be removed: ${error.message}`]
+    }
     return [`Temporary file ${path} could not be removed`]
   }
 }
@@ -48,7 +60,9 @@ export async function createDirectory(path: string): Promise<WriteResult> {
     await mkdir(path, { recursive: true })
     return { succeeded: true }
   } catch (error) {
-    if (error instanceof Error) return writeFailure(error, path)
+    if (error instanceof Error) {
+      return writeFailure(error, path)
+    }
     throw error
   }
 }
@@ -58,7 +72,9 @@ export async function removeFile(path: string): Promise<WriteResult> {
     await rm(path)
     return { succeeded: true }
   } catch (error) {
-    if (error instanceof Error) return writeFailure(error, path)
+    if (error instanceof Error) {
+      return writeFailure(error, path)
+    }
     throw error
   }
 }

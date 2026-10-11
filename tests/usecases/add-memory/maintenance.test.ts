@@ -1,7 +1,58 @@
+import { mkdir, readdir } from "node:fs/promises"
+import { join } from "node:path"
+
 import { expect, test } from "vitest"
 
-import { maintenanceProblemsOf } from "#/usecases"
-import { aNote } from "#test-helpers"
+import { readNote } from "#/services"
+import { addMemory, maintenanceProblemsOf } from "#/usecases"
+import { aLimits, aNote, linkFolder, setupVaults } from "#test-helpers"
+
+const draft = {
+  statement: "Use pnpm, never npm",
+  type: "rule" as const,
+  body: "Use pnpm everywhere.",
+  dontForget: false,
+}
+
+test("reports a saved note and the true maintenance cause when the index points outside", async () => {
+  const { root, globalVault, configPath } = await setupVaults()
+  const outside = join(root, "outside")
+  await mkdir(outside)
+  await linkFolder(outside, join(globalVault, "index.md"))
+
+  const result = await addMemory(
+    { scope: "global", folder: "pnpm", draft },
+    { configPath, workingFolder: "D:/Downloads" },
+  )
+
+  expect(result).toMatchObject({
+    succeeded: true,
+    output: { maintenanceProblems: ["outside-vault: index.md leads outside the vault"] },
+  })
+  expect(await readNote({ path: globalVault, limits: aLimits() }, "pnpm", draft.statement)).toMatchObject({
+    succeeded: true,
+  })
+  expect(await readdir(outside)).toEqual([])
+})
+
+test("reports persistence when the index destination is a directory", async () => {
+  const { globalVault, configPath } = await setupVaults()
+  await mkdir(join(globalVault, "index.md"))
+
+  const result = await addMemory(
+    { scope: "global", folder: "pnpm", draft },
+    { configPath, workingFolder: "D:/Downloads" },
+  )
+
+  expect(result).toMatchObject({
+    succeeded: true,
+    output: { maintenanceProblems: [expect.stringContaining("index.md")] },
+  })
+  expect(await readNote({ path: globalVault, limits: aLimits() }, "pnpm", draft.statement)).toMatchObject({
+    succeeded: true,
+  })
+  expect(await readdir(join(globalVault, "index.md"))).toEqual([])
+})
 
 test("keeps an index refusal's true reason and every problem", () => {
   expect(

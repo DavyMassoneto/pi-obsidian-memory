@@ -1,24 +1,22 @@
-import { type NoteLimits, parseNote, validateNote } from "#/domain"
+import { parseNote, validateNote } from "#/domain"
 import { hashOf, readRawFile } from "#/services/vault/filesystem"
 import { displayNotePath } from "./display.ts"
 import { noteFileName } from "./paths.ts"
 import { resolveFile } from "./resolve.ts"
-import type { ReadNoteResult } from "./types.ts"
+import type { ReadNoteResult, VaultContext } from "./types.ts"
 
-export async function readNote(
-  vault: string,
-  folder: string,
-  statement: string,
-  limits: NoteLimits,
-): Promise<ReadNoteResult> {
-  const path = await resolveFile(vault, folder, noteFileName(statement))
+export async function readNote(vault: VaultContext, folder: string, statement: string): Promise<ReadNoteResult> {
+  const path = await resolveFile(vault.path, folder, noteFileName(statement))
   if (!path.succeeded) {
     return path
   }
 
   const file = await readRawFile(path.output)
   if (!file.succeeded) {
-    if (file.reason !== "not-found") return file
+    if (file.reason !== "not-found") {
+      return file
+    }
+
     const problem = `${displayNotePath(folder, statement)} does not exist`
     return { succeeded: false, reason: "not-found", problems: [problem] }
   }
@@ -29,7 +27,7 @@ export async function readNote(
   }
 
   const hash = hashOf(file.output)
-  const validated = validateNote(parsed.output, limits)
+  const validated = validateNote(parsed.output, vault.limits)
   if (!validated.succeeded) {
     return { succeeded: false, reason: "needs-fixing", problems: validated.problems, parsed: parsed.output, hash }
   }

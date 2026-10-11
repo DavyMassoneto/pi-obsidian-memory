@@ -1,7 +1,8 @@
 import { type ExtensionAPI, getAgentDir } from "@earendil-works/pi-coding-agent"
 
 import { disableClaudeCodeAutoMemory } from "#/pi/claude-code"
-import { memoryAddTool, memoryConfigPath } from "#/pi/memory-add"
+import { memoryAddTool } from "#/pi/memory-add"
+import { memoryConfigPath } from "#/pi/paths"
 import type { ExtensionRegistrar } from "./types.ts"
 
 export default function extension(pi: ExtensionAPI): void {

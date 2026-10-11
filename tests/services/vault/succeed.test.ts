@@ -5,9 +5,9 @@ import { expect, test } from "vitest"
 
 import { renderNote } from "#/domain"
 import { readNote, succeedStoredNote } from "#/services"
-import { aDecision, aQuestion, vaultWithQuestion } from "#test-helpers"
+import { aDecision, aLimits, aQuestion, vaultWithQuestion } from "#test-helpers"
 
-const limits = { maxBodyChars: 1000, maxStatementChars: 100 }
+const limits = aLimits()
 const today = "2026-10-06"
 
 const question = aQuestion()
@@ -16,26 +16,26 @@ const decision = aDecision()
 test("archives the previous note, writes the successor and links them both ways", async () => {
   const { vault, request } = await vaultWithQuestion(today)
 
-  const result = await succeedStoredNote(vault, "Global memory", request, limits)
+  const result = await succeedStoredNote({ path: vault, name: "Global memory", limits }, request)
 
   expect(result).toMatchObject({ succeeded: true })
-  expect(await readNote(vault, "archive/search", question.statement, limits)).toMatchObject({
+  expect(await readNote({ path: vault, limits }, "archive/search", question.statement)).toMatchObject({
     output: { note: { frontmatter: { archived: today, replacedBy: "[[search/Chose local embeddings]]" } } },
   })
-  expect(await readNote(vault, "search", decision.statement, limits)).toMatchObject({
+  expect(await readNote({ path: vault, limits }, "search", decision.statement)).toMatchObject({
     output: {
       note: {
         frontmatter: { created: today, updated: today, replaces: "[[archive/search/Local or remote embeddings]]" },
       },
     },
   })
-  expect(await readNote(vault, "search", question.statement, limits)).toMatchObject({ reason: "not-found" })
+  expect(await readNote({ path: vault, limits }, "search", question.statement)).toMatchObject({ reason: "not-found" })
 })
 
 test("refreshes the indexes of every folder involved", async () => {
   const { vault, request } = await vaultWithQuestion(today)
 
-  await succeedStoredNote(vault, "Global memory", request, limits)
+  await succeedStoredNote({ path: vault, name: "Global memory", limits }, request)
 
   const searchIndex = await readFile(join(vault, "search", "index.md"), "utf8")
   expect(searchIndex).toContain(decision.statement)
@@ -48,7 +48,7 @@ test("refuses with a conflict when the previous note changed since it was read, 
   const edited = renderNote({ ...question, body: "Edited in Obsidian." })
   await writeFile(file, edited)
 
-  expect(await succeedStoredNote(vault, "Global memory", request, limits)).toMatchObject({
+  expect(await succeedStoredNote({ path: vault, name: "Global memory", limits }, request)).toMatchObject({
     succeeded: false,
     reason: "conflict",
   })
@@ -62,7 +62,7 @@ test("refuses when the successor's name is taken, changing nothing", async () =>
   await writeFile(join(vault, "search", `${decision.statement}.md`), "user note")
   const before = await readFile(file, "utf8")
 
-  expect(await succeedStoredNote(vault, "Global memory", request, limits)).toEqual({
+  expect(await succeedStoredNote({ path: vault, name: "Global memory", limits }, request)).toEqual({
     succeeded: false,
     reason: "exists",
     existingStatement: decision.statement,
@@ -76,7 +76,7 @@ test("refuses an invalid successor, changing nothing", async () => {
   const { vault, request } = await vaultWithQuestion(today)
   const invalid = { ...request, successor: { folder: "search", note: { ...decision, body: "" } } }
 
-  expect(await succeedStoredNote(vault, "Global memory", invalid, limits)).toEqual({
+  expect(await succeedStoredNote({ path: vault, name: "Global memory", limits }, invalid)).toEqual({
     succeeded: false,
     reason: "invalid",
     problems: ["body: is empty"],
@@ -88,7 +88,7 @@ test("refuses a successor in a folder reserved for the vault, changing nothing",
   const { vault, request } = await vaultWithQuestion(today)
   const reserved = { ...request, successor: { folder: "archive/search", note: decision } }
 
-  expect(await succeedStoredNote(vault, "Global memory", reserved, limits)).toEqual({
+  expect(await succeedStoredNote({ path: vault, name: "Global memory", limits }, reserved)).toEqual({
     succeeded: false,
     reason: "invalid",
     problems: ['folder "archive": is reserved for the vault'],

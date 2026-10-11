@@ -3,6 +3,9 @@ import { expect, test } from "vitest"
 import { displayIndexName, displayIndexText } from "#/domain"
 
 test.each([
+  ["", "<code></code>"],
+  [" ", "` `"],
+  ["   ", "`   `"],
   ["Bad#name", "`Bad#name`"],
   ["Bad[[name]]", "`Bad[[name]]`"],
   ["Bad`name", "``Bad`name``"],

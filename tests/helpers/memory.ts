@@ -3,7 +3,7 @@ import { dirname, join } from "node:path"
 
 import { memoryConfigPath } from "#/pi"
 import { aConfig, writeConfig } from "./config.ts"
-import { useTempFolder } from "./search-index.ts"
+import { useTempFolder } from "./temp-folder.ts"
 
 export async function setupVaults() {
   const root = await useTempFolder()

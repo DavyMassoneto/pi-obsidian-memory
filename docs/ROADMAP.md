@@ -15,24 +15,43 @@ Every milestone:
 
 ## Current state
 
-- pi loads the extension. At session start it only shows "pi-obsidian-memory loaded".
+- pi loads the extension and registers `memory_add` silently. The real-pi smoke test checks that registration.
 - One tool, `memory_add`, for explicit requests to remember. It writes a valid note to the global or project vault,
   refuses invalid notes, existing names (in any case) and unregistered projects, and refreshes the folder indexes up to
-  the root. When the name is taken, it reads the existing note to show it.
+  the root, including resolved physical ancestors for directory aliases. When the name is taken, it reads the exact
+  existing disk statement to show the note. Persistence remains success with warnings if index/cleanup maintenance
+  fails; warnings do not mean the note should be saved again.
 - pi sets `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` for its own process.
 - The config is read and validated, and a folder is matched to its project. Nothing writes the config.
-- Built but not reachable by any tool or command: updating, archiving and succeeding notes, and the text search index
-  (SQLite FTS5).
+- Built but not reachable by any tool or command: updating, archiving and succeeding notes. Lifecycle reports partial
+  progress after late failures; update/removal hash checks and link checks still have check/use windows.
+- The text search resource has a private SQLite connection, prepared statements and transactional rowid-linked FTS5
+  writes with structured failures. A new/incompatible derived schema is rebuilt empty. Vault synchronization and
+  corrupt-index content reconstruction remain milestone 2 work; search is not connected to a tool.
 - Nothing stops the LLM from reading or writing vault files with pi's file tools, bash or Claude Code sessions started
   by pi.
-- Texts the LLM sees name `/memory-setup` and `/memory-init`, which do not exist, and tell it to change a note, which
-  no tool can do. The README says the extension has no features.
-- The note frontmatter and validation rework is uncommitted, part of it staged.
-- Modules with no test at their mirrored path: `domain/config/paths`, `domain/note/names`,
-  `domain/validation/describe`, `pi/memory-add/respond`, `services/search-index/errors`,
-  `services/search-index/write`, `services/vault/files`, `services/vault/paths`, `services/vault/refusals`,
-  `services/vault/relocate`. Some are covered under other names (`paths` by `resolve.test.ts` and
-  `vault-name.test.ts`; index writes by `open.test.ts` and `search.test.ts`).
+- Guidance points to manual configuration/global scope and never offers unavailable setup/init/update operations.
+- Frontmatter, name/path, diagnostic, pi response, search-write and lifecycle regression tests now use source-named
+  paths. Names live in `domain/names`, paths in `domain/vault-path` and pi paths in `pi/paths`.
+- Vault filesystem, publication and refusal internals are exercised through real-disk public operations, not exported
+  to tests. `services/vault/paths` is filename assembly; there is no longer a `services/vault/files` module or a
+  `services/search-index/errors` module. This does not claim a dedicated test file for every internal helper.
+- Shared temporary-folder and limits fixtures live by topic under `tests/helpers`; no filesystem mocks are used.
+
+## Completed correction work
+
+- [x] Missing/non-directory paths return refusals; enumeration includes dot-notes, permitted aliases and diagnostic
+  entries for refused notes/folders. Unsafe names render without misleading links (review 1, 5, 30, 31, 33, 34).
+- [x] Exclusive creation, resolved-target writes, exact existing statements, retained refresh causes and truthful
+  saved/partial/maintenance outcomes (2–4, 6, 16, 19, 25, 32). These do not close update/removal races or make lifecycle
+  atomic; deterministic cleanup-denial and catastrophic SQLite cleanup coverage remain limited.
+- [x] Pure memory rules/factory in domain, resource-owned config I/O, narrowed vault API, named vault contexts and pi
+  path ownership, with no cross-resource service imports (7–10, 12–14).
+- [x] Private search resource, precise boundary types, exhaustive presentation, shared schema/path definitions,
+  rowid-linked transactional FTS and cached Intl/statements (11, 15, 17–18, 20–24, 26).
+- [x] Source-named behavioral regressions, shared fixture cleanup, accurate current docs, SDK peer pin to tested 1.0.1
+  and silent registration smoke (27–29). Independent integrated review is still an acceptance gate, not implied by
+  these implementation checkmarks.
 
 ## Settled behaviour
 
@@ -63,16 +82,16 @@ Every milestone:
 
 - **Goal:** nothing new for the user; the next milestones build on committed, tested, truthful code.
 - **Scope:**
-  - Commit the in-progress note work.
+  - [x] Commit the note/frontmatter correction work.
   - Each module listed in Current state gets its test at the mirrored path (tests covering it under other names move
     there), or is confirmed as wiring or constants (AGENTS.md, Tests).
-  - Texts the LLM or user sees name only commands and tools that exist, and offer what can be done instead:
+  - [x] Texts the LLM or user sees name only commands and tools that exist, and offer what can be done instead:
     - an invalid config points to the config file described in config.md;
     - saving to an unregistered project offers saving to the global vault;
     - a name already taken shows the existing note and asks for a statement that says what is new, since no tool can
       update a note yet.
     - Milestones 1 and 3 restore these texts when the commands and tools exist.
-  - The README Status says what works.
+  - [x] The README Status says what works.
 - **Out of scope:** new behaviour.
 - **Depends on:** nothing.
 - **Done when:**
@@ -106,7 +125,7 @@ Every milestone:
 - **Out of scope:** settings of later milestones (each adds its own); copying or moving notes between vaults.
 - **Depends on:** 0.
 - **Done when:**
-  - in pi with no config, session start offers `/memory-setup` (smoke test, replacing the "loaded" check);
+  - in pi with no config, session start offers `/memory-setup` (smoke test, extending the registered-tool check);
   - after setup, the config holds every key and `memory_add` saves into the chosen vault;
   - a config missing a key gains it, with its default, after re-running setup, and every other value stays the same;
   - after `/memory-init`, a project memory saved from a subfolder lands in the project vault, and an unregistered
@@ -179,8 +198,9 @@ Every milestone:
 
 ### 3. Explicit updates and lifecycle
 
-- **Goal:** when the user asks, the agent updates, archives or replaces a memory. It never deletes a note and never
-  overwrites the user's edit.
+- **Goal:** when the user asks, the agent updates, archives or replaces a memory, preserving history and refusing
+  detected edits. The current resource has the update/removal race limits documented in vault-format; this milestone
+  must not describe those checks as atomic protection.
 - **Scope:**
   - `memory_update`, `memory_archive` and `memory_succeed`, for explicit requests only (VISION 5, 8; vault-format
     Writing and Lifecycle).
@@ -194,7 +214,8 @@ Every milestone:
     stays;
   - an archived note sits under `archive/` with `archived` set, and is out of search and Don't forget;
   - a successor and its archived note link to each other, whatever the two types;
-  - a refused write (read-only file, name taken, not read first) changes nothing on disk;
+  - preflight refusals (name taken, not read first) publish nothing; late filesystem failures report partial progress
+    and retained copies accurately, and maintenance warnings do not misreport an already-completed movement;
   - the skill covers the new tools, for explicit requests only.
 
 ### 4. Automatic capture

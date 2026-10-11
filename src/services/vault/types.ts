@@ -1,4 +1,4 @@
-import type { InvalidNote, Note, NoteLimits, ParsedNote, PlacedNote, Succession } from "#/domain"
+import type { InvalidNote, Note, NoteLimits, ParsedNote, PlacedNote, ProblemFolder, Succession } from "#/domain"
 import type { Done, Failed, Succeeded } from "#/shared"
 
 export interface VaultContext {
@@ -17,11 +17,6 @@ export interface StoredNote {
 
 export interface MaintenanceWarnings {
   maintenanceProblems?: string[]
-}
-
-export interface ProblemFolder {
-  folder: string
-  problems: string[]
 }
 
 export interface FolderListing {
@@ -45,8 +40,6 @@ export interface SucceedRequest {
 }
 
 export interface RelocationRequest {
-  vault: string
-  vaultName: string
   original: PlacedNote
   hashWhenRead: string
   written: [PlacedNote, ...PlacedNote[]]
@@ -108,6 +101,8 @@ export type UpdateResult = (Succeeded<StoredNote> & MaintenanceWarnings) | Updat
 export type VaultResult = CreateResult | UpdateResult
 export type ReadNoteResult = Succeeded<StoredNote> | ReadRefusal | NeedsFixingNote
 export type CheckResult = Done | LifecycleRefusal
+export type RemovalResult = Succeeded<string> | LifecycleRefusal
+export type RelocationWriteResult = RemovalResult | PartialRelocation
 export type RelocationResult = (Done & MaintenanceWarnings) | LifecycleRefusal | PartialRelocation
 export type PlacedResult = (Succeeded<PlacedNote> & MaintenanceWarnings) | LifecycleRefusal | PartialRelocation
 export type SuccessionResult = (Succeeded<Succession> & MaintenanceWarnings) | LifecycleRefusal | PartialRelocation

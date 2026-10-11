@@ -46,6 +46,8 @@ export function writeFailure(error: Error, path: string): WriteFailure {
 }
 
 export function errorCode(error: Error): string {
-  if ("code" in error && typeof error.code === "string") return error.code
+  if ("code" in error && typeof error.code === "string") {
+    return error.code
+  }
   return error.name
 }

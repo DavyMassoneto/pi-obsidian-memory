@@ -2,6 +2,10 @@
 
 How memory is organized inside a vault (global or project). Decided with the user on 2026-10-04.
 
+The format and resource operations below exist today. Automated synchronization, templates in the vault,
+Don't forget injection, and commands such as `/memory-doctor` are target behaviour, not registered features.
+Only `memory_add` is currently a pi tool; see [ROADMAP.md](ROADMAP.md).
+
 ## Layout
 
 - One folder per subject. Each folder holds short notes, one point per note.
@@ -11,15 +15,19 @@ How memory is organized inside a vault (global or project). Decided with the use
   3. When two paths make sense, the LLM asks the user.
 - Splitting a folder that grew too much is up to the user, or suggested by `/memory-doctor`.
 - Every folder has an `index.md` listing its subfolders and its notes (with type and don't forget mark), so the LLM can
-  walk down the tree level by level. The memory system regenerates it on every write; manual edits to it are
-  overwritten.
+  walk down the tree level by level. `memory_add` and completed lifecycle operations refresh affected indexes;
+  manual edits to them are overwritten. The primitive create/update APIs leave refresh to their caller.
   - Links use the full path from the vault root, since every folder has an `index.md` and the same statement can
     exist in two folders.
   - Subjects and notes are sorted alphabetically, ignoring case; empty sections are left out.
   - The root index is titled with the vault name and has an `## Archive` section when `archive/` exists. `archive/`
     has its own indexes, in the same format.
-  - Invalid notes are listed under `## Needs fixing`, with their problems, so they never vanish from the map.
-  - Writing a note refreshes the index of its folder and of every folder above it, up to the root.
+  - Invalid or unreadable notes and problematic folders are listed under `## Needs fixing`, with their problems.
+    Names or parent paths that cannot be represented faithfully as wikilinks use literal non-clickable text instead.
+    Folder problems are labeled `Folder`.
+  - Refresh includes logical and resolved physical folders and their ancestors, up to the root, without rewriting
+    the same resolved index destination twice. Lifecycle also refreshes the physical parent of the removed original.
+  - Valid dot-prefixed `.md` notes remain ordinary notes and appear in indexes. Actual temporary files are excluded.
   - Not subjects: hidden folders (`.obsidian/`), and at the vault root `archive/` and `_templates/`. Below the root,
     folders with those names are ordinary subjects.
   - `index` (any case) is reserved: no note can have it as its statement.
@@ -43,22 +51,33 @@ How memory is organized inside a vault (global or project). Decided with the use
   - Folder and file names are checked first: `/` between folders, no absolute path, drive letter, empty part, `.` or
     `..`, and the same name rules as a statement.
   - A new memory goes in a subject folder: never hidden (`.name`), never `archive/` or `_templates/` at the root
-    (archiving goes through the lifecycle).
+    (archiving goes through the lifecycle). This policy applies to both logical and resolved physical destinations.
+  - The vault and every folder component must be directories. Missing, non-directory and unreadable locations
+    produce distinct refusals.
   - Links inside the vault (symbolic links, junctions) are followed only when their real path is inside the real
     path of the vault; a link that leads outside or does not resolve (missing target, loop) is refused.
   - Limit: links are checked right before each read or write, not atomically with it. A folder replaced by a link to
     the outside between the check and the use is not caught.
-- A new note is refused when a note with the same name already exists in the folder, in any case (Windows does not
-  tell `Use pnpm` from `use pnpm`).
-- A note is only updated if it did not change on disk since it was read (content hash). If the user edited it in
-  Obsidian in the meantime, the update is refused as a conflict and the user's edit stays.
-- Every write goes to a hidden temporary file in the same folder (`.<name>.md.tmp-<id>`) and is then renamed over the
-  note, so a crash never leaves a half-written note. The temporary file lives for milliseconds and is always removed.
-- A note that cannot be written (read-only, locked) is refused with the reason; the note stays as it was.
-- Archiving or succeeding a note touches several files, with no journal. Everything is checked before anything is
-  written (the note did not change, the names are free, the new notes are valid), so the usual refusals change
-  nothing. Then the order is: archived copy, successor, and only last the original is removed. A crash in the middle
-  can only leave the same note in two places, never lose one; `/memory-doctor` finds duplicate ids.
+- Creation writes a complete hidden temporary file (`.<name>.md.tmp-<id>`) and publishes it with an exclusive hard
+  link. It never replaces an occupied exact destination. Hard-link support is required; there is no silent fallback
+  to partial-content creation. Existing-name refusals carry the actual disk statement, including alias names/casing.
+- Name checks ignore case. Concurrent case-equivalent publication depends on native filesystem name equivalence:
+  ordinary case-insensitive NTFS is tested; case-sensitive directories have no atomic case-folded uniqueness promise.
+- Updates and generated index replacement rename a complete temporary file over the validated resolved target,
+  preserving permitted internal alias entries. This is not a durability guarantee across power loss.
+- Updates and original removals compare the content hash immediately before mutation. A detected edit is a conflict,
+  but comparison and rename/removal are separate operations: an edit in that remaining window may be replaced or
+  removed. Hash checks are not compare-and-swap transactions, and link checks are not atomic confinement.
+- Temporary-file cleanup is attempted after publication. A successful publication remains successful if cleanup
+  fails, with maintenance diagnostics; a primary failure stays primary if cleanup also fails. A temporary may remain.
+- A successful note write or completed lifecycle movement remains success when only index maintenance fails, with
+  warnings retaining the cause. A warning means an index may be stale, not that the note should be saved again.
+- Lifecycle preflight reduces refusals but cannot guarantee later steps will succeed. The order is archived copy,
+  successor if any, then removal of the checked resolved original. A later failure reports already-published notes
+  and an observed original state (`present`, `missing` or `unknown`), not proof of preserved original content.
+  Published copies are not deleted in a hash-based rollback because that could delete a concurrent user edit.
+  This is not an atomic multi-file operation: failures/crashes can leave partial state, directories and duplicates.
+  Archiving through a file alias removes its resolved target, so retained aliases to it become dangling links.
 
 ## Changes made outside the system
 
