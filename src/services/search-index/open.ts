@@ -3,35 +3,33 @@ import { mkdirSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { DatabaseSync } from "node:sqlite"
 
+import { closeFailedIndex } from "./cleanup.ts"
 import { INDEX_FILE_EXTENSION, INDEX_FILE_NAME_LENGTH } from "./constants.ts"
-import type { SearchIndex } from "./types.ts"
+import { indexFailure } from "./refusals.ts"
+import { initializeSchema } from "./schema.ts"
+import { SqliteSearchIndex } from "./storage.ts"
+import type { OpenIndexResult } from "./types.ts"
 
-export function openIndex(path: string): SearchIndex {
-  mkdirSync(dirname(path), { recursive: true })
+export function openIndex(path: string): OpenIndexResult {
+  try {
+    mkdirSync(dirname(path), { recursive: true })
+    return initializeIndex(new DatabaseSync(path))
+  } catch (error) {
+    if (!(error instanceof Error)) throw error
+    return indexFailure(error)
+  }
+}
 
-  const index = new DatabaseSync(path)
-  index.exec(`
-    CREATE TABLE IF NOT EXISTS notes (
-      id TEXT PRIMARY KEY,
-      folder TEXT NOT NULL,
-      statement TEXT NOT NULL,
-      body TEXT NOT NULL,
-      type TEXT NOT NULL,
-      dont_forget INTEGER NOT NULL,
-      archived INTEGER NOT NULL,
-      size INTEGER NOT NULL,
-      modified_ms REAL NOT NULL,
-      hash TEXT NOT NULL
-    );
-    CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(
-      id UNINDEXED,
-      statement,
-      body,
-      tokenize = 'porter unicode61'
-    );
-  `)
+function initializeIndex(database: DatabaseSync): OpenIndexResult {
+  try {
+    const schema = initializeSchema(database)
+    if (!schema.succeeded) return closeFailedIndex(database, schema)
 
-  return index
+    return { succeeded: true, output: new SqliteSearchIndex(database), rebuilt: schema.output }
+  } catch (error) {
+    if (!(error instanceof Error)) throw error
+    return closeFailedIndex(database, indexFailure(error))
+  }
 }
 
 export function indexFileFor(indexFolder: string, vaultPath: string): string {
