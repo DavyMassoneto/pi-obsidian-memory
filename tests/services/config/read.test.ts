@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { expect, test } from "vitest"
 
 import { readConfig } from "#/services"
-import { aConfig, registrationFixture, useTempFolder } from "#test-helpers"
+import { memoryConfigAt, registrationFixture, useTempFolder } from "#test-helpers"
 
 test("reads a valid config file", async () => {
   const fixture = await registrationFixture()
@@ -47,7 +47,7 @@ test("refuses hand-edited junction vault overlaps without changing config or vau
 test("refuses an invalid file with every problem", async () => {
   const folder = await useTempFolder()
   const path = join(folder, "config.json")
-  await writeFile(path, JSON.stringify({ ...aConfig(), theme: "dark" }))
+  await writeFile(path, JSON.stringify({ ...memoryConfigAt(folder), theme: "dark" }))
 
   expect(await readConfig(path)).toEqual({
     succeeded: false,

@@ -22,11 +22,11 @@ afterEach(() => {
 })
 
 test("saves a global memory in the global vault and refreshes its indexes", async () => {
-  const { globalVault, configPath } = await setupVaults()
+  const { globalVault, configPath, unregisteredFolder } = await setupVaults()
 
   const result = await addMemory(
     { scope: "global", folder: "tools/pnpm", draft },
-    { configPath, workingFolder: "D:/Downloads" },
+    { configPath, workingFolder: unregisteredFolder },
   )
 
   expect(result).toMatchObject({
@@ -39,11 +39,11 @@ test("saves a global memory in the global vault and refreshes its indexes", asyn
 })
 
 test("saves a project memory in the vault of the project pi runs in", async () => {
-  const { globalVault, projectVault, configPath } = await setupVaults()
+  const { globalVault, projectVault, configPath, projectFolder } = await setupVaults()
 
   const result = await addMemory(
     { scope: "project", folder: "pnpm", draft },
-    { configPath, workingFolder: "D:/Projects/loja/src" },
+    { configPath, workingFolder: join(projectFolder, "src") },
   )
 
   expect(result).toMatchObject({ succeeded: true, output: { vaultName: "loja" } })
@@ -54,11 +54,11 @@ test("saves a project memory in the vault of the project pi runs in", async () =
 test("creates the note today with a fresh id and the don't forget mark when asked", async () => {
   vi.useFakeTimers({ toFake: ["Date"] })
   vi.setSystemTime(new Date(2026, 9, 6, 10, 0))
-  const { configPath } = await setupVaults()
+  const { configPath, unregisteredFolder } = await setupVaults()
 
   const result = await addMemory(
     { scope: "global", folder: "pnpm", draft: { ...draft, dontForget: true } },
-    { configPath, workingFolder: "D:/Downloads" },
+    { configPath, workingFolder: unregisteredFolder },
   )
 
   expect(result).toMatchObject({
@@ -68,43 +68,43 @@ test("creates the note today with a fresh id and the don't forget mark when aske
 })
 
 test("refuses the project scope in a folder with no registered project, writing nothing", async () => {
-  const { globalVault, projectVault, configPath } = await setupVaults()
+  const { globalVault, projectVault, configPath, unregisteredFolder } = await setupVaults()
 
   expect(
-    await addMemory({ scope: "project", folder: "pnpm", draft }, { configPath, workingFolder: "D:/Downloads" }),
+    await addMemory({ scope: "project", folder: "pnpm", draft }, { configPath, workingFolder: unregisteredFolder }),
   ).toMatchObject({ succeeded: false, reason: "no-project" })
   expect(await readdir(globalVault)).toEqual([])
   expect(await readdir(projectVault)).toEqual([])
 })
 
 test("tells the memory is not configured when there is no config", async () => {
-  const { root } = await setupVaults()
+  const { root, unregisteredFolder } = await setupVaults()
 
   expect(
     await addMemory(
       { scope: "global", folder: "pnpm", draft },
-      { configPath: join(root, "missing.json"), workingFolder: "D:/Downloads" },
+      { configPath: join(root, "missing.json"), workingFolder: unregisteredFolder },
     ),
   ).toMatchObject({ succeeded: false, reason: "not-configured" })
 })
 
 test("refuses when the config is invalid, writing nothing", async () => {
-  const { globalVault, configPath } = await setupVaults()
+  const { globalVault, configPath, unregisteredFolder } = await setupVaults()
   await writeFile(configPath, "{ not json")
 
   expect(
-    await addMemory({ scope: "global", folder: "pnpm", draft }, { configPath, workingFolder: "D:/Downloads" }),
+    await addMemory({ scope: "global", folder: "pnpm", draft }, { configPath, workingFolder: unregisteredFolder }),
   ).toMatchObject({ succeeded: false, reason: "invalid-config" })
   expect(await readdir(globalVault)).toEqual([])
 })
 
 test("refuses an invalid note with every problem, writing nothing", async () => {
-  const { globalVault, configPath } = await setupVaults()
+  const { globalVault, configPath, unregisteredFolder } = await setupVaults()
 
   expect(
     await addMemory(
       { scope: "global", folder: "pnpm", draft: { ...draft, statement: "Use a: b", body: "" } },
-      { configPath, workingFolder: "D:/Downloads" },
+      { configPath, workingFolder: unregisteredFolder },
     ),
   ).toEqual({
     succeeded: false,
@@ -115,8 +115,8 @@ test("refuses an invalid note with every problem, writing nothing", async () => 
 })
 
 test("refuses a note whose name is taken and returns the existing note, untouched", async () => {
-  const { globalVault, configPath } = await setupVaults()
-  const context = { configPath, workingFolder: "D:/Downloads" }
+  const { globalVault, configPath, unregisteredFolder } = await setupVaults()
+  const context = { configPath, workingFolder: unregisteredFolder }
   const first = await addMemory({ scope: "global", folder: "pnpm", draft }, context)
   if (!first.succeeded) {
     throw new Error(`setup failed: ${first.problems.join(", ")}`)
@@ -145,24 +145,26 @@ test.each([
   ["the archive", "Archive/pnpm", ['folder "Archive": is reserved for the vault']],
   ["the templates", "_templates/pnpm", ['folder "_templates": is reserved for the vault']],
 ])("refuses %s, writing nothing", async (_case, folder, problems) => {
-  const { root, globalVault, configPath } = await setupVaults()
+  const { root, globalVault, configPath, unregisteredFolder } = await setupVaults()
 
-  expect(await addMemory({ scope: "global", folder, draft }, { configPath, workingFolder: "D:/Downloads" })).toEqual({
+  expect(
+    await addMemory({ scope: "global", folder, draft }, { configPath, workingFolder: unregisteredFolder }),
+  ).toEqual({
     succeeded: false,
     reason: "invalid",
     problems,
   })
   expect(await readdir(globalVault)).toEqual([])
-  expect((await readdir(root)).sort()).toEqual(["Global memory", "config.json", "loja"])
+  expect((await readdir(root)).sort()).toEqual(["Global memory", "config.json", "loja", "work"])
 })
 
 test("lists the folder and note problems together", async () => {
-  const { configPath } = await setupVaults()
+  const { configPath, unregisteredFolder } = await setupVaults()
 
   expect(
     await addMemory(
       { scope: "global", folder: ".private", draft: { ...draft, body: "" } },
-      { configPath, workingFolder: "D:/Downloads" },
+      { configPath, workingFolder: unregisteredFolder },
     ),
   ).toEqual({
     succeeded: false,
@@ -172,24 +174,24 @@ test("lists the folder and note problems together", async () => {
 })
 
 test("refuses a vault folder that does not exist, creating nothing", async () => {
-  const { root, globalVault, configPath } = await setupVaults()
+  const { root, globalVault, configPath, unregisteredFolder } = await setupVaults()
   await rm(globalVault, { recursive: true })
 
   expect(
-    await addMemory({ scope: "global", folder: "pnpm", draft }, { configPath, workingFolder: "D:/Downloads" }),
+    await addMemory({ scope: "global", folder: "pnpm", draft }, { configPath, workingFolder: unregisteredFolder }),
   ).toEqual({ succeeded: false, reason: "vault-missing", problems: [`the vault folder ${globalVault} does not exist`] })
-  expect((await readdir(root)).sort()).toEqual(["config.json", "loja"])
+  expect((await readdir(root)).sort()).toEqual(["config.json", "loja", "work"])
 })
 
 test("reports a saved note and the true maintenance cause when the index points outside", async () => {
-  const { root, globalVault, configPath } = await setupVaults()
+  const { root, globalVault, configPath, unregisteredFolder } = await setupVaults()
   const outside = join(root, "outside")
   await mkdir(outside)
   await linkFolder(outside, join(globalVault, "index.md"))
 
   const result = await addMemory(
     { scope: "global", folder: "pnpm", draft },
-    { configPath, workingFolder: "D:/Downloads" },
+    { configPath, workingFolder: unregisteredFolder },
   )
 
   expect(result).toMatchObject({
@@ -201,12 +203,12 @@ test("reports a saved note and the true maintenance cause when the index points 
 })
 
 test("reports persistence when the index destination is a directory", async () => {
-  const { globalVault, configPath } = await setupVaults()
+  const { globalVault, configPath, unregisteredFolder } = await setupVaults()
   await mkdir(join(globalVault, "index.md"))
 
   const result = await addMemory(
     { scope: "global", folder: "pnpm", draft },
-    { configPath, workingFolder: "D:/Downloads" },
+    { configPath, workingFolder: unregisteredFolder },
   )
 
   expect(result).toMatchObject({
@@ -218,8 +220,8 @@ test("reports persistence when the index destination is a directory", async () =
 })
 
 test("refreshes the index with the limits from the config", async () => {
-  const { root, globalVault } = await setupVaults()
-  const config = { ...aConfig(), global: { vault: globalVault }, limits: { maxBodyChars: 30, maxStatementChars: 100 } }
+  const { root, globalVault, config: originalConfig, unregisteredFolder } = await setupVaults()
+  const config = { ...originalConfig, limits: { maxBodyChars: 30, maxStatementChars: 100 } }
   const configPath = await writeConfig(root, config)
   const long = { ...aNote(), statement: "Long note", body: "a".repeat(40) }
   await mkdir(join(globalVault, "pnpm"))
@@ -227,7 +229,7 @@ test("refreshes the index with the limits from the config", async () => {
 
   const result = await addMemory(
     { scope: "global", folder: "pnpm", draft },
-    { configPath, workingFolder: "D:/Downloads" },
+    { configPath, workingFolder: unregisteredFolder },
   )
 
   expect(result).toMatchObject({ succeeded: true })

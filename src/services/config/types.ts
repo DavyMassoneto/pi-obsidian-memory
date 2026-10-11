@@ -42,6 +42,8 @@ export interface RegistrationPaths extends ConfigRegistrationLocation {
 }
 
 export type RegistrationPathsResult = Succeeded<RegistrationPaths> | Failed
+export type CanonicalPathResult = Succeeded<string> | Failed
+export type CanonicalConfigResult = Succeeded<MemoryConfig> | Failed
 
 export interface WriteConfigRequest {
   path: string

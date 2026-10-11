@@ -10,6 +10,8 @@ import {
   registrationProblems,
 } from "#/domain"
 import type {
+  CanonicalConfigResult,
+  CanonicalPathResult,
   ConfigRegistrationLocation,
   ConfigRegistrationLocationResult,
   RegistrationPaths,
@@ -18,19 +20,21 @@ import type {
 
 export async function canonicalizeRegistration(request: RegistrationPaths): Promise<RegistrationPathsResult> {
   const location = await canonicalizeConfigLocation(request)
-  if (!location.succeeded) {
-    return location
+  const index = await canonicalField(request.indexPath, "indexPath", "directory")
+  const problems: string[] = []
+  if (!location.succeeded) problems.push(...location.problems)
+  if (!index.succeeded) problems.push(...index.problems)
+  if (!location.succeeded || !index.succeeded) {
+    return { succeeded: false, problems }
   }
-  try {
-    const canonical = { ...location.output, indexPath: await canonicalDirectory(request.indexPath) }
-    const problems = [...infrastructureProblems(request), ...infrastructureProblems(canonical)]
-    if (problems.length > 0) {
-      return { succeeded: false, problems: [...new Set(problems)] }
-    }
-    return { succeeded: true, output: canonical }
-  } catch (error) {
-    return { succeeded: false, problems: [String(error)] }
+
+  const canonical = { ...location.output, indexPath: index.output }
+  problems.push(...infrastructureProblems(request), ...infrastructureProblems(canonical))
+  if (problems.length > 0) {
+    return { succeeded: false, problems: [...new Set(problems)] }
   }
+
+  return { succeeded: true, output: canonical }
 }
 
 export async function canonicalizeConfigLocation(
@@ -40,39 +44,66 @@ export async function canonicalizeConfigLocation(
   if (!parsed.succeeded) {
     return parsed
   }
-  try {
-    const canonical = {
-      config: await canonicalConfig(parsed.output),
-      configPath: await canonicalPath(request.configPath),
-    }
-    const problems = [
-      ...registrationProblems(canonical.config),
-      ...configLocationProblems(request),
-      ...configLocationProblems(canonical),
-    ]
-    if (problems.length > 0) {
-      return { succeeded: false, problems: [...new Set(problems)] }
-    }
-    return { succeeded: true, output: canonical }
-  } catch (error) {
-    return { succeeded: false, problems: [String(error)] }
+
+  const config = await canonicalConfig(parsed.output)
+  const path = await canonicalField(request.configPath, "configPath", "file")
+  const problems: string[] = []
+  if (!config.succeeded) problems.push(...config.problems)
+  if (!path.succeeded) problems.push(...path.problems)
+  if (!config.succeeded || !path.succeeded) {
+    return { succeeded: false, problems }
   }
+
+  const canonical = { config: config.output, configPath: path.output }
+  problems.push(
+    ...registrationProblems(canonical.config),
+    ...configLocationProblems(request),
+    ...configLocationProblems(canonical),
+  )
+  if (problems.length > 0) {
+    return { succeeded: false, problems: [...new Set(problems)] }
+  }
+
+  return { succeeded: true, output: canonical }
 }
 
-async function canonicalConfig(config: MemoryConfig): Promise<MemoryConfig> {
+async function canonicalConfig(config: MemoryConfig): Promise<CanonicalConfigResult> {
+  const problems: string[] = []
+  const global = await canonicalField(config.global.vault, "global.vault", "directory")
+  if (!global.succeeded) problems.push(...global.problems)
+
   const projects: ProjectEntry[] = []
-  for (const project of config.projects) {
-    projects.push({
-      ...project,
-      folder: await canonicalDirectory(project.folder),
-      vault: await canonicalDirectory(project.vault),
-    })
+  for (const [index, project] of config.projects.entries()) {
+    const folder = await canonicalField(project.folder, `projects.${index}.folder`, "directory")
+    const vault = await canonicalField(project.vault, `projects.${index}.vault`, "directory")
+    if (!folder.succeeded) problems.push(...folder.problems)
+    if (!vault.succeeded) problems.push(...vault.problems)
+    if (folder.succeeded && vault.succeeded) {
+      projects.push({ ...project, folder: folder.output, vault: vault.output })
+    }
   }
-  return { ...config, global: { vault: await canonicalDirectory(config.global.vault) }, projects }
+  if (!global.succeeded || problems.length > 0) {
+    return { succeeded: false, problems }
+  }
+
+  return { succeeded: true, output: { ...config, global: { vault: global.output }, projects } }
+}
+
+async function canonicalField(path: string, field: string, kind: "file" | "directory"): Promise<CanonicalPathResult> {
+  try {
+    if (kind === "directory") {
+      return { succeeded: true, output: await canonicalDirectory(path) }
+    }
+
+    return { succeeded: true, output: await canonicalPath(path) }
+  } catch (error) {
+    return { succeeded: false, problems: [`${field}: ${String(error)}`] }
+  }
 }
 
 async function canonicalDirectory(path: string): Promise<string> {
   const canonical = await canonicalPath(path)
+
   try {
     if (!(await stat(canonical)).isDirectory()) {
       throw new Error(`${path}: expected a directory`)
@@ -82,6 +113,7 @@ async function canonicalDirectory(path: string): Promise<string> {
       throw error
     }
   }
+
   return canonical
 }
 
@@ -89,10 +121,12 @@ async function canonicalPath(path: string): Promise<string> {
   if (!isFullyQualifiedPath(path)) {
     throw new Error(`${path}: expected a fully qualified absolute path on this platform`)
   }
+
   const absolute = resolve(path)
   const root = parse(absolute).root
   const parts = absolute.slice(root.length).split(sep).filter(Boolean)
   let current = await realpath(root)
+
   for (const [index, part] of parts.entries()) {
     if (!(await stat(current)).isDirectory()) {
       throw new Error(`${current}: expected an existing ancestor directory`)
@@ -108,6 +142,7 @@ async function canonicalPath(path: string): Promise<string> {
     }
     current = await realpath(candidate)
   }
+
   return current
 }
 
@@ -115,9 +150,11 @@ function isFullyQualifiedPath(path: string): boolean {
   if (!isAbsolute(path)) {
     return false
   }
+
   const root = parse(path).root.replaceAll("\\", "/")
   if (sep === "\\" && !root.includes(":") && !root.startsWith("//")) {
     return false
   }
+
   return true
 }

@@ -1,10 +1,70 @@
-import { mkdir, rm, symlink, writeFile } from "node:fs/promises"
+import { mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { canonicalizeRegistration } from "#/services"
-import { registrationFixture } from "#test-helpers"
+import { canonicalizeConfigLocation, canonicalizeRegistration } from "#/services"
+import { registrationFixture, useTempFolder } from "#test-helpers"
+
+test("reports every independent filesystem failure with its config field", async () => {
+  const root = await useTempFolder()
+  const global = join(root, "global")
+  const folder = join(root, "work")
+  const vault = join(root, "vault")
+  const otherVault = join(root, "other-vault")
+  for (const path of [global, folder, vault, otherVault]) {
+    await writeFile(path, "preserve")
+  }
+  const config = {
+    global: { vault: global },
+    projects: [
+      { name: "first", folder, vault },
+      { name: "second", folder: join(root, "other-work"), vault: otherVault },
+    ],
+    limits: { maxBodyChars: 1000, maxStatementChars: 100 },
+  }
+
+  expect(await canonicalizeConfigLocation({ config, configPath: join(root, "config.json") })).toEqual({
+    succeeded: false,
+    problems: [
+      `global.vault: Error: ${global}: expected a directory`,
+      `projects.0.folder: Error: ${folder}: expected a directory`,
+      `projects.0.vault: Error: ${vault}: expected a directory`,
+      `projects.1.vault: Error: ${otherVault}: expected a directory`,
+    ],
+  })
+  for (const path of [global, folder, vault, otherVault]) {
+    expect(await readFile(path, "utf8")).toBe("preserve")
+  }
+})
+
+test("keeps genuine link diagnostics alongside independent registration and infrastructure failures", async () => {
+  const root = await useTempFolder()
+  const broken = join(root, "broken")
+  const file = join(root, "file")
+  await symlink(join(root, "missing"), broken, "junction")
+  await writeFile(file, "preserve")
+  const result = await canonicalizeRegistration({
+    config: {
+      global: { vault: broken },
+      projects: [{ name: "project", folder: join(root, "work"), vault: file }],
+      limits: { maxBodyChars: 1000, maxStatementChars: 100 },
+    },
+    configPath: join(file, "config.json"),
+    indexPath: file,
+  })
+
+  expect(result).toEqual({
+    succeeded: false,
+    problems: [
+      expect.stringMatching(/^global.vault: .*ENOENT/),
+      `projects.0.vault: Error: ${file}: expected a directory`,
+      `configPath: Error: ${await realpath(file)}: expected an existing ancestor directory`,
+      `indexPath: Error: ${file}: expected a directory`,
+    ],
+  })
+  expect(await readFile(file, "utf8")).toBe("preserve")
+})
 
 test("canonical junction aliases and missing suffixes cannot nest vaults", async () => {
   const fixture = await registrationFixture()

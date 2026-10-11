@@ -15,6 +15,14 @@ export function aConfig(): MemoryConfig {
   }
 }
 
+export function memoryConfigAt(root: string): MemoryConfig {
+  return {
+    global: { vault: join(root, "Global memory") },
+    projects: [{ name: "loja", folder: join(root, "work", "loja"), vault: join(root, "loja") }],
+    limits: { maxBodyChars: 1000, maxStatementChars: 100 },
+  }
+}
+
 export async function writeConfig(folder: string, config: MemoryConfig): Promise<string> {
   const path = join(folder, "config.json")
   await writeFile(path, JSON.stringify(config, null, 2))
