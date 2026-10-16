@@ -3,6 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
+import { noSessionResponse } from "#src/pi"
 import {
   archiveResponse,
   noteWithId,
@@ -65,5 +66,5 @@ test("before any session started the tool says memory is not ready", async () =>
 
   const response = await archiveResponse(fixture, { vault: "global", path })
 
-  expect(textOf(response)).toContain("Memory is not ready")
+  expect(response).toEqual(noSessionResponse())
 })

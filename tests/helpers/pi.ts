@@ -200,7 +200,7 @@ export function textOf(response: MemoryAddResponse): string {
 export function mentionsIn(texts: string[]): string[] {
   return texts.flatMap((text) =>
     [
-      ...text.matchAll(/(?<=^|\s)\/[a-z][\w-]*/g),
+      ...text.matchAll(/(?<=^|[\s`(])\/[a-z][\w-]*/g),
       ...text.matchAll(/\b[a-z]+(?:_[a-z]+)+\b/g),
       ...text.matchAll(/(?<![\w/])memory-\w+/g),
     ].map((mention) => mention[0]),

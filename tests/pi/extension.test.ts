@@ -18,7 +18,7 @@ import {
   vaultRefusalText,
 } from "#test-helpers"
 
-test("registers the six tools, the two commands and the session events", () => {
+test("registers the six tools, the four commands and the session events", () => {
   const { tools, searchTools, getTools, updateTools, archiveTools, succeedTools, registered, events, commands } =
     registerWithFakePi({})
 
@@ -65,7 +65,7 @@ test("registers the six tools, the two commands and the session events", () => {
     "memory_succeed",
   ])
   expect(events).toEqual(["session_start", "before_agent_start", "tool_call", "session_shutdown"])
-  expect(commands).toEqual(["memory-setup", "memory-init"])
+  expect(commands).toEqual(["memory-setup", "memory-init", "memory-export", "memory-doctor"])
 })
 
 test("shutting the session down drops the memory block", async () => {
@@ -136,6 +136,17 @@ test("no LLM-facing text names a command or tool that is not registered", async 
 
   expect(mentionsIn(texts).length).toBeGreaterThan(0)
   expect(unregisteredMentions(texts, names)).toEqual([])
+})
+
+test("backticked and parenthesised mentions are caught too", () => {
+  const registered = ["memory_add", "/memory-setup"]
+
+  expect(unregisteredMentions(["Run `/memory-setup`, then `memory_add`."], registered)).toEqual([])
+  expect(unregisteredMentions(["Run `/memory-doktor` (or (/memory-init)) or `memory_updat`."], registered)).toEqual([
+    "/memory-doktor",
+    "/memory-init",
+    "memory_updat",
+  ])
 })
 
 test("a registered slash command mention is accepted and an unregistered one is reported", () => {

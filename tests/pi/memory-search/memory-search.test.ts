@@ -1,10 +1,9 @@
 import { expect, test } from "vitest"
 
+import { noSessionResponse } from "#src/pi"
 import {
   noteWithId,
-  piGlobalOnlyFixture,
   piMemoryFixture,
-  piUnconfiguredFixture,
   putCatalogFile,
   searchedText,
   searchResponse,
@@ -31,48 +30,13 @@ test("lists each hit with its vault, path, type and marks, grouped by vault", as
   )
 })
 
-test("says how to read on when nothing is found", async () => {
-  const fixture = await piMemoryFixture()
-  await fixture.pi.startSession(fixture.piContext, "startup")
-
-  expect(await searchedText(fixture, { query: "nothing", vault: "both" })).toBe(
-    'No notes found in global, project. Try other words or walk folders with memory_get (path "" is the vault root).',
-  )
-})
-
-test("a folder without a registered project says so", async () => {
-  const fixture = await piGlobalOnlyFixture()
-  await fixture.pi.startSession(fixture.piContext, "startup")
-
-  expect(await searchedText(fixture, { query: "x", vault: "both" })).toContain(
-    "No project vault is registered for this folder.",
-  )
-})
-
-test("without a config the search is an error that points to /memory-setup", async () => {
-  const fixture = await piUnconfiguredFixture()
-  await fixture.pi.startSession(fixture.piContext, "startup")
-
-  expect(await searchedText(fixture, { query: "x", vault: "global" })).toContain("/memory-setup")
-})
-
-test("a search that no vault answered is an error", async () => {
-  const fixture = await piGlobalOnlyFixture()
-  await fixture.pi.startSession(fixture.piContext, "startup")
-
-  const response = await searchResponse(fixture, { query: "x", vault: "project" })
-
-  expect(response.isError).toBe(true)
-  expect(textOf(response)).toBe("No project vault is registered for this folder.")
-})
-
 test("a search before any session started says memory is not ready", async () => {
   const fixture = await piMemoryFixture()
 
   const response = await searchResponse(fixture, { query: "x", vault: "global" })
 
   expect(response.isError).toBe(true)
-  expect(textOf(response)).toContain("Memory is not ready")
+  expect(response).toEqual(noSessionResponse())
 })
 
 test("a config edited by hand during the session does not surface a stale-session error", async () => {

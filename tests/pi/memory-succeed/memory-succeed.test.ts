@@ -3,6 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
+import { noSessionResponse } from "#src/pi"
 import {
   noteWithId,
   READIED_PATH as path,
@@ -70,5 +71,5 @@ test("before any session started the tool says memory is not ready", async () =>
 
   const response = await succeedResponse(fixture, replacement)
 
-  expect(textOf(response)).toContain("Memory is not ready")
+  expect(response).toEqual(noSessionResponse())
 })

@@ -4,7 +4,7 @@ How memory is organized inside a vault (global or project). Decided with the use
 
 The format and resource operations below exist today, and so does the synchronizer, which runs at session start and
 before each search. Setup and init write the templates to `_templates/`. Don't forget notes are injected at session
-start. Commands such as `/memory-doctor` are target behaviour, not registered features. The pi tools today are
+start. The commands are `/memory-setup`, `/memory-init`, `/memory-doctor` and `/memory-export`. The pi tools today are
 `memory_add`, `memory_search`, `memory_get`, `memory_update`, `memory_archive` and `memory_succeed`; see [ROADMAP.md](ROADMAP.md).
 
 ## Layout
@@ -51,6 +51,12 @@ start. Commands such as `/memory-doctor` are target behaviour, not registered fe
 - [[typescript/No ternaries|No ternaries]] · rule
 - [[typescript/Strict mode always on|Strict mode always on]] · rule · don't forget
 ```
+
+## Dashboard
+
+- `Memory.base` at the vault root is written with the templates when missing; the user's edits to it are kept.
+- Views, all tables with file name, folder, type, Don't forget and updated: `All notes` (not archived), `Don't forget`
+  and `Archive`. It leaves out `index.md` files and `_templates/`. It only displays; it edits nothing.
 
 ## Writing
 

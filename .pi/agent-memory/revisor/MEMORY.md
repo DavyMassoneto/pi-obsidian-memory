@@ -30,3 +30,8 @@
 - 2026-10 (M3 review): mutation script pattern `tmp/revisor-mut.sh f sedexpr testdirs...` (cp .bak, sed, vitest, restore, rm .bak)
   ran 12 mutations in one Bash call (~10 min budget). Check new *.test.ts for `^async function` (readyNote fixtures
   recur) and new src folders (memory-change, change-report) for missing mirrored tests. Full npm test ~2-3 min now.
+- 2026-10 (M7/M8 review): Windows System32 tar.exe (bsdtar 3.8.8, ACP 1252) extracts UTF-8-flagged zip names only
+  if representable in cp1252 ("Ação" ok, "✓"/"メモ" fail "empty or unreadable filename"); Expand-Archive handles all
+  -> tar.exe is not an oracle for non-Latin names. Mention guard (tests/helpers/pi.ts mentionsIn) misses backticked
+  slash commands (`/memory-x`): mutate SKILL.md to prove coverage. complete-blank hash check is doubled by
+  update-file.ts expectedHash, so mutating one survives (not a gap).

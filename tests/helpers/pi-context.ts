@@ -24,6 +24,7 @@ export interface FakePiContextOptions {
   sessionId: string
   model: ChatModelSource | undefined
   available: ChatModelSource[]
+  noCredentials: string[]
   answers: Partial<PromptScript>
 }
 
@@ -38,6 +39,7 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
     sessionId: "session-one",
     model: { provider: "test-chat", id: "selected-chat" },
     available: [],
+    noCredentials: [],
     answers: {},
   }
   const options = { ...base, ...overrides }
@@ -51,7 +53,15 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
     cwd: options.cwd,
     hasUI: options.hasUI,
     model: options.model,
-    modelRegistry: { getAvailable: () => options.available },
+    modelRegistry: {
+      getAvailable: () => options.available,
+      find: (provider, modelId) =>
+        options.available.find((model) => model.provider === provider && model.id === modelId),
+      async getApiKeyAndHeaders(model) {
+        if (options.noCredentials.includes(`${model.provider}/${model.id}`)) return { ok: false, error: "No API key" }
+        return { ok: true }
+      },
+    },
     sessionManager: { getSessionId: () => options.sessionId },
     ui: {
       async select(title, choices) {

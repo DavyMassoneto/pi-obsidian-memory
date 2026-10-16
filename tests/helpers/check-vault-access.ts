@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process"
 import { homedir, hostname } from "node:os"
 import { dirname, parse } from "node:path"
 
-import { checkVaultAccess } from "#src/usecases"
+import { checkVaultAccess, type GuardedTargets, hitsTargets, type VaultAccessRequest } from "#src/usecases"
 import { searchFixture } from "./search-memory.ts"
 
 type GuardRequest = Parameters<typeof checkVaultAccess>[0]["request"]
@@ -33,4 +33,8 @@ export function volumeGuidForm(path: string): string {
   const { root } = parse(path)
   const listed = execFileSync("cmd", ["/c", "mountvol", root, "/L"], { encoding: "utf8" }).trim()
   return `${listed}${path.slice(root.length)}`
+}
+
+export async function targetHits(targets: GuardedTargets, cwd: string, request: VaultAccessRequest): Promise<boolean> {
+  return hitsTargets({ request, cwd, home: homedir(), targets })
 }
