@@ -6,6 +6,7 @@ import type {
   ProblemFolder,
   Succession,
   VaultCatalogFailure,
+  VaultFileStat,
 } from "#src/domain"
 import type { Done, Failed, Succeeded } from "#src/shared"
 
@@ -122,6 +123,33 @@ export interface RefreshPlan {
 }
 
 export type RefreshContinuation = () => boolean
+export type RefreshScope = "with-ancestors" | "exact"
+
+export type IndexStat = VaultFileStat
+
+export interface RefreshedFolder {
+  folder: string
+  index: IndexStat
+  settled: boolean
+}
+
+export interface RefreshedFolders {
+  refreshed: RefreshedFolder[]
+}
+
+export interface FolderRefreshed extends MaintenanceWarnings {
+  index: IndexStat
+  settled: boolean
+}
+
+export interface ListingDraft extends FolderListing {
+  settled: boolean
+}
+
+export interface SettledListing {
+  listing: FolderListing
+  settled: boolean
+}
 
 export type LifecycleRefusal = UpdateRefusal | ExistingNoteRefusal
 export type VaultRefusal = LifecycleRefusal | IoRefusal
@@ -156,7 +184,10 @@ export type RelocationResult = (Done & MaintenanceWarnings) | LifecycleRefusal |
 export type PlacedResult = (Succeeded<PlacedNote> & MaintenanceWarnings) | LifecycleRefusal | PartialRelocation
 export type SuccessionResult = (Succeeded<Succession> & MaintenanceWarnings) | LifecycleRefusal | PartialRelocation
 export type RefreshResult = (Done & MaintenanceWarnings) | RefreshRefusal
+export type FolderRefreshResult = RefreshResult & RefreshedFolders
+export type FolderRefreshOutcome = Succeeded<FolderRefreshed> | RefreshRefusal
 export type ResolveResult = Succeeded<string> | ResolveRefusal
 export type ListResult = Succeeded<FolderListing> | ReadRefusal
+export type SettledListResult = Succeeded<SettledListing> | ReadRefusal
 export type VaultFolderState = "missing" | "empty" | "populated" | "not-directory"
 export type VaultFolderResult = Succeeded<VaultFolderState> | IoRefusal

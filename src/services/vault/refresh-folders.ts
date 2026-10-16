@@ -1,29 +1,41 @@
 import { basename, dirname, relative, sep } from "node:path"
 
 import { renderFolderIndex } from "#src/domain"
+import { catalogStat } from "#src/services/vault/catalog"
 import type { NamedVaultContext } from "#src/services/vault/context"
-import { readRawFile, realPathOf, type WriteResult, writeAtomically } from "#src/services/vault/filesystem"
+import { linkStatOf, readRawFile, realPathOf, type WriteResult, writeAtomically } from "#src/services/vault/filesystem"
 import { FOLDER_INDEX_FILE_NAME } from "./constants.ts"
 import { contentsOf } from "./folder-contents.ts"
-import { listFolder } from "./list.ts"
+import { listSettledFolder } from "./list.ts"
 import { maintenanceFailure, planRefreshFolders } from "./refresh-plan.ts"
 import { refuseWrite } from "./refusals.ts"
 import { resolveFile, resolveFolder } from "./resolve.ts"
-import type { RefreshContinuation, RefreshRefusal, RefreshResult } from "./types.ts"
+import type {
+  FolderRefreshed,
+  FolderRefreshOutcome,
+  FolderRefreshResult,
+  RefreshContinuation,
+  RefreshedFolder,
+  RefreshRefusal,
+  RefreshResult,
+  RefreshScope,
+} from "./types.ts"
 
 export async function refreshFolders(
   context: NamedVaultContext,
   folders: string[],
   shouldContinue: RefreshContinuation,
-): Promise<RefreshResult> {
-  const planned = await planRefreshFolders(context.path, folders)
+  scope: RefreshScope,
+): Promise<FolderRefreshResult> {
+  const planned = await planRefreshFolders(context.path, folders, scope)
   if (!planned.succeeded) {
-    return planned
+    return { ...planned, refreshed: [] }
   }
 
   const failures: RefreshRefusal[] = [...planned.output.refusals]
   const maintenanceProblems: string[] = []
-  const writtenPaths = new Set<string>()
+  const refreshed: RefreshedFolder[] = []
+  const writtenPaths = new Map<string, FolderRefreshed>()
   for (const folder of planned.output.folders) {
     if (!shouldContinue()) {
       failures.unshift(interruption())
@@ -37,12 +49,16 @@ export async function refreshFolders(
     }
     if (!written.succeeded) {
       failures.push(written)
-    } else if (written.maintenanceProblems) {
-      maintenanceProblems.push(...written.maintenanceProblems)
+      continue
+    }
+
+    refreshed.push({ folder, index: written.output.index, settled: written.output.settled })
+    if (written.output.maintenanceProblems) {
+      maintenanceProblems.push(...written.output.maintenanceProblems)
     }
   }
 
-  return summarize(failures, maintenanceProblems)
+  return { ...summarize(failures, maintenanceProblems), refreshed }
 }
 
 function interruption(): RefreshRefusal {
@@ -75,9 +91,9 @@ function summarize(failures: RefreshRefusal[], maintenanceProblems: string[]): R
 async function refreshFolder(
   context: NamedVaultContext,
   folder: string,
-  writtenPaths: Set<string>,
+  writtenPaths: Map<string, FolderRefreshed>,
   shouldContinue: RefreshContinuation,
-): Promise<RefreshResult> {
+): Promise<FolderRefreshOutcome> {
   try {
     return await writeIndex(context, folder, writtenPaths, shouldContinue)
   } catch (error) {
@@ -92,9 +108,9 @@ async function refreshFolder(
 async function writeIndex(
   context: NamedVaultContext,
   folder: string,
-  writtenPaths: Set<string>,
+  writtenPaths: Map<string, FolderRefreshed>,
   shouldContinue: RefreshContinuation,
-): Promise<RefreshResult> {
+): Promise<FolderRefreshOutcome> {
   const directory = await resolveFolder(context.path, folder)
   if (!directory.succeeded) {
     return directory
@@ -111,8 +127,9 @@ async function writeIndex(
       problems: [`Folder index of "${folder}" must be the index.md of its own folder`],
     }
   }
-  if (writtenPaths.has(path.output)) {
-    return { succeeded: true }
+  const alreadyWritten = writtenPaths.get(path.output)
+  if (alreadyWritten) {
+    return { succeeded: true, output: { index: alreadyWritten.index, settled: alreadyWritten.settled } }
   }
 
   const root = await resolveFolder(context.path, "")
@@ -121,23 +138,44 @@ async function writeIndex(
   }
 
   const physical = relative(root.output, directory.output).split(sep).join("/")
-  const listing = await listFolder(context, physical)
+  const listing = await listSettledFolder(context, physical)
   if (!listing.succeeded) {
     return listing
   }
 
-  const contents = await contentsOf(context, physical, listing.output)
+  const contents = await contentsOf(context, physical, listing.output.listing)
   if (!shouldContinue()) {
     return interruption()
   }
 
-  const written = await writeChangedIndex(path.output, renderFolderIndex(contents))
+  const refreshed = await writeAndStat(path.output, folder, renderFolderIndex(contents), listing.output.settled)
+  if (refreshed.succeeded) {
+    writtenPaths.set(path.output, refreshed.output)
+  }
+  return refreshed
+}
+
+async function writeAndStat(
+  path: string,
+  folder: string,
+  text: string,
+  settled: boolean,
+): Promise<FolderRefreshOutcome> {
+  const written = await writeChangedIndex(path, text)
   if (!written.succeeded) {
     return refuseWrite(folder, "index", written)
   }
 
-  writtenPaths.add(path.output)
-  return written
+  const index = await linkStatOf(path)
+  if (!index.succeeded) {
+    return index
+  }
+
+  const refreshed: FolderRefreshed = { index: catalogStat(index.output), settled }
+  if (written.maintenanceProblems) {
+    refreshed.maintenanceProblems = written.maintenanceProblems
+  }
+  return { succeeded: true, output: refreshed }
 }
 
 async function isOwnIndex(directory: string, target: string): Promise<boolean> {

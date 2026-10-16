@@ -93,6 +93,10 @@ export function canonicalizeWorkingFolder(path: string): Promise<CanonicalPathRe
   return canonicalField(path, "workingFolder", "directory")
 }
 
+export function canonicalizeAccessPath(absolute: string): Promise<CanonicalPathResult> {
+  return canonicalField(absolute, "accessPath", "file")
+}
+
 async function canonicalField(path: string, field: string, kind: "file" | "directory"): Promise<CanonicalPathResult> {
   try {
     if (kind === "directory") {

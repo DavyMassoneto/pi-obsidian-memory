@@ -12,7 +12,16 @@ export async function readNote(vault: VaultContext, folder: string, statement: s
     return path
   }
 
-  const file = await readRawFile(path.output)
+  return readResolvedNote(vault, folder, statement, path.output)
+}
+
+export async function readResolvedNote(
+  vault: VaultContext,
+  folder: string,
+  statement: string,
+  path: string,
+): Promise<ReadNoteResult> {
+  const file = await readRawFile(path)
   if (!file.succeeded) {
     if (file.reason !== "not-found") {
       return file

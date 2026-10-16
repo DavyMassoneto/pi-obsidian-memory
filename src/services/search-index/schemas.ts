@@ -138,3 +138,35 @@ export const SearchOptionsSchema = Type.Object(
   },
   { additionalProperties: false },
 )
+
+export const FolderIndexStateSchema = Type.Object(
+  {
+    folder: Type.String(),
+    fingerprint: Type.String({ minLength: 1 }),
+    indexSize: Type.Integer({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }),
+    indexMtimeMs: Type.Number(),
+    indexCtimeMs: Type.Number(),
+    indexIno: Type.String({ minLength: 1 }),
+  },
+  { additionalProperties: false },
+)
+
+export const FolderIndexWriteSchema = Type.Object(
+  {
+    states: Type.Array(FolderIndexStateSchema),
+    keepFolders: Type.Array(Type.String()),
+  },
+  { additionalProperties: false },
+)
+
+export const FolderIndexRowSchema = Type.Object(
+  {
+    folder: Type.String(),
+    fingerprint: Type.String({ minLength: 1 }),
+    index_size: Type.Integer({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }),
+    index_mtime_ms: Type.Number(),
+    index_ctime_ms: Type.Number(),
+    index_ino: Type.String({ minLength: 1 }),
+  },
+  { additionalProperties: false },
+)

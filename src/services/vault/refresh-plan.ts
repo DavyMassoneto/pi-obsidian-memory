@@ -4,14 +4,15 @@ import { ancestorFolders } from "#src/domain"
 import { linkStatOf } from "#src/services/vault/filesystem"
 import type { Succeeded } from "#src/shared"
 import { resolveFolder } from "./resolve.ts"
-import type { RefreshPlan, RefreshRefusal, ResolveRefusal } from "./types.ts"
+import type { RefreshPlan, RefreshRefusal, RefreshScope, ResolveRefusal } from "./types.ts"
 
 export async function planRefreshFolders(
   vault: string,
   folders: string[],
+  scope: RefreshScope,
 ): Promise<Succeeded<RefreshPlan> | RefreshRefusal> {
   try {
-    return await planFolders(vault, folders)
+    return await planFolders(vault, folders, scope)
   } catch (error) {
     if (!(error instanceof Error)) {
       throw error
@@ -21,7 +22,11 @@ export async function planRefreshFolders(
   }
 }
 
-async function planFolders(vault: string, folders: string[]): Promise<Succeeded<RefreshPlan> | ResolveRefusal> {
+async function planFolders(
+  vault: string,
+  folders: string[],
+  scope: RefreshScope,
+): Promise<Succeeded<RefreshPlan> | ResolveRefusal> {
   const root = await resolveFolder(vault, "")
   if (!root.succeeded) {
     return root
@@ -44,9 +49,13 @@ async function planFolders(vault: string, folders: string[]): Promise<Succeeded<
     }
 
     const physical = relative(root.output, checked.output).split(sep).join("/")
-    for (const ancestor of [...ancestorFolders(physical), ...ancestorFolders(folder)]) {
-      ancestors.add(ancestor)
-      discoveredFolders.add(ancestor)
+    let selected = [folder]
+    if (scope === "with-ancestors") {
+      selected = [...ancestorFolders(physical), ...ancestorFolders(folder)]
+    }
+    for (const chosen of selected) {
+      ancestors.add(chosen)
+      discoveredFolders.add(chosen)
     }
   }
 

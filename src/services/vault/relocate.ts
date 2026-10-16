@@ -51,7 +51,7 @@ export async function relocateNote(
 
   const removedFolder = relative(root.output, dirname(moved.output)).split(sep).join("/")
   const folders = [removedFolder, request.original.folder, ...request.written.map((placed) => placed.folder)]
-  const refreshed = await refreshFolders(vault, folders, alwaysContinue)
+  const refreshed = await refreshFolders(vault, folders, alwaysContinue, "with-ancestors")
   if (!refreshed.succeeded) {
     progress.maintenanceProblems.push(...refreshed.problems)
   } else if (refreshed.maintenanceProblems) {

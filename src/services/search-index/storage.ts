@@ -4,6 +4,8 @@ import type { CatalogChanges, VectorReplacement } from "#src/domain"
 import { readCatalogHits } from "./catalog-query.ts"
 import { prepareCatalogStatements } from "./catalog-statements.ts"
 import { closeFailedIndex } from "./cleanup.ts"
+import { prepareFolderIndexStatements } from "./folder-index-statements.ts"
+import { readStoredFolderIndexes, writeFolderIndexStates } from "./folder-index-storage.ts"
 import { readInventory } from "./inventory.ts"
 import { putLegacyEntry, removeLegacyEntry } from "./legacy.ts"
 import { readSearchHits } from "./query.ts"
@@ -13,6 +15,8 @@ import { prepareStatements } from "./statements.ts"
 import type {
   CatalogQuery,
   CatalogSearchResult,
+  FolderIndexState,
+  FolderIndexStatesResult,
   IndexEntry,
   IndexWork,
   IndexWriteResult,
@@ -31,6 +35,7 @@ export class SqliteSearchIndex implements SearchIndex {
   readonly #statements: ReturnType<typeof prepareStatements>
   readonly #catalog: ReturnType<typeof prepareCatalogStatements>
   readonly #vectors: ReturnType<typeof prepareVectorStatements>
+  readonly #folderIndexes: ReturnType<typeof prepareFolderIndexStatements>
   #usable = true
 
   constructor(database: DatabaseSync) {
@@ -38,6 +43,7 @@ export class SqliteSearchIndex implements SearchIndex {
     this.#statements = prepareStatements(database)
     this.#catalog = prepareCatalogStatements(database)
     this.#vectors = prepareVectorStatements(database)
+    this.#folderIndexes = prepareFolderIndexStatements(database)
   }
 
   put(entry: IndexEntry): IndexWriteResult {
@@ -54,6 +60,24 @@ export class SqliteSearchIndex implements SearchIndex {
 
   replaceVectors(request: VectorReplacement): IndexWriteResult {
     return this.#write(() => writeVectors(this.#vectors, this.#catalog, request))
+  }
+
+  recordFolderIndexes(states: FolderIndexState[], keepFolders: string[]): IndexWriteResult {
+    return this.#write(() => writeFolderIndexStates(this.#folderIndexes, states, keepFolders))
+  }
+
+  folderIndexes(): FolderIndexStatesResult {
+    if (!this.#usable || !this.#database.isOpen) return closedIndex()
+
+    try {
+      this.#database.exec("BEGIN")
+      const result = readStoredFolderIndexes(this.#folderIndexes)
+      this.#database.exec("COMMIT")
+      return result
+    } catch (error) {
+      if (!(error instanceof Error)) throw error
+      return this.#rollBack(indexFailure(error))
+    }
   }
 
   inventory(): InventoryResult {

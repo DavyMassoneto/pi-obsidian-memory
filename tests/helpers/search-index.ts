@@ -3,7 +3,14 @@ import { DatabaseSync } from "node:sqlite"
 
 import { onTestFinished } from "vitest"
 
-import { type IndexEntry, openIndex, type SearchHit, type SearchIndex, type SearchResult } from "#src/services"
+import {
+  type FolderIndexState,
+  type IndexEntry,
+  openIndex,
+  type SearchHit,
+  type SearchIndex,
+  type SearchResult,
+} from "#src/services"
 import { useTempFolder } from "./temp-folder.ts"
 
 export async function useTempIndex(): Promise<SearchIndex> {
@@ -31,6 +38,17 @@ export function openedIndex(path: string): SearchIndex {
     }
   })
   return result.output
+}
+
+export function folderIndexState(folder: string, fingerprint: string): FolderIndexState {
+  return {
+    folder,
+    fingerprint,
+    indexSize: 120,
+    indexMtimeMs: 1_700_000_000_123.5,
+    indexCtimeMs: 1_700_000_000_456.25,
+    indexIno: "9007199254740993",
+  }
 }
 
 export function changeIndexFile(path: string, sql: string): void {
