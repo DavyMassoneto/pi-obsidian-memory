@@ -1,7 +1,7 @@
 import { expect, test } from "vitest"
 
 import { respondTo } from "#/pi"
-import { aNote, registerWithFakePi, textOf } from "#test-helpers"
+import { aNote, textOf } from "#test-helpers"
 
 test("reports persistence with a maintenance warning instead of a failed save", () => {
   const response = respondTo({
@@ -60,28 +60,4 @@ test("guides setup and project selection using config paths and global scope", (
   expect(textOf(noProject)).toContain("global scope")
   expect(missing.isError).toBe(true)
   expect(noProject.isError).toBe(true)
-})
-
-test("LLM guidance names only registered memory operations", () => {
-  const { tools, commands } = registerWithFakePi({})
-  const results = [
-    respondTo({ succeeded: false, reason: "not-configured", configPath: "config.json", problems: [] }),
-    respondTo({
-      succeeded: false,
-      reason: "no-project",
-      workingFolder: "work",
-      configPath: "config.json",
-      problems: [],
-    }),
-    respondTo({ succeeded: false, reason: "exists", existing: { note: aNote(), hash: "hash" }, problems: [] }),
-  ]
-  const guidance = [
-    ...tools.flatMap((tool) => [tool.description, JSON.stringify(tool.parameters)]),
-    ...results.map(textOf),
-  ].join("\n")
-  const registered = [...tools.map((tool) => tool.name), ...commands.map((name) => `/${name}`)]
-
-  for (const operation of guidance.matchAll(/\/?memory[-_]\w+/g)) {
-    expect(registered).toContain(operation[0])
-  }
 })

@@ -4,22 +4,20 @@ import { join } from "node:path"
 import { expect, test } from "vitest"
 
 import { renderNote } from "#/domain"
-import { type RefreshContinuation, refreshFolders } from "#/services"
-import { aLimits, aNote, linkFolder, putNoteFile, readIndexOf, tryLinkFile, useTempFolder } from "#test-helpers"
+import { refreshFolders } from "#/services"
+import {
+  aLimits,
+  allowing,
+  aNote,
+  keepGoing,
+  linkFolder,
+  putNoteFile,
+  readIndexOf,
+  tryLinkFile,
+  useTempFolder,
+} from "#test-helpers"
 
 const limits = aLimits()
-
-function keepGoing(): boolean {
-  return true
-}
-
-function allowing(checks: number): RefreshContinuation {
-  let left = checks
-  return () => {
-    left -= 1
-    return left >= 0
-  }
-}
 
 test("refreshes the other folders when a folder name is not representable as a link", async () => {
   const vault = await useTempFolder()

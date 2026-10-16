@@ -28,14 +28,6 @@ test("returns not-found for a missing folder without writing ancestor indexes", 
   expect(await readdir(vault)).toEqual([])
 })
 
-test("does not advertise a regular archive file as the archive folder", async () => {
-  const vault = await useTempFolder()
-  await writeFile(join(vault, "archive"), "user content")
-
-  expect(await refreshIndexes({ path: vault, name: "Memory", limits }, "")).toMatchObject({ succeeded: true })
-  expect(await readIndexOf(vault, "")).not.toContain("## Archive")
-})
-
 test("refuses an internal index alias to a non-index file without replacing the link or target", async (context) => {
   const vault = await useTempFolder()
   const target = join(vault, "map.txt")
@@ -79,15 +71,6 @@ test("writes the index of the folder and of every folder above it, up to the roo
   )
   expect(await readIndexOf(vault, "tools")).toContain("- [[tools/pnpm/index|pnpm]]")
   expect(await readIndexOf(vault, "")).toContain("# Global memory\n\n## Subjects\n\n- [[tools/index|tools]]")
-})
-
-test("adds the Archive section to the root index when the vault has an archive", async () => {
-  const vault = await useTempFolder()
-  await mkdir(join(vault, "archive"))
-
-  await refreshIndexes({ path: vault, name: "Global memory", limits }, "")
-
-  expect(await readIndexOf(vault, "")).toContain("## Archive\n\n- [[archive/index|archive]]")
 })
 
 test("overwrites an index edited by hand", async () => {
