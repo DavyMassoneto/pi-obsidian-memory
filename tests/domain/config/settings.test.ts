@@ -8,6 +8,7 @@ test("setup alone can use the explicitly supplied model and null leaves both mod
   const defaults = prepareSetupDefaults(selected)
   expect(defaults).toEqual({
     ...productSettings(),
+    decisionModel: { provider: "typesafe", model: "jev-latest" },
     capture: { model: selected, when: "after-each-turn" },
     memoryAgent: { model: selected },
     global: {},

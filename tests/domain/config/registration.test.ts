@@ -63,6 +63,7 @@ test("setup completes a new draft but refuses incomplete repaired registrations 
       global: { vault: "C:/new-global" },
       projects: [],
       ...productSettings(),
+      decisionModel: { provider: "typesafe", model: "jev-latest" },
     },
   })
   const draft = inspectConfigForRepair(

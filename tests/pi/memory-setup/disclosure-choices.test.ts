@@ -14,7 +14,16 @@ test.each([
   },
   {
     chosen: "a remote embeddings provider",
-    settings: { embeddings: { provider: "openai", model: "text-embedding-3-small" } },
+    settings: {
+      embeddings: { provider: "openai", model: "text-embedding-3-small" },
+      decisionModel: {
+        provider: "laya",
+        endpoint: "http://127.0.0.1:8000/v1/systemone",
+        model: "multilingual",
+        maxTokens: 8192,
+        headMaxTokens: 192,
+      },
+    },
     shown: "secrets included",
     hidden: "TypeSafe",
   },

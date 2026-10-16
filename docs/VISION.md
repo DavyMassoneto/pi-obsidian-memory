@@ -35,7 +35,7 @@ lives in any folder they choose.
    - At session start, every **"Don't forget"** note is loaded in full, with no limit. The
      memory agent also loads the memories relevant to the project and folder, within a
      configurable character budget (12,000 characters by default).
-   - On each user message, a fast decision model (configurable: Laya locally, or Jev by API)
+   - On each user message, a fast decision model (configurable: Jev by API by default, or Laya locally)
      decides whether memory is needed. If it is, a small configurable LLM (the memory agent)
      searches (text + embeddings) and reads notes; the decision model re-ranks the candidates
      so only the relevant ones reach the main LLM.

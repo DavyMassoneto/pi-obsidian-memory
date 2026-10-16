@@ -24,13 +24,7 @@ explicitly chosen available chat model's provider and id. They are not built-in 
   "memoryAgent": { "model": { "provider": "selected-provider", "id": "selected-model" } },
   "context": { "budgetChars": 12000 },
   "embeddings": { "provider": "local", "model": "Xenova/multilingual-e5-small" },
-  "decisionModel": {
-    "provider": "laya",
-    "endpoint": "http://127.0.0.1:8000/v1/systemone",
-    "model": "multilingual",
-    "maxTokens": 8192,
-    "headMaxTokens": 192
-  }
+  "decisionModel": { "provider": "typesafe", "model": "jev-latest" }
 }
 ```
 
@@ -51,7 +45,7 @@ explicitly chosen available chat model's provider and id. They are not built-in 
 | `memoryAgent.model` | Exactly `{provider, id}`, both nonblank strings | Explicit selected chat model supplied at setup |
 | `context.budgetChars` | Positive integer; relevant-memory character budget | 12000 |
 | `embeddings` | One exact alternative below | Local multilingual E5 |
-| `decisionModel` | One exact alternative below | Laya with the values shown above |
+| `decisionModel` | One exact alternative below | Jev (`typesafe`, `jev-latest`) |
 | `decisionModel.gateThreshold` | Optional number from 0 to 1: the gate asks for memory when its probability is above it | Jev 0.5; Laya none |
 | `decisionModel.relevanceThreshold` | Optional number from 0 to 1: a note is kept when its probability is at least this | Jev 0.5; Laya none |
 
@@ -104,10 +98,11 @@ Cutoffs: a value in `config.json` overrides the default for its provider.
 | Jev | 0.5 | 0.5 | TypeSafe's cookbooks give 0.5 as a starting point |
 | Laya | none | none | the measurement does not support a default: the gate scored at chance and the relevance signal is weak (see [decision-thresholds.md](decision-thresholds.md)) |
 
-**With the default Laya config, per-message memory is off**, and each session says so, until you set both
-`decisionModel.gateThreshold` and `decisionModel.relevanceThreshold` in `config.json`: nothing is added, no model is
-asked, and the user is told once per session which cutoff is missing. No value is invented. With Jev it works from the
-TypeSafe starting values 0.5/0.5. `/memory-doctor` lists both cutoffs and where each comes from (config, TypeSafe
+**Jev is the default** and works from the TypeSafe starting values 0.5/0.5, with `TYPESAFE_API_KEY` set. **Laya is an
+optional local choice that needs explicit cutoffs**: with a Laya config and no cutoffs, per-message memory is off and
+each session says so, until you set both `decisionModel.gateThreshold` and `decisionModel.relevanceThreshold` in
+`config.json`: nothing is added, no model is asked, and the user is told once per session which cutoff is missing. No
+value is invented. `/memory-doctor` lists both cutoffs and where each comes from (config, TypeSafe
 starting value or missing).
 
 Laya (local; Apache-2.0, not gated, weights downloaded on first load):
@@ -134,8 +129,8 @@ Jev (TypeSafe System One, by API):
   in `config.json`. `/memory-doctor` checks pi's registry and the key, without a live call.
 - `jev-latest` is an alias; the API answers with the versioned id (for example `jev-1.13.0`), and that answer is
   accepted for `jev-latest`.
-- Price: input $0.042 per million tokens, output free (docs.typesafe.ai/models, 2026). pi's catalog shows cost 0, which
-  is not the real price.
+- Price: input $0.042 per million tokens ($42 per billion), output free (docs.typesafe.ai, `models.md`, 2026; see
+  `.pi/research/laya-jev.md`). pi's catalog shows cost 0, which is not the real price.
 
 There is no `schemaVersion`, secret/key field, arbitrary provider options bag or persistent consent setting. Credentials
 for remote execution come from pi or the environment, never from this file. No credential lookup occurs when

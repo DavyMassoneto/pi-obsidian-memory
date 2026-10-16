@@ -150,3 +150,33 @@ test("repair never silently defaults runtime parse or drops a valid sibling afte
     replacementRequired: false,
   })
 })
+
+test("the default decision model is Jev when nothing says otherwise", () => {
+  const jev = { provider: "typesafe", model: "jev-latest" }
+  expect(inspectConfigForRepair("{}").decisionModel).toEqual(jev)
+  expect(inspectConfigForRepair(JSON.stringify({ ...aConfig(), decisionModel: {} })).decisionModel).toEqual(jev)
+  expect(
+    inspectConfigForRepair(JSON.stringify({ ...aConfig(), decisionModel: { model: "jev-latest" } })).decisionModel,
+  ).toEqual(jev)
+  expect(
+    inspectConfigForRepair(JSON.stringify({ ...aConfig(), decisionModel: { gateThreshold: 0.4 } })).decisionModel,
+  ).toEqual({ ...jev, gateThreshold: 0.4 })
+})
+
+test.each([
+  ["provider laya", { provider: "laya" }],
+  ["model multilingual", { model: "multilingual" }],
+  ["an endpoint", { endpoint: "http://127.0.0.1:9000/v1/systemone" }],
+  ["maxTokens", { maxTokens: 4000 }],
+  ["headMaxTokens", { headMaxTokens: 100 }],
+])("Laya stays the choice when the config shows %s", (_case, decisionModel) => {
+  const repaired = inspectConfigForRepair(JSON.stringify({ ...aConfig(), decisionModel })).decisionModel
+  expect(repaired).toEqual({
+    provider: "laya",
+    endpoint: "http://127.0.0.1:8000/v1/systemone",
+    model: "multilingual",
+    maxTokens: 8192,
+    headMaxTokens: 192,
+    ...decisionModel,
+  })
+})

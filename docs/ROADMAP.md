@@ -52,7 +52,7 @@ Every milestone:
   tools (receipts, conflicts); explicit `memory_add` saves are not duplicated. When unsure it asks through the UI, or
   skips without one. It adds nothing to the main prompt, and runs are serialized. Judgement quality is untested
   against a real model.
-- Relevant memory per message (milestone 6): on each user message the decision model (Laya locally, or Jev: classifiers
+- Relevant memory per message (milestone 6): on each user message the decision model (Jev by API, or Laya locally: classifiers
   that answer yes/no probabilities, never search or generate) gates whether memory is needed. If so, the memory agent
   (`memoryAgent.model`) searches and reads (at most 8 rounds), the decision model scores each candidate note (one batch;
   a note that cannot be scored is dropped with a "could not score N of M" notice), notes at or above the relevance
@@ -62,10 +62,11 @@ Every milestone:
   longer valid. Session start loads relevant notes within `context.budgetChars` (12,000 by default) into the system
   section once, with Don't forget notes outside the budget. The whole step ends within the decision timeout plus the
   retrieval duration (30 s + 30 s). With Laya or Jev unavailable nothing is added and the user is told once per
-  session; no other model takes over. Jev is used without any runtime question and works from TypeSafe's starting
-  cutoffs (0.5/0.5). **With the default Laya config per-message memory is off** and says so each session, until the user
-  sets `gateThreshold` and `relevanceThreshold` in `decisionModel`: Laya's gate measured at chance and the measurement
-  supports no default (docs/decision-thresholds.md). Judgement quality is untested against a real model.
+  session; no other model takes over. Jev is the default decision model (user decision), used without any runtime question, with
+  `TYPESAFE_API_KEY` and TypeSafe's starting cutoffs (0.5/0.5); price $0.042 per million input tokens (docs.typesafe.ai,
+  `.pi/research/laya-jev.md`). Laya is an optional local choice that needs explicit cutoffs: with Laya and no
+  `gateThreshold`/`relevanceThreshold` per-message memory is off and says so each session, because Laya's gate measured
+  at chance and the measurement supports no default (docs/decision-thresholds.md). Judgement quality is untested against a real model.
 - `memory_search` (text; global, project or both; 10 results per vault; archived and invalid-frontmatter notes
   excluded) shows vault, path, type, Don't forget and needs fixing. `memory_get` (vault and path) returns a note in
   full with its problems, a folder's index (`""` is the root), and reads `archive/`. The catalog is synchronized
@@ -406,7 +407,7 @@ Every milestone:
     It uses their published docs and asks the user only what the docs leave open.
   - [x] At session start, the memory agent also loads memories relevant to the project and folder, within
     `context.budgetChars` (12,000 by default). Don't forget notes do not count against it.
-  - [x] On each message, the decision model (`decisionModel`: Laya locally by default, or Jev by API) decides whether
+  - [x] On each message, the decision model (`decisionModel`: Jev by API by default, or Laya locally) decides whether
     memory is needed. The memory agent (`memoryAgent.model`, by default the pi model in use at setup) searches and
     reads, and the decision model gates the message and scores each candidate note against the cutoffs
     (`gateThreshold`/`relevanceThreshold`; defaults in config.md and docs/decision-thresholds.md).
@@ -419,7 +420,7 @@ Every milestone:
 - **Depends on:** 5.
 - **Done when:**
   - [x] a message that needs no memory adds nothing (this holds when the cutoffs exist: Jev's starting values, or
-    values set in the config; with the default Laya config per-message memory is off and says so);
+    values set in the config; with Laya and no cutoffs per-message memory is off and says so);
   - [x] a related message adds only the notes scored above the relevance cutoff;
   - [x] earlier messages stay byte-identical;
   - [x] a loaded note edited in Obsidian comes back marked as replacing the earlier one;
