@@ -12,8 +12,8 @@ Long-term memory for the [pi coding agent](https://pi.dev), stored in [Obsidian]
 > note remains success with a warning if filesystem maintenance fails. `memory_search` and `memory_get` search and
 > read the vaults, and session start loads every Don't forget note. `memory_update`, `memory_archive` and `memory_succeed`
 > change notes only on an explicit request, after `memory_get` of the same note in the session, and refuse a note
-> changed on disk since; archiving moves to `archive/`, never deletes. Not yet: blocking the LLM's other routes to
-> vault files, automatic capture and the decision-model check. Semantic search is in: `memory_search` fuses words and
+> changed on disk since; archiving moves to `archive/`, never deletes. Automatic capture reviews the conversation in the background at the configured `capture.when` moment, asking
+> when unsure. Not yet: blocking the LLM's other routes to vault files and the decision-model check. Semantic search is in: `memory_search` fuses words and
 > vectors (local model by default), falling back to words when it is off.
 
 See [docs/VISION.md](docs/VISION.md) for what this project is and the decisions behind it.

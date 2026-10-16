@@ -13,6 +13,8 @@ export const DISCLOSURE_DECLINED = "sending notes to the remote embeddings provi
 
 export const MODEL_INVALID = "the downloaded local model is damaged; remove its folder to download it again"
 
+export const SHUTDOWN_FAILED = "The local search model did not shut down cleanly:"
+
 export const DOWNLOAD_ANSWER = "download"
 
 export const DISCLOSURE_ANSWER_PREFIX = "disclosure:"

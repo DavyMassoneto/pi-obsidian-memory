@@ -1,5 +1,6 @@
-import type { AgentToolResult } from "@earendil-works/pi-coding-agent"
+import type { AgentToolResult, SessionShutdownEvent } from "@earendil-works/pi-coding-agent"
 
+import type { MemoryPiContext } from "#src/pi/context"
 import type { Done } from "#src/shared"
 import type { MemoryOperationContext, MemorySession, RegistrationContext } from "#src/usecases"
 
@@ -8,7 +9,7 @@ export interface RegistrationFlow {
   registration: RegistrationContext
 }
 
-export type SessionShutdownHandler = () => void
+export type SessionShutdownHandler = (event: SessionShutdownEvent, ctx: MemoryPiContext) => Promise<void>
 
 export type NoSessionResponse = AgentToolResult<undefined>
 

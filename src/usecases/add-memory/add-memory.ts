@@ -63,7 +63,14 @@ async function addLeasedMemory(request: AddMemoryRequest, context: MemoryOperati
   const notePath = displayNotePath(request.folder, created.output.note.statement)
   return {
     succeeded: true,
-    output: { vaultName: name, folder: request.folder, notePath, stored: created.output, maintenanceProblems },
+    output: {
+      scope: request.scope,
+      vaultName: name,
+      folder: request.folder,
+      notePath,
+      stored: created.output,
+      maintenanceProblems,
+    },
   }
 }
 

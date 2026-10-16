@@ -1,10 +1,10 @@
 import type { AddedMemory, AddMemoryResult, ExistingMemoryRefusal } from "#src/usecases"
 import { NO_PROJECT_GUIDANCE, SAME_POINT_GUIDANCE, SETUP_GUIDANCE } from "./constants.ts"
-import type { MemoryAddResponse } from "./types.ts"
+import type { AddedDetails, MemoryAddResponse } from "./types.ts"
 
 export function respondTo(result: AddMemoryResult): MemoryAddResponse {
   if (result.succeeded) {
-    return reply(describeSaved(result.output), false)
+    return reply(describeSaved(result.output), false, { vault: result.output.scope, path: result.output.notePath })
   }
 
   switch (result.reason) {
@@ -50,6 +50,6 @@ function describeExisting(refusal: ExistingMemoryRefusal): string {
   return [...problems, "", `Current note (${note.frontmatter.type}):`, note.body, "", SAME_POINT_GUIDANCE].join("\n")
 }
 
-function reply(text: string, isError: boolean): MemoryAddResponse {
-  return { content: [{ type: "text", text }], details: undefined, isError }
+function reply(text: string, isError: boolean, details?: AddedDetails): MemoryAddResponse {
+  return { content: [{ type: "text", text }], details, isError }
 }

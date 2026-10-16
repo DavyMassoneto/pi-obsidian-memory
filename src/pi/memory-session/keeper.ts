@@ -1,7 +1,7 @@
 import type { MemoryPaths, MemoryPiContext } from "#src/pi/context"
 import type { SemanticRuntime } from "#src/pi/semantic"
 import { createMemorySession, type MemoryOperationContext, type MemorySession } from "#src/usecases"
-import { STALE_SESSION_REASON } from "./constants.ts"
+import { CAPTURE_BRANCH, STALE_SESSION_REASON } from "./constants.ts"
 import type { ReadOutcome, ReadRun, RegistrationFlow } from "./types.ts"
 
 export class MemorySessionKeeper {
@@ -53,6 +53,13 @@ export class MemorySessionKeeper {
   ): MemoryOperationContext | null {
     if (!this.#session) return null
     return this.operationContext(this.#session, workingFolder, paths, callerSignal)
+  }
+
+  captureOperation(workingFolder: string, paths: MemoryPaths): MemoryOperationContext | null {
+    const main = this.#session
+    if (!main) return null
+    const sibling = main.sibling({ sessionId: main.stamp().sessionId, branchId: CAPTURE_BRANCH })
+    return this.operationContext(sibling, workingFolder, paths, main.signal(main.stamp()))
   }
 
   async readFresh<Outcome extends ReadOutcome>(

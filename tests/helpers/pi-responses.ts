@@ -5,7 +5,7 @@ import type { ChangeFailure } from "#src/pi"
 import { renderDoctorReport, renderMemoryBlock, reportFailure, reportSuccess, respondToSearch } from "#src/pi"
 import type { DontForgetVault, GetMemoryResult, LoadedDontForgetNote, SearchMemoryResult } from "#src/usecases"
 import { diagnosedMemory } from "./diagnose-memory.ts"
-import { textOf } from "./pi.ts"
+import { textOf } from "./pi-text.ts"
 import { deliveredRead } from "./session.ts"
 
 const problems = ["a problem"]

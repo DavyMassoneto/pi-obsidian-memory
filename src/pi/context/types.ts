@@ -1,9 +1,16 @@
+import type { ModelRegistry, SessionEntry } from "@earendil-works/pi-coding-agent"
+
 export type NotifyLevel = "info" | "warning" | "error"
+
+export interface DialogOptions {
+  timeout?: number
+  signal?: AbortSignal
+}
 
 export interface MemoryUi {
   select(title: string, options: string[]): Promise<string | undefined>
   confirm(title: string, message: string): Promise<boolean>
-  input(title: string, placeholder?: string): Promise<string | undefined>
+  input(title: string, placeholder?: string, options?: DialogOptions): Promise<string | undefined>
   notify(message: string, type?: NotifyLevel): void
 }
 
@@ -11,6 +18,12 @@ export interface ChatModelSource {
   provider: string
   id: string
 }
+
+export type RegistryContext = Parameters<ModelRegistry["complete"]>[1]
+
+export type RegistryOptions = Parameters<ModelRegistry["complete"]>[2]
+
+export type RegistryMessage = Awaited<ReturnType<ModelRegistry["complete"]>>
 
 export interface ModelAuthResolved {
   ok: true
@@ -28,10 +41,12 @@ export interface AvailableModels {
   find(provider: string, modelId: string): ChatModelSource | undefined
   getApiKeyAndHeaders(model: ChatModelSource): Promise<ModelAuthResult>
   getApiKeyForProvider(provider: string): Promise<string | undefined>
+  complete(model: ChatModelSource, context: RegistryContext, options: RegistryOptions): Promise<RegistryMessage>
 }
 
 export interface SessionIdSource {
   getSessionId(): string
+  getBranch(): SessionEntry[]
 }
 
 export interface MemoryPiContext {

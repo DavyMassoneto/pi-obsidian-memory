@@ -105,3 +105,21 @@ test("starting a session attaches its UI to the semantic runtime", async () => {
   expect(port).toMatchObject({ available: true })
   expect(prompts).toHaveLength(1)
 })
+
+test("a capture operation has no context before a session started", () => {
+  expect(new MemorySessionKeeper().captureOperation("work", paths)).toBeNull()
+})
+
+test("a capture operation runs in its own sibling session, which stops when the main session is replaced", () => {
+  const keeper = new MemorySessionKeeper()
+  const { context } = fakePiContext("work", {})
+  const main = keeper.start(context)
+
+  const operation = keeper.captureOperation("work", paths)
+
+  expect(operation?.session).not.toBe(main)
+  expect(operation?.stamp.branchId).toBe("capture")
+  expect(operation?.signal.aborted).toBe(false)
+  keeper.start(context)
+  expect(operation?.signal.aborted).toBe(true)
+})

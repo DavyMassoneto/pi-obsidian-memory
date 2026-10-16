@@ -7,6 +7,7 @@ test("reports persistence with a maintenance warning instead of a failed save", 
   const response = respondTo({
     succeeded: true,
     output: {
+      scope: "global",
       vaultName: "Global memory",
       folder: "tools",
       notePath: "tools/Use pnpm.md",
@@ -81,4 +82,24 @@ test("reports an unreadable config without sending the user to /memory-setup", (
   expect(unreadable.isError).toBe(true)
   expect(textOf(unreadable)).toContain("cannot read config (EACCES)")
   expect(textOf(unreadable)).not.toContain("/memory-setup")
+})
+
+test("a saved note reports its vault and path in the details, so capture can find explicit saves", () => {
+  const response = respondTo({
+    succeeded: true,
+    output: {
+      scope: "project",
+      vaultName: "Loja memory",
+      folder: "tools",
+      notePath: "tools/Use pnpm.md",
+      stored: { note: aNote(), hash: "hash" },
+      maintenanceProblems: [],
+    },
+  })
+
+  expect(response.details).toEqual({ vault: "project", path: "tools/Use pnpm.md" })
+})
+
+test("a refusal has no details", () => {
+  expect(respondTo({ succeeded: false, reason: "invalid", problems: ["x"] }).details).toBeUndefined()
 })

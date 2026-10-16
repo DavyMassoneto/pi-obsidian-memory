@@ -66,10 +66,31 @@ export const ClarificationObservationSchema = Type.Object(
   { additionalProperties: false },
 )
 
+export const RefusedObservationSchema = Type.Object(
+  {
+    kind: Type.Literal("refused"),
+    action: Type.Enum([
+      "search",
+      "get",
+      "list",
+      "add",
+      "update",
+      "archive",
+      "succeed",
+      "clarify",
+      "finish",
+      "unparseable",
+    ]),
+    problems: Type.Array(TextSchema, { maxItems: 20 }),
+  },
+  { additionalProperties: false },
+)
+
 export const CaptureObservationSchema = Type.Union([
   ObservationSchema,
   WriteObservationSchema,
   ClarificationObservationSchema,
+  RefusedObservationSchema,
 ])
 
 export const CaptureInputSchema = Type.Object(

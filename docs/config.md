@@ -47,14 +47,14 @@ explicitly chosen available chat model's provider and id. They are not built-in 
 | `limits.maxStatementChars` | Positive integer | 100 |
 | `limits.maxNotesPerFolder` | Positive integer; future doctor reporting threshold | 20 |
 | `capture.model` | Exactly `{provider, id}`, both nonblank strings | Explicit selected chat model supplied at setup |
-| `capture.when` | `after-each-turn`, `on-compaction`, or `at-session-end` | `after-each-turn` |
+| `capture.when` | `after-each-turn` (`agent_end`), `on-compaction` (`session_before_compact`), `at-session-end` (`session_shutdown`) | `after-each-turn` |
 | `memoryAgent.model` | Exactly `{provider, id}`, both nonblank strings | Explicit selected chat model supplied at setup |
 | `context.budgetChars` | Positive integer; future optional relevant-memory character budget | 12000 |
 | `embeddings` | One exact alternative below | Local multilingual E5 |
 | `decisionModel` | One exact alternative below | Laya with the values shown above |
 
 The optional relevant-memory budget does not limit Don't forget notes in the target context behavior. These settings
-are configuration choices, not proof that capture, retrieval, doctor or any configured model currently runs. A chat
+are configuration choices, not proof that retrieval, doctor or any configured model currently runs; capture runs with `capture.model`. A chat
 reference is syntactically validated here; model availability is a separate future runtime check.
 
 Embeddings allow only these closed provider/model pairs, with no other fields:

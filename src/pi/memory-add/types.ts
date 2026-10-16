@@ -5,6 +5,11 @@ import type { MemoryAddParamsSchema } from "./schemas.ts"
 
 export type MemoryAddParams = Static<typeof MemoryAddParamsSchema>
 
-export type MemoryAddTool = ToolDefinition<typeof MemoryAddParamsSchema, undefined>
+export interface AddedDetails {
+  vault: "global" | "project"
+  path: string
+}
 
-export type MemoryAddResponse = AgentToolResult<undefined>
+export type MemoryAddTool = ToolDefinition<typeof MemoryAddParamsSchema, AddedDetails | undefined>
+
+export type MemoryAddResponse = AgentToolResult<AddedDetails | undefined>

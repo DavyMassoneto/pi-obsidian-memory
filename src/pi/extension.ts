@@ -2,7 +2,15 @@ import { homedir } from "node:os"
 
 import { type ExtensionAPI, getAgentDir } from "@earendil-works/pi-coding-agent"
 
+import {
+  agentEndHandler,
+  beforeCompactHandler,
+  CaptureRuntime,
+  type CompletionFactory,
+  registryCompletion,
+} from "#src/pi/capture"
 import { disableClaudeCodeAutoMemory } from "#src/pi/claude-code"
+import type { MemoryPaths } from "#src/pi/context"
 import { memoryAddTool } from "#src/pi/memory-add"
 import { memoryArchiveTool } from "#src/pi/memory-archive"
 import { MemoryBlock } from "#src/pi/memory-block"
@@ -21,34 +29,63 @@ import { sessionStartHandler } from "#src/pi/session-start"
 import { vaultGuardHandler } from "#src/pi/vault-guard"
 import { loadDontForget } from "#src/usecases"
 import { registrarFor } from "./registrar.ts"
-import type { ExtensionRegistrar } from "./types.ts"
+import type { ExtensionOverrides, ExtensionRegistrar } from "./types.ts"
 
 export default function extension(pi: ExtensionAPI): void {
   registerExtension(registrarFor(pi), getAgentDir(), process.env)
 }
 
-export function registerExtension(registrar: ExtensionRegistrar, agentDir: string, env: NodeJS.ProcessEnv): void {
+export function registerExtension(
+  registrar: ExtensionRegistrar,
+  agentDir: string,
+  env: NodeJS.ProcessEnv,
+  overrides?: ExtensionOverrides,
+): void {
   disableClaudeCodeAutoMemory(env)
   const paths = { configPath: memoryConfigPath(agentDir), indexPath: memoryIndexPath(agentDir) }
   const semantic = new SemanticRuntime(memoryModelCachePath(agentDir))
   const sessions = new MemorySessionKeeper(semantic)
   const block = new MemoryBlock(loadDontForget)
+  registerTools(registrar, paths, sessions)
+  registerCommands(registrar, paths, sessions, memoryModelCachePath(agentDir))
+  registrar.onSessionStart(sessionStartHandler(paths, sessions, block))
+  registrar.onBeforeAgentStart(block.beforeAgentStart())
+  registrar.onToolCall(vaultGuardHandler(paths.configPath, memoryDataFolder(agentDir), homedir()))
+  let completionOf: CompletionFactory = registryCompletion
+  if (overrides?.completionOf) completionOf = overrides.completionOf
+  const capture = new CaptureRuntime({
+    paths,
+    sessions,
+    completionOf,
+    writeCursor: (data) => registrar.appendCursor(data),
+  })
+  registrar.onAgentEnd(agentEndHandler(capture))
+  registrar.onBeforeCompact(beforeCompactHandler(capture))
+  registrar.onSessionShutdown(async (_event, ctx) => {
+    await capture.request({ ctx, trigger: "at-session-end" })
+    sessions.shutdown()
+    block.clear()
+    await semantic.shutdown()
+  })
+}
+
+function registerTools(registrar: ExtensionRegistrar, paths: MemoryPaths, sessions: MemorySessionKeeper): void {
   registrar.registerAddTool(memoryAddTool(paths, sessions))
   registrar.registerSearchTool(memorySearchTool(paths, sessions))
   registrar.registerGetTool(memoryGetTool(paths, sessions))
   registrar.registerUpdateTool(memoryUpdateTool(paths, sessions))
   registrar.registerArchiveTool(memoryArchiveTool(paths, sessions))
   registrar.registerSucceedTool(memorySucceedTool(paths, sessions))
+}
+
+function registerCommands(
+  registrar: ExtensionRegistrar,
+  paths: MemoryPaths,
+  sessions: MemorySessionKeeper,
+  modelCachePath: string,
+): void {
   registrar.registerCommand(MEMORY_SETUP_COMMAND, memorySetupCommand(paths, sessions))
   registrar.registerCommand(MEMORY_INIT_COMMAND, memoryInitCommand(paths, sessions))
   registrar.registerCommand(MEMORY_EXPORT_COMMAND, memoryExportCommand(paths, sessions))
-  registrar.registerCommand(MEMORY_DOCTOR_COMMAND, memoryDoctorCommand(paths, sessions, memoryModelCachePath(agentDir)))
-  registrar.onSessionStart(sessionStartHandler(paths, sessions, block))
-  registrar.onBeforeAgentStart(block.beforeAgentStart())
-  registrar.onToolCall(vaultGuardHandler(paths.configPath, memoryDataFolder(agentDir), homedir()))
-  registrar.onSessionShutdown(() => {
-    sessions.shutdown()
-    block.clear()
-    void semantic.shutdown()
-  })
+  registrar.registerCommand(MEMORY_DOCTOR_COMMAND, memoryDoctorCommand(paths, sessions, modelCachePath))
 }
