@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises"
 
 import { expect, test } from "vitest"
 
+import { noSessionResponse } from "#src/pi"
 import {
   noteWithId,
   READIED_PATH as path,
@@ -68,5 +69,5 @@ test("before any session started the tool says memory is not ready", async () =>
   const response = await updateResponse(fixture, { vault: "global", path, body: "Changed." })
 
   expect(response.isError).toBe(true)
-  expect(textOf(response)).toContain("Memory is not ready")
+  expect(response).toEqual(noSessionResponse())
 })

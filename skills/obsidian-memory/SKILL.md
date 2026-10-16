@@ -96,3 +96,5 @@ Use these only when the user explicitly asks. Always read the note with `memory_
 
 - With no global vault registered there is no memory: tell the user to run `/memory-setup`.
 - A folder not registered as a project has global memory only: the user can run `/memory-init` to register it.
+- Notes listed under Needs fixing, blank notes and duplicate ids: suggest the user run `/memory-doctor`.
+- A copy of the memory as a zip: the user can run `/memory-export`.

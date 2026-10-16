@@ -2,7 +2,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { memoryConfigPath } from "#src/pi"
+import { memoryConfigPath, noSessionResponse } from "#src/pi"
 import { addMemory } from "#src/usecases"
 import {
   fakePiContext,
@@ -89,5 +89,5 @@ test("the tool says memory is not ready before a session started", async () => {
   const response = await tool.execute("call-3", params, undefined, undefined, fakeToolContext(unregisteredFolder))
 
   expect(response.isError).toBe(true)
-  expect(textOf(response)).toContain("Memory is not ready")
+  expect(response).toEqual(noSessionResponse())
 })

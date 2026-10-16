@@ -16,7 +16,7 @@ Every milestone:
 ## Current state
 
 - pi loads the extension and registers `memory_add`, `memory_search`, `memory_get`, `memory_update`, `memory_archive`,
-  `memory_succeed`, `/memory-setup` and `/memory-init`. Session start notifies, with a
+  `memory_succeed`, `/memory-setup`, `/memory-init`, `/memory-doctor` and `/memory-export`. Session start notifies, with a
   UI and not on reload, when there is no config (offers `/memory-setup`), an invalid config (every problem, nothing
   used) or an unreadable file. The real-pi smoke test checks the registrations and the no-config notice.
 - One tool, `memory_add`, for explicit requests to remember. It writes a valid note to the global or project vault,
@@ -69,6 +69,15 @@ Every milestone:
   (`vault/draft`, `config/registration`, `config/target`, `embeddings/configuration`, `search-index/inspection`),
   prepared SQL lists (`search-index/*statements`) and the one-line `vault/filesystem/hash`.
 - A test proves no LLM-facing text names a command or tool that is not registered (`tests/pi/extension.test.ts`).
+- `/memory-doctor` (UI only) reports per vault: invalid notes with problems, blank notes, duplicate ids, leftover
+  temporaries and folders over the notes-per-folder limit; then config problems and the chat model (registry and
+  credentials, no network call). Embeddings and the decision model show "not used yet". It offers to complete each
+  blank note (type, and a body when empty; existing text is kept as the body), applied only after confirmation.
+- `/memory-export` (UI only) asks for a folder (default: the working folder) and writes
+  `memory-export-YYYY-MM-DD-HHmmss.zip` with `global/` and `project/`, holding every non-hidden, non-temporary file,
+  attachments and `index.md` included. It never overwrites (a taken name asks again), refuses a folder inside a vault,
+  and refuses the whole export naming an unreadable file. Vault bytes stay unchanged.
+- `Memory.base` is written with the templates by setup and init when missing.
 - Shared temporary-folder and limits fixtures live by topic under `tests/helpers`; no filesystem mocks are used.
 
 ## Completed correction work
@@ -379,13 +388,14 @@ Every milestone:
 
 - **Goal:** the user finds and fixes what is wrong in the memory.
 - **Scope:** VISION 9 and vault-format.
-  - For the global vault and the current project's vault, it lists:
+  - [x] For the global vault and the current project's vault, it lists:
     - invalid notes with every problem;
     - duplicate ids;
     - leftover temporary files;
     - folders above `limits.maxNotesPerFolder` notes (20 by default), suggesting a split.
-  - It also shows the config's problems and whether each configured model and embedding provider answers.
-  - It offers to complete a blank note (new `id`, asks the type) and applies it only after the user confirms.
+  - [x] It shows the config's problems and checks the chat model (registry and credentials, no network call).
+  - [ ] Provider checks for embeddings and the decision model: shown as "not used yet" until milestones 5 and 6.
+  - [x] It offers to complete a blank note (new `id`, asks the type) and applies it only after the user confirms.
 - **Out of scope:** any other change. The doctor reports and suggests; it never rewrites, merges, moves or deletes.
 - **Depends on:** 2; its provider checks grow with 4–6. It can move earlier when needed.
 - **Done when:**
@@ -398,13 +408,13 @@ Every milestone:
 
 - **Goal:** the user browses the memory in Obsidian and takes it out as one file.
 - **Scope:** VISION 9.
-  - Dashboard:
+  - [x] Dashboard:
     - `Memory.base` at the vault root, written by `/memory-setup` and `/memory-init` when missing; a user's edits to
       it are kept;
     - views: all notes (statement, folder, type, Don't forget, updated), Don't forget, and Archive;
     - it leaves out `_templates/`;
     - vault-format gains a Dashboard section.
-  - `/memory-export`:
+  - [x] `/memory-export`:
     - one `.zip` with `global/` and, in a registered project, `project/`, each holding its vault: notes, `archive/`,
       `_templates/`, the dashboard;
     - no hidden folders (`.obsidian/`) and no temporary files;

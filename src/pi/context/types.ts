@@ -12,8 +12,21 @@ export interface ChatModelSource {
   id: string
 }
 
+export interface ModelAuthResolved {
+  ok: true
+}
+
+export interface ModelAuthRefused {
+  ok: false
+  error: string
+}
+
+export type ModelAuthResult = ModelAuthResolved | ModelAuthRefused
+
 export interface AvailableModels {
   getAvailable(): ChatModelSource[]
+  find(provider: string, modelId: string): ChatModelSource | undefined
+  getApiKeyAndHeaders(model: ChatModelSource): Promise<ModelAuthResult>
 }
 
 export interface SessionIdSource {

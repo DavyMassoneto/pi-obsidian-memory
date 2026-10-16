@@ -6,6 +6,8 @@ import { disableClaudeCodeAutoMemory } from "#src/pi/claude-code"
 import { memoryAddTool } from "#src/pi/memory-add"
 import { memoryArchiveTool } from "#src/pi/memory-archive"
 import { MemoryBlock } from "#src/pi/memory-block"
+import { MEMORY_DOCTOR_COMMAND, memoryDoctorCommand } from "#src/pi/memory-doctor"
+import { MEMORY_EXPORT_COMMAND, memoryExportCommand } from "#src/pi/memory-export"
 import { memoryGetTool } from "#src/pi/memory-get"
 import { MEMORY_INIT_COMMAND, memoryInitCommand } from "#src/pi/memory-init"
 import { memorySearchTool } from "#src/pi/memory-search"
@@ -37,6 +39,8 @@ export function registerExtension(registrar: ExtensionRegistrar, agentDir: strin
   registrar.registerSucceedTool(memorySucceedTool(paths, sessions))
   registrar.registerCommand(MEMORY_SETUP_COMMAND, memorySetupCommand(paths, sessions))
   registrar.registerCommand(MEMORY_INIT_COMMAND, memoryInitCommand(paths, sessions))
+  registrar.registerCommand(MEMORY_EXPORT_COMMAND, memoryExportCommand(paths, sessions))
+  registrar.registerCommand(MEMORY_DOCTOR_COMMAND, memoryDoctorCommand(paths, sessions))
   registrar.onSessionStart(sessionStartHandler(paths, sessions, block))
   registrar.onBeforeAgentStart(block.beforeAgentStart())
   registrar.onToolCall(vaultGuardHandler(paths.configPath, memoryDataFolder(agentDir), homedir()))

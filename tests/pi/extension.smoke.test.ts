@@ -15,7 +15,9 @@ test("pi loads the package, registers its tools and commands, and offers /memory
       "memory_succeed",
     ]),
   )
-  expect(loaded.commandNames).toEqual(expect.arrayContaining(["memory-setup", "memory-init"]))
+  expect(loaded.commandNames).toEqual(
+    expect.arrayContaining(["memory-setup", "memory-init", "memory-export", "memory-doctor"]),
+  )
   expect(loaded.startNotifications).toEqual([{ message: expect.stringContaining("/memory-setup"), type: "info" }])
 })
 
