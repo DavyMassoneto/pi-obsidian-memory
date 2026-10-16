@@ -2,7 +2,7 @@ import Type from "typebox"
 import { Value } from "typebox/value"
 import { expect, test } from "vitest"
 
-import { describeSchemaErrors } from "#/domain"
+import { describeSchemaErrors } from "#src/domain"
 
 test("describes unknown properties once without repeating their false-schema errors", () => {
   const schema = Type.Object(

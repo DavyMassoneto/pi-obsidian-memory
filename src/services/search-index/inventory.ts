@@ -1,6 +1,6 @@
 import { Value } from "typebox/value"
 
-import { type CatalogEntry, CatalogEntrySchema, CatalogNoteSchema } from "#/domain"
+import { type CatalogEntry, CatalogEntrySchema, CatalogNoteSchema } from "#src/domain"
 import type { prepareCatalogStatements } from "./catalog-statements.ts"
 import { CatalogRowSchema, CatalogStateSchema } from "./schemas.ts"
 import type { CatalogRow, InventoryResult, SearchIndexRefusal } from "./types.ts"

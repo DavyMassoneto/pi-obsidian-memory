@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { applyIndexChanges, openIndex, readIndexInventory, recoverIndex, searchCatalog } from "#/services"
+import { applyIndexChanges, openIndex, readIndexInventory, recoverIndex, searchCatalog } from "#src/services"
 import { catalogChanges, catalogEntry, changeIndexFile, useIndexFile } from "#test-helpers"
 
 test("persists partial population across reopen and reports migration as needing population", async () => {

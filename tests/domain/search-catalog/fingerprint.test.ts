@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { semanticFingerprint } from "#/domain"
+import { semanticFingerprint } from "#src/domain"
 
 test("fingerprints exactly statement and body with unambiguous boundaries", () => {
   const content = { statement: "Use pnpm", body: "Keep trailing spaces.  \n" }

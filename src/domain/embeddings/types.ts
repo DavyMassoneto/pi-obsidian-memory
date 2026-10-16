@@ -1,6 +1,6 @@
 import type { Static } from "typebox"
 
-import type { Succeeded } from "#/shared"
+import type { Succeeded } from "#src/shared"
 import type { EmbeddingConfigurationSchema } from "./schemas.ts"
 
 export type EmbeddingConfiguration = Static<typeof EmbeddingConfigurationSchema>

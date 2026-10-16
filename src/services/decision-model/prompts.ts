@@ -1,4 +1,4 @@
-import type { CandidateDecisionRequest, DecisionRequest } from "#/domain"
+import type { CandidateDecisionRequest, DecisionRequest } from "#src/domain"
 import type { DecisionPrompt } from "./types.ts"
 
 export function memoryPrompt(request: DecisionRequest): DecisionPrompt {

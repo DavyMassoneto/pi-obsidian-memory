@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { applyIndexChanges, readVectorCache, replaceVectorCache } from "#/services"
+import { applyIndexChanges, readVectorCache, replaceVectorCache } from "#src/services"
 import { catalogChanges, catalogEntry, useIndexFile } from "#test-helpers"
 
 test("keeps semantic chunks through moves and stat/date changes, drops changed content", async () => {

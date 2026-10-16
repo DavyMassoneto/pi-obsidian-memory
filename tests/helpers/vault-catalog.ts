@@ -1,8 +1,13 @@
 import { mkdir, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
 
-import { analyzeVaultNote, type InspectedVaultFile, type VaultCatalogEntry, type VaultCatalogFailure } from "#/domain"
-import type { VaultContext } from "#/services"
+import {
+  analyzeVaultNote,
+  type InspectedVaultFile,
+  type VaultCatalogEntry,
+  type VaultCatalogFailure,
+} from "#src/domain"
+import type { VaultContext } from "#src/services"
 import { aLimits } from "./limits.ts"
 import { useTempFolder } from "./temp-folder.ts"
 

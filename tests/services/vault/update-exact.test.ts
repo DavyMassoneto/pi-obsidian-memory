@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { renderNote } from "#/domain"
-import { inspectVaultFile, updateStoredFile } from "#/services"
+import { renderNote } from "#src/domain"
+import { inspectVaultFile, updateStoredFile } from "#src/services"
 import { linkFolder, putCatalogFile, tryLinkFile, vaultWithStoredFile } from "#test-helpers"
 
 test.each([".MD", ".mD", ".Md"])("updates the exact %s entry without a lowercase sibling", async (extension) => {

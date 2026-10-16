@@ -1,6 +1,6 @@
 import type { Dirent, Stats } from "node:fs"
 
-import type { Done, Failed, Succeeded } from "#/shared"
+import type { Done, Failed, Succeeded } from "#src/shared"
 
 interface MissingFile extends Failed {
   reason: "not-found"

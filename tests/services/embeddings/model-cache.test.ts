@@ -4,7 +4,7 @@ import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
-import { provisionLocalModel } from "#/services"
+import { provisionLocalModel } from "#src/services"
 import { embeddingOperation } from "#test-helpers"
 
 describe("provisionLocalModel", () => {

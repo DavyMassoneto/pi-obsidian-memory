@@ -2,7 +2,7 @@ import { rm } from "node:fs/promises"
 
 import { expect, test } from "vitest"
 
-import { closeIndex, putNote, removeNote, searchText } from "#/services"
+import { closeIndex, putNote, removeNote, searchText } from "#src/services"
 import { anEntry, openedIndex, useIndexFile } from "#test-helpers"
 
 test("closes idempotently and refuses operations on a closed resource", async () => {

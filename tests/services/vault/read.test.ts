@@ -4,8 +4,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { renderNote } from "#/domain"
-import { readNote } from "#/services"
+import { renderNote } from "#src/domain"
+import { readNote } from "#src/services"
 import {
   aLimits,
   aNote,

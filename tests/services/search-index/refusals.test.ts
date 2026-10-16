@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { closeIndex, openIndex, putNote } from "#/services"
+import { closeIndex, openIndex, putNote } from "#src/services"
 import { anEntry, openedIndex, useTempFolder } from "#test-helpers"
 
 test("reports a corrupt database without replacing it or leaking its connection", async () => {

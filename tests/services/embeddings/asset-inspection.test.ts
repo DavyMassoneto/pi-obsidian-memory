@@ -4,7 +4,7 @@ import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
-import { inspectModelAsset } from "#/services"
+import { inspectModelAsset } from "#src/services"
 import { embeddingOperation, syntheticModelAsset } from "#test-helpers"
 
 describe("inspectModelAsset", () => {

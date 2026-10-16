@@ -1,4 +1,4 @@
-import type { DecisionDiagnostics, DecisionResult } from "#/domain"
+import type { DecisionDiagnostics, DecisionResult } from "#src/domain"
 import { withinDecisionDeadline } from "./deadline.ts"
 import { classifyJev } from "./jev.ts"
 import { classifyLaya } from "./laya.ts"
@@ -6,7 +6,7 @@ import { decisionPreflight, remainingDecisionMs } from "./preflight.ts"
 import { candidatePrompt, memoryPrompt } from "./prompts.ts"
 import type { CandidateDecisionCall, DecisionContext, DecisionPrompt, MemoryDecisionCall } from "./types.ts"
 
-export { rankCandidates, shouldRetrieveMemory } from "#/domain"
+export { rankCandidates, shouldRetrieveMemory } from "#src/domain"
 
 async function decide(context: DecisionContext, prompt: DecisionPrompt): Promise<DecisionResult> {
   const diagnostics: DecisionDiagnostics = {

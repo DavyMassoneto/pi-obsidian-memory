@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { embedGoogle } from "#/services"
+import { embedGoogle } from "#src/services"
 import { embeddingServer, googleResponse, recordedEmbeddingBody, remoteEmbeddingContext } from "#test-helpers"
 
 describe("embedGoogle", () => {

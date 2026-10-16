@@ -1,4 +1,4 @@
-import type { WriteFailure } from "#/services/vault/filesystem"
+import type { WriteFailure } from "#src/services/vault/filesystem"
 import { NOTE_EXTENSION } from "./constants.ts"
 import { displayNotePath } from "./display.ts"
 import type { CreateRefusal, ExistingNoteRefusal } from "./types.ts"

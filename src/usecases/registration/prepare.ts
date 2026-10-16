@@ -1,4 +1,4 @@
-import { prepareSetupDefaults, readConfigSnapshot } from "#/services"
+import { prepareSetupDefaults, readConfigSnapshot } from "#src/services"
 import { captureRegistrationContext, captureSelectedModel } from "./entry.ts"
 import { registrationInterruption } from "./publication.ts"
 import type { RegistrationContext, SetupPreparationRequest, SetupPreparationResult } from "./types.ts"

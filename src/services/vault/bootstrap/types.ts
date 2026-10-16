@@ -1,7 +1,7 @@
-import type { VaultBootstrapProgress, VaultCatalogFailure } from "#/domain"
-import type { Succeeded } from "#/shared"
+import type { VaultBootstrapProgress, VaultCatalogFailure } from "#src/domain"
+import type { Succeeded } from "#src/shared"
 
-export type { VaultBootstrapFailure, VaultBootstrapProgress, VaultBootstrapResult } from "#/domain"
+export type { VaultBootstrapFailure, VaultBootstrapProgress, VaultBootstrapResult } from "#src/domain"
 
 export interface AssetLocation {
   root: string

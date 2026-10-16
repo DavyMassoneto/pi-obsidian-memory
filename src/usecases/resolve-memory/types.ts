@@ -4,4 +4,4 @@ export type {
   ResolvedMemory,
   ResolvedVault,
   ResolveMemoryResult,
-} from "#/usecases/resolve-memory/leased"
+} from "#src/usecases/resolve-memory/leased"

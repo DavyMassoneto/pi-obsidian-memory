@@ -1,6 +1,6 @@
 import Type from "typebox"
 
-import { AddMemoryRequestSchema } from "#/usecases"
+import { AddMemoryRequestSchema } from "#src/usecases"
 
 export const MemoryAddParamsSchema = Type.Object(
   {

@@ -1,6 +1,6 @@
 import Type from "typebox"
 
-import { NoteIdSchema, NoteTypeSchema } from "#/domain/note"
+import { NoteIdSchema, NoteTypeSchema } from "#src/domain/note"
 
 export const CatalogPathSchema = Type.String({
   minLength: 1,

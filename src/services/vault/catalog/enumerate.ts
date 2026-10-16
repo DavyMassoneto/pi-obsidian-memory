@@ -1,7 +1,7 @@
 import { readdir } from "node:fs/promises"
 
-import { catalogFileKind, isCatalogHidden, isCatalogNotePath, type VaultEnumerationResult } from "#/domain"
-import type { VaultContext } from "#/services/vault/context"
+import { catalogFileKind, isCatalogHidden, isCatalogNotePath, type VaultEnumerationResult } from "#src/domain"
+import type { VaultContext } from "#src/services/vault/context"
 import { catalogIoFailure } from "./failures.ts"
 import { resolveCatalogEntry, resolveCatalogRoot } from "./resolve.ts"
 import type { CatalogWalk, CatalogWalkRequest } from "./types.ts"

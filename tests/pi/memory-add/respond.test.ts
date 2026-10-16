@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { respondTo } from "#/pi"
+import { respondTo } from "#src/pi"
 import { aNote, textOf } from "#test-helpers"
 
 test("reports persistence with a maintenance warning instead of a failed save", () => {

@@ -1,5 +1,5 @@
-import { checkMemoryFolder, checkNote, type Note } from "#/domain"
-import type { VaultContext } from "#/services/vault/context"
+import { checkMemoryFolder, checkNote, type Note } from "#src/domain"
+import type { VaultContext } from "#src/services/vault/context"
 import { resolveMemoryFolder } from "./memory-folder.ts"
 import { writeValidatedNote } from "./publish.ts"
 import type { CreateResult } from "./types.ts"

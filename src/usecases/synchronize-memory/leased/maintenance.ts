@@ -1,5 +1,5 @@
-import { refreshFolders } from "#/services"
-import { memoryOperationInterruption } from "#/usecases/operation-context"
+import { refreshFolders } from "#src/services"
+import { memoryOperationInterruption } from "#src/usecases/operation-context"
 import type { CatalogSynchronization, SynchronizationScan } from "./types.ts"
 
 export async function maintainMemoryFolders(work: CatalogSynchronization, scan: SynchronizationScan): Promise<void> {

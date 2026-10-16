@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { comparablePath, isInside, pathsOverlap, resolveProject, vaultNameOf } from "#/domain"
+import { comparablePath, isInside, pathsOverlap, resolveProject, vaultNameOf } from "#src/domain"
 import { aConfig } from "#test-helpers"
 
 test.each([

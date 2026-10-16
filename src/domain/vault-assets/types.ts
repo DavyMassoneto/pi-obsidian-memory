@@ -1,5 +1,5 @@
-import type { VaultCatalogFailure } from "#/domain/vault-catalog"
-import type { Failed, Succeeded } from "#/shared"
+import type { VaultCatalogFailure } from "#src/domain/vault-catalog"
+import type { Failed, Succeeded } from "#src/shared"
 
 export interface VaultAsset {
   path: string

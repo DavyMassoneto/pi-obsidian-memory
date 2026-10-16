@@ -2,7 +2,7 @@ import { createServer } from "node:http"
 
 import { vi } from "vitest"
 
-import type { JevClassifierResult, JevContext, LayaContext } from "#/services"
+import type { JevClassifierResult, JevContext, LayaContext } from "#src/services"
 
 export interface SyntheticDecisionResponse {
   body: string

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { displayNotePath } from "#/services"
+import { displayNotePath } from "#src/services"
 
 test.each([
   ["", "Rule", "Rule.md"],

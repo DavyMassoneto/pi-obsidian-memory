@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { applyIndexChanges, enumerateVault, readIndexInventory, reconcileCatalog, searchCatalog } from "#/services"
+import { applyIndexChanges, enumerateVault, readIndexInventory, reconcileCatalog, searchCatalog } from "#src/services"
 import {
   catalogChanges,
   catalogEntry,

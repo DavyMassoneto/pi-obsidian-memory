@@ -1,4 +1,4 @@
-import type { DeliveredRead, SessionIdentity } from "#/usecases"
+import type { DeliveredRead, SessionIdentity } from "#src/usecases"
 
 export function sessionIdentity(): SessionIdentity {
   return { sessionId: "session-one", branchId: "branch-one" }

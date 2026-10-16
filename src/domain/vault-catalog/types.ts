@@ -1,5 +1,5 @@
-import type { NoteFrontmatter, NoteLimits, ParsedNote } from "#/domain/note"
-import type { Failed, Succeeded } from "#/shared"
+import type { NoteFrontmatter, NoteLimits, ParsedNote } from "#src/domain/note"
+import type { Failed, Succeeded } from "#src/shared"
 
 export type VaultEntryKind = "note" | "folder" | "index" | "template" | "dashboard" | "temporary" | "other"
 

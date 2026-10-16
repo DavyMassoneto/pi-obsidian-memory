@@ -1,7 +1,7 @@
 import { Value } from "typebox/value"
 
-import { checkEdges, checkFileSystemName, checkLinkCharacters } from "#/domain/names"
-import { FOLDER_INDEX_NAME } from "#/domain/vault-path"
+import { checkEdges, checkFileSystemName, checkLinkCharacters } from "#src/domain/names"
+import { FOLDER_INDEX_NAME } from "#src/domain/vault-path"
 import { NOTE_CHARACTER_SEGMENTER } from "./constants.ts"
 import { describeNoteSchemaErrors } from "./schema-errors.ts"
 import { NoteFrontmatterSchema } from "./schemas.ts"

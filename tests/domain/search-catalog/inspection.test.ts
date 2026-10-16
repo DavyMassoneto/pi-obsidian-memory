@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { classifyAliasFailure, inspectedCatalogEntry, reusableCatalogEntry, semanticFingerprint } from "#/domain"
+import { classifyAliasFailure, inspectedCatalogEntry, reusableCatalogEntry, semanticFingerprint } from "#src/domain"
 import {
   aCatalogFailure,
   anInspectedFile,

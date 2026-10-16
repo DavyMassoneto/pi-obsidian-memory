@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { embedOpenAI } from "#/services"
+import { embedOpenAI } from "#src/services"
 import {
   embeddingServer,
   embeddingVector,

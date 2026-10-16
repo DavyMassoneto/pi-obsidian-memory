@@ -1,5 +1,5 @@
-import type { Note } from "#/domain/note"
-import { ARCHIVE_FOLDER, checkVaultPath, FOLDER_INDEX_NAME, joinVaultPath } from "#/domain/vault-path"
+import type { Note } from "#src/domain/note"
+import { ARCHIVE_FOLDER, checkVaultPath, FOLDER_INDEX_NAME, joinVaultPath } from "#src/domain/vault-path"
 import { DONT_FORGET_LABEL, INDEX_TEXT_COLLATOR, NOTE_LINE_SEPARATOR, PROBLEM_SEPARATOR } from "./constants.ts"
 import { displayIndexName, displayIndexText } from "./display.ts"
 import type { FolderContents, InvalidNote, Titled } from "./types.ts"

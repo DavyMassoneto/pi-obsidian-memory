@@ -1,5 +1,5 @@
-import type { ConfigRepairDraft, MemoryConfig, ParseConfigResult } from "#/domain"
-import type { Failed, Succeeded } from "#/shared"
+import type { ConfigRepairDraft, MemoryConfig, ParseConfigResult } from "#src/domain"
+import type { Failed, Succeeded } from "#src/shared"
 
 export type ConfigFailureReason = "not-configured" | "invalid-config"
 

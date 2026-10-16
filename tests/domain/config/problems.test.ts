@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { parseConfig } from "#/domain"
+import { parseConfig } from "#src/domain"
 import { aConfig } from "#test-helpers"
 
 test("strict settings report every independent missing, wrong and unknown nested field", () => {

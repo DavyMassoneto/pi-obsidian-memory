@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { decideMemory } from "#/services"
+import { decideMemory } from "#src/services"
 import { decisionServer, jevContext, jevReply, layaReply, memoryDecisionRequest } from "#test-helpers"
 
 describe("Decision deadline", () => {

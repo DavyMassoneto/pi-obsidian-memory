@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { parseConfig, readConfigFields } from "#/domain"
+import { parseConfig, readConfigFields } from "#src/domain"
 import { aConfig } from "#test-helpers"
 
 test("the decision provider laya selects its own required fields", () => {

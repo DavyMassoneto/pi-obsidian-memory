@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { analyzeVaultNote } from "#/domain"
+import { analyzeVaultNote } from "#src/domain"
 import { noteText, validFrontmatterLines } from "#test-helpers"
 
 test("valid frontmatter supplies identity independently of invalid text and archive eligibility", () => {

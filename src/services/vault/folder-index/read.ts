@@ -1,14 +1,14 @@
 import { readdir } from "node:fs/promises"
 
-import { catalogFileKind, isCatalogHidden, isRootTemplate } from "#/domain"
+import { catalogFileKind, isCatalogHidden, isRootTemplate } from "#src/domain"
 import {
   catalogFailure,
   catalogIoFailure,
   observeVaultPath,
   type ResolvedCatalogEntry,
   readCatalogBytes,
-} from "#/services/vault/catalog"
-import type { VaultContext } from "#/services/vault/context"
+} from "#src/services/vault/catalog"
+import type { VaultContext } from "#src/services/vault/context"
 import type { FolderIndexPathResult, FolderIndexRequest, FolderIndexResult } from "./types.ts"
 
 export async function readFolderIndex(vault: VaultContext, request: FolderIndexRequest): Promise<FolderIndexResult> {

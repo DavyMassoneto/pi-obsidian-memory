@@ -1,4 +1,4 @@
-import type { AddedMemory, AddMemoryResult, ExistingMemoryRefusal } from "#/usecases"
+import type { AddedMemory, AddMemoryResult, ExistingMemoryRefusal } from "#src/usecases"
 import { NO_PROJECT_GUIDANCE, SAME_POINT_GUIDANCE } from "./constants.ts"
 import type { MemoryAddResponse } from "./types.ts"
 

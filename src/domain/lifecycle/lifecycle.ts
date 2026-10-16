@@ -1,4 +1,4 @@
-import { ARCHIVE_FOLDER, joinVaultPath } from "#/domain/vault-path"
+import { ARCHIVE_FOLDER, joinVaultPath } from "#src/domain/vault-path"
 import type { PlacedNote, Succession } from "./types.ts"
 
 export function archiveNote(placed: PlacedNote, today: string): PlacedNote {

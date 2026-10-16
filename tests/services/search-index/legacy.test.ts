@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { applyIndexChanges, putNote, readIndexInventory, removeNote, searchText } from "#/services"
+import { applyIndexChanges, putNote, readIndexInventory, removeNote, searchText } from "#src/services"
 import { anEntry, catalogChanges, catalogEntry, useIndexFile } from "#test-helpers"
 
 test("legacy archived results preserve the supplied folder field", async () => {

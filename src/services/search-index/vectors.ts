@@ -1,4 +1,4 @@
-import type { VectorReplacement } from "#/domain"
+import type { VectorReplacement } from "#src/domain"
 import type { IndexWriteResult, SearchIndex, VectorCacheResult } from "./types.ts"
 
 export function readVectorCache(index: SearchIndex): VectorCacheResult {

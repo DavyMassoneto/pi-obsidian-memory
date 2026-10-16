@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { synchronizeMemory } from "#/usecases"
+import { synchronizeMemory } from "#src/usecases"
 import {
   linkFolder,
   memoryReadFixture,

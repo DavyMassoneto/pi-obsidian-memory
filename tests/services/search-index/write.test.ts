@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { putNote, removeNote, searchText } from "#/services"
+import { putNote, removeNote, searchText } from "#src/services"
 import {
   anEntry,
   assertIndexConsistent,

@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { inspectVaultFile } from "#/services"
+import { inspectVaultFile } from "#src/services"
 import { catalogVault, noteText, putCatalogFile, validFrontmatterLines } from "#test-helpers"
 
 test("timestamp-only edits retain the exact hash and limits are rechecked independently of bytes", async () => {

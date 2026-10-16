@@ -1,5 +1,5 @@
-import type { VaultCatalogFailure, VaultExportFile, VaultExportResult } from "#/domain"
-import type { VaultContext } from "#/services/vault/context"
+import type { VaultCatalogFailure, VaultExportFile, VaultExportResult } from "#src/domain"
+import type { VaultContext } from "#src/services/vault/context"
 import { readCatalogBytes } from "./bytes.ts"
 import { walkVault } from "./enumerate.ts"
 

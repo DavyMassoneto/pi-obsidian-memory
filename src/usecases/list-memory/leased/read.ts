@@ -1,6 +1,6 @@
-import { readFolderIndex } from "#/services"
-import { type MemoryOperationContext, memoryOperationInterruption } from "#/usecases/operation-context"
-import type { ResolvedVault } from "#/usecases/resolve-memory"
+import { readFolderIndex } from "#src/services"
+import { type MemoryOperationContext, memoryOperationInterruption } from "#src/usecases/operation-context"
+import type { ResolvedVault } from "#src/usecases/resolve-memory"
 import type { ListMemoryResult } from "./types.ts"
 
 export async function readLeasedFolder(

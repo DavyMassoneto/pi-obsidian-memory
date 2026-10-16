@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { renderNote } from "#/domain"
-import { createMemoryNote, refreshIndexes } from "#/services"
+import { renderNote } from "#src/domain"
+import { createMemoryNote, refreshIndexes } from "#src/services"
 import {
   aLimits,
   aNote,

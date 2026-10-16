@@ -1,4 +1,4 @@
-import type { EmbeddingBatchRequest, EmbeddingFailure } from "#/domain"
+import type { EmbeddingBatchRequest, EmbeddingFailure } from "#src/domain"
 import type { ChunkPolicy, PreparedChunk, PreparedChunks } from "./types.ts"
 
 export function validateEmbeddingRequest(request: EmbeddingBatchRequest): EmbeddingFailure | null {

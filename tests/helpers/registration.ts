@@ -2,7 +2,7 @@ import { mkdir, mkdtemp } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
-import type { MemoryConfig } from "#/domain"
+import type { MemoryConfig } from "#src/domain"
 import { productSettings } from "./settings.ts"
 
 export async function registrationFixture() {

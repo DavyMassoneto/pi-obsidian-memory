@@ -4,7 +4,7 @@ import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
-import { createLocalEmbedder, type EmbeddingBatchRequest, loadLocalModel } from "#/services"
+import { createLocalEmbedder, type EmbeddingBatchRequest, loadLocalModel } from "#src/services"
 import { controlledLocalModelLoader, embeddingOperation } from "#test-helpers"
 
 describe("createLocalEmbedder loading", () => {

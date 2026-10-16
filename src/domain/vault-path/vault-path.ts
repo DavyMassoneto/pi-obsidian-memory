@@ -1,4 +1,4 @@
-import { checkEdges, checkFileSystemName, checkLinkCharacters, RELATIVE_NAMES } from "#/domain/names"
+import { checkEdges, checkFileSystemName, checkLinkCharacters, RELATIVE_NAMES } from "#src/domain/names"
 import { DRIVE_LETTER, HIDDEN_NAME_PREFIX, RESERVED_ROOT_FOLDERS, VAULT_PATH_SEPARATOR } from "./constants.ts"
 
 export function joinVaultPath(...parts: string[]): string {

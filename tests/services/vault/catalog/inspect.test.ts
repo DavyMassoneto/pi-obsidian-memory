@@ -4,7 +4,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { inspectVaultFile } from "#/services"
+import { inspectVaultFile } from "#src/services"
 import { catalogVault, linkFolder, noteText, putCatalogFile, validFrontmatterLines } from "#test-helpers"
 
 test("retains exact byte hash and stat while parsed invalid names and bodies remain searchable", async () => {

@@ -4,7 +4,7 @@ import { join, resolve } from "node:path"
 
 import { DefaultResourceLoader, type ExtensionToolContext, SettingsManager } from "@earendil-works/pi-coding-agent"
 
-import { type MemoryAddResponse, type MemoryAddTool, registerExtension } from "#/pi"
+import { type MemoryAddResponse, type MemoryAddTool, registerExtension } from "#src/pi"
 
 const repoRoot = resolve(import.meta.dirname, "..", "..")
 

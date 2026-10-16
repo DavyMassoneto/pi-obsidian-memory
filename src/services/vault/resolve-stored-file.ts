@@ -1,7 +1,7 @@
 import { basename } from "node:path"
 
-import { checkVaultPath } from "#/domain"
-import { realPathOf } from "#/services/vault/filesystem"
+import { checkVaultPath } from "#src/domain"
+import { realPathOf } from "#src/services/vault/filesystem"
 import { noteFileName, storedFilePath } from "./paths.ts"
 import { resolveFile } from "./resolve.ts"
 import type { FileRelocationRequest, ResolveResult } from "./types.ts"

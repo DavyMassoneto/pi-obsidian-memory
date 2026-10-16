@@ -1,6 +1,6 @@
 import Type from "typebox"
 
-import { NoteIdSchema, NoteTypeSchema } from "#/domain/note"
+import { NoteIdSchema, NoteTypeSchema } from "#src/domain/note"
 
 export const VaultSchema = Type.Enum(["global", "project"])
 export const PathSchema = Type.String({ maxLength: 1024 })

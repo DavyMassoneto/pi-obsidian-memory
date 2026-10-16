@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { getMemory, type ListMemoryRequest, listMemory } from "#/usecases"
+import { getMemory, type ListMemoryRequest, listMemory } from "#src/usecases"
 import { expectRegistrationLeaseReleased, memoryReadFixture, memoryReadTree, putCatalogFile } from "#test-helpers"
 
 test("list and get route actual folders including .md folders without minting receipts", async () => {

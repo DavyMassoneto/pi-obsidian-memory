@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { enumerateVault, inspectVaultFile } from "#/services"
+import { enumerateVault, inspectVaultFile } from "#src/services"
 import { catalogVault, linkFolder, noteText, putCatalogFile, validFrontmatterLines } from "#test-helpers"
 
 test("dot file aliases retain canonical identity but never admit a hidden directory", async () => {

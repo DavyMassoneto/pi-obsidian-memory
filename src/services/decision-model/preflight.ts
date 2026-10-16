@@ -1,6 +1,6 @@
 import { Value } from "typebox/value"
 
-import type { DecisionFailureCode } from "#/domain"
+import type { DecisionFailureCode } from "#src/domain"
 import { decisionTimeoutMs } from "./constants.ts"
 import { isLoopbackEndpoint } from "./endpoint.ts"
 import { DecisionModelNameSchema } from "./schemas.ts"

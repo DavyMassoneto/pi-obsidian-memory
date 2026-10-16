@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { listFolder, readNote } from "#/services"
+import { listFolder, readNote } from "#src/services"
 import { aLimits, linkFolder, useTempFolder } from "#test-helpers"
 
 test("reports an unreadable vault link loop rather than calling it missing", async () => {

@@ -1,6 +1,6 @@
-import { ARCHIVE_FOLDER, type FolderContents } from "#/domain"
-import type { NamedVaultContext } from "#/services/vault/context"
-import { findFileIgnoringCase, linkStatOf } from "#/services/vault/filesystem"
+import { ARCHIVE_FOLDER, type FolderContents } from "#src/domain"
+import type { NamedVaultContext } from "#src/services/vault/context"
+import { findFileIgnoringCase, linkStatOf } from "#src/services/vault/filesystem"
 import { resolveFolder } from "./resolve.ts"
 import type { FolderListing } from "./types.ts"
 

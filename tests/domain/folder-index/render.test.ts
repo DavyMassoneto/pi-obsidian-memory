@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { renderFolderIndex } from "#/domain"
+import { renderFolderIndex } from "#src/domain"
 import { aDontForgetNote, aNote, noteAbout } from "#test-helpers"
 
 test("lists the subjects and notes of a folder", () => {

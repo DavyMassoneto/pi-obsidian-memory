@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { parseConfig } from "#/domain"
+import { parseConfig } from "#src/domain"
 import { aConfig } from "#test-helpers"
 
 test("text that is not JSON is refused as a single problem carrying the parser message", () => {

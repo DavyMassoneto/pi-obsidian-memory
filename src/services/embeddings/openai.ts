@@ -1,4 +1,4 @@
-import { type EmbeddingBatchRequest, type EmbeddingResult, openAIEmbeddingConfiguration } from "#/domain"
+import { type EmbeddingBatchRequest, type EmbeddingResult, openAIEmbeddingConfiguration } from "#src/domain"
 import { finishEmbeddingBatch } from "./batch.ts"
 import { prepareChunks } from "./chunks.ts"
 import { postEmbedding } from "./http.ts"

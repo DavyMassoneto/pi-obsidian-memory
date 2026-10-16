@@ -1,6 +1,6 @@
 import type { Stats } from "node:fs"
 
-import type { VaultFileStat } from "#/domain"
+import type { VaultFileStat } from "#src/domain"
 import type { ResolvedCatalogEntry } from "./types.ts"
 
 export function catalogStat(stats: Stats): VaultFileStat {

@@ -1,5 +1,5 @@
-import type { VaultCatalogFailure, VaultExportFile } from "#/domain"
-import type { Failed, Succeeded } from "#/shared"
+import type { VaultCatalogFailure, VaultExportFile } from "#src/domain"
+import type { Failed, Succeeded } from "#src/shared"
 
 export interface FolderIndexRequest {
   folder: string

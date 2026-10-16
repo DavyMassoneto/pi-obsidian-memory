@@ -3,8 +3,8 @@ import { realpath } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { promisify } from "node:util"
 
-import { indexFileFor, readIndexInventory, recoverIndex, searchCatalog } from "#/services"
-import type { MemoryOperationContext } from "#/usecases"
+import { indexFileFor, readIndexInventory, recoverIndex, searchCatalog } from "#src/services"
+import type { MemoryOperationContext } from "#src/usecases"
 
 export async function denySynchronizationRead(path: string) {
   const systemRoot = process.env.SystemRoot

@@ -3,9 +3,9 @@ import { join } from "node:path"
 
 import { afterEach, expect, test, vi } from "vitest"
 
-import { renderNote } from "#/domain"
-import { readNote } from "#/services"
-import { addMemory } from "#/usecases"
+import { renderNote } from "#src/domain"
+import { readNote } from "#src/services"
+import { addMemory } from "#src/usecases"
 import { aLimits, aNote, linkFolder, setupVaults, writeConfig } from "#test-helpers"
 
 const limits = aLimits()

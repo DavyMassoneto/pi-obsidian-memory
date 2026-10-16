@@ -1,6 +1,6 @@
 import { stringify } from "yaml"
 
-import { type NoteType, NoteTypeSchema } from "#/domain/note"
+import { type NoteType, NoteTypeSchema } from "#src/domain/note"
 import type { DashboardView, VaultAsset, VaultDashboard } from "./types.ts"
 
 export function renderVaultAssets(): VaultAsset[] {

@@ -1,4 +1,4 @@
-import { type EmbeddingBatchRequest, type EmbeddingResult, localEmbeddingConfiguration } from "#/domain"
+import { type EmbeddingBatchRequest, type EmbeddingResult, localEmbeddingConfiguration } from "#src/domain"
 import { finishEmbeddingBatch } from "./batch.ts"
 import { prepareChunks, validateEmbeddingRequest } from "./chunks.ts"
 import { runEmbeddingOperation } from "./operation.ts"

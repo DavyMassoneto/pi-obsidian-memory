@@ -4,8 +4,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import type { MemoryScope } from "#/services"
-import { type GetMemoryRequest, getMemory } from "#/usecases"
+import type { MemoryScope } from "#src/services"
+import { type GetMemoryRequest, getMemory } from "#src/usecases"
 import {
   expectRegistrationLeaseReleased,
   linkFolder,

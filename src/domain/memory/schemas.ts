@@ -1,6 +1,6 @@
 import Type from "typebox"
 
-import { NoteTypeSchema } from "#/domain/note"
+import { NoteTypeSchema } from "#src/domain/note"
 
 export const MemoryScopeSchema = Type.Enum(["global", "project"])
 

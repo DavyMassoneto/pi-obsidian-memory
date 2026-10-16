@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { renderNote } from "#/domain"
-import { completeBlankFile, inspectVaultFile, updateNote } from "#/services"
+import { renderNote } from "#src/domain"
+import { completeBlankFile, inspectVaultFile, updateNote } from "#src/services"
 import { aNote, catalogVault, putCatalogFile } from "#test-helpers"
 
 test("the exact-filename writer retains hash and candidate checks for uppercase destinations", async () => {

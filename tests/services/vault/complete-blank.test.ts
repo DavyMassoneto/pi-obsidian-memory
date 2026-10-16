@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { renderNote } from "#/domain"
-import { type CompleteBlankRequest, completeBlankFile, inspectVaultFile } from "#/services"
+import { renderNote } from "#src/domain"
+import { type CompleteBlankRequest, completeBlankFile, inspectVaultFile } from "#src/services"
 import { aNote, catalogVault, linkFolder, putCatalogFile, tryLinkFile } from "#test-helpers"
 
 test("confirmed blank completion uses the supplied valid identity and preserves unrelated files", async () => {

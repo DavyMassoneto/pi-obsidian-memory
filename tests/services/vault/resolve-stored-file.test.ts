@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { renderNote } from "#/domain"
-import { archiveStoredFile, succeedStoredFile, updateStoredFile } from "#/services"
+import { renderNote } from "#src/domain"
+import { archiveStoredFile, succeedStoredFile, updateStoredFile } from "#src/services"
 import { aDecision, catalogVault, linkFolder, putCatalogFile, tryLinkFile, vaultWithStoredFile } from "#test-helpers"
 
 test("exact resolution refuses non-Markdown originals before lifecycle publication", async () => {

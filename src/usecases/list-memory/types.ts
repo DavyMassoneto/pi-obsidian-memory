@@ -1,6 +1,6 @@
-import type { MemoryScope } from "#/services"
+import type { MemoryScope } from "#src/services"
 
-export type { FolderRead, ListMemoryResult } from "#/usecases/list-memory/leased"
+export type { FolderRead, ListMemoryResult } from "#src/usecases/list-memory/leased"
 
 export interface ListMemoryRequest {
   vault: MemoryScope

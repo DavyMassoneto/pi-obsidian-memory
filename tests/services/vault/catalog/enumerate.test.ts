@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { enumerateVault, inspectVaultFile } from "#/services"
+import { enumerateVault, inspectVaultFile } from "#src/services"
 import { catalogVault, linkFolder, noteText, putCatalogFile, useTempFolder, validFrontmatterLines } from "#test-helpers"
 
 test("enumerates subjects iteratively, includes archive and temporaries, and records direct folder coverage", async () => {

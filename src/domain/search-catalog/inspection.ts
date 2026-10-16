@@ -1,4 +1,4 @@
-import type { InspectedVaultFile, VaultCatalogEntry, VaultCatalogFailure } from "#/domain/vault-catalog"
+import type { InspectedVaultFile, VaultCatalogEntry, VaultCatalogFailure } from "#src/domain/vault-catalog"
 import { semanticFingerprint } from "./fingerprint.ts"
 import type { AliasFailureClassification, CatalogEntry } from "./types.ts"
 

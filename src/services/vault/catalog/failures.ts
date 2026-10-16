@@ -1,4 +1,4 @@
-import type { VaultCatalogFailure } from "#/domain"
+import type { VaultCatalogFailure } from "#src/domain"
 import type { CatalogFailureDetail, CatalogOperation } from "./types.ts"
 
 export function catalogFailure(detail: CatalogFailureDetail): VaultCatalogFailure {

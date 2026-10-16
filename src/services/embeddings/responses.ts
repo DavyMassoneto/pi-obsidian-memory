@@ -1,6 +1,6 @@
 import { Value } from "typebox/value"
 
-import { normalizeVector } from "#/domain"
+import { normalizeVector } from "#src/domain"
 import { GoogleEmbeddingResponseSchema, OpenAIEmbeddingResponseSchema } from "./schemas.ts"
 import type { ParsedVectors } from "./types.ts"
 

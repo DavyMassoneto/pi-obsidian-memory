@@ -1,6 +1,6 @@
 language js
 
 JsModuleSource() as $source where {
-  $source <: r".#/(?:domain|services|usecases|pi|shared)/.*.",
-  register_diagnostic(span=$source, message="Another layer is imported through its layer barrel (#/services), never a module inside it (#/services/vault).")
+  $source <: r".#src/(?:domain|services|usecases|pi|shared)/.*.",
+  register_diagnostic(span=$source, message="Another layer is imported through its layer barrel (#src/services), never a module inside it (#src/services/vault).")
 }

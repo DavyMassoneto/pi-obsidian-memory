@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { loadCachedLocalModel } from "#/services"
+import { loadCachedLocalModel } from "#src/services"
 import { syntheticDispose, syntheticEncode, syntheticExtraction, syntheticPipeline } from "#test-helpers"
 
 vi.mock("@huggingface/transformers", async () => {

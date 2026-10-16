@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { openIndex, putNote } from "#/services"
+import { openIndex, putNote } from "#src/services"
 import { anEntry, changeIndexFile, openedIndex, useTempFolder } from "#test-helpers"
 
 test("closes a connection when the FTS table is missing", async () => {

@@ -3,7 +3,7 @@ import { dirname } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { applyIndexChanges, readIndexInventory, recoverIndex, searchCatalog } from "#/services"
+import { applyIndexChanges, readIndexInventory, recoverIndex, searchCatalog } from "#src/services"
 import {
   assertIndexConsistent,
   catalogChanges,

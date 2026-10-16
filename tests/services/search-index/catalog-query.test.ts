@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { applyIndexChanges, searchCatalog } from "#/services"
+import { applyIndexChanges, searchCatalog } from "#src/services"
 import { catalogChanges, catalogEntry, useIndexFile } from "#test-helpers"
 
 test("literal query terms find a needs-fixing note and empty terms do not become an FTS error", async () => {

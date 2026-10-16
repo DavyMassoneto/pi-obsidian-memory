@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { disableClaudeCodeAutoMemory } from "#/pi"
+import { disableClaudeCodeAutoMemory } from "#src/pi"
 
 test("turns off Claude Code's own memory for the Claude Code sessions this pi starts", () => {
   const env: NodeJS.ProcessEnv = { PATH: "C:/bin" }

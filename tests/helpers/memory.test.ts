@@ -3,7 +3,7 @@ import { isAbsolute, join, relative } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { parseConfig, resolveProject } from "#/domain"
+import { parseConfig, resolveProject } from "#src/domain"
 import { setupRegisteredMemoryAdd, setupVaults } from "#test-helpers"
 
 test.each([

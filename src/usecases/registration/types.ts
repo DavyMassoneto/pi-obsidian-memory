@@ -9,10 +9,10 @@ import type {
   VaultBootstrapFailure,
   VaultBootstrapProgress,
   WriteConfigRequest,
-} from "#/services"
-import type { Failed, Succeeded } from "#/shared"
-import type { MemoryContext } from "#/usecases/add-memory"
-import type { MemorySession, OperationStamp } from "#/usecases/session"
+} from "#src/services"
+import type { Failed, Succeeded } from "#src/shared"
+import type { MemoryContext } from "#src/usecases/add-memory"
+import type { MemorySession, OperationStamp } from "#src/usecases/session"
 
 export type {
   ChatModelReference,
@@ -20,7 +20,7 @@ export type {
   ConfigSnapshot,
   MemoryConfig,
   VaultBootstrapProgress,
-} from "#/services"
+} from "#src/services"
 
 export interface RegistrationContext extends MemoryContext {
   indexPath: string

@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { getMemory, listMemory, resolveMemory } from "#/usecases"
+import { getMemory, listMemory, resolveMemory } from "#src/usecases"
 import {
   expectRegistrationLeaseReleased,
   linkFolder,

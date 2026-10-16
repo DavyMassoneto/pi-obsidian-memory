@@ -2,7 +2,7 @@ import { createHash } from "node:crypto"
 
 import { expect, test } from "vitest"
 
-import { catalogValidationFingerprint } from "#/services"
+import { catalogValidationFingerprint } from "#src/services"
 
 const limits = { maxStatementChars: 100, maxBodyChars: 1000, maxNotesPerFolder: 20 }
 

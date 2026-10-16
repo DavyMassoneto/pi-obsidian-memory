@@ -4,7 +4,7 @@ import {
   proposeInit,
   readConfigSnapshot,
   resolveRegistrationVault,
-} from "#/services"
+} from "#src/services"
 import { captureRegistrationContext } from "./entry.ts"
 import { publishRegistration, registrationInterruption, registrationValidationFailure } from "./publication.ts"
 import type { InitCommitRequest, RegistrationContext, RegistrationResult } from "./types.ts"

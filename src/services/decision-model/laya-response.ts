@@ -1,6 +1,6 @@
 import { Value } from "typebox/value"
 
-import type { DecisionDiagnostics, DecisionResult } from "#/domain"
+import type { DecisionDiagnostics, DecisionResult } from "#src/domain"
 import { maxDecisionResponseBytes } from "./constants.ts"
 import { LayaResponseSchema } from "./schemas.ts"
 import type { LayaReadRequest, LayaResponse } from "./types.ts"

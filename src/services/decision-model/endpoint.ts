@@ -1,1 +1,1 @@
-export { isLoopbackEndpoint } from "#/domain"
+export { isLoopbackEndpoint } from "#src/domain"

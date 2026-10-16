@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { catalogIoFailure, enumerateVault, inspectVaultFile } from "#/services"
+import { catalogIoFailure, enumerateVault, inspectVaultFile } from "#src/services"
 import { catalogVault, putCatalogFile } from "#test-helpers"
 
 test("reports missing files and non-directory traversal distinctly", async () => {

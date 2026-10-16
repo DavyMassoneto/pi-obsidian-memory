@@ -4,7 +4,7 @@ import { dirname } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { readConfigSnapshot } from "#/services"
+import { readConfigSnapshot } from "#src/services"
 import { registrationFixture } from "#test-helpers"
 
 test("preservation: schema-invalid snapshot retains contradictory resources and exact unpublished bytes", async () => {

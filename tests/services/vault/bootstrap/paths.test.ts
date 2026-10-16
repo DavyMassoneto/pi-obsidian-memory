@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { ensureVaultAssets } from "#/services"
+import { ensureVaultAssets } from "#src/services"
 import { catalogVault, putCatalogFile } from "#test-helpers"
 
 test("attaches to case-insensitive existing template folder and dashboard without rewriting bytes", async () => {

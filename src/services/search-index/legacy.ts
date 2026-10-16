@@ -1,6 +1,6 @@
 import { Value } from "typebox/value"
 
-import { type CatalogEntry, semanticFingerprint } from "#/domain"
+import { type CatalogEntry, semanticFingerprint } from "#src/domain"
 import type { prepareCatalogStatements } from "./catalog-statements.ts"
 import { validCatalogEntry } from "./inventory.ts"
 import { invalidCatalog, writeCatalogEntry } from "./reconcile.ts"

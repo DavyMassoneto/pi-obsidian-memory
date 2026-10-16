@@ -1,4 +1,4 @@
-import type { EmbeddingFailure, EmbeddingResult } from "#/domain"
+import type { EmbeddingFailure, EmbeddingResult } from "#src/domain"
 import { EmbeddingResourceError } from "./errors.ts"
 import type { EmbeddingOperation, EmbeddingOperationContext } from "./types.ts"
 

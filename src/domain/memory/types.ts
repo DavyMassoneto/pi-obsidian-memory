@@ -1,6 +1,6 @@
 import type { Static } from "typebox"
 
-import type { Failed, Succeeded } from "#/shared"
+import type { Failed, Succeeded } from "#src/shared"
 import type { MemoryDraftSchema, MemoryScopeSchema } from "./schemas.ts"
 
 export type MemoryScope = Static<typeof MemoryScopeSchema>

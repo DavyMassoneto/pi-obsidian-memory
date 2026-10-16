@@ -5,4 +5,4 @@ export {
   googleEmbeddingConfiguration,
   localEmbeddingConfiguration,
   openAIEmbeddingConfiguration,
-} from "#/domain"
+} from "#src/domain"

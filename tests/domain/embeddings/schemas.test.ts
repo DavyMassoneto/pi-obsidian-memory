@@ -1,7 +1,7 @@
 import { Value } from "typebox/value"
 import { describe, expect, it } from "vitest"
 
-import { EmbeddingConfigurationSchema } from "#/domain"
+import { EmbeddingConfigurationSchema } from "#src/domain"
 
 describe("EmbeddingConfigurationSchema", () => {
   it("refuses mismatched models, credentials and missing provider fields", () => {

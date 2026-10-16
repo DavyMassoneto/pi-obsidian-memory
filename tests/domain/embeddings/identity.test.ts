@@ -5,7 +5,7 @@ import {
   googleEmbeddingConfiguration,
   localEmbeddingConfiguration,
   openAIEmbeddingConfiguration,
-} from "#/domain"
+} from "#src/domain"
 
 describe("embeddingFingerprint", () => {
   it("separates vector spaces and states the complete local processing policy", () => {

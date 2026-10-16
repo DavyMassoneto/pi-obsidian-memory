@@ -1,7 +1,7 @@
 import { mkdir, readdir } from "node:fs/promises"
 import { join } from "node:path"
 
-import { catalogFailure, catalogIoFailure, resolveCatalogEntry } from "#/services/vault/catalog"
+import { catalogFailure, catalogIoFailure, resolveCatalogEntry } from "#src/services/vault/catalog"
 import type { AssetLocation, AssetPathResult } from "./types.ts"
 
 export async function existingAsset(location: AssetLocation): Promise<AssetPathResult> {

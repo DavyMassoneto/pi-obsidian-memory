@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { readConfigFields } from "#/domain"
+import { readConfigFields } from "#src/domain"
 import { emptyConfigFields } from "#test-helpers"
 
 test.each(["null", "false", "42", "[]", '"text"'])("malformed root %s retains no fields", (text) => {

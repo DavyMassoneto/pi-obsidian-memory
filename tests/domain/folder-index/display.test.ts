@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { displayIndexName, displayIndexText } from "#/domain"
+import { displayIndexName, displayIndexText } from "#src/domain"
 
 test.each([
   ["", "<code></code>"],

@@ -1,8 +1,8 @@
 import type { Dirent } from "node:fs"
 
-import { ARCHIVE_FOLDER, joinVaultPath, TEMPLATES_FOLDER } from "#/domain"
-import type { VaultContext } from "#/services/vault/context"
-import { directoryEntriesOf, linkStatOf } from "#/services/vault/filesystem"
+import { ARCHIVE_FOLDER, joinVaultPath, TEMPLATES_FOLDER } from "#src/domain"
+import type { VaultContext } from "#src/services/vault/context"
+import { directoryEntriesOf, linkStatOf } from "#src/services/vault/filesystem"
 import { FOLDER_INDEX_FILE_NAME, NOTE_EXTENSION } from "./constants.ts"
 import { readNote } from "./read.ts"
 import { resolveFile, resolveFolder } from "./resolve.ts"

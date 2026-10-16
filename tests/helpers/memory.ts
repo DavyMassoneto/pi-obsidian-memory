@@ -1,7 +1,7 @@
 import { copyFile, mkdir } from "node:fs/promises"
 import { dirname, join } from "node:path"
 
-import { memoryConfigPath } from "#/pi"
+import { memoryConfigPath } from "#src/pi"
 import { memoryConfigAt, writeConfig } from "./config.ts"
 import { useTempFolder } from "./temp-folder.ts"
 

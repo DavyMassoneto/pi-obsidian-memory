@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { openIndex, putNote, recoverIndex, searchText } from "#/services"
+import { openIndex, putNote, recoverIndex, searchText } from "#src/services"
 import { anEntry, changeIndexFile, openedIndex, statementsOf, tryLinkFile, useTempFolder } from "#test-helpers"
 
 test.for(["", "-journal", "-wal", "-shm"])(

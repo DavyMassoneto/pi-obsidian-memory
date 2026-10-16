@@ -2,7 +2,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { inspectVaultFile } from "#/services"
+import { inspectVaultFile } from "#src/services"
 import { catalogVault, linkFolder, putCatalogFile } from "#test-helpers"
 
 test("rejects traversal, drive, alternate-stream and backslash paths before reading", async () => {

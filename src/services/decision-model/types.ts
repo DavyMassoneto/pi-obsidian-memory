@@ -6,7 +6,7 @@ import type {
   DecisionDiagnostics,
   DecisionRequest,
   DecisionResult,
-} from "#/domain"
+} from "#src/domain"
 import type { LayaResponseSchema } from "./schemas.ts"
 
 export type LayaResponse = Static<typeof LayaResponseSchema>
@@ -23,7 +23,7 @@ export type {
   DecisionResult,
   DecisionUsage,
   RelevanceDecision,
-} from "#/domain"
+} from "#src/domain"
 
 export interface DecisionLimits {
   deadlineMs: number

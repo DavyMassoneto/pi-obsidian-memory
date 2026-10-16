@@ -2,7 +2,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { indexFileFor } from "#/services"
+import { indexFileFor } from "#src/services"
 
 test("gives the same vault the same index file, however its path is written", () => {
   const folder = join("C:", "agent", "index")

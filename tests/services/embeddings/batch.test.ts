@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { localEmbeddingConfiguration } from "#/domain"
-import { finishEmbeddingBatch } from "#/services"
+import { localEmbeddingConfiguration } from "#src/domain"
+import { finishEmbeddingBatch } from "#src/services"
 import { embeddingVector } from "#test-helpers"
 
 describe("finishEmbeddingBatch", () => {

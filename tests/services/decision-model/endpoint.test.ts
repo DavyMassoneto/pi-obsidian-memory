@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { decideMemory } from "#/services"
+import { decideMemory } from "#src/services"
 import { layaContext, memoryDecisionRequest } from "#test-helpers"
 
 describe("Laya endpoint restriction", () => {

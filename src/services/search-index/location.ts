@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import { join } from "node:path"
 
-import { comparablePath } from "#/domain"
+import { comparablePath } from "#src/domain"
 import { INDEX_FILE_EXTENSION, INDEX_FILE_NAME_LENGTH } from "./constants.ts"
 
 export function indexFileFor(indexFolder: string, vaultPath: string): string {

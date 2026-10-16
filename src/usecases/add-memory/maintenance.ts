@@ -1,5 +1,5 @@
-import { type CreateResult, type NamedVaultContext, type RefreshResult, refreshIndexes } from "#/services"
-import type { Done } from "#/shared"
+import { type CreateResult, type NamedVaultContext, type RefreshResult, refreshIndexes } from "#src/services"
+import type { Done } from "#src/shared"
 
 export async function maintainAddedMemory(
   vault: NamedVaultContext,

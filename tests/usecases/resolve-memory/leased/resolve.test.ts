@@ -2,7 +2,7 @@ import { mkdir, rm } from "node:fs/promises"
 
 import { expect, test } from "vitest"
 
-import { type GetMemoryRequest, getMemory, resolveMemory } from "#/usecases"
+import { type GetMemoryRequest, getMemory, resolveMemory } from "#src/usecases"
 import {
   expectRegistrationLeaseReleased,
   memoryReadFixture,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { aggregateVectors, normalizeVector } from "#/domain"
+import { aggregateVectors, normalizeVector } from "#src/domain"
 
 describe("normalizeVector", () => {
   it("normalizes finite nonzero vectors without overflow or underflow", () => {
