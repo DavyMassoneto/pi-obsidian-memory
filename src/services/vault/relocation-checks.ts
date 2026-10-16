@@ -1,4 +1,4 @@
-import { checkNote, type PlacedNote } from "#src/domain"
+import { checkNote, isRootArchive, type PlacedNote } from "#src/domain"
 import type { VaultContext } from "#src/services/vault/context"
 import { findFileIgnoringCase, hashOf, readRawFile, removeFile } from "#src/services/vault/filesystem"
 import { displayNotePath } from "./display.ts"
@@ -15,7 +15,7 @@ export async function checkRelocation(vault: VaultContext, request: FileRelocati
   }
 
   for (const placed of request.written) {
-    const problems = checkNote(placed.note, vault.limits)
+    const problems = checkPlaced(placed, vault)
     if (problems.length > 0) {
       return { succeeded: false, reason: "invalid", problems }
     }
@@ -26,6 +26,11 @@ export async function checkRelocation(vault: VaultContext, request: FileRelocati
     }
   }
   return { succeeded: true }
+}
+
+function checkPlaced(placed: PlacedNote, vault: VaultContext): string[] {
+  if (isRootArchive(placed.folder)) return []
+  return checkNote(placed.note, vault.limits)
 }
 
 async function checkUnchanged(vault: string, request: FileRelocationRequest): Promise<CheckResult> {

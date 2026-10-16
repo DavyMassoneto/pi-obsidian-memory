@@ -5,7 +5,7 @@ import { expect, test } from "vitest"
 
 import { readNote } from "#src/services"
 import { addMemory, maintenanceProblemsOf } from "#src/usecases"
-import { aLimits, aNote, linkFolder, setupVaults } from "#test-helpers"
+import { aLimits, aNote, linkFolder, operationContextFor, setupVaults } from "#test-helpers"
 
 const draft = {
   statement: "Use pnpm, never npm",
@@ -22,7 +22,7 @@ test("reports a saved note and the true maintenance cause when the index points 
 
   const result = await addMemory(
     { scope: "global", folder: "pnpm", draft },
-    { configPath, workingFolder: unregisteredFolder },
+    operationContextFor({ configPath, workingFolder: unregisteredFolder }),
   )
 
   expect(result).toMatchObject({
@@ -41,7 +41,7 @@ test("reports persistence when the index destination is a directory", async () =
 
   const result = await addMemory(
     { scope: "global", folder: "pnpm", draft },
-    { configPath, workingFolder: unregisteredFolder },
+    operationContextFor({ configPath, workingFolder: unregisteredFolder }),
   )
 
   expect(result).toMatchObject({

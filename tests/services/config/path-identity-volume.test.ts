@@ -1,17 +1,10 @@
-import { spawnSync } from "node:child_process"
 import { mkdir, writeFile } from "node:fs/promises"
 import { join, parse } from "node:path"
 
 import { expect, test } from "vitest"
 
 import { canonicalizeAccessPath, fileIdentity, pathIdentities } from "#src/services"
-import { useTempFolder } from "#test-helpers"
-
-function volumeGuidRoot(drive: string): string | null {
-  const output = spawnSync("cmd.exe", ["/c", "mountvol", drive, "/L"], { encoding: "utf8" }).stdout.trim()
-  if (/^\\\\\?\\Volume\{[^}]+\}\\$/i.test(output)) return output
-  return null
-}
+import { useTempFolder, volumeGuidRoot } from "#test-helpers"
 
 test("a volume GUID path keeps the identities of every existing ancestor below the unreadable volume root", async (context) => {
   const root = await useTempFolder()

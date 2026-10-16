@@ -15,7 +15,8 @@ Every milestone:
 
 ## Current state
 
-- pi loads the extension and registers `memory_add`, `memory_search`, `memory_get`, `/memory-setup` and `/memory-init`. Session start notifies, with a
+- pi loads the extension and registers `memory_add`, `memory_search`, `memory_get`, `memory_update`, `memory_archive`,
+  `memory_succeed`, `/memory-setup` and `/memory-init`. Session start notifies, with a
   UI and not on reload, when there is no config (offers `/memory-setup`), an invalid config (every problem, nothing
   used) or an unreadable file. The real-pi smoke test checks the registrations and the no-config notice.
 - One tool, `memory_add`, for explicit requests to remember. It writes a valid note to the global or project vault,
@@ -49,13 +50,18 @@ Every milestone:
   package.
 - Milestone 2 is not complete: the vault access guard is not built. Nothing stops the LLM from reading or writing vault
   files with pi's file tools, bash or Claude Code sessions started by pi.
-- Built but not reachable by any tool or command: updating, archiving and succeeding notes. Lifecycle reports partial
-  progress after late failures; update/removal hash checks and link checks still have check/use windows.
+- `memory_update`, `memory_archive` and `memory_succeed` (explicit requests only) each need a `memory_get` read of the
+  exact vault and path in the same session. The receipt is consumed on success, conflict or partial result, and kept on
+  preflight refusals. They refuse a note changed on disk since that read. Update keeps `id` and `created`, sets
+  `updated` and never renames; archive moves the note to `archive/` (never deletes); succeed creates the successor and
+  links both ways. Paths under `archive/` cannot be changed. A note over a lowered limit can still be archived (the
+  archived copy skips note-limit checks). `memory_add` now holds the session lease. Lifecycle reports partial progress
+  after late failures; update/removal hash checks and link checks still have check/use windows.
 - The text search resource has a private SQLite connection, prepared statements and transactional rowid-linked FTS5
   writes with structured failures. Synchronization populates missing/corrupt catalogs from vault files, retaining
   cached rows under failed coverage and reporting incomplete population separately.
-- Guidance names `/memory-setup` when memory is off and `/memory-init` for an unregistered folder, and never offers
-  update operations that do not exist yet.
+- Guidance names `/memory-setup` when memory is off and `/memory-init` for an unregistered folder, and offers
+  `memory_update` for an existing note only when the user asked for a change.
 - Frontmatter, name/path, diagnostic, pi response, search-write and lifecycle regression tests now use source-named
   paths. Names live in `domain/names`, paths in `domain/vault-path` and pi paths in `pi/paths`.
 - Every module with logic has a test file at its mirrored path. Modules not exported from a layer barrel are tested
@@ -284,10 +290,10 @@ Every milestone:
   detected edits. The current resource has the update/removal race limits documented in vault-format; this milestone
   must not describe those checks as atomic protection.
 - **Scope:**
-  - `memory_update`, `memory_archive` and `memory_succeed`, for explicit requests only (VISION 5, 8; vault-format
+  - [x] `memory_update`, `memory_archive` and `memory_succeed`, for explicit requests only (VISION 5, 8; vault-format
     Writing and Lifecycle).
-  - Each refuses a note not read with `memory_get` in this session, and a note changed on disk since that read.
-  - The milestone 0 guidance about an existing note goes back to offering an update.
+  - [x] Each refuses a note not read with `memory_get` in this session, and a note changed on disk since that read.
+  - [x] The milestone 0 guidance about an existing note goes back to offering an update.
 - **Out of scope:** doing any of it without being asked (4).
 - **Depends on:** 2.
 - **Done when:**

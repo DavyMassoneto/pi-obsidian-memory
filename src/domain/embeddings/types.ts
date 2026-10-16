@@ -52,3 +52,7 @@ export interface EmbeddingPolicy {
   documentPrefix: string
   chunking: string
 }
+
+export type EmbeddingProvider = EmbeddingConfiguration["provider"]
+
+export type MinimumSimilarities = Record<EmbeddingProvider, number | null>

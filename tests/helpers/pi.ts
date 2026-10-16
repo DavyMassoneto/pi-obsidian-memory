@@ -15,10 +15,13 @@ import {
   type ExtensionRegistrar,
   type MemoryAddResponse,
   type MemoryAddTool,
+  type MemoryArchiveTool,
   type MemoryCommand,
   type MemoryGetTool,
   type MemoryPiContext,
   type MemorySearchTool,
+  type MemorySucceedTool,
+  type MemoryUpdateTool,
   registerExtension,
   type SessionShutdownHandler,
   type SessionStartHandler,
@@ -38,6 +41,9 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
   const tools: MemoryAddTool[] = []
   const searchTools: MemorySearchTool[] = []
   const getTools: MemoryGetTool[] = []
+  const updateTools: MemoryUpdateTool[] = []
+  const archiveTools: MemoryArchiveTool[] = []
+  const succeedTools: MemorySucceedTool[] = []
   const registered: string[] = []
   const promptHandlers: BeforeAgentStartHandler[] = []
   const events: string[] = []
@@ -59,6 +65,18 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
     registerGetTool(tool) {
       registered.push(tool.name)
       getTools.push(tool)
+    },
+    registerUpdateTool(tool) {
+      registered.push(tool.name)
+      updateTools.push(tool)
+    },
+    registerArchiveTool(tool) {
+      registered.push(tool.name)
+      archiveTools.push(tool)
+    },
+    registerSucceedTool(tool) {
+      registered.push(tool.name)
+      succeedTools.push(tool)
     },
     onBeforeAgentStart(handler) {
       events.push("before_agent_start")
@@ -87,6 +105,9 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
     tools,
     searchTools,
     getTools,
+    updateTools,
+    archiveTools,
+    succeedTools,
     registered,
     events,
     commands,

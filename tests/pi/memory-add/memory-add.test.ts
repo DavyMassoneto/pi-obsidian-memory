@@ -4,7 +4,14 @@ import { expect, test } from "vitest"
 
 import { memoryConfigPath } from "#src/pi"
 import { addMemory } from "#src/usecases"
-import { fakeToolContext, registerFakePiAt, setupRegisteredMemoryAdd, textOf } from "#test-helpers"
+import {
+  fakePiContext,
+  fakeToolContext,
+  operationContextFor,
+  registerFakePiAt,
+  setupRegisteredMemoryAdd,
+  textOf,
+} from "#test-helpers"
 
 const params = {
   scope: "project" as const,
@@ -20,18 +27,19 @@ test.each([
   ["global", "Global memory", false],
 ] as const)("the registered execute maps %s scope and every draft field", async (scope, vaultName, dontForget) => {
   const { agentDir, configPath, projectFolder } = await setupRegisteredMemoryAdd()
-  const { tools } = registerFakePiAt(agentDir, {})
+  const { tools, startSession } = registerFakePiAt(agentDir, {})
   const tool = tools[0]
   if (!tool) {
     throw new Error("memory tool was not registered")
   }
   const context = fakeToolContext(join(projectFolder, "src"))
+  await startSession(fakePiContext(context.cwd, { hasUI: false }).context, "startup")
 
   const input = { ...params, scope, dontForget }
   const response = await tool.execute("call-1", input, undefined, undefined, context)
   const existing = await addMemory(
     { scope, folder: params.folder, draft: input },
-    { configPath, workingFolder: context.cwd },
+    operationContextFor({ configPath, workingFolder: context.cwd }),
   )
 
   expect(response).toEqual({
@@ -58,11 +66,12 @@ test.each([
 
 test("the registered execute translates refusals without hiding their cause", async () => {
   const { agentDir, unregisteredFolder } = await setupRegisteredMemoryAdd()
-  const { tools } = registerFakePiAt(agentDir, {})
+  const { tools, startSession } = registerFakePiAt(agentDir, {})
   const tool = tools[0]
   if (!tool) {
     throw new Error("memory tool was not registered")
   }
+  await startSession(fakePiContext(unregisteredFolder, { hasUI: false }).context, "startup")
 
   const response = await tool.execute("call-2", params, undefined, undefined, fakeToolContext(unregisteredFolder))
 
@@ -70,4 +79,15 @@ test("the registered execute translates refusals without hiding their cause", as
   expect(textOf(response)).toContain(`${unregisteredFolder} has no registered project`)
   expect(textOf(response)).toContain(memoryConfigPath(agentDir))
   expect(textOf(response)).toContain("global scope")
+})
+
+test("the tool says memory is not ready before a session started", async () => {
+  const { agentDir, unregisteredFolder } = await setupRegisteredMemoryAdd()
+  const tool = registerFakePiAt(agentDir, {}).tools[0]
+  if (!tool) throw new Error("memory tool was not registered")
+
+  const response = await tool.execute("call-3", params, undefined, undefined, fakeToolContext(unregisteredFolder))
+
+  expect(response.isError).toBe(true)
+  expect(textOf(response)).toContain("Memory is not ready")
 })

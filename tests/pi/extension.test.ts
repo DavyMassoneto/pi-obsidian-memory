@@ -6,6 +6,7 @@ import type { AddMemoryResult } from "#src/usecases"
 import {
   aNote,
   blockTexts,
+  changeTexts,
   getResponses,
   mentionsIn,
   piMemoryFixture,
@@ -17,8 +18,9 @@ import {
   vaultRefusalText,
 } from "#test-helpers"
 
-test("registers the three tools, the two commands and the session events", () => {
-  const { tools, searchTools, getTools, registered, events, commands } = registerWithFakePi({})
+test("registers the six tools, the two commands and the session events", () => {
+  const { tools, searchTools, getTools, updateTools, archiveTools, succeedTools, registered, events, commands } =
+    registerWithFakePi({})
 
   expect(tools).toEqual([
     expect.objectContaining({
@@ -34,7 +36,34 @@ test("registers the three tools, the two commands and the session events", () =>
     }),
   ])
   expect(getTools).toEqual([expect.objectContaining({ name: "memory_get" })])
-  expect(registered).toEqual(["memory_add", "memory_search", "memory_get"])
+  expect(updateTools).toEqual([
+    expect.objectContaining({
+      name: "memory_update",
+      description: "Use only when the user explicitly asks to change a memory. Read it with memory_get first.",
+    }),
+  ])
+  expect(archiveTools).toEqual([
+    expect.objectContaining({
+      name: "memory_archive",
+      description:
+        "Use only when the user explicitly asks to retire a memory with no successor. Read it with memory_get first.",
+    }),
+  ])
+  expect(succeedTools).toEqual([
+    expect.objectContaining({
+      name: "memory_succeed",
+      description:
+        "Use only when the user explicitly asks to replace a memory that stopped being true or was resolved. Read it with memory_get first.",
+    }),
+  ])
+  expect(registered).toEqual([
+    "memory_add",
+    "memory_search",
+    "memory_get",
+    "memory_update",
+    "memory_archive",
+    "memory_succeed",
+  ])
   expect(events).toEqual(["session_start", "before_agent_start", "tool_call", "session_shutdown"])
   expect(commands).toEqual(["memory-setup", "memory-init"])
 })
@@ -58,7 +87,8 @@ test("turns off Claude Code's own memory in pi's environment", () => {
 })
 
 test("no LLM-facing text names a command or tool that is not registered", async () => {
-  const { tools, searchTools, getTools, registered, commands } = registerWithFakePi({})
+  const { tools, searchTools, getTools, updateTools, archiveTools, succeedTools, registered, commands } =
+    registerWithFakePi({})
   const problems = ["a problem"]
   const existing = { note: aNote(), hash: "hash" }
   const responses: AddMemoryResult[] = [
@@ -90,7 +120,10 @@ test("no LLM-facing text names a command or tool that is not registered", async 
     (value) => typeof value === "string" && value !== pi.MEMORY_BLOCK_SECTION,
   )
   const texts = [
-    ...[...tools, ...searchTools, ...getTools].map((tool) => JSON.stringify(tool)),
+    ...[...tools, ...searchTools, ...getTools, ...updateTools, ...archiveTools, ...succeedTools].map((tool) =>
+      JSON.stringify(tool),
+    ),
+    ...changeTexts(),
     ...searchResponses().map((result) => textOf(respondToSearch(result))),
     ...getResponses().map((result) => textOf(respondToGet({ vault: "global", path: "p" }, result))),
     ...blockTexts(),

@@ -1,4 +1,4 @@
-import type { EmbeddingConfiguration, EmbeddingPolicy } from "./types.ts"
+import type { EmbeddingConfiguration, EmbeddingPolicy, MinimumSimilarities } from "./types.ts"
 
 export const localEmbeddingConfiguration = {
   provider: "local",
@@ -47,3 +47,9 @@ export const googleEmbeddingPolicy = {
   documentPrefix: "RETRIEVAL_DOCUMENT",
   chunking: "v1-utf8-bytes1024-overlap128-mean-chunks-query-refuse-autoTruncate-false",
 } as const satisfies EmbeddingPolicy
+
+export const MINIMUM_SIMILARITY = {
+  local: 0.8,
+  openai: null,
+  google: null,
+} as const satisfies MinimumSimilarities

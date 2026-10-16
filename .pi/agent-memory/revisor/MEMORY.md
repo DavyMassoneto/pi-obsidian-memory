@@ -27,3 +27,6 @@
 - 2026-10 (vault-guard re-review): more Windows path-guard bypass classes Node fs reads: `\?\Volume{guid}\...`
   (`mountvol C: /L` gives the GUID) and `\<hostname>\C$`, `\[::1]\C$`. /tmp logs persist across runs: check the
   "Start at" time before trusting a background test log.
+- 2026-10 (M3 review): mutation script pattern `tmp/revisor-mut.sh f sedexpr testdirs...` (cp .bak, sed, vitest, restore, rm .bak)
+  ran 12 mutations in one Bash call (~10 min budget). Check new *.test.ts for `^async function` (readyNote fixtures
+  recur) and new src folders (memory-change, change-report) for missing mirrored tests. Full npm test ~2-3 min now.

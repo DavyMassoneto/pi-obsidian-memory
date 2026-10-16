@@ -6,7 +6,7 @@ import { afterEach, expect, test, vi } from "vitest"
 import { renderNote } from "#src/domain"
 import { readNote } from "#src/services"
 import { addMemory } from "#src/usecases"
-import { aLimits, aNote, linkFolder, setupVaults, writeConfig } from "#test-helpers"
+import { aLimits, aNote, linkFolder, operationContextFor, setupVaults, writeConfig } from "#test-helpers"
 
 const limits = aLimits()
 
@@ -26,7 +26,7 @@ test("saves a global memory in the global vault and refreshes its indexes", asyn
 
   const result = await addMemory(
     { scope: "global", folder: "tools/pnpm", draft },
-    { configPath, workingFolder: unregisteredFolder },
+    operationContextFor({ configPath, workingFolder: unregisteredFolder }),
   )
 
   expect(result).toMatchObject({
@@ -47,7 +47,7 @@ test("maintains logical and physical ancestors when saving through a directory a
 
   const result = await addMemory(
     { scope: "global", folder: "alias", draft },
-    { configPath, workingFolder: unregisteredFolder },
+    operationContextFor({ configPath, workingFolder: unregisteredFolder }),
   )
 
   expect(result).toMatchObject({ succeeded: true, output: { maintenanceProblems: [] } })
@@ -65,7 +65,7 @@ test("saves a project memory in the vault of the project pi runs in", async () =
 
   const result = await addMemory(
     { scope: "project", folder: "pnpm", draft },
-    { configPath, workingFolder: join(projectFolder, "src") },
+    operationContextFor({ configPath, workingFolder: join(projectFolder, "src") }),
   )
 
   expect(result).toMatchObject({ succeeded: true, output: { vaultName: "loja" } })
@@ -80,7 +80,7 @@ test("creates the note today with a fresh id and the don't forget mark when aske
 
   const result = await addMemory(
     { scope: "global", folder: "pnpm", draft: { ...draft, dontForget: true } },
-    { configPath, workingFolder: unregisteredFolder },
+    operationContextFor({ configPath, workingFolder: unregisteredFolder }),
   )
 
   expect(result).toMatchObject({
@@ -93,7 +93,10 @@ test("refuses the project scope in a folder with no registered project, writing 
   const { globalVault, projectVault, configPath, unregisteredFolder } = await setupVaults()
 
   expect(
-    await addMemory({ scope: "project", folder: "pnpm", draft }, { configPath, workingFolder: unregisteredFolder }),
+    await addMemory(
+      { scope: "project", folder: "pnpm", draft },
+      operationContextFor({ configPath, workingFolder: unregisteredFolder }),
+    ),
   ).toMatchObject({ succeeded: false, reason: "no-project" })
   expect(await readdir(globalVault)).toEqual([])
   expect(await readdir(projectVault)).toEqual([])
@@ -105,7 +108,7 @@ test("tells the memory is not configured when there is no config", async () => {
   expect(
     await addMemory(
       { scope: "global", folder: "pnpm", draft },
-      { configPath: join(root, "missing.json"), workingFolder: unregisteredFolder },
+      operationContextFor({ configPath: join(root, "missing.json"), workingFolder: unregisteredFolder }),
     ),
   ).toMatchObject({ succeeded: false, reason: "not-configured" })
 })
@@ -115,7 +118,10 @@ test("refuses when the config is invalid, writing nothing", async () => {
   await writeFile(configPath, "{ not json")
 
   expect(
-    await addMemory({ scope: "global", folder: "pnpm", draft }, { configPath, workingFolder: unregisteredFolder }),
+    await addMemory(
+      { scope: "global", folder: "pnpm", draft },
+      operationContextFor({ configPath, workingFolder: unregisteredFolder }),
+    ),
   ).toMatchObject({ succeeded: false, reason: "invalid-config" })
   expect(await readdir(globalVault)).toEqual([])
 })
@@ -126,7 +132,7 @@ test("refuses an invalid note with every problem, writing nothing", async () => 
   expect(
     await addMemory(
       { scope: "global", folder: "pnpm", draft: { ...draft, statement: "Use a: b", body: "" } },
-      { configPath, workingFolder: unregisteredFolder },
+      operationContextFor({ configPath, workingFolder: unregisteredFolder }),
     ),
   ).toEqual({
     succeeded: false,
@@ -138,7 +144,7 @@ test("refuses an invalid note with every problem, writing nothing", async () => 
 
 test("refuses a note whose name is taken and returns the existing note, untouched", async () => {
   const { globalVault, configPath, unregisteredFolder } = await setupVaults()
-  const context = { configPath, workingFolder: unregisteredFolder }
+  const context = operationContextFor({ configPath, workingFolder: unregisteredFolder })
   const first = await addMemory({ scope: "global", folder: "pnpm", draft }, context)
   if (!first.succeeded) {
     throw new Error(`setup failed: ${first.problems.join(", ")}`)
@@ -170,7 +176,10 @@ test.each([
   const { root, globalVault, configPath, unregisteredFolder } = await setupVaults()
 
   expect(
-    await addMemory({ scope: "global", folder, draft }, { configPath, workingFolder: unregisteredFolder }),
+    await addMemory(
+      { scope: "global", folder, draft },
+      operationContextFor({ configPath, workingFolder: unregisteredFolder }),
+    ),
   ).toEqual({
     succeeded: false,
     reason: "invalid",
@@ -186,7 +195,7 @@ test("lists the folder and note problems together", async () => {
   expect(
     await addMemory(
       { scope: "global", folder: ".private", draft: { ...draft, body: "" } },
-      { configPath, workingFolder: unregisteredFolder },
+      operationContextFor({ configPath, workingFolder: unregisteredFolder }),
     ),
   ).toEqual({
     succeeded: false,
@@ -200,7 +209,10 @@ test("refuses a vault folder that does not exist, creating nothing", async () =>
   await rm(globalVault, { recursive: true })
 
   expect(
-    await addMemory({ scope: "global", folder: "pnpm", draft }, { configPath, workingFolder: unregisteredFolder }),
+    await addMemory(
+      { scope: "global", folder: "pnpm", draft },
+      operationContextFor({ configPath, workingFolder: unregisteredFolder }),
+    ),
   ).toEqual({ succeeded: false, reason: "vault-missing", problems: [`the vault folder ${globalVault} does not exist`] })
   expect((await readdir(root)).sort()).toEqual(["config.json", "loja", "work"])
 })
@@ -215,7 +227,7 @@ test("refreshes the index with the limits from the config", async () => {
 
   const result = await addMemory(
     { scope: "global", folder: "pnpm", draft },
-    { configPath, workingFolder: unregisteredFolder },
+    operationContextFor({ configPath, workingFolder: unregisteredFolder }),
   )
 
   expect(result).toMatchObject({ succeeded: true })

@@ -1,11 +1,20 @@
 import { mkdir } from "node:fs/promises"
 import { join } from "node:path"
 
-import type { MemoryGetParams, MemorySearchParams } from "#src/pi"
+import type {
+  MemoryArchiveParams,
+  MemoryGetParams,
+  MemorySearchParams,
+  MemorySucceedParams,
+  MemoryUpdateParams,
+} from "#src/pi"
+import { READIED_PATH } from "./memory-change.ts"
 import { textOf } from "./pi.ts"
 import { fakePiContext } from "./pi-context.ts"
 import { fakeToolContext, toolCallEvent } from "./pi-prompt.ts"
 import { piRegistrationFixture, writeAgentConfig } from "./pi-registration.ts"
+import { noteWithId } from "./search-memory.ts"
+import { putCatalogFile } from "./vault-catalog.ts"
 
 export async function piMemoryFixture() {
   const fixture = await piRegistrationFixture()
@@ -65,4 +74,30 @@ export async function vaultRefusalText(): Promise<string> {
   )
   if (!blocked || typeof blocked.reason !== "string") throw new Error("vault path was not blocked")
   return blocked.reason
+}
+
+export async function updateResponse(fixture: MemoryFixture, params: MemoryUpdateParams) {
+  const tool = fixture.pi.updateTools[0]
+  if (!tool) throw new Error("memory_update not registered")
+  return tool.execute("call-update", params, undefined, undefined, fakeToolContext(fixture.workingFolder))
+}
+
+export async function archiveResponse(fixture: MemoryFixture, params: MemoryArchiveParams) {
+  const tool = fixture.pi.archiveTools[0]
+  if (!tool) throw new Error("memory_archive not registered")
+  return tool.execute("call-archive", params, undefined, undefined, fakeToolContext(fixture.workingFolder))
+}
+
+export async function succeedResponse(fixture: MemoryFixture, params: MemorySucceedParams) {
+  const tool = fixture.pi.succeedTools[0]
+  if (!tool) throw new Error("memory_succeed not registered")
+  return tool.execute("call-succeed", params, undefined, undefined, fakeToolContext(fixture.workingFolder))
+}
+
+export async function readiedPiNote() {
+  const fixture = await piMemoryFixture()
+  await putCatalogFile(fixture.vaults.global, READIED_PATH, noteWithId(1, "Always pnpm.", []))
+  await fixture.pi.startSession(fixture.piContext, "startup")
+  await readText(fixture, { vault: "global", path: READIED_PATH })
+  return { ...fixture, file: join(fixture.vaults.global.path, READIED_PATH) }
 }

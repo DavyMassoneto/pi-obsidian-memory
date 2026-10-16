@@ -10,10 +10,32 @@ import {
   targetVault,
   today,
 } from "#src/services"
+import {
+  captureMemoryOperationContext,
+  type MemoryOperationContext,
+  memoryAdmissionRefusal,
+  memoryOperationInterruption,
+} from "#src/usecases/operation-context"
 import { maintainAddedMemory } from "./maintenance.ts"
-import type { AddMemoryRequest, AddMemoryResult, MemoryContext } from "./types.ts"
+import type { AddMemoryRequest, AddMemoryResult } from "./types.ts"
 
-export async function addMemory(request: AddMemoryRequest, context: MemoryContext): Promise<AddMemoryResult> {
+export async function addMemory(
+  request: AddMemoryRequest,
+  callerContext: MemoryOperationContext,
+): Promise<AddMemoryResult> {
+  const context = captureMemoryOperationContext(callerContext)
+  const lease = await context.session.acquire(context.stamp, context.signal)
+  if (!lease) return memoryAdmissionRefusal(context)
+  try {
+    const interrupted = memoryOperationInterruption(context)
+    if (interrupted) return interrupted
+    return await addLeasedMemory(request, context)
+  } finally {
+    lease.release()
+  }
+}
+
+async function addLeasedMemory(request: AddMemoryRequest, context: MemoryOperationContext): Promise<AddMemoryResult> {
   const config = await readConfig(context.configPath)
   if (!config.succeeded) {
     return config

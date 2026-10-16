@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { expect, test } from "vitest"
 
 import { addMemory, initProjectMemory, prepareProjectInit, setupMemory, synchronizeMemory } from "#src/usecases"
-import { registrationDiskTree, registrationUsecaseFixture } from "#test-helpers"
+import { operationContextFor, registrationDiskTree, registrationUsecaseFixture } from "#test-helpers"
 
 const draft = {
   statement: "Use pnpm, never npm",
@@ -31,15 +31,15 @@ test("after setup and init a project memory from a subfolder lands in the projec
 
   const project = await addMemory(
     { scope: "project", folder: "tools", draft },
-    { configPath: context.configPath, workingFolder: subfolder },
+    operationContextFor({ configPath: context.configPath, workingFolder: subfolder }),
   )
   const refused = await addMemory(
     { scope: "project", folder: "tools", draft },
-    { configPath: context.configPath, workingFolder: unregistered },
+    operationContextFor({ configPath: context.configPath, workingFolder: unregistered }),
   )
   const global = await addMemory(
     { scope: "global", folder: "tools", draft },
-    { configPath: context.configPath, workingFolder: unregistered },
+    operationContextFor({ configPath: context.configPath, workingFolder: unregistered }),
   )
 
   expect(project).toMatchObject({ succeeded: true, output: { vaultName: "loja-vault" } })
