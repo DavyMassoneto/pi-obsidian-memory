@@ -36,7 +36,7 @@ test("does not advertise a regular archive file as the archive folder", async ()
   expect(await readIndexOf(vault, "")).not.toContain("## Archive")
 })
 
-test("writes an internal index alias target without replacing the link", async (context) => {
+test("refuses an internal index alias to a non-index file without replacing the link or target", async (context) => {
   const vault = await useTempFolder()
   const target = join(vault, "map.txt")
   await writeFile(target, "old index")
@@ -46,9 +46,12 @@ test("writes an internal index alias target without replacing the link", async (
     return
   }
 
-  expect(await refreshIndexes({ path: vault, name: "Memory", limits }, "")).toEqual({ succeeded: true })
+  expect(await refreshIndexes({ path: vault, name: "Memory", limits }, "")).toMatchObject({
+    succeeded: false,
+    reason: "invalid",
+  })
   expect((await lstat(alias)).isSymbolicLink()).toBe(true)
-  expect(await readFile(target, "utf8")).toBe("# Memory\n")
+  expect(await readFile(target, "utf8")).toBe("old index")
 })
 
 test("indexes a valid dot-prefixed note and excludes actual temporary files", async () => {

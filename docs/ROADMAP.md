@@ -33,13 +33,14 @@ Every milestone:
   them to product operations or prove live-provider/local-inference availability. Disclosures and consent UI remain
   unimplemented; registration and later milestones are not complete.
 - Read usecases resolve strict configured global/current-project scope, get exact full diagnostic notes with session
-  receipts, and read existing folder indexes without generating assets. They are not pi tools. Synchronization,
-  search wiring, mandatory context and universal vault isolation remain incomplete; milestone 2 is not complete.
+  receipts, and read existing folder indexes without generating assets. They are not pi tools. A leased internal
+  synchronizer now reconciles per-vault catalogs and re-checks every fully enumerated folder's index. Search wiring,
+  mandatory context and universal vault isolation remain incomplete; milestone 2 is not complete.
 - Built but not reachable by any tool or command: updating, archiving and succeeding notes. Lifecycle reports partial
   progress after late failures; update/removal hash checks and link checks still have check/use windows.
 - The text search resource has a private SQLite connection, prepared statements and transactional rowid-linked FTS5
-  writes with structured failures. A new/incompatible derived schema is rebuilt empty. Vault synchronization and
-  corrupt-index content reconstruction remain milestone 2 work; search is not connected to a tool.
+  writes with structured failures. Synchronization populates missing/corrupt catalogs from vault files, retaining
+  cached rows under failed coverage and reporting incomplete population separately. Search is not connected to a tool.
 - Nothing stops the LLM from reading or writing vault files with pi's file tools, bash or Claude Code sessions started
   by pi.
 - Guidance points to manual configuration/global scope and never offers unavailable setup/init/update operations.
@@ -51,6 +52,25 @@ Every milestone:
 - Shared temporary-folder and limits fixtures live by topic under `tests/helpers`; no filesystem mocks are used.
 
 ## Completed correction work
+
+- [x] Adversarial review of pending synchronization changes: retry folder maintenance after catalog publication,
+  remove stale parent links after empty-folder deletion, and preserve unchanged folder-index files. Synchronization
+  now checks every completely enumerated physical folder; this adds reads, without rewriting identical indexes.
+  Index filename derivation uses the existing normalized `indexFileFor` contract in one resource-owned module.
+  Regression tests were observed failing before the maintenance fixes; no product milestone was completed.
+
+- [x] Independent review of 2026-10-12 resolved: an unrepresentable or failing folder no longer stops the other
+  folders' indexes; cancellation is checked before every index write; stable aliases and alias-to-ancestor cycles are
+  positive exclusions (plain ELOOP lowers coverage); an index alias is followed only to its own folder's index;
+  indexes render from the physical folder; the catalog-entry, reuse and alias-classification rules live in the domain.
+  Reading every note on each synchronization remains a measured-later limit before wiring sync to search.
+
+- [x] Bounded catalog-synchronization usecase: one lease, strict configured scope, per-canonical-root index paths,
+  real scan coverage, validation/content fingerprints, exact direct-file aliases, duplicate IDs and affected/missing
+  folder-index maintenance. Directory aliases are not recursively duplicated; replaced alias-subtree catalog rows
+  are retired explicitly, not reported as deleted notes. Failures retain committed progress; sync does not mint or
+  refresh get receipts. Index/database-sidecar links and index-to-note maintenance aliases refuse before writes.
+  Same-stat edits and final filesystem check/use races remain; this is not search-tool wiring or milestone completion.
 
 - [x] Bounded exact-read usecase slice: canonical scope/infrastructure validation, raw config-snapshot session binding,
   full closed-frontmatter get receipts and read-only folder-index listing. Invalid closed metadata stays diagnostic,

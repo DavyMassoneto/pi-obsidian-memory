@@ -37,11 +37,12 @@ test("real vault directory replacement removes a cached note using actual enumer
     observedPaths: enumeration.output.observedPaths,
     completeDirectories: enumeration.output.completeDirectories,
     failedPaths: enumeration.output.failures.map((failure) => failure.path),
+    untraversedAliasDirectories: [],
+    excludedAliasFiles: [],
     validationFingerprint: entry.validationFingerprint,
     complete: true,
   })
   expect(plan.deletes).toEqual([entry.path])
-  expect(plan.touchedFolders).toEqual(["tools"])
   expect(applyIndexChanges(index, plan)).toEqual({ succeeded: true })
   expect(readIndexInventory(index)).toEqual({
     succeeded: true,

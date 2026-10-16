@@ -113,8 +113,15 @@ export interface IoRefusal extends Failed {
 }
 
 export interface RefreshRefusal extends Failed {
-  reason: CreateRefusal["reason"] | "io-error"
+  reason: CreateRefusal["reason"] | "io-error" | "interrupted"
 }
+
+export interface RefreshPlan {
+  folders: Set<string>
+  refusals: RefreshRefusal[]
+}
+
+export type RefreshContinuation = () => boolean
 
 export type LifecycleRefusal = UpdateRefusal | ExistingNoteRefusal
 export type VaultRefusal = LifecycleRefusal | IoRefusal

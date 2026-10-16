@@ -33,6 +33,8 @@ export function catalogScan(entries: CatalogEntry[]): CatalogScan {
     observedPaths: entries.map((entry) => entry.path),
     completeDirectories: ["", "tools"],
     failedPaths: [],
+    untraversedAliasDirectories: [],
+    excludedAliasFiles: [],
     validationFingerprint: "limits-one",
     complete: true,
   }

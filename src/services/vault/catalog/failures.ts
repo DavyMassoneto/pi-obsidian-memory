@@ -11,7 +11,6 @@ export function catalogIoFailure(error: Error, operation: CatalogOperation): Vau
     if (error.code === "ENOENT") reason = "not-found"
     if (error.code === "ENOTDIR") reason = "not-directory"
     if (error.code === "EACCES" || error.code === "EPERM" || error.code === "EBUSY") reason = "unreadable"
-    if (error.code === "ELOOP") reason = "cycle"
   }
   return catalogFailure({ ...operation, reason, problem: error.message })
 }

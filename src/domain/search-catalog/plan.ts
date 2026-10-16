@@ -1,4 +1,4 @@
-import { catalogFolder, confirmedMissing } from "./coverage.ts"
+import { confirmedMissing, retiredAliasPath } from "./coverage.ts"
 import type { CatalogEntry, CatalogPlan, CatalogScan, CatalogSnapshot, DuplicateCatalogId } from "./types.ts"
 
 export function planCatalogChanges(snapshot: CatalogSnapshot, scan: CatalogScan): CatalogPlan {
@@ -10,12 +10,13 @@ export function planCatalogChanges(snapshot: CatalogSnapshot, scan: CatalogScan)
     statUpdates: [],
     duplicateIds: [],
     reinspectPaths: [],
-    touchedFolders: [],
     population: snapshot.population,
   }
 
   for (const entry of scan.entries) classifyEntry(entry, previous.get(entry.path), plan)
-  plan.deletes = snapshot.entries.filter((entry) => confirmedMissing(entry.path, scan)).map((entry) => entry.path)
+  plan.deletes = snapshot.entries
+    .filter((entry) => confirmedMissing(entry.path, scan) || retiredAliasPath(entry.path, scan))
+    .map((entry) => entry.path)
 
   const current = new Map(previous)
   for (const path of plan.deletes) current.delete(path)
@@ -27,10 +28,6 @@ export function planCatalogChanges(snapshot: CatalogSnapshot, scan: CatalogScan)
   if (scan.complete && scan.failedPaths.length === 0 && plan.reinspectPaths.length === 0) plan.population = "ready"
 
   plan.duplicateIds = duplicateIds([...current.values()])
-  plan.touchedFolders = [
-    ...new Set([...plan.deletes, ...plan.upserts.map((entry) => entry.path)].map(catalogFolder)),
-  ].sort()
-
   return plan
 }
 

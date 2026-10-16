@@ -6,6 +6,14 @@ export function catalogFolder(path: string): string {
   return path.slice(0, slash)
 }
 
+export function retiredAliasPath(path: string, scan: CatalogScan): boolean {
+  if (scan.failedPaths.some((failed) => failed === "" || path === failed || path.startsWith(`${failed}/`))) return false
+  return (
+    scan.excludedAliasFiles.includes(path) ||
+    scan.untraversedAliasDirectories.some((alias) => path === alias || path.startsWith(`${alias}/`))
+  )
+}
+
 export function confirmedMissing(path: string, scan: CatalogScan): boolean {
   if (scan.failedPaths.some((failed) => failed === "" || path === failed || path.startsWith(`${failed}/`))) return false
   if (scan.completeDirectories.includes(path)) return true
