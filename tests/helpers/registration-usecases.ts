@@ -4,7 +4,15 @@ import { dirname, join } from "node:path"
 import { expect } from "vitest"
 
 import { readConfigSnapshot } from "#src/services"
-import { createMemorySession, type RegistrationContext } from "#src/usecases"
+import {
+  type ChatModelReference,
+  type ConfigRepairDraft,
+  createMemorySession,
+  prepareMemorySetup,
+  proposeMemorySetup,
+  type RegistrationContext,
+  type SetupVaultMode,
+} from "#src/usecases"
 import { sessionIdentity } from "./session.ts"
 import { productSettings } from "./settings.ts"
 import { useTempFolder } from "./temp-folder.ts"
@@ -73,4 +81,19 @@ export async function expectRegistrationLeaseReleased(context: RegistrationConte
   const lease = await context.session.acquire(context.session.stamp(), AbortSignal.timeout(1000))
   expect(lease).not.toBeNull()
   lease?.release()
+}
+
+export async function setupPreparationOf(context: RegistrationContext, selectedModel: ChatModelReference | null) {
+  const preparation = await prepareMemorySetup({ selectedModel }, context)
+  if (!preparation.succeeded) throw new Error(preparation.problems.join("\n"))
+  return preparation.output
+}
+
+export function proposeVaultMode(
+  context: RegistrationContext,
+  draft: ConfigRepairDraft,
+  vault: string,
+  mode: SetupVaultMode,
+) {
+  return proposeMemorySetup({ draft, vault, mode }, context)
 }

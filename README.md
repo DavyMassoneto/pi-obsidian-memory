@@ -2,10 +2,13 @@
 
 Long-term memory for the [pi coding agent](https://pi.dev), stored in [Obsidian](https://obsidian.md) vaults.
 
-> **Status:** early development. `memory_add` saves explicit requests to remember in configured global/project
-> vaults and refreshes folder indexes. A saved note remains success with a warning if filesystem maintenance fails.
-> Configure memory manually at `pi-obsidian-memory/config.json` in the pi agent directory. Startup is silent;
-> setup/init, reading/search, update and lifecycle tools are not registered yet.
+> **Status:** early development. `/memory-setup` chooses or attaches the global vault and writes the config
+> (`pi-obsidian-memory/config.json` in the pi agent directory); `/memory-init` registers a working folder as a
+> project with its own vault. Session start says when memory is not configured or the config is invalid
+> or unreadable. `memory_add`
+> saves explicit requests to remember in the configured global/project vaults and refreshes folder indexes; a saved
+> note remains success with a warning if filesystem maintenance fails. Not yet: reading, search and context loading,
+> update and lifecycle tools, automatic capture, doctor, dashboard and export.
 
 See [docs/VISION.md](docs/VISION.md) for what this project is and the decisions behind it.
 

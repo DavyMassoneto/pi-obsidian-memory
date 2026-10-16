@@ -158,3 +158,5 @@ export type SuccessionResult = (Succeeded<Succession> & MaintenanceWarnings) | L
 export type RefreshResult = (Done & MaintenanceWarnings) | RefreshRefusal
 export type ResolveResult = Succeeded<string> | ResolveRefusal
 export type ListResult = Succeeded<FolderListing> | ReadRefusal
+export type VaultFolderState = "missing" | "empty" | "populated" | "not-directory"
+export type VaultFolderResult = Succeeded<VaultFolderState> | IoRefusal

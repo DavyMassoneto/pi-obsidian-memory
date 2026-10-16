@@ -3,9 +3,8 @@
 How memory is organized inside a vault (global or project). Decided with the user on 2026-10-04.
 
 The format and resource operations below exist today, and so does an internal synchronizer (not yet triggered by
-any pi event). Templates in the vault, Don't forget injection, and commands such as `/memory-doctor` are target
-behaviour, not registered features.
-Only `memory_add` is currently a pi tool; see [ROADMAP.md](ROADMAP.md).
+any pi event). Setup and init write the templates to `_templates/`. Don't forget injection and commands such as
+`/memory-doctor` are target behaviour, not registered features. Only `memory_add` is currently a pi tool; see [ROADMAP.md](ROADMAP.md).
 
 ## Layout
 
@@ -226,6 +225,8 @@ risk may become an issue or a lesson. A note can also go to `archive/` with no s
 - Every marked note is injected in full (name and body) at session start, outside the summary budget, so it never
   depends on the LLM choosing to open it.
 - A note in `archive/` is no longer injected.
+- A marked note whose name or body breaks a rule is injected with its problems. A note whose frontmatter is invalid
+  is not injected, since its mark cannot be trusted; it is listed under `## Needs fixing` until it is corrected.
 
 ## Not memory
 

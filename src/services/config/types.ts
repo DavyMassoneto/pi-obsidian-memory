@@ -1,14 +1,19 @@
 import type { ConfigRepairDraft, MemoryConfig, ParseConfigResult } from "#src/domain"
 import type { Failed, Succeeded } from "#src/shared"
 
-export type ConfigFailureReason = "not-configured" | "invalid-config"
+export type ConfigFailureReason = "not-configured" | "invalid-config" | "unreadable"
 
 export interface ConfigRefusal extends Failed {
   reason: ConfigFailureReason
   configPath: string
 }
 
-export type ReadConfigResult = Succeeded<MemoryConfig> | ConfigRefusal
+export interface ConfigUnreadable extends ConfigRefusal {
+  reason: "unreadable"
+  code: string
+}
+
+export type ReadConfigResult = Succeeded<MemoryConfig> | ConfigRefusal | ConfigUnreadable
 
 export interface ConfigLocation {
   path: string

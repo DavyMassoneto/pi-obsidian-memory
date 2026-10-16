@@ -1,5 +1,5 @@
 import type { AddedMemory, AddMemoryResult, ExistingMemoryRefusal } from "#src/usecases"
-import { NO_PROJECT_GUIDANCE, SAME_POINT_GUIDANCE } from "./constants.ts"
+import { NO_PROJECT_GUIDANCE, SAME_POINT_GUIDANCE, SETUP_GUIDANCE } from "./constants.ts"
 import type { MemoryAddResponse } from "./types.ts"
 
 export function respondTo(result: AddMemoryResult): MemoryAddResponse {
@@ -22,7 +22,9 @@ export function respondTo(result: AddMemoryResult): MemoryAddResponse {
       return reply([...result.problems, `Config: ${result.configPath}`, NO_PROJECT_GUIDANCE].join("\n"), true)
     case "not-configured":
     case "invalid-config":
-      return reply([...result.problems, `Ask the user to configure memory in ${result.configPath}.`].join("\n"), true)
+      return reply([...result.problems, SETUP_GUIDANCE].join("\n"), true)
+    case "unreadable":
+      return reply([...result.problems, `Config: ${result.configPath}`].join("\n"), true)
     case "not-directory":
     case "not-readable":
     case "not-writable":

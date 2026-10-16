@@ -1,4 +1,5 @@
 export * from "./coverage.ts"
+export * from "./dont-forget.ts"
 export * from "./fingerprint.ts"
 export * from "./inspection.ts"
 export * from "./plan.ts"

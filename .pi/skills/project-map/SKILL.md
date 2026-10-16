@@ -9,29 +9,30 @@ description: Map of pi-obsidian-memory — areas and owners, interfaces between 
 
 | Owner | Paths (src + mirrored tests/) | Purpose |
 | --- | --- | --- |
-| nucleo | `src/domain`, `src/shared`, `tests/domain` | Pure rules (note, config, names, vault-path, capture, lifecycle, catalogs); generic result types |
-| cofre | `src/services/vault`, `tests/services/vault` | Notes on disk: read/write/archive/relocate/list, bootstrap, catalog, folder indexes |
-| indice | `src/services/{search-index,embeddings}` + tests | SQLite search index, reconcile/recovery, embedding providers |
+| nucleo | `src/domain`, `src/shared`, `tests/domain` | Pure rules (note, config incl. `disclosures.ts`, names, vault-path, capture, lifecycle, catalogs, `*/dont-forget.ts`); generic result types |
+| cofre | `src/services/vault`, `tests/services/vault` | Notes on disk: read/write/archive/relocate/list, bootstrap, catalog, folder indexes, `inspect-folder.ts` |
+| indice | `src/services/{search-index,embeddings}` + tests | SQLite search index, reconcile/recovery, embedding providers; `search-index/inspection.ts` (domain re-export seam) |
 | ponte | `src/services/{config,llm,decision-model,clock,id}`, `src/services/index.ts` + tests | Config I/O, LLM, decision model, clock, ids |
-| maestro | `src/usecases`, `src/pi`, `tests/usecases`, `tests/pi` | Operation flows; pi tools/events/commands, extension entry (`src/pi/extension.ts`) |
+| maestro | `src/usecases` (incl. `registration/{propose,prepare-init,check}.ts`), `src/pi` (incl. `registrar.ts`, `memory-setup`, `memory-init`, `session-start`, `registration-report`, `memory-session`, `context`), `tests/usecases`, `tests/pi` | Operation flows; pi tools/events/commands, extension entry (`src/pi/extension.ts`) |
 | cartografo | `.pi/skills/project-map/SKILL.md` | Keeps this map |
 
 Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`, `tsconfig.json`, `vitest.config.ts`,
-`docs/`, `README.md`, `AGENTS.md`.
+`docs/`, `README.md`, `AGENTS.md`, `skills/obsidian-memory/SKILL.md` (shipped skill).
 
 ## Test helpers (`tests/helpers/`, one file per topic)
 
 - nucleo: `config.ts`, `settings.ts`, `types.ts` (only `LimitsInput`, used by config.ts)
-- cofre: `vault.ts`, `vault-catalog.ts`, `vault-exact.ts`, `windows-file-handle.ts`, `note.ts`, `limits.ts`, `temp-folder.ts`
+- cofre: `vault.ts` (`keepGoing`, `nestedAliasVault`, `allowing`), `vault-catalog.ts` (`anInspectedFile`, `aCatalogFailure`, `aVaultCatalogEntry`), `vault-exact.ts`, `windows-file-handle.ts`, `note.ts`, `limits.ts`, `temp-folder.ts`
 - indice: `search-index.ts`, `search-catalog.ts`, `embeddings.ts`
 - ponte: `llm.ts`, `decision-model.ts`, `registration.ts` (used by tests/services/config)
-- maestro: `memory.ts`, `memory.test.ts`, `memory-read.ts`, `registration-usecases.ts`, `session.ts`, `synchronize-memory.ts`, `pi.ts`, `index.ts` (barrel)
+- maestro: `memory.ts`, `memory.test.ts`, `memory-read.ts`, `registration-usecases.ts`, `session.ts`, `synchronize-memory.ts`, `pi.ts`, `pi-context.ts`, `pi-registration.ts`, `index.ts` (barrel)
 - Shared helpers (`note`, `temp-folder`, `settings`, `config`, `index`) are used across areas: others request additions via the orchestrator.
 
 ## Interfaces
 
 - Ladder: pi → usecases → services → domain, each imports only the layer below; `shared` is importable by all and imports
   no layer (`biome/layer-*.grit`).
+- Seam: usecases reach domain rules only through `#src/services` re-exports, never `#src/domain` directly.
 - Aliases (`package.json` `imports`): `#src/<layer-or-folder>` → `./src/<x>/index.ts` (`#src/domain`, `#src/services`,
   `#src/usecases`, `#src/shared`); `#test-helpers` → `tests/helpers/index.ts`.
 - Barrels: every `index.ts` only has `export * from "./x.ts"` / `"./folder/index.ts"` (`biome/index-reexports-only.grit`).
@@ -42,13 +43,13 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 - Seams, usecase → services (from imports in `src/usecases`):
   - add-memory: config (`readConfig`/`targetVault`), vault (`readNote`, `refreshIndexes`, create), clock (`today`), id (`newNoteId`).
   - get-memory: vault (`inspectVaultFile`, `observeVaultPath`). list-memory: vault (`readFolderIndex`).
-  - registration: config (`readConfigSnapshot`, `writeConfig`, `canonicalizeRegistration`, `proposeInit`, `checkConfigSnapshot`), vault (`ensureVaultAssets`).
+  - registration (`registration/{propose,prepare-init,check}.ts` new): config (`readConfigSnapshot`, `writeConfig`, `canonicalizeRegistration`, `proposeInit`, `checkConfigSnapshot`), vault (`ensureVaultAssets`).
   - resolve-memory: config snapshot + canonicalization, `targetVault`.
   - synchronize-memory: vault (`inspectVaultFile`, `observeVaultPath`, `refreshFolders`) + search-index (`reconcileCatalog`, `applyIndexChanges`, `readIndexInventory`).
   - session, operation-context: shared flow pieces used by the above.
 - Services consume domain types (note, catalog entry, config snapshot, `MemoryDraftSchema`, `MemoryScopeSchema`);
   results use `#src/shared` result types (`{ succeeded, output | problems }`).
-- pi: `src/pi/{memory-add,claude-code,paths}` call usecases only; `src/pi/claude-code` sets `CLAUDE_CODE_DISABLE_AUTO_MEMORY`.
+- pi: `src/pi/{memory-add,claude-code,paths,memory-setup,memory-init,session-start,registration-report,memory-session,context}` and `src/pi/registrar.ts` call usecases only; `src/pi/claude-code` sets `CLAUDE_CODE_DISABLE_AUTO_MEMORY`.
 
 ## Build / test / run
 
@@ -79,8 +80,9 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 - Index file path: use `indexFileFor` (`services/search-index/.../location.ts`), the only convention; the index is
   rebuildable from notes (REVISAO-DE-CODIGO.md, 2026-10-12 round, finding 3).
 - Folder maintenance must re-check every fully enumerated physical folder on each sync (REVISAO-DE-CODIGO.md, findings 1-2).
+- `src/domain/config/problems.ts` was removed; do not import it.
 - Old incomplete configs are invalid at runtime, never silently migrated; setup-only defaults need an explicit chat model (ROADMAP Current state).
-- Update/archive/succeed exist but are not reachable by any tool; search and setup/init commands are not wired (ROADMAP Current state).
+- Update/archive/succeed exist but are not reachable by any tool; search is not wired (ROADMAP Current state).
 - Every roadmap milestone ends with `npm test`, lint, typecheck and `test:pi` passing on Windows, and updates the README Status (ROADMAP intro).
 
 ## Pitfalls — working in parallel

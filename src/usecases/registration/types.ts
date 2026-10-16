@@ -6,6 +6,8 @@ import type {
   ConfigWriteRefusal,
   MemoryConfig,
   MemoryScope,
+  ProjectEntry,
+  SetupDisclosure,
   VaultBootstrapFailure,
   VaultBootstrapProgress,
   WriteConfigRequest,
@@ -19,6 +21,7 @@ export type {
   ConfigRepairDraft,
   ConfigSnapshot,
   MemoryConfig,
+  SetupDisclosure,
   VaultBootstrapProgress,
 } from "#src/services"
 
@@ -77,3 +80,29 @@ export interface RegistrationPublication {
   write: WriteConfigRequest
   scope: MemoryScope
 }
+
+export type SetupVaultMode = "create" | "attach"
+
+export interface SetupProposalRequest {
+  draft: ConfigRepairDraft
+  vault: string
+  mode: SetupVaultMode
+}
+
+export interface ProposedSetup {
+  config: MemoryConfig
+  disclosures: SetupDisclosure[]
+}
+
+export type SetupProposalResult = Succeeded<ProposedSetup> | Failed
+
+export interface InitPreparation {
+  expectedHash: string
+  existing: ProjectEntry | null
+  defaultName: string
+  takenNames: string[]
+}
+
+export type InitPreparationResult = Succeeded<InitPreparation> | ConfigRefusal
+
+export type ProjectNameResult = Succeeded<string> | Failed

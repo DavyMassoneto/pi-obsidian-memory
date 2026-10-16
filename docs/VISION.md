@@ -27,7 +27,7 @@ lives in any folder they choose.
    outside the vaults (e.g. `~/.pi/agent/pi-obsidian-memory/config.json`). Format: [config.md](config.md).
    - **Global:** `/memory-setup` asks where the global vault lives, then creates a new
      dedicated vault or attaches an existing one, and records its path. It can be re-run
-     to move or switch the vault. Until a global vault is registered there is no memory,
+     to point to another vault; the old one is left as it was. Until a global vault is registered there is no memory,
      and the extension offers `/memory-setup`.
    - **Project:** `/memory-init` records a manual map (working folder → project → vault).
      An unregistered folder gets global memory only.

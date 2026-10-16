@@ -19,6 +19,11 @@ export function catalogEntry(path: string): CatalogEntry {
   }
 }
 
+export function catalogEntryWithNote(path: string, note: Partial<NonNullable<CatalogEntry["note"]>>): CatalogEntry {
+  const entry = catalogEntry(path)
+  return { ...entry, note: entry.note && { ...entry.note, ...note } }
+}
+
 export function catalogChanges(upserts: CatalogEntry[], expectedRevision: number): CatalogChanges {
   return { expectedRevision, upserts, deletes: [], statUpdates: [], population: "ready" }
 }

@@ -6,3 +6,7 @@
   reverse check lists orphan split files (e.g. *-exact.test.ts, refresh-folders-failures.test.ts) — pre-existing.
 - Full `npm test` ~60 s on Windows; lint+typecheck fast. Other agents may edit .pi/skills concurrently: don't attribute.
 - AGENTS.md "test files hold only tests": local helper functions in *.test.ts (e.g. keepGoing) are a rule violation.
+- 2026-xx (M1 review): real ~/.pi/agent/pi-obsidian-memory/config.json EXISTS on this machine, so dropping
+  PI_CODING_AGENT_DIR from tests/helpers/pi.ts loadIsolatedPi makes the smoke test fail (isolation is proven).
+  Mutation recipe: cp file tmp/revisor-x.bak; sed; npx vitest run --project unit <dir>; cp back; untracked files
+  don't show in git diff, verify restore with grep. tmp/ is NOT gitignored: delete scratch logs.

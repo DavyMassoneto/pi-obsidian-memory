@@ -36,7 +36,7 @@ export function readConfigInspection(text: string): ConfigDocumentInspection {
   const max = Value.Pointer.Get(document, "/decisionModel/maxTokens")
   const head = Value.Pointer.Get(document, "/decisionModel/headMaxTokens")
   const invalidTokenOrder = typeof max === "number" && typeof head === "number" && head >= max
-  const inspection = { observations, projectCount, shapeProblems: [...new Set(problems)], invalidTokenOrder }
+  const inspection = { observations, projectCount, shapeProblems: problems, invalidTokenOrder }
   if (Value.Check(MemoryConfigSchema, document)) return { ...inspection, config: { succeeded: true, output: document } }
   return { ...inspection, config: { succeeded: false } }
 }
