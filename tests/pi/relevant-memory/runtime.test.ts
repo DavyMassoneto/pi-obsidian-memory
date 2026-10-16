@@ -5,6 +5,7 @@ import { expect, onTestFinished, test } from "vitest"
 
 import {
   decisionServer,
+  eventually,
   FINISH_WITH_READS,
   fakePiContext,
   getNote,
@@ -154,6 +155,7 @@ test("an unavailable Laya adds nothing, tells the user once per session, and nev
     true,
   )
   await pi.startSession(context, "startup")
+  await eventually(() => expect(complete).toHaveBeenCalledTimes(1))
   const calls = complete.mock.calls.length
 
   const first = await pi.runTurn(context, "pnpm?")
@@ -194,6 +196,7 @@ test("a note loaded into the section at session start is watched too: an edit la
 test("a run started by a custom message adds nothing and never starts retrieval", async () => {
   const { pi, context, complete } = await startedPiFixture({ laya: RANKED, session: [], turns: [] }, false)
   await pi.startSession(context, "startup")
+  await eventually(() => expect(complete).toHaveBeenCalledTimes(1))
   const calls = complete.mock.calls.length
 
   expect(await pi.runCustomStart(context)).toBeNull()

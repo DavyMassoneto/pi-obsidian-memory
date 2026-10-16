@@ -1,3 +1,6 @@
 export * from "./constants.ts"
 export * from "./decide.ts"
+export * from "./laya-batch.ts"
+export * from "./laya-http-failure.ts"
+export * from "./score-candidates.ts"
 export * from "./types.ts"

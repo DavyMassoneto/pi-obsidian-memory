@@ -48,7 +48,6 @@ export interface SetupCommitRequest {
   config: MemoryConfig
   expectedHash: string | null
   replacementConfirmed: boolean
-  disclosuresConfirmed: boolean
 }
 
 export type SetupCommitCaptureResult = Succeeded<SetupCommitRequest> | Failed

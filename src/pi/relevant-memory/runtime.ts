@@ -2,40 +2,21 @@ import { Value } from "typebox/value"
 
 import type { MemoryPiContext } from "#src/pi/context"
 import type { BeforeAgentStartHandler } from "#src/pi/memory-block"
-import {
-  type JevSource,
-  LoadedChangesSchema,
-  loadSessionMemory,
-  prepareDecisionModel,
-  retrieveMemory,
-} from "#src/usecases"
-import {
-  JEV_CONFIRM_FAILED,
-  JEV_DECLINED,
-  JEV_MESSAGE,
-  JEV_MISSING,
-  JEV_NO_UI,
-  JEV_TITLE,
-  RELEVANT_MESSAGE_TYPE,
-} from "./constants.ts"
+import { type JevSource, LoadedChangesSchema, loadSessionMemory, retrieveMemory } from "#src/usecases"
+import { JEV_MISSING, RELEVANT_MESSAGE_TYPE } from "./constants.ts"
 import { classifierPrompt } from "./prompt.ts"
 import type { RelevantMemoryDeps } from "./types.ts"
 
 export class RelevantMemoryRuntime {
   #deps: RelevantMemoryDeps
-  #jevAnswer: Promise<boolean> | null = null
   #told = new Set<string>()
 
   constructor(deps: RelevantMemoryDeps) {
     this.#deps = deps
   }
 
-  async start(ctx: MemoryPiContext): Promise<void> {
+  reset(): void {
     this.#told = new Set<string>()
-    const operation = this.#deps.sessions.retrievalOperation(ctx.cwd, this.#deps.paths)
-    if (!operation) return
-    const refusal = await prepareDecisionModel(operation, this.#jevFor(ctx))
-    if (typeof refusal === "string") this.tell(ctx, [refusal])
   }
 
   restore(ctx: MemoryPiContext): void {
@@ -92,8 +73,6 @@ export class RelevantMemoryRuntime {
 
   #jevFor(ctx: MemoryPiContext): JevSource {
     return async (modelId) => {
-      const refusal = await this.#confirmJev(ctx)
-      if (refusal) return { available: false, reason: refusal }
       const model = ctx.modelRegistry.findOfType("classifier", "typesafe", modelId)
       if (!model) return { available: false, reason: JEV_MISSING }
       return {
@@ -103,20 +82,5 @@ export class RelevantMemoryRuntime {
         },
       }
     }
-  }
-
-  async #confirmJev(ctx: MemoryPiContext): Promise<string | null> {
-    if (!this.#jevAnswer) {
-      if (!ctx.hasUI) return JEV_NO_UI
-      this.#jevAnswer = ctx.ui.confirm(JEV_TITLE, JEV_MESSAGE)
-    }
-    try {
-      if (await this.#jevAnswer) return null
-    } catch (error) {
-      if (!(error instanceof Error)) throw error
-      this.#jevAnswer = null
-      return `${JEV_CONFIRM_FAILED} ${error.message}`
-    }
-    return JEV_DECLINED
   }
 }

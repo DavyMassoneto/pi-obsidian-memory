@@ -22,6 +22,14 @@ export const TEMPORARIES_HEADING = "Leftover temporary files:"
 
 export const UNREADABLE_HEADING = "Files that could not be read:"
 
+export const CUTOFF_SOURCES = new Map<string, string>([
+  ["config", "config"],
+  ["typesafe", "TypeSafe starting value"],
+  ["missing", "missing"],
+])
+
+export const CUTOFFS_HINT = "set decisionModel.gateThreshold and relevanceThreshold, see docs/decision-thresholds.md"
+
 export const MODELS_HEADING = "Models:"
 
 export const COMPLETE_TYPE_TITLE = "Complete this blank note: which type is it?"

@@ -40,3 +40,7 @@ export function volumeGuidRoot(drive: string): string | null {
   if (/^\\\\\?\\Volume\{[^}]+\}\\$/i.test(output)) return output
   return null
 }
+
+export function configTextWithDecisionModel(decisionModel: object): string {
+  return JSON.stringify({ ...aConfig(), decisionModel })
+}

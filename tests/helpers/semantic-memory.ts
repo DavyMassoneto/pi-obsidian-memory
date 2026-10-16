@@ -12,9 +12,6 @@ import {
   readVectorCoverage,
 } from "#src/services"
 import {
-  type LocalModelAccess,
-  type LocalModelStatus,
-  type LocalSemanticOptions,
   type MemoryOperationContext,
   prepareSemanticSearch,
   type QueryVector,
@@ -138,26 +135,6 @@ export async function conceptVault() {
   await putCatalogFile(fixture.vault, "vehicles/Car.md", noteWithId(1, "An engine on four wheels.", []))
   await putCatalogFile(fixture.vault, "pets/Dog.md", noteWithId(2, "A canine that barks.", []))
   return fixture
-}
-
-export interface RecordedLocal {
-  access: LocalModelAccess
-  created: LocalSemanticOptions[]
-}
-
-export function recordingLocalAccess(status: LocalModelStatus): RecordedLocal {
-  const created: LocalSemanticOptions[] = []
-  const access: LocalModelAccess = {
-    check: async () => status,
-    create(options) {
-      created.push(options)
-      return {
-        port: { available: true, embed: async () => ({ succeeded: false, status: "unavailable" }) },
-        dispose: async () => {},
-      }
-    },
-  }
-  return { access, created }
 }
 
 export async function rankedWithQuery(fixture: Awaited<ReturnType<typeof semanticFixture>>, query: QueryVector) {

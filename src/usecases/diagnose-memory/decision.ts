@@ -24,7 +24,7 @@ export async function checkDecision(
       request: { message: PROBE_MESSAGE, project: null, folder: PROBE_FOLDER },
     })
     if (answer.succeeded) return { provider, model, status: "ready", detail: `answered at ${endpoint}` }
-    const cause = describeDecisionFailure(answer.code)
+    const cause = describeDecisionFailure(answer)
     return { provider, model, status: "not-answering", problem: `${endpoint} is not answering: ${cause}` }
   }
   if (!probe.hasClassifier(provider, model)) {

@@ -1,16 +1,16 @@
 import {
   type CandidateScore,
   type DecisionContext,
-  type DecisionFailureCode,
+  type DecisionFailure,
   type DecisionLimits,
   type DecisionResult,
   decideMemory,
   type MemoryConfig,
   type ReadObservation,
   rankCandidates,
-  scoreCandidate,
+  scoreCandidates,
 } from "#src/services"
-import { DECISION_UNAVAILABLE, ROUTING_MISSING_HELP } from "./constants.ts"
+import { COULD_NOT_SCORE, DECISION_UNAVAILABLE, ROUTING_MISSING_HELP } from "./constants.ts"
 import type { JevSource, RankedNotes } from "./types.ts"
 
 export async function decisionContextOf(
@@ -33,7 +33,6 @@ export async function decisionContextOf(
   return {
     provider: "typesafe",
     model: config.model,
-    consent: "messages-and-candidates",
     classifier: access.classifier,
     ...limits,
   }
@@ -41,12 +40,15 @@ export async function decisionContextOf(
 
 export function decisionNotice(result: DecisionResult): string | null {
   if (result.succeeded) return null
-  return `${DECISION_UNAVAILABLE} ${describeDecisionFailure(result.code)}`
+  return `${DECISION_UNAVAILABLE} ${describeDecisionFailure(result)}`
 }
 
-export function describeDecisionFailure(code: DecisionFailureCode): string {
-  if (code === "routing-missing") return ROUTING_MISSING_HELP
-  return code
+export function describeDecisionFailure(failure: DecisionFailure): string {
+  if (failure.code === "routing-missing") return ROUTING_MISSING_HELP
+  if (failure.code !== "http-error" || typeof failure.httpStatus !== "number") return failure.code
+  let text = `${failure.code} (HTTP ${failure.httpStatus})`
+  if (typeof failure.detail === "string") text = `${text}: ${failure.detail}`
+  return text
 }
 
 export function needsMemory(
@@ -62,26 +64,36 @@ export async function rankNotes(
   context: DecisionContext,
   message: string,
   notes: ReadObservation[],
+  cutoff: number,
 ): Promise<RankedNotes> {
+  const results = await scoreCandidates(
+    context,
+    notes.map((note) => ({
+      message,
+      identity: identityOf(note),
+      candidate: { statement: note.statement, body: note.body },
+    })),
+  )
   const scores: CandidateScore[] = []
-  for (const note of notes) {
-    const result = await scoreCandidate({
-      context,
-      request: {
-        message,
-        identity: { vault: note.vault, id: note.id, revision: note.hash },
-        candidate: { statement: note.statement, body: note.body },
-      },
-    })
-    const notice = decisionNotice(result)
-    if (notice || !result.succeeded) return { notes: [], notice }
-    scores.push({
-      identity: { vault: note.vault, id: note.id, revision: note.hash },
-      probability: result.output.probability,
-    })
-  }
-  const ranked = rankCandidates(scores)
-  return { notes: ranked.flatMap((score) => notes.filter((note) => matches(note, score))), notice: null }
+  let failure: DecisionFailure | null = null
+  let failed = 0
+  results.forEach((result, index) => {
+    const note = notes[index]
+    if (result.succeeded && note) scores.push({ identity: identityOf(note), probability: result.output.probability })
+    else if (!result.succeeded) {
+      failed += 1
+      failure = result
+    }
+  })
+  if (failure && failed === notes.length) return { notes: [], notice: decisionNotice(failure) }
+  const ranked = rankCandidates(scores, cutoff)
+  let notice: string | null = null
+  if (failed > 0) notice = `${COULD_NOT_SCORE} ${failed} of ${notes.length} notes`
+  return { notes: ranked.flatMap((score) => notes.filter((note) => matches(note, score))), notice }
+}
+
+function identityOf(note: ReadObservation): CandidateScore["identity"] {
+  return { vault: note.vault, id: note.id, revision: note.hash }
 }
 
 function matches(note: ReadObservation, score: CandidateScore): boolean {

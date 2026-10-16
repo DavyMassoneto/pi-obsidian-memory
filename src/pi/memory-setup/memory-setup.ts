@@ -13,7 +13,6 @@ import {
   setupNeedsModel,
 } from "#src/usecases"
 import {
-  DISCLOSURE_TITLE,
   MEMORY_SETUP_DESCRIPTION,
   REPAIR_CONFIRM_LINE,
   REPAIR_TITLE,
@@ -53,14 +52,12 @@ async function runMemorySetup(ctx: MemoryPiContext, registration: RegistrationCo
   if (typeof vault !== "string") return cancelled(ctx)
   const proposal = await proposeMemorySetup({ draft, vault, mode }, registration)
   if (!proposal.succeeded) return ctx.ui.notify(proposal.problems.join("\n"), "error")
-  const disclosed = await ctx.ui.confirm(DISCLOSURE_TITLE, disclosureText(proposal.output.disclosures))
-  if (!disclosed) return cancelled(ctx)
+  ctx.ui.notify(disclosureText(proposal.output.disclosures), "warning")
   const result = await setupMemory(
     {
       config: proposal.output.config,
       expectedHash: snapshot.hash,
       replacementConfirmed: draft.replacementRequired,
-      disclosuresConfirmed: true,
     },
     registration,
   )

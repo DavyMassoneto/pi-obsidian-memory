@@ -27,7 +27,7 @@ export interface LayaAsk {
   statement: string | null
 }
 
-export type LayaScript = (ask: LayaAsk) => number
+export type LayaScript = (ask: LayaAsk) => number | null
 
 export interface LayaQuestionBody {
   instructions: string
@@ -50,6 +50,7 @@ export interface LayaStateBody {
 export interface LayaRequestBody {
   questions: LayaQuestionsBody
   state: LayaStateBody
+  states?: LayaStateBody[]
 }
 
 export type RetrievalStepFunction = (input: RetrievalInput) => RetrievalAction
@@ -68,4 +69,3 @@ export interface RelevantPiOptions {
 export type Done = () => boolean
 
 export type TurnMessage = NonNullable<TurnOutcome["message"]>
-export type LazyConfirm = () => Promise<boolean>

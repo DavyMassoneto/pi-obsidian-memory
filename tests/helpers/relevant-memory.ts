@@ -50,7 +50,15 @@ export interface RelevantOptions {
 }
 
 export function layaModel(endpoint: string): MemoryConfig["decisionModel"] {
-  return { provider: "laya", endpoint, model: "multilingual", maxTokens: 8192, headMaxTokens: 192 }
+  return {
+    provider: "laya",
+    endpoint,
+    model: "multilingual",
+    maxTokens: 8192,
+    headMaxTokens: 192,
+    gateThreshold: 0.2,
+    relevanceThreshold: 0.5,
+  }
 }
 
 export async function relevantFixture(options: RelevantOptions) {

@@ -74,6 +74,7 @@ function levelOf(diagnosed: DiagnosedMemory): "info" | "warning" {
   if (diagnosed.models.some((report) => report.check.status !== "ok")) return "warning"
   if (diagnosed.embeddings.status !== "ready") return "warning"
   if ("problem" in diagnosed.decision) return "warning"
+  if (diagnosed.cutoffs.gate.source === "missing" || diagnosed.cutoffs.relevance.source === "missing") return "warning"
   return "info"
 }
 

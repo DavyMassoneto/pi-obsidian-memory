@@ -79,6 +79,7 @@ export function diagnosedMemory(overrides: Partial<DiagnosedMemory>): DiagnosedM
     maxNotesPerFolder: 20,
     embeddings: { provider: "local", model: "Xenova/multilingual-e5-small", status: "ready" },
     decision: { provider: "typesafe", model: "jev-latest", status: "ready", detail: "model and API key found" },
+    cutoffs: { gate: { value: 0.5, source: "typesafe" }, relevance: { value: 0.5, source: "typesafe" } },
     models: [
       { role: "capture", check: { model: { provider: "p", id: "m" }, status: "ok" } },
       { role: "memory agent", check: { model: { provider: "p", id: "m" }, status: "ok" } },

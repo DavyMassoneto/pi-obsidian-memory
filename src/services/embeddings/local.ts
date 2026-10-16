@@ -54,7 +54,7 @@ async function getLocalModel(state: LocalEmbeddingState, signal: AbortSignal): P
   if (state.options.loadModel) {
     loader = state.options.loadModel
   }
-  const options = { cachePath: state.options.cachePath, downloadConsent: state.options.downloadConsent, signal }
+  const options = { cachePath: state.options.cachePath, signal }
   if (state.options.onProgress) {
     state.model = loader({ ...options, onProgress: state.options.onProgress })
   } else {

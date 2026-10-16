@@ -46,7 +46,6 @@ export interface RelevanceDecision {
 export type DecisionFailureCode =
   | "unsafe-endpoint"
   | "invalid-settings"
-  | "consent-required"
   | "unavailable"
   | "http-error"
   | "invalid-response"
@@ -61,6 +60,7 @@ export interface DecisionFailure {
   code: DecisionFailureCode
   diagnostics: DecisionDiagnostics
   httpStatus?: number
+  detail?: string
 }
 
 export interface DecisionSuccess {
@@ -69,3 +69,10 @@ export interface DecisionSuccess {
 }
 
 export type DecisionResult = DecisionSuccess | DecisionFailure
+
+export type DecisionProvider = DecisionDiagnostics["provider"]
+
+export interface DecisionCutoffs {
+  gate: number
+  relevance: number
+}

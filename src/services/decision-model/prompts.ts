@@ -3,7 +3,7 @@ import type { DecisionPrompt } from "./types.ts"
 
 export function memoryPrompt(request: DecisionRequest): DecisionPrompt {
   return {
-    state: { message: request.message, project: request.project, folder: request.folder },
+    state: { project: request.project, folder: request.folder, message: request.message },
     questions: {
       needed: {
         type: "bool",
@@ -18,11 +18,11 @@ export function memoryPrompt(request: DecisionRequest): DecisionPrompt {
 export function candidatePrompt(request: CandidateDecisionRequest): DecisionPrompt {
   return {
     state: {
-      message: request.message,
       candidate: {
         statement: request.candidate.statement,
         body: request.candidate.body,
       },
+      message: request.message,
     },
     questions: {
       relevant: {

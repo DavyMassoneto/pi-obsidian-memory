@@ -30,8 +30,6 @@ export const REPLACE_LINE = "The file is not valid JSON and will be replaced."
 
 export const DISCLOSURE_TITLE = "Before setup: what leaves this machine"
 
-export const DISCLOSURE_CONFIRM_LINE = "Continue?"
-
 export const CHAT_MODELS_DISCLOSURE =
   "Capture and the memory agent send conversation and note content to the chat model you chose."
 

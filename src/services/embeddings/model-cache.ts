@@ -15,7 +15,6 @@ export async function provisionLocalModel(options: LocalModelOptions): Promise<M
     const request: ModelAssetRequest = {
       directory,
       asset,
-      downloadConsent: options.downloadConsent,
       signal: options.signal,
       transport: fetchPublicModelAsset,
     }

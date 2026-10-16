@@ -3,9 +3,9 @@ import { Value } from "typebox/value"
 import type { DecisionDiagnostics, DecisionResult } from "#src/domain"
 import { maxDecisionResponseBytes } from "./constants.ts"
 import { LayaResponseSchema } from "./schemas.ts"
-import type { LayaReadRequest, LayaResponse } from "./types.ts"
+import type { LayaReadRequest, LayaResponse, LayaResultCandidate, LayaValueRequest } from "./types.ts"
 
-async function readBoundedText(response: Response): Promise<string | null> {
+export async function readBoundedText(response: Response, limit: number): Promise<string | null> {
   if (!response.body) return null
   const reader = response.body.getReader()
   const chunks: Uint8Array[] = []
@@ -15,7 +15,7 @@ async function readBoundedText(response: Response): Promise<string | null> {
       const chunk = await reader.read()
       if (chunk.done) return Buffer.concat(chunks).toString("utf8")
       size += chunk.value.byteLength
-      if (size > maxDecisionResponseBytes) {
+      if (size > limit) {
         await reader.cancel()
         return null
       }
@@ -51,7 +51,7 @@ function explicitlyRouted(reason: string, requested: string, checkpoint: string)
   return reason === `explicit model='${requested}'` || reason === `explicit model='${checkpoint}'`
 }
 
-function interpretResponse(parsed: LayaResponse, request: LayaReadRequest): DecisionResult {
+function interpretResponse(parsed: LayaResponse, request: LayaValueRequest): DecisionResult {
   const { question } = request
   const usage = parsed.usage
   const routing = parsed.routing
@@ -67,9 +67,6 @@ function interpretResponse(parsed: LayaResponse, request: LayaReadRequest): Deci
   if (routing.model !== checkpoint || !explicitlyRouted(routing.reason, diagnostics.requestedModel, checkpoint)) {
     return { succeeded: false, code: "invalid-response", diagnostics }
   }
-  if (usage.truncated || usage.state_tokens_dropped > 0 || usage.truncated_questions.length > 0) {
-    return { succeeded: false, code: "truncated", diagnostics }
-  }
   if (usage.options && Object.keys(usage.options).length > 0) {
     return { succeeded: false, code: "collapsed-options", diagnostics }
   }
@@ -77,21 +74,22 @@ function interpretResponse(parsed: LayaResponse, request: LayaReadRequest): Deci
   if (!answer || Object.keys(parsed.answers).length !== 1) {
     return { succeeded: false, code: "invalid-response", diagnostics }
   }
-  if (answer.low_confidence || answer.abstention === "abstained" || answer.abstention === "unevaluated") {
-    return { succeeded: false, code: "invalid-response", diagnostics }
-  }
   return { succeeded: true, output: { probability: answer.noul, diagnostics } }
 }
 
+export function interpretLayaValue(value: LayaResultCandidate, request: LayaValueRequest): DecisionResult {
+  if (!Value.Check(LayaResponseSchema, value)) {
+    return { succeeded: false, code: "invalid-response", diagnostics: request.diagnostics }
+  }
+  return interpretResponse(value, request)
+}
+
 export async function readLayaResponse(request: LayaReadRequest): Promise<DecisionResult> {
-  const text = await readBoundedText(request.response)
-  const diagnostics = request.diagnostics
-  if (typeof text !== "string") return { succeeded: false, code: "invalid-response", diagnostics }
+  const text = await readBoundedText(request.response, maxDecisionResponseBytes)
+  if (typeof text !== "string") return { succeeded: false, code: "invalid-response", diagnostics: request.diagnostics }
   try {
-    const parsed = JSON.parse(text)
-    if (!Value.Check(LayaResponseSchema, parsed)) return { succeeded: false, code: "invalid-response", diagnostics }
-    return interpretResponse(parsed, request)
+    return interpretLayaValue(JSON.parse(text), request)
   } catch {
-    return { succeeded: false, code: "invalid-response", diagnostics }
+    return { succeeded: false, code: "invalid-response", diagnostics: request.diagnostics }
   }
 }

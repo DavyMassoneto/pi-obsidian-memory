@@ -30,7 +30,7 @@ export async function registrationUsecaseFixture() {
     signal: controller.signal,
   }
   const config = { global: { vault: join(root, "global") }, projects: [], ...productSettings() }
-  const request = { config, expectedHash: null, replacementConfirmed: false, disclosuresConfirmed: true }
+  const request = { config, expectedHash: null, replacementConfirmed: false }
   return { root, context, controller, config, request }
 }
 

@@ -44,7 +44,7 @@ export function registerExtension(
 ): void {
   disableClaudeCodeAutoMemory(env)
   const paths = { configPath: memoryConfigPath(agentDir), indexPath: memoryIndexPath(agentDir) }
-  const semantic = new SemanticRuntime(memoryModelCachePath(agentDir))
+  const semantic = new SemanticRuntime(memoryModelCachePath(agentDir), overrides?.localModel)
   const sessions = new MemorySessionKeeper(semantic)
   const block = new MemoryBlock(loadDontForget)
   registerTools(registrar, paths, sessions)

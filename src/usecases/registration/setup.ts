@@ -27,9 +27,6 @@ async function prepareGlobalRegistration(
   request: SetupCommitRequest,
   context: RegistrationContext,
 ): Promise<RegistrationResult> {
-  if (!request.disclosuresConfirmed) {
-    return registrationValidationFailure({ succeeded: false, problems: ["setup disclosures require confirmation"] })
-  }
   const vault = resolveRegistrationVault({ vault: request.config.global.vault, workingFolder: context.workingFolder })
   if (!vault.succeeded) return registrationValidationFailure(vault)
   const write: WriteConfigRequest = {

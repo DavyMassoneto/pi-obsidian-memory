@@ -51,3 +51,11 @@ export async function classifyJev(context: JevContext, call: ProviderCall): Prom
     },
   }
 }
+
+export async function classifyJevSettled(context: JevContext, call: ProviderCall): Promise<DecisionResult> {
+  try {
+    return await classifyJev(context, call)
+  } catch {
+    return { succeeded: false, code: "unavailable", diagnostics: call.diagnostics }
+  }
+}

@@ -95,15 +95,15 @@ test("a keeper with a semantic runtime gives every operation its source, and one
   expect(without.operationContext(without.start(context), "work", paths, undefined)).not.toHaveProperty("semantic")
 })
 
-test("starting a session attaches its UI to the semantic runtime", async () => {
+test("starting a session attaches its registry to the semantic runtime", async () => {
   const runtime = new SemanticRuntime("models")
-  const { context, prompts } = fakePiContext("work", { apiKeys: ["openai"], answers: { confirms: [true] } })
+  const { context, prompts } = fakePiContext("work", { apiKeys: ["openai"] })
 
   new MemorySessionKeeper(runtime).start(context)
   const port = await runtime.source({ provider: "openai", model: "text-embedding-3-small" })
 
   expect(port).toMatchObject({ available: true })
-  expect(prompts).toHaveLength(1)
+  expect(prompts).toEqual([])
 })
 
 test("a capture operation has no context before a session started", () => {

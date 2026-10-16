@@ -11,10 +11,7 @@ export function decisionPreflight(context: DecisionContext): DecisionFailureCode
   if (!Number.isSafeInteger(context.deadlineMs)) return "invalid-settings"
   if (context.deadlineMs <= Date.now()) return "deadline"
   if (!Value.Check(DecisionModelNameSchema, context.model)) return "invalid-settings"
-  if (context.provider === "typesafe") {
-    if (context.consent !== "messages-and-candidates") return "consent-required"
-    return null
-  }
+  if (context.provider === "typesafe") return null
   if (!isLoopbackEndpoint(context.endpoint)) return "unsafe-endpoint"
   if (!Number.isInteger(context.maxTokens) || context.maxTokens < 1 || context.maxTokens > 8192) {
     return "invalid-settings"

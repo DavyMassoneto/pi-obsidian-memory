@@ -2,6 +2,7 @@ import { expect, onTestFinished, test } from "vitest"
 
 import {
   decisionServer,
+  eventually,
   FINISH_WITH_READS,
   fakePiContext,
   getNote,
@@ -123,4 +124,30 @@ test("a Laya without routing is told once per session with how to run it", async
   const told = notifications.filter((item) => item.message.includes("LAYA_JEV_STRICT"))
   expect(told).toHaveLength(1)
   expect(told[0]?.message).toMatch(/laya-serve without LAYA_JEV_STRICT.*LAYA_HOST/)
+})
+
+test("a Laya with no cutoffs is told once per session, adds nothing and asks no model", async () => {
+  const fixture = await relevantPiFixture({
+    laya: null,
+    decisionModel: {
+      provider: "laya",
+      endpoint: "http://127.0.0.1:1/v1/systemone",
+      model: "multilingual",
+      maxTokens: 8192,
+      headMaxTokens: 192,
+    },
+    session: [],
+    turns: [],
+  })
+  const { context, notifications } = fakePiContext(fixture.workingFolder, { hasUI: true })
+  await fixture.pi.startSession(context, "startup")
+  await eventually(() => expect(fixture.complete).toHaveBeenCalledTimes(1))
+
+  const first = await fixture.pi.runTurn(context, "pnpm?")
+  await fixture.pi.runTurn(context, "pnpm??")
+
+  expect(first.message).toBeNull()
+  expect(fixture.complete).toHaveBeenCalledTimes(1)
+  const told = notifications.filter((item) => item.message.includes("docs/decision-thresholds.md"))
+  expect(told).toHaveLength(1)
 })

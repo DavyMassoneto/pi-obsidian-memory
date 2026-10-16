@@ -106,7 +106,7 @@ export function rankedIndexes(similarities: readonly number[]): number[] {
 const BATCH_SIZE = 20
 
 export async function embedBenchmark() {
-  const embedder = createLocalEmbedder({ cachePath: benchmarkCacheFolder(), downloadConsent: true })
+  const embedder = createLocalEmbedder({ cachePath: benchmarkCacheFolder() })
   const context = { signal: new AbortController().signal, timeoutMs: 600_000 }
   const embedAll = async (purpose: "query" | "document", texts: string[]) => {
     const vectors: (readonly number[])[] = []

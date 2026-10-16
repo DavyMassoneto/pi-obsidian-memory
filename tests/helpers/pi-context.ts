@@ -8,12 +8,11 @@ import type {
   DialogOptions,
   MemoryPiContext,
 } from "#src/pi"
-import type { LazyConfirm } from "./types.ts"
 
 export interface PromptScript {
   selects: (string | undefined)[]
-  inputs: (string | undefined)[]
-  confirms: (boolean | Promise<boolean> | LazyConfirm)[]
+  inputs: (string | undefined | Promise<string | undefined>)[]
+  confirms: (boolean | Promise<boolean>)[]
 }
 
 export interface AskedPrompt {
@@ -124,7 +123,6 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
         prompts.push({ kind: "confirm", title, message, options: [], dialog: null })
         const answer = confirms.shift()
         if (typeof answer === "boolean" || answer instanceof Promise) return answer
-        if (typeof answer === "function") return answer()
         throw new Error(`unexpected confirm: ${title}`)
       },
       async input(title, placeholder, dialog) {

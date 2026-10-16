@@ -10,7 +10,7 @@ const local = { provider: "local", model: "Xenova/multilingual-e5-small" } as co
 const openai = { provider: "openai", model: "text-embedding-3-small" } as const
 const google = { provider: "google", model: "gemini-embedding-001" } as const
 
-test("a local model that is not downloaded yet says how big it is and that it is asked for on first use", async () => {
+test("a local model that is not downloaded yet says how big it is and that it is downloaded on first use", async () => {
   const folder = await useTempFolder()
 
   const report = await checkEmbeddings(local, embeddingProbe(join(folder, "models"), []), new AbortController().signal)
@@ -20,7 +20,7 @@ test("a local model that is not downloaded yet says how big it is and that it is
     model: "Xenova/multilingual-e5-small",
     status: "model-not-downloaded",
   })
-  expect(report).toMatchObject({ problem: expect.stringMatching(/not downloaded.*\d+ MB.*asked/) })
+  expect(report).toMatchObject({ problem: expect.stringMatching(/not downloaded.*\d+ MB.*downloaded on/) })
 })
 
 test("a damaged local model file is reported as damaged", async () => {

@@ -55,12 +55,9 @@ test("repoint creates only the selected target and preserves existing assets and
   expect(JSON.parse(await readFile(context.configPath, "utf8"))).toEqual({ ...config, global: { vault } })
 })
 
-test("stale expected hashes and unconfirmed disclosures refuse before creating assets", async () => {
+test("stale expected hashes refuse before creating assets", async () => {
   const { root, context, request } = await registrationUsecaseFixture()
-  for (const refused of [
-    { ...request, expectedHash: "stale" },
-    { ...request, disclosuresConfirmed: false },
-  ]) {
+  for (const refused of [{ ...request, expectedHash: "stale" }]) {
     expect(await setupMemory(refused, context)).toMatchObject({
       succeeded: false,
       stage: "validation",
@@ -121,31 +118,25 @@ test("setup cannot upgrade its granted lease by replacing the stamp with a newer
   await expectRegistrationLeaseReleased(context)
 })
 
-test.each(["hash", "disclosures", "replacement"])(
-  "setup captures %s approval before admission yields",
-  async (field) => {
-    const { root, context, request } = await registrationUsecaseFixture()
-    const text = "{malformed"
-    const expectedHash = await writeRegistrationSnapshot(context, text)
-    const submitted = { ...request, expectedHash, replacementConfirmed: true }
-    if (field === "hash") submitted.expectedHash = "stale"
-    if (field === "disclosures") submitted.disclosuresConfirmed = false
-    if (field === "replacement") submitted.replacementConfirmed = false
-    const before = await registrationDiskTree(root)
-    const pending = setupMemory(submitted, context)
-    submitted.expectedHash = expectedHash
-    submitted.disclosuresConfirmed = true
-    submitted.replacementConfirmed = true
-    const result = await pending
-    expect(result).toMatchObject({ succeeded: false, stage: "validation", assets: { created: [] } })
-    if (field === "hash") expect(result).toMatchObject({ cause: { reason: "conflict" } })
-    if (field === "disclosures") expect(result).toMatchObject({ problems: ["setup disclosures require confirmation"] })
-    if (field === "replacement") expect(result).toMatchObject({ cause: { reason: "replacement-required" } })
-    expect(await registrationDiskTree(root)).toEqual(before)
-    expect(await readFile(context.configPath, "utf8")).toBe(text)
-    await expectRegistrationLeaseReleased(context)
-  },
-)
+test.each(["hash", "replacement"])("setup captures %s approval before admission yields", async (field) => {
+  const { root, context, request } = await registrationUsecaseFixture()
+  const text = "{malformed"
+  const expectedHash = await writeRegistrationSnapshot(context, text)
+  const submitted = { ...request, expectedHash, replacementConfirmed: true }
+  if (field === "hash") submitted.expectedHash = "stale"
+  if (field === "replacement") submitted.replacementConfirmed = false
+  const before = await registrationDiskTree(root)
+  const pending = setupMemory(submitted, context)
+  submitted.expectedHash = expectedHash
+  submitted.replacementConfirmed = true
+  const result = await pending
+  expect(result).toMatchObject({ succeeded: false, stage: "validation", assets: { created: [] } })
+  if (field === "hash") expect(result).toMatchObject({ cause: { reason: "conflict" } })
+  if (field === "replacement") expect(result).toMatchObject({ cause: { reason: "replacement-required" } })
+  expect(await registrationDiskTree(root)).toEqual(before)
+  expect(await readFile(context.configPath, "utf8")).toBe(text)
+  await expectRegistrationLeaseReleased(context)
+})
 
 test("relative selected global vault is resolved against supplied working folder only", async () => {
   const { context, config, request } = await registrationUsecaseFixture()

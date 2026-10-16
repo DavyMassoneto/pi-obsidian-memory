@@ -22,6 +22,7 @@ import {
   type SessionStartHandler,
   type ToolCallHandler,
 } from "#src/pi"
+import { offlineLocalAccess } from "./local-access.ts"
 import { fakePiContext } from "./pi-context.ts"
 import { customStartEvent, promptEventFor } from "./pi-prompt.ts"
 import type { TurnOutcome } from "./types.ts"
@@ -108,7 +109,7 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv, overr
       shutdownHandlers.push(handler)
     },
   }
-  registerExtension(registrar, agentDir, env, overrides)
+  registerExtension(registrar, agentDir, env, { localModel: offlineLocalAccess(), ...overrides })
 
   return {
     tools,

@@ -24,7 +24,6 @@ export interface RemoteEmbeddingContext extends EmbeddingOperationContext {
 
 export interface LocalRuntimeOptions {
   cachePath: string
-  downloadConsent: boolean
   onProgress?: DownloadProgressListener
 }
 
@@ -109,7 +108,6 @@ export type ModelAssetTransport = (request: ModelAssetFetchRequest) => Promise<R
 export interface ModelAssetRequest {
   directory: string
   asset: ModelAsset
-  downloadConsent: boolean
   signal: AbortSignal
   transport: ModelAssetTransport
   onProgress?: DownloadProgressListener

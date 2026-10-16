@@ -52,6 +52,8 @@ explicitly chosen available chat model's provider and id. They are not built-in 
 | `context.budgetChars` | Positive integer; relevant-memory character budget | 12000 |
 | `embeddings` | One exact alternative below | Local multilingual E5 |
 | `decisionModel` | One exact alternative below | Laya with the values shown above |
+| `decisionModel.gateThreshold` | Optional number from 0 to 1: the gate asks for memory when its probability is above it | Jev 0.5; Laya none |
+| `decisionModel.relevanceThreshold` | Optional number from 0 to 1: a note is kept when its probability is at least this | Jev 0.5; Laya none |
 
 The relevant-memory budget limits the notes loaded at session start and the notes added to each message; Don't forget
 notes are outside it. Capture runs
@@ -67,19 +69,46 @@ Embeddings allow only these closed provider/model pairs, with no other fields:
 
 Decision settings allow only:
 
-- Laya: exactly `provider`, `endpoint`, `model`, `maxTokens`, `headMaxTokens`. Provider is `laya`, model is
+- Laya: exactly `provider`, `endpoint`, `model`, `maxTokens`, `headMaxTokens`, and optionally `gateThreshold` and
+  `relevanceThreshold`. Provider is `laya`, model is
   `multilingual`. `maxTokens` is an integer from 1 to 8192. `headMaxTokens` is a positive integer strictly less than
   `maxTokens` (default 192). Endpoint validation reuses the decision resource's URL policy: HTTP or HTTPS, parsed
   hostname `127.0.0.1` or `[::1]`, pathname `/v1/systemone`, no credentials, query or fragment. `localhost` is not
   accepted. Port may be chosen explicitly. URL normalization follows the existing resource policy.
-- Jev: exactly `{"provider":"typesafe","model":"jev-latest"}`. No endpoint or token-limit fields.
+- Jev: `{"provider":"typesafe","model":"jev-latest"}` and optionally `gateThreshold` and `relevanceThreshold`. No
+  endpoint or token-limit fields.
 
 ### Running the decision model
 
-For each user message the decision model decides whether memory is needed. It also scores the notes the memory agent
-found. If it is unavailable, nothing is added for that message, the user is told once per session, and no other model
-takes its place. The per-message step ends within 30 s of decision time plus the retrieval duration (30 s); the first
-message of a session may also wait for the session-start load.
+Laya and Jev are classifiers: they answer typed questions with a yes/no probability. They never search and never
+generate text. For each user message the decision model is asked two kinds of question, and the memory agent (the chat
+model in `memoryAgent.model`) does the searching and reading in between:
+
+1. **Gate:** "does this message need stored memory?" If the probability is not above the gate cutoff, nothing is added
+   and the memory agent is not started.
+2. **Relevance:** after the memory agent has read some notes, the decision model is asked, for each candidate note,
+   "does this note help answer the message?" Notes at or above the relevance cutoff are added, best first, within
+   `context.budgetChars`. One question per note, sent in a single batch.
+
+A note that cannot be scored (a failed or invalid answer for that note) is dropped on its own, and the user is told
+once per session "could not score N of M notes"; the message fails as a whole only when every note fails. A truncated
+Laya answer is a valid score, taken on the start of the text. If the decision model is unavailable, nothing is added for
+that message, the user is told once per session, and no other model takes its place. The per-message step ends within
+30 s of decision time plus the retrieval duration (30 s); the first message of a session may also wait for the
+session-start load.
+
+Cutoffs: a value in `config.json` overrides the default for its provider.
+
+| | Gate | Relevance | Source |
+|---|---|---|---|
+| Jev | 0.5 | 0.5 | TypeSafe's cookbooks give 0.5 as a starting point |
+| Laya | none | none | the measurement does not support a default: the gate scored at chance and the relevance signal is weak (see [decision-thresholds.md](decision-thresholds.md)) |
+
+**With the default Laya config, per-message memory is off**, and each session says so, until you set both
+`decisionModel.gateThreshold` and `decisionModel.relevanceThreshold` in `config.json`: nothing is added, no model is
+asked, and the user is told once per session which cutoff is missing. No value is invented. With Jev it works from the
+TypeSafe starting values 0.5/0.5. `/memory-doctor` lists both cutoffs and where each comes from (config, TypeSafe
+starting value or missing).
 
 Laya (local; Apache-2.0, not gated, weights downloaded on first load):
 
@@ -91,7 +120,13 @@ Laya (local; Apache-2.0, not gated, weights downloaded on first load):
 4. The config's `model` must be `multilingual`. When checking an answer, the server's own alias for that model in the
    routing reason is also accepted.
 
-`/memory-doctor` makes one real call to the endpoint and reports whether Laya answered.
+What laya-serve receives: each question carries its text in the `instructions` field. Only the gate question is sent
+with the answer labels `{"true":"A","false":"B"}`; the relevance questions are sent without labels (plain `noul` separated
+better in the measurement). Relevance questions for one message go to the batch endpoint, `POST <endpoint>/batch`, up to 64
+states at a time. A server too old for these fields answers 422; the doctor shows the server's detail.
+
+`/memory-doctor` makes one real call to the endpoint, with the real gate question, and reports whether Laya answered
+and, if not, the cause.
 
 Jev (TypeSafe System One, by API):
 
@@ -120,8 +155,8 @@ Both commands work only with a UI: without one they ask nothing and write nothin
   keeps it) and attaches it by default.
 - An invalid config is repaired: every valid value is kept, and one list names each missing key and each value that
   could not be kept. A file that is not valid JSON is replaced only after the user confirms.
-- Before writing, the user confirms the disclosures that apply (below): chat models always; Jev when selected; remote
-  embeddings when selected. Declining changes nothing.
+- Before writing, it shows the warnings that apply (below): chat models always; Jev when selected; remote embeddings
+  when selected, as a plain warning with no question.
 - Re-run with another path points the config to that vault; the old vault is left as it was. Every note template is
   written to `_templates/` of the vault; templates already there are kept.
 
@@ -165,7 +200,7 @@ be read shows a warning naming the cause.
 - Setup proposals change only the global vault registration. Init proposals add a project or repoint the most
   specific matching project, retaining its original working-folder mapping. Both preserve all settings. Repointing
   does not copy, move or delete the old vault. Registration usecases create missing target assets without replacing
-  existing templates or dashboard edits. Setup requires disclosure confirmation, which `/memory-setup` collects.
+  existing templates or dashboard edits.
   Preparation creates nothing. Failed bootstrap or publication retains created assets and reports progress,
   not rollback. A session lease serializes local registration; external hash/path check-use windows remain. Cancellation
   stops before the next resource write, not one already started; successful config publication remains success.
@@ -173,19 +208,17 @@ be read shows a warning naming the cause.
   validation also checks physical aliases and keeps configuration/index infrastructure outside vaults.
 - A vault is named after its folder (`.../Global memory` is "Global memory").
 
-## Disclosure
+## Warnings
 
-`/memory-setup` shows one confirmation before writing, with a line for each that applies: capture and the memory agent
+`/memory-setup` shows one warning before writing, with a line for each that applies: capture and the memory agent
 send conversation and note content to the chosen chat model (always); TypeSafe receives user messages and candidate
 notes when Jev is selected; remote embeddings providers receive note content, **secrets included**, and queries.
-Declining cancels the change. A hand-edited remote configuration is explicit selection and is never replaced by a
-local provider. Before the first semantic use in a runtime, pi asks once to confirm sending note content and queries
-to the remote embeddings provider. The local model (~135 MB) is downloaded only after a confirmation, once per
-runtime, into `pi-obsidian-memory/models` beside `config.json`; consent is never a side effect of creating defaults.
-With no UI or a declined confirmation, search uses words only (with a status line), never another provider. API keys
-come from pi's model registry; `/memory-doctor` checks embeddings without network. With Jev, pi asks once per runtime
-to confirm sending user messages and candidate notes to TypeSafe; with no UI or a declined confirmation, per-message
-memory is off for the run, never replaced by another model. An unavailable Laya service is diagnosed by
+The warning is plain: nothing is asked, and setup continues. A hand-edited remote configuration is explicit selection and is never replaced by a
+local provider; it is used without any question at runtime. The local model (~135 MB) is downloaded when needed,
+without asking, into `pi-obsidian-memory/models` beside `config.json`. If semantic search is off or unavailable,
+search uses words only (with a status line), never another provider. API keys come from pi's model registry;
+`/memory-doctor` checks embeddings without network. Jev is used without any runtime question; if unavailable,
+per-message memory is off, never replaced by another model. An unavailable Laya service is diagnosed by
 `/memory-doctor`, never silently replaced or installed.
 
 ## Which project a folder belongs to

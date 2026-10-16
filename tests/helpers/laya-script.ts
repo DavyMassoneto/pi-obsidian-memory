@@ -2,16 +2,20 @@ import { createServer } from "node:http"
 
 import { onTestFinished } from "vitest"
 
-import { layaReply } from "./decision-model.ts"
+import { layaBatchReply, layaReply } from "./decision-model.ts"
 import type { LayaAsk, LayaRequestBody, LayaScript } from "./types.ts"
 
-function askedOf(text: string): LayaAsk {
-  const body: LayaRequestBody = JSON.parse(text)
+function askedOf(body: LayaRequestBody, state: LayaRequestBody["state"]): LayaAsk {
   let question: LayaAsk["question"] = "relevant"
   if ("needed" in body.questions) question = "needed"
   let statement: string | null = null
-  if (body.state.candidate) statement = body.state.candidate.statement
-  return { question, message: body.state.message, statement }
+  if (state.candidate) statement = state.candidate.statement
+  return { question, message: state.message, statement }
+}
+
+function replyOf(ask: LayaAsk, probability: number | null): string {
+  if (typeof probability !== "number") return JSON.stringify({ ...JSON.parse(layaReply(0)), answers: {} })
+  return layaReply(probability).replaceAll("needed", ask.question)
 }
 
 export function relevanceScript(needed: number, byStatement: Map<string, number>): LayaScript {
@@ -24,6 +28,13 @@ export function relevanceScript(needed: number, byStatement: Map<string, number>
   }
 }
 
+export function failingFor(script: LayaScript, statements: string[]): LayaScript {
+  return (ask) => {
+    if (typeof ask.statement === "string" && statements.includes(ask.statement)) return null
+    return script(ask)
+  }
+}
+
 export async function scriptedLaya(script: LayaScript) {
   const asked: LayaAsk[] = []
   const server = createServer((request, response) => {
@@ -33,9 +44,27 @@ export async function scriptedLaya(script: LayaScript) {
       text += chunk
     })
     request.on("end", () => {
-      const ask = askedOf(text)
+      const body: LayaRequestBody = JSON.parse(text)
+      if (request.url?.endsWith("/batch")) {
+        let states: LayaRequestBody["state"][] = []
+        if (body.states) states = body.states
+        const replies = states.map((state) => {
+          const ask = askedOf(body, state)
+          asked.push(ask)
+          return replyOf(ask, script(ask))
+        })
+        response.end(layaBatchReply(replies))
+        return
+      }
+      const ask = askedOf(body, body.state)
       asked.push(ask)
-      response.end(layaReply(script(ask)).replaceAll("needed", ask.question))
+      const probability = script(ask)
+      if (typeof probability !== "number") {
+        response.statusCode = 500
+        response.end("")
+        return
+      }
+      response.end(replyOf(ask, probability))
     })
   })
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))

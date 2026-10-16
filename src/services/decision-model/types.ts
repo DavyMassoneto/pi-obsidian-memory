@@ -4,12 +4,14 @@ import type {
   CandidateContent,
   CandidateDecisionRequest,
   DecisionDiagnostics,
+  DecisionFailureCode,
   DecisionRequest,
   DecisionResult,
 } from "#src/domain"
-import type { LayaResponseSchema } from "./schemas.ts"
+import type { LayaResponseSchema, LayaResultCandidateSchema } from "./schemas.ts"
 
 export type LayaResponse = Static<typeof LayaResponseSchema>
+export type LayaResultCandidate = Static<typeof LayaResultCandidateSchema>
 
 export type {
   CandidateContent,
@@ -42,7 +44,6 @@ export interface LayaContext extends DecisionLimits {
 export interface JevContext extends DecisionLimits {
   provider: "typesafe"
   model: string
-  consent: "messages-and-candidates" | "not-granted"
   classifier: JevClassifierPort
 }
 
@@ -158,8 +159,27 @@ export interface DecisionOperation {
   run(signal: AbortSignal): Promise<DecisionResult>
 }
 
-export interface LayaReadRequest {
-  response: Response
+export interface LayaValueRequest {
   question: "needed" | "relevant"
   diagnostics: DecisionDiagnostics
+}
+
+export interface LayaReadRequest extends LayaValueRequest {
+  response: Response
+}
+
+export interface DecisionBatchItem {
+  prompt: DecisionPrompt
+  diagnostics: DecisionDiagnostics
+}
+
+export interface LayaBatchCall {
+  items: DecisionBatchItem[]
+  signal: AbortSignal
+}
+
+export type DecisionInterruption<Outcome> = (code: DecisionFailureCode) => Outcome
+
+export interface DeadlineOperation<Outcome> {
+  run(signal: AbortSignal): Promise<Outcome>
 }

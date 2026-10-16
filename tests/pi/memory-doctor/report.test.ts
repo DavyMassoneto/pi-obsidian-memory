@@ -15,6 +15,7 @@ test("a clean vault says no problems were found, and the providers not in use ye
       "- memory agent p/m: ok",
       "- embeddings local/Xenova/multilingual-e5-small: ready",
       "- decision model typesafe/jev-latest: ready (model and API key found)",
+      "- decision cutoffs: gate 0.5 (TypeSafe starting value), relevance 0.5 (TypeSafe starting value)",
     ].join("\n"),
   )
 })

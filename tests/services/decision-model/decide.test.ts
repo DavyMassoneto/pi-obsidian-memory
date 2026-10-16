@@ -15,12 +15,11 @@ describe("decide entry points", () => {
 
   it("reports the requested model and empty provider facts when preflight refuses", async () => {
     const context = jevContext(jevReply(0.8))
-    context.consent = "not-granted"
-    context.model = "jev-preview"
+    context.model = "jev preview"
     expect(await decideMemory({ context, request: memoryDecisionRequest })).toEqual({
       succeeded: false,
-      code: "consent-required",
-      diagnostics: { provider: "typesafe", requestedModel: "jev-preview", reportedModel: null, usage: null },
+      code: "invalid-settings",
+      diagnostics: { provider: "typesafe", requestedModel: "jev preview", reportedModel: null, usage: null },
     })
   })
 
