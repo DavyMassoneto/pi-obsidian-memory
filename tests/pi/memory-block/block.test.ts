@@ -1,9 +1,10 @@
-import { mkdir, rename } from "node:fs/promises"
+import { mkdir, rename, rm } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
 import { MemoryBlock, MemorySessionKeeper } from "#src/pi"
+import { LoadedMemory } from "#src/usecases"
 import {
   fakePiContext,
   noteWithId,
@@ -84,14 +85,94 @@ test("a load that fails unexpectedly still gives a block that names the tools an
     { configPath: "c", indexPath: "i" },
     undefined,
   )
+  const told: string[] = []
   const block = new MemoryBlock(() => Promise.reject(new Error("disk exploded")))
 
-  block.begin(operation, true)
+  block.begin({
+    context: operation,
+    configured: true,
+    loaded: new LoadedMemory(),
+    relevant: async () => null,
+    notify: (messages) => told.push(...messages),
+  })
   const event = promptEvent("work")
-  await block.beforeAgentStart()(event)
+  await block.beforeAgentStart()(event, context)
 
   const text = event.systemPromptOptions.sections.obsidian_memory
   expect(text).toContain("memory_search")
   expect(text).toContain("memory_get")
   expect(text).toContain("Could not load Don't forget notes: disk exploded")
+  expect(told).toEqual(["Could not load Don't forget notes: disk exploded"])
+})
+
+test("a load that is refused still gives a block that names the tools and says why, and tells the user", async () => {
+  const keeper = new MemorySessionKeeper()
+  const { context } = fakePiContext("work", {})
+  const operation = keeper.operationContext(
+    keeper.start(context),
+    "work",
+    { configPath: "c", indexPath: "i" },
+    undefined,
+  )
+  const told: string[] = []
+  const block = new MemoryBlock(async () => ({
+    succeeded: false,
+    reason: "config-unavailable",
+    configPath: "c",
+    problems: ["no config"],
+  }))
+
+  block.begin({
+    context: operation,
+    configured: true,
+    loaded: new LoadedMemory(),
+    relevant: async () => null,
+    notify: (messages) => told.push(...messages),
+  })
+  const event = promptEvent("work")
+  await block.beforeAgentStart()(event, context)
+
+  const text = event.systemPromptOptions.sections.obsidian_memory
+  expect(text).toContain("memory_get")
+  expect(text).toContain("Could not load Don't forget notes: no config")
+  expect(told).toEqual(["Could not load Don't forget notes: no config"])
+})
+
+test("a vault that could not be read is told to the user too, while the other vault's notes are kept", async () => {
+  const { pi, workingFolder, vaults, projectVault } = await piMemoryFixture()
+  await putCatalogFile(vaults.global, "Keep.md", noteWithId(1, "Keep.", ["dontForget: true"]))
+  await rm(projectVault, { recursive: true })
+  const { context, notifications } = fakePiContext(workingFolder, { hasUI: true })
+
+  await pi.startSession(context, "startup")
+  const block = (await pi.runPrompt(workingFolder)).obsidian_memory
+
+  expect(block).toContain("Keep.")
+  expect(notifications.filter((item) => item.message.includes("project"))).toHaveLength(1)
+})
+
+test("a relevant-notes load that rejects is told to the user and does not take the Don't forget block down", async () => {
+  const keeper = new MemorySessionKeeper()
+  const { context } = fakePiContext("work", {})
+  const operation = keeper.operationContext(
+    keeper.start(context),
+    "work",
+    { configPath: "c", indexPath: "i" },
+    undefined,
+  )
+  const told: string[] = []
+  const block = new MemoryBlock(async () => ({ succeeded: true, output: { vaults: [] } }))
+
+  block.begin({
+    context: operation,
+    configured: true,
+    loaded: new LoadedMemory(),
+    relevant: () => Promise.reject(new Error("agent exploded")),
+    notify: (messages) => told.push(...messages),
+  })
+  const event = promptEvent("work")
+  await block.beforeAgentStart()(event, context)
+
+  expect(event.systemPromptOptions.sections.obsidian_memory).toContain("No note is marked Don't forget.")
+  expect(told).toEqual(["Could not load relevant notes: agent exploded"])
 })

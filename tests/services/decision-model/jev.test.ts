@@ -128,3 +128,40 @@ describe("Jev pi classifier adapter", () => {
     expect(context.classifier.classify).toHaveBeenCalledTimes(1)
   })
 })
+
+describe("Jev answering model id", () => {
+  it.each([
+    ["jev-latest", "jev-1.13.0"],
+    ["jev-latest", "jev-1.14.0"],
+    ["jev-latest", "jev-latest"],
+    ["jev-preview", "jev-1.14.0"],
+    ["jev-1.13.0", "jev-1.13.0"],
+  ])("accepts %s answered by %s and reports the versioned id", async (requested, reported) => {
+    const context = jevContext({ ...jevReply(0.7), model: reported })
+    context.model = requested
+    expect(await decideMemory({ context, request: memoryDecisionRequest })).toMatchObject({
+      succeeded: true,
+      output: { probability: 0.7, diagnostics: { requestedModel: requested, reportedModel: reported } },
+    })
+  })
+
+  it.each([
+    ["jev-latest", "other-1.13.0"],
+    ["jev-latest", "jevx-1.13.0"],
+    ["jev-latest", "jev-1.13.0-evil"],
+    ["jev-latest", "jev-"],
+    ["jev-latest", "jev-1."],
+    ["jev-latest", "jev-preview"],
+    ["jev-latest", "xjev-latest"],
+    ["jev-1.13.0", "jev-1.14.0"],
+    ["jev-1.13.0", "jev-latest"],
+  ])("refuses %s answered by %s", async (requested, reported) => {
+    const context = jevContext({ ...jevReply(0.7), model: reported })
+    context.model = requested
+    expect(await decideMemory({ context, request: memoryDecisionRequest })).toMatchObject({
+      succeeded: false,
+      code: "invalid-response",
+      diagnostics: { requestedModel: requested },
+    })
+  })
+})

@@ -24,6 +24,7 @@ import { MEMORY_SETUP_COMMAND, memorySetupCommand } from "#src/pi/memory-setup"
 import { memorySucceedTool } from "#src/pi/memory-succeed"
 import { memoryUpdateTool } from "#src/pi/memory-update"
 import { memoryConfigPath, memoryDataFolder, memoryIndexPath, memoryModelCachePath } from "#src/pi/paths"
+import { RelevantMemoryRuntime } from "#src/pi/relevant-memory"
 import { SemanticRuntime } from "#src/pi/semantic"
 import { sessionStartHandler } from "#src/pi/session-start"
 import { vaultGuardHandler } from "#src/pi/vault-guard"
@@ -48,11 +49,13 @@ export function registerExtension(
   const block = new MemoryBlock(loadDontForget)
   registerTools(registrar, paths, sessions)
   registerCommands(registrar, paths, sessions, memoryModelCachePath(agentDir))
-  registrar.onSessionStart(sessionStartHandler(paths, sessions, block))
-  registrar.onBeforeAgentStart(block.beforeAgentStart())
-  registrar.onToolCall(vaultGuardHandler(paths.configPath, memoryDataFolder(agentDir), homedir()))
   let completionOf: CompletionFactory = registryCompletion
   if (overrides?.completionOf) completionOf = overrides.completionOf
+  const relevant = new RelevantMemoryRuntime({ paths, sessions, completionOf })
+  registrar.onSessionStart(sessionStartHandler(paths, sessions, block, relevant))
+  registrar.onBeforeAgentStart(block.beforeAgentStart())
+  registrar.onBeforeAgentStart(relevant.beforeAgentStart())
+  registrar.onToolCall(vaultGuardHandler(paths.configPath, memoryDataFolder(agentDir), homedir()))
   const capture = new CaptureRuntime({
     paths,
     sessions,

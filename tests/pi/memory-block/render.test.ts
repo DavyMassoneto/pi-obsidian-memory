@@ -23,7 +23,18 @@ test("a note with problems carries them under Needs fixing", () => {
       vaults: [
         {
           vault: "global",
-          notes: [{ vault: "global", path: "Long.md", type: "rule", body: "Too long.", problems: ["body: too long"] }],
+          notes: [
+            {
+              vault: "global",
+              path: "Long.md",
+              type: "rule",
+              id: "01JABCDE7XKQ2M9V3RTN8WPZ01",
+              hash: "a".repeat(64),
+              statement: "Long",
+              body: "Too long.",
+              problems: ["body: too long"],
+            },
+          ],
           problems: [],
         },
       ],
@@ -33,10 +44,17 @@ test("a note with problems carries them under Needs fixing", () => {
   expect(block).toContain("### global · Long.md · rule\nToo long.\nNeeds fixing:\n- body: too long")
 })
 
-test.each(["not-configured", "invalid-config", "config-unavailable"] as const)(
-  "a %s refusal gives no block",
+test("a refusal because there is no config gives no block", () => {
+  expect(renderMemoryBlock({ succeeded: false, reason: "not-configured", problems: ["p"], configPath: "c" })).toBeNull()
+})
+
+test.each(["invalid-config", "config-unavailable"] as const)(
+  "a %s refusal gives a block that names the tools and the problem",
   (reason) => {
-    expect(renderMemoryBlock({ succeeded: false, reason, problems: ["p"], configPath: "c" })).toBeNull()
+    const block = renderMemoryBlock({ succeeded: false, reason, problems: ["p"], configPath: "c" })
+
+    expect(block).toContain("memory_search")
+    expect(block).toContain("Could not load Don't forget notes: p")
   },
 )
 

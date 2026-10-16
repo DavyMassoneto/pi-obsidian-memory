@@ -46,3 +46,7 @@
 - 2026-10 (M4 re-review): pi ctx getters (cwd, ui, hasUI, sessionManager...) throw after session replacement/reload
   (runner.assertActive); pi awaits session_shutdown handlers (no timeout) BEFORE invalidate, so work awaited there is
   safe. When using sed line addresses in mutations, get line numbers from `grep -n` on the file, not concatenated cat -n.
+- 2026-10 (M6 relevant-memory review): mention guard (tests/pi/extension.test.ts) only scans `import * as pi from "#src/pi"`
+  constants + listed renderers -> texts in usecases constants or pi folders missing from src/pi/index.ts escape it; prove by
+  mutating a tool name in the text. Deadline tests that jump the clock 61 s pass on the per-step 30 s cap of completeStep,
+  not on an overall deadline: mutate the overall deadline (x10 / +1e9) to check. Mutation script /tmp/revisor/mut.sh still works.

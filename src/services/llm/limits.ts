@@ -1,1 +1,1 @@
-export { MAX_CAPTURE_DURATION_MS, MAX_MODEL_ROUNDS } from "./constants.ts"
+export { MAX_CAPTURE_DURATION_MS, MAX_MODEL_ROUNDS, MAX_RETRIEVAL_DURATION_MS } from "./constants.ts"

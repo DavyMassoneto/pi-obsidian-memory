@@ -50,6 +50,7 @@ export type DecisionFailureCode =
   | "unavailable"
   | "http-error"
   | "invalid-response"
+  | "routing-missing"
   | "truncated"
   | "collapsed-options"
   | "aborted"

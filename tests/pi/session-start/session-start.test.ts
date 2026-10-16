@@ -3,7 +3,7 @@ import { mkdir, readdir, readFile } from "node:fs/promises"
 import { expect, test, vi } from "vitest"
 
 import { SETUP_CREATE_OPTION } from "#src/pi"
-import { fakePiContext, piRegistrationFixture, writeAgentConfig } from "#test-helpers"
+import { fakePiContext, piRegistrationFixture, relevantPiFixture, writeAgentConfig } from "#test-helpers"
 
 test("with no config the session offers /memory-setup", async () => {
   const { pi, workingFolder } = await piRegistrationFixture()
@@ -38,9 +38,8 @@ test("a config that cannot be read is shown as a warning with its problem", asyn
   expect(notifications).toEqual([{ message: expect.stringContaining(configPath), type: "warning" }])
 })
 
-test("a valid config starts silently", async () => {
-  const { pi, configPath, config, workingFolder } = await piRegistrationFixture()
-  await writeAgentConfig(configPath, JSON.stringify(config))
+test("a valid config whose memory loads starts silently", async () => {
+  const { pi, workingFolder } = await relevantPiFixture({ laya: null, session: [], turns: [] })
   const { context, notifications } = fakePiContext(workingFolder, {})
 
   await pi.startSession(context, "startup")

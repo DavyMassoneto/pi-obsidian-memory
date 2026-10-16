@@ -60,7 +60,7 @@ Secrets (keys, passwords, tokens) are memory: the vault is the user's own safe. 
 
 ## Reading
 
-The memory block at session start is only part of the memory. Search and read more when you need it.
+The memory block at session start, and the relevant notes added to a message, are only part of the memory. A note added again as replacing an earlier copy supersedes it; a note marked no longer valid must not be relied on. Search and read more when you need it.
 
 - `memory_search`: search by words and, when semantic search is on, by meaning, over one or both vaults. When it says semantic search is off, try other words too. Each result gives the vault, the path, the type, the Don't forget mark and whether the note needs fixing. Archived notes and notes with invalid frontmatter are not searched.
 - `memory_get`: takes a vault and a path.

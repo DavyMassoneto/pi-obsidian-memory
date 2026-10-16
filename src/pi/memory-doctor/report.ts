@@ -1,4 +1,11 @@
-import type { DiagnosedMemory, EmbeddingReport, ModelReport, VaultReport, VaultReportFailure } from "#src/usecases"
+import type {
+  DecisionReport,
+  DiagnosedMemory,
+  EmbeddingReport,
+  ModelReport,
+  VaultReport,
+  VaultReportFailure,
+} from "#src/usecases"
 import {
   BLANK_HEADING,
   COULD_NOT_CHECK,
@@ -8,10 +15,8 @@ import {
   DUPLICATES_HEADING,
   MODELS_HEADING,
   NO_PROBLEMS,
-  NOT_USED_YET,
   TEMPORARIES_HEADING,
   UNREADABLE_HEADING,
-  UNUSED_PROVIDERS,
 } from "./constants.ts"
 
 export function renderDoctorReport(diagnosed: DiagnosedMemory): string {
@@ -19,7 +24,7 @@ export function renderDoctorReport(diagnosed: DiagnosedMemory): string {
   const lines = [DOCTOR_TITLE, "", ...sections.flatMap((section) => [...section, ""])]
   if (diagnosed.projectMissing) lines.push(DOCTOR_NO_PROJECT_VAULT, "")
   lines.push(MODELS_HEADING, ...diagnosed.models.map(renderModel), renderEmbeddings(diagnosed.embeddings))
-  lines.push(...UNUSED_PROVIDERS.map((name) => `- ${name}: ${NOT_USED_YET}`))
+  lines.push(renderDecision(diagnosed.decision))
   return lines.join("\n")
 }
 
@@ -64,6 +69,12 @@ function renderEmbeddings(report: EmbeddingReport): string {
   const name = `embeddings ${report.provider}/${report.model}`
   if (report.status === "ready") return `- ${name}: ready`
   return `- ${name}: ${report.problem}`
+}
+
+function renderDecision(report: DecisionReport): string {
+  const name = `decision model ${report.provider}/${report.model}`
+  if ("problem" in report) return `- ${name}: ${report.problem}`
+  return `- ${name}: ready (${report.detail})`
 }
 
 function renderModel(report: ModelReport): string {

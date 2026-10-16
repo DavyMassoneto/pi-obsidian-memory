@@ -2,35 +2,39 @@ import { describe, expect, it } from "vitest"
 
 import { invalidatedBlock, type LoadedNote, loadedNoteBlock, replacementBlock } from "#src/domain"
 
-const alpha: LoadedNote = { path: "tools/Alpha.md", statement: "Alpha", body: "alpha body" }
+const alpha: LoadedNote = { vault: "global", path: "tools/Alpha.md", type: "rule", body: "alpha body" }
 
 describe("loadedNoteBlock", () => {
-  it("renders path, statement and body", () => {
-    expect(loadedNoteBlock(alpha)).toBe("Note: tools/Alpha.md\nStatement: Alpha\n\nalpha body")
+  it("renders vault, path and type in a heading, then the body, like the Don't forget block", () => {
+    expect(loadedNoteBlock(alpha)).toBe("### global · tools/Alpha.md · rule\nalpha body")
+  })
+
+  it("tells apart the same path in the two vaults", () => {
+    expect(loadedNoteBlock({ ...alpha, vault: "project" })).toBe("### project · tools/Alpha.md · rule\nalpha body")
   })
 })
 
 describe("replacementBlock", () => {
-  it("marks the current copy as replacing the earlier copy of the previous path", () => {
-    const current: LoadedNote = { path: "tools/Alpha.md", statement: "Alpha", body: "new body" }
+  it("marks the current copy as replacing the earlier copy of the previous vault and path", () => {
+    const current: LoadedNote = { ...alpha, body: "new body" }
     expect(replacementBlock(alpha, current)).toBe(
-      `This replaces the earlier copy of "tools/Alpha.md" loaded above; use this version and ignore the earlier one.\n\n${loadedNoteBlock(current)}`,
+      `This replaces the earlier copy of "global · tools/Alpha.md" loaded above; use this version and ignore the earlier one.\n\n${loadedNoteBlock(current)}`,
     )
   })
 
-  it("names the previous path when the note moved", () => {
-    const moved: LoadedNote = { path: "other/Alpha.md", statement: "Alpha", body: "alpha body" }
+  it("names the previous vault and path when the note moved", () => {
+    const moved: LoadedNote = { ...alpha, path: "other/Alpha.md" }
     const block = replacementBlock(alpha, moved)
-    expect(block).toContain('earlier copy of "tools/Alpha.md"')
-    expect(block).toContain("Note: other/Alpha.md")
+    expect(block).toContain('earlier copy of "global · tools/Alpha.md"')
+    expect(block).toContain("### global · other/Alpha.md · rule")
   })
 })
 
 describe("invalidatedBlock", () => {
-  it("tells the model the earlier copy is no longer valid and does not repeat the body", () => {
+  it("names the vault and path, says the earlier copy is no longer valid and does not repeat the body", () => {
     const block = invalidatedBlock(alpha)
     expect(block).toBe(
-      'The earlier copy of "tools/Alpha.md" loaded above is no longer valid: the note was archived or deleted. Do not rely on it.',
+      'The earlier copy of "global · tools/Alpha.md" loaded above is no longer valid: the note was archived or deleted. Do not rely on it.',
     )
     expect(block).not.toContain(alpha.body)
   })

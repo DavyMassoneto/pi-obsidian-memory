@@ -1,8 +1,27 @@
 import { Value } from "typebox/value"
 
 import type { DecisionResult, DecisionUsage } from "#src/domain"
+import { modelVersionPattern } from "./constants.ts"
 import { JevResultSchema } from "./schemas.ts"
 import type { JevContext, ProviderCall } from "./types.ts"
+
+function modelFamily(id: string): string {
+  return id.slice(0, id.lastIndexOf("-"))
+}
+
+function modelTail(id: string): string {
+  return id.slice(id.lastIndexOf("-") + 1)
+}
+
+function answeredByRequestedModel(requested: string, reported: string): boolean {
+  if (reported === requested) return true
+  if (!requested.includes("-") || !reported.includes("-")) return false
+  return (
+    modelFamily(requested) === modelFamily(reported) &&
+    !modelVersionPattern.test(modelTail(requested)) &&
+    modelVersionPattern.test(modelTail(reported))
+  )
+}
 
 export async function classifyJev(context: JevContext, call: ProviderCall): Promise<DecisionResult> {
   const diagnostics = call.diagnostics
@@ -15,7 +34,11 @@ export async function classifyJev(context: JevContext, call: ProviderCall): Prom
   if (result.stopReason === "aborted") return { succeeded: false, code: "aborted", diagnostics }
   if (result.stopReason === "error") return { succeeded: false, code: "unavailable", diagnostics }
   const answer = result.answers[call.question]
-  if (result.model !== context.model || answer?.type !== "bool" || typeof answer.probability !== "number") {
+  if (
+    !answeredByRequestedModel(context.model, result.model) ||
+    answer?.type !== "bool" ||
+    typeof answer.probability !== "number"
+  ) {
     return { succeeded: false, code: "invalid-response", diagnostics }
   }
   let usage: DecisionUsage | null = null

@@ -1,14 +1,6 @@
-import { mkdtemp, rm } from "node:fs/promises"
-import { tmpdir } from "node:os"
-import { join, resolve } from "node:path"
+import { join } from "node:path"
 
-import {
-  type BeforeAgentStartEvent,
-  DefaultResourceLoader,
-  type SessionStartEvent,
-  SettingsManager,
-  type ToolCallEvent,
-} from "@earendil-works/pi-coding-agent"
+import type { BeforeAgentStartEvent, SessionStartEvent, ToolCallEvent } from "@earendil-works/pi-coding-agent"
 
 import {
   type AgentEndHandler,
@@ -31,10 +23,8 @@ import {
   type ToolCallHandler,
 } from "#src/pi"
 import { fakePiContext } from "./pi-context.ts"
-import { promptEvent } from "./pi-prompt.ts"
-import { guardedReads } from "./pi-smoke.ts"
-
-const repoRoot = resolve(import.meta.dirname, "..", "..")
+import { promptEventFor } from "./pi-prompt.ts"
+import type { TurnOutcome } from "./types.ts"
 
 export function registerWithFakePi(env: NodeJS.ProcessEnv) {
   return registerFakePiAt(join("C:", "agent"), env)
@@ -58,6 +48,7 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv, overr
   const agentEndHandlers: AgentEndHandler[] = []
   const compactHandlers: BeforeCompactHandler[] = []
   const cursors: CursorData[] = []
+  const failures = { cursor: false }
 
   const registrar: ExtensionRegistrar = {
     registerAddTool(tool) {
@@ -104,7 +95,10 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv, overr
       events.push("session_before_compact")
       compactHandlers.push(handler)
     },
-    appendCursor: (data) => cursors.push(data),
+    appendCursor(data) {
+      if (failures.cursor) throw new Error("cursor refused")
+      cursors.push(data)
+    },
     onToolCall(handler) {
       events.push("tool_call")
       toolCallHandlers.push(handler)
@@ -135,9 +129,19 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv, overr
       for (const handler of startHandlers) await handler({ type: "session_start", reason }, context)
     },
     async runPrompt(cwd: string): Promise<BeforeAgentStartEvent["systemPromptOptions"]["sections"]> {
-      const event = promptEvent(cwd)
-      for (const handler of promptHandlers) await handler(event)
+      const event = promptEventFor(cwd, "hello")
+      const { context } = fakePiContext(cwd, { hasUI: false })
+      for (const handler of promptHandlers) await handler(event, context)
       return event.systemPromptOptions.sections
+    },
+    async runTurn(context: MemoryPiContext, prompt: string): Promise<TurnOutcome> {
+      const event = promptEventFor(context.cwd, prompt)
+      let message: TurnOutcome["message"] = null
+      for (const handler of promptHandlers) {
+        const result = await handler(event, context)
+        if (result?.message) message = result.message
+      }
+      return { sections: event.systemPromptOptions.sections, message }
     },
     async runToolCall(event: ToolCallEvent, context: MemoryPiContext) {
       for (const handler of toolCallHandlers) {
@@ -157,53 +161,6 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv, overr
         await handler({ type: "session_before_compact", reason: "manual" }, context)
     },
     cursors,
-  }
-}
-
-export async function loadIsolatedPi() {
-  const isolatedAgentDir = await mkdtemp(join(tmpdir(), "pi-smoke-"))
-  const previousAutoMemory = process.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY
-  const previousAgentDir = process.env.PI_CODING_AGENT_DIR
-  process.env.PI_CODING_AGENT_DIR = isolatedAgentDir
-  const loader = new DefaultResourceLoader({
-    cwd: isolatedAgentDir,
-    agentDir: isolatedAgentDir,
-    settingsManager: SettingsManager.inMemory({ packages: [repoRoot] }),
-    noPromptTemplates: true,
-    noThemes: true,
-    noContextFiles: true,
-  })
-  try {
-    await loader.reload()
-    const loaded = loader.getExtensions()
-    if (loaded.errors.length > 0) {
-      throw new Error(loaded.errors.map((error) => error.error).join("\n"))
-    }
-    const { context, notifications } = fakePiContext(isolatedAgentDir, {})
-    for (const extension of loaded.extensions) {
-      const handlers = extension.handlers.get("session_start")
-      if (!handlers) continue
-      for (const handler of handlers) await handler({ type: "session_start", reason: "startup" }, context)
-    }
-    const guarded = await guardedReads(loader, isolatedAgentDir, context)
-    return {
-      guarded,
-      skillNames: loader.getSkills().skills.map((skill) => skill.name),
-      toolNames: loaded.extensions.flatMap((extension) => [...extension.tools.keys()]),
-      commandNames: loaded.extensions.flatMap((extension) => [...extension.commands.keys()]),
-      startNotifications: notifications,
-    }
-  } finally {
-    restoreEnv("CLAUDE_CODE_DISABLE_AUTO_MEMORY", previousAutoMemory)
-    restoreEnv("PI_CODING_AGENT_DIR", previousAgentDir)
-    await rm(isolatedAgentDir, { recursive: true, force: true })
-  }
-}
-
-function restoreEnv(name: string, previous: string | undefined): void {
-  if (typeof previous !== "string") {
-    delete process.env[name]
-  } else {
-    process.env[name] = previous
+    failures,
   }
 }

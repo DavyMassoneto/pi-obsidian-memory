@@ -123,3 +123,31 @@ test("a capture operation runs in its own sibling session, which stops when the 
   keeper.start(context)
   expect(operation?.signal.aborted).toBe(true)
 })
+
+test("a retrieval operation has no context before a session started", () => {
+  expect(new MemorySessionKeeper().retrievalOperation("work", paths)).toBeNull()
+})
+
+test("a retrieval operation runs in its own sibling session, apart from capture's", () => {
+  const keeper = new MemorySessionKeeper()
+  const { context } = fakePiContext("work", {})
+  const main = keeper.start(context)
+
+  const retrieval = keeper.retrievalOperation("work", paths)
+  const capture = keeper.captureOperation("work", paths)
+
+  expect(retrieval?.session).not.toBe(main)
+  expect(retrieval?.session).not.toBe(capture?.session)
+  expect(retrieval?.stamp.branchId).toBe("retrieval")
+})
+
+test("the loaded notes are kept for the session and start empty with the next one", () => {
+  const keeper = new MemorySessionKeeper()
+  const { context } = fakePiContext("work", {})
+  keeper.start(context)
+  const first = keeper.loaded()
+
+  keeper.start(context)
+
+  expect(keeper.loaded()).not.toBe(first)
+})

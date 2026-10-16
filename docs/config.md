@@ -45,17 +45,19 @@ explicitly chosen available chat model's provider and id. They are not built-in 
 | `projects[].vault` | Absolute vault folder path | User selection |
 | `limits.maxBodyChars` | Positive integer | 1000 |
 | `limits.maxStatementChars` | Positive integer | 100 |
-| `limits.maxNotesPerFolder` | Positive integer; future doctor reporting threshold | 20 |
+| `limits.maxNotesPerFolder` | Positive integer; doctor reporting threshold | 20 |
 | `capture.model` | Exactly `{provider, id}`, both nonblank strings | Explicit selected chat model supplied at setup |
 | `capture.when` | `after-each-turn` (`agent_end`), `on-compaction` (`session_before_compact`), `at-session-end` (`session_shutdown`) | `after-each-turn` |
 | `memoryAgent.model` | Exactly `{provider, id}`, both nonblank strings | Explicit selected chat model supplied at setup |
-| `context.budgetChars` | Positive integer; future optional relevant-memory character budget | 12000 |
+| `context.budgetChars` | Positive integer; relevant-memory character budget | 12000 |
 | `embeddings` | One exact alternative below | Local multilingual E5 |
 | `decisionModel` | One exact alternative below | Laya with the values shown above |
 
-The optional relevant-memory budget does not limit Don't forget notes in the target context behavior. These settings
-are configuration choices, not proof that retrieval, doctor or any configured model currently runs; capture runs with `capture.model`. A chat
-reference is syntactically validated here; model availability is a separate future runtime check.
+The relevant-memory budget limits the notes loaded at session start and the notes added to each message; Don't forget
+notes are outside it. Capture runs
+with `capture.model`; the memory agent, with `memoryAgent.model`, searches and reads for each message and at session
+start. A chat reference is syntactically validated when the config is read; its availability is checked by
+`/memory-doctor` and at use.
 
 Embeddings allow only these closed provider/model pairs, with no other fields:
 
@@ -72,8 +74,36 @@ Decision settings allow only:
   accepted. Port may be chosen explicitly. URL normalization follows the existing resource policy.
 - Jev: exactly `{"provider":"typesafe","model":"jev-latest"}`. No endpoint or token-limit fields.
 
+### Running the decision model
+
+For each user message the decision model decides whether memory is needed. It also scores the notes the memory agent
+found. If it is unavailable, nothing is added for that message, the user is told once per session, and no other model
+takes its place. The per-message step ends within 30 s of decision time plus the retrieval duration (30 s); the first
+message of a session may also wait for the session-start load.
+
+Laya (local; Apache-2.0, not gated, weights downloaded on first load):
+
+1. `pip install "laya[serve]"` (Python 3.10 or later).
+2. Start it bound to the loopback address: `LAYA_HOST=127.0.0.1 LAYA_PORT=8000 laya-serve`. Without `LAYA_HOST` it
+   binds to `0.0.0.0` with no authentication. If loading hangs, add `USE_TF=0`.
+3. Do not set `LAYA_JEV_STRICT`: the server then omits the field naming the model that answered, and every answer is
+   rejected.
+4. The config's `model` must be `multilingual`. When checking an answer, the server's own alias for that model in the
+   routing reason is also accepted.
+
+`/memory-doctor` makes one real call to the endpoint and reports whether Laya answered.
+
+Jev (TypeSafe System One, by API):
+
+- The API key is `TYPESAFE_API_KEY` in the environment (or pi's credentials for the `typesafe` provider); it is never
+  in `config.json`. `/memory-doctor` checks pi's registry and the key, without a live call.
+- `jev-latest` is an alias; the API answers with the versioned id (for example `jev-1.13.0`), and that answer is
+  accepted for `jev-latest`.
+- Price: input $0.042 per million tokens, output free (docs.typesafe.ai/models, 2026). pi's catalog shows cost 0, which
+  is not the real price.
+
 There is no `schemaVersion`, secret/key field, arbitrary provider options bag or persistent consent setting. Credentials
-for future remote execution come from pi or the environment, never from this file. No credential lookup occurs when
+for remote execution come from pi or the environment, never from this file. No credential lookup occurs when
 reading, repairing, proposing or publishing configuration.
 
 ## Commands
@@ -153,8 +183,10 @@ local provider. Before the first semantic use in a runtime, pi asks once to conf
 to the remote embeddings provider. The local model (~135 MB) is downloaded only after a confirmation, once per
 runtime, into `pi-obsidian-memory/models` beside `config.json`; consent is never a side effect of creating defaults.
 With no UI or a declined confirmation, search uses words only (with a status line), never another provider. API keys
-come from pi's model registry; `/memory-doctor` checks embeddings without network. Jev's startup disclosure is
-planned with milestone 6. An unavailable Laya service must be diagnosed rather than silently replaced or installed.
+come from pi's model registry; `/memory-doctor` checks embeddings without network. With Jev, pi asks once per runtime
+to confirm sending user messages and candidate notes to TypeSafe; with no UI or a declined confirmation, per-message
+memory is off for the run, never replaced by another model. An unavailable Laya service is diagnosed by
+`/memory-doctor`, never silently replaced or installed.
 
 ## Which project a folder belongs to
 

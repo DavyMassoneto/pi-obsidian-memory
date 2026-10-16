@@ -26,7 +26,18 @@ test("a marked note comes back in full and an unmarked one does not", async () =
       vaults: [
         {
           vault: "global",
-          notes: [{ vault: "global", path: "tools/Use pnpm.md", type: "rule", body: "Always pnpm.", problems: [] }],
+          notes: [
+            {
+              vault: "global",
+              path: "tools/Use pnpm.md",
+              type: "rule",
+              id: "01JABCDE7XKQ2M9V3RTN8WPZ01",
+              hash: expect.stringMatching(/^[a-f0-9]{64}$/),
+              statement: "Use pnpm",
+              body: "Always pnpm.",
+              problems: [],
+            },
+          ],
           problems: [],
         },
         { vault: "project", notes: [], problems: [] },

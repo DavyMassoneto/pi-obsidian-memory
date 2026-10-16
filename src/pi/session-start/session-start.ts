@@ -1,6 +1,7 @@
 import type { MemoryPaths } from "#src/pi/context"
 import type { MemoryBlock } from "#src/pi/memory-block"
 import type { MemorySessionKeeper } from "#src/pi/memory-session"
+import type { RelevantMemoryRuntime } from "#src/pi/relevant-memory"
 import { checkMemoryConfig } from "#src/usecases"
 import { INVALID_CONFIG_NOTICE, NO_MEMORY_NOTICE, REPAIR_HINT, UNREADABLE_CONFIG_NOTICE } from "./constants.ts"
 import type { SessionStartHandler } from "./types.ts"
@@ -9,11 +10,20 @@ export function sessionStartHandler(
   paths: MemoryPaths,
   sessions: MemorySessionKeeper,
   block: MemoryBlock,
+  relevant: RelevantMemoryRuntime,
 ): SessionStartHandler {
   return async (event, ctx) => {
     const session = sessions.start(ctx)
+    relevant.restore(ctx)
     const result = await checkMemoryConfig({ configPath: paths.configPath, workingFolder: ctx.cwd })
-    block.begin(sessions.operationContext(session, ctx.cwd, paths, undefined), result.succeeded)
+    block.begin({
+      context: sessions.operationContext(session, ctx.cwd, paths, undefined),
+      configured: result.succeeded,
+      loaded: sessions.loaded(),
+      relevant: () => relevant.sessionText(ctx),
+      notify: (messages) => relevant.tell(ctx, messages),
+    })
+    if (result.succeeded) await relevant.start(ctx)
     if (!ctx.hasUI || event.reason === "reload") return
     if (result.succeeded) return
     const problems = result.problems.map((problem) => `- ${problem}`)

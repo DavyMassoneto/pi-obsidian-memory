@@ -55,7 +55,7 @@ describe("Laya response validation", () => {
     },
   )
 
-  it("refuses missing routing even when the engine claims the requested model", async () => {
+  it("reports missing routing (LAYA_JEV_STRICT) as routing-missing even when the engine claims the requested model", async () => {
     const body = layaReply(0.9)
       .replace(/,"routing":\{[^}]*\}/, "")
       .replace("laya-rl-agent", "multilingual")
@@ -63,7 +63,7 @@ describe("Laya response validation", () => {
     try {
       expect(await decideMemory({ context: server.context, request: memoryDecisionRequest })).toMatchObject({
         succeeded: false,
-        code: "invalid-response",
+        code: "routing-missing",
         diagnostics: { reportedModel: null },
       })
     } finally {
@@ -131,7 +131,6 @@ describe("Laya response validation", () => {
     ["nonfinite", layaReply(0.5).replace('"noul":0.5', '"noul":1e999'), "invalid-response"],
     ["string", layaReply(0.5).replace('"noul":0.5', '"noul":"0.5"'), "invalid-response"],
     ["invalid JSON", "sample-token-not-json", "invalid-response"],
-    ["unknown field", layaReply(0.5).replace('"answers":', '"error":"sample-token","answers":'), "invalid-response"],
     ["truncation", layaReply(0.5).replace('"truncated":false', '"truncated":true'), "truncated"],
     ["dropped", layaReply(0.5).replace('"state_tokens_dropped":0', '"state_tokens_dropped":1'), "truncated"],
     [

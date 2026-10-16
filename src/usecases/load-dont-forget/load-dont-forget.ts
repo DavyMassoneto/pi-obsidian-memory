@@ -88,17 +88,25 @@ async function loadSynchronizedVault(
       result.problems.push(...inspected.problems)
       continue
     }
-    const note = loadedNote(target, path, inspected.output.analysis)
+    const note = loadedNote(target, path, inspected.output.analysis, inspected.output.rawHash)
     if (note) result.notes.push(note)
   }
 }
 
-function loadedNote(target: ResolvedVault, path: string, analysis: VaultNoteAnalysis): LoadedDontForgetNote | null {
+function loadedNote(
+  target: ResolvedVault,
+  path: string,
+  analysis: VaultNoteAnalysis,
+  hash: string,
+): LoadedDontForgetNote | null {
   if (!isLoadedDontForget(analysis) || analysis.status !== "parsed" || !analysis.frontmatter) return null
   return {
     vault: target.scope,
     path,
     type: analysis.frontmatter.type,
+    id: analysis.frontmatter.id,
+    hash,
+    statement: analysis.parsed.statement,
     body: analysis.parsed.body,
     problems: [...analysis.frontmatterProblems, ...analysis.nameProblems, ...analysis.bodyProblems],
   }

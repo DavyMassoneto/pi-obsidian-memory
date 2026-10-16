@@ -1,11 +1,19 @@
 import type { SessionEntry } from "@earendil-works/pi-coding-agent"
 
-import type { ChatModelSource, DialogOptions, MemoryPiContext } from "#src/pi"
+import type {
+  ChatModelSource,
+  ClassifierModelRef,
+  ClassifierOutcome,
+  ClassifierPrompt,
+  DialogOptions,
+  MemoryPiContext,
+} from "#src/pi"
+import type { LazyConfirm } from "./types.ts"
 
 export interface PromptScript {
   selects: (string | undefined)[]
   inputs: (string | undefined)[]
-  confirms: (boolean | Promise<boolean>)[]
+  confirms: (boolean | Promise<boolean> | LazyConfirm)[]
 }
 
 export interface AskedPrompt {
@@ -15,6 +23,8 @@ export interface AskedPrompt {
   options: string[]
   dialog: DialogOptions | null
 }
+
+export type ClassifyFake = (prompt: ClassifierPrompt) => Promise<ClassifierOutcome>
 
 export interface RecordedNotification {
   message: string
@@ -30,6 +40,7 @@ export interface FakePiContextOptions {
   noCredentials: string[]
   apiKeys: string[]
   hangingInputs: boolean
+  classify: ClassifyFake | null
   branch: SessionEntry[]
   emptyApiKeys: string[]
   answers: Partial<PromptScript>
@@ -37,6 +48,18 @@ export interface FakePiContextOptions {
 
 export function noAnswers(): PromptScript {
   return { selects: [], inputs: [], confirms: [] }
+}
+
+const JEV_MODEL: ClassifierModelRef = {
+  type: "classifier",
+  id: "jev-latest",
+  name: "Jev",
+  api: "typesafe-system-one",
+  provider: "typesafe",
+  baseUrl: "https://api.typesafe.test/v1/systemone",
+  input: ["text"],
+  contextWindow: 8192,
+  cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
 }
 
 export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptions>) {
@@ -49,6 +72,7 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
     noCredentials: [],
     apiKeys: [],
     hangingInputs: false,
+    classify: null,
     branch: [],
     emptyApiKeys: [],
     answers: {},
@@ -75,6 +99,14 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
       async complete() {
         throw new Error("unexpected model completion")
       },
+      findOfType(_type, provider, modelId) {
+        if (options.classify && provider === "typesafe" && modelId === "jev-latest") return JEV_MODEL
+        return undefined
+      },
+      async classify(_model, prompt) {
+        if (!options.classify) throw new Error("unexpected classification")
+        return options.classify(prompt)
+      },
       async getApiKeyForProvider(provider) {
         if (options.apiKeys.includes(provider)) return `key-${provider}`
         if (options.emptyApiKeys.includes(provider)) return ""
@@ -92,6 +124,7 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
         prompts.push({ kind: "confirm", title, message, options: [], dialog: null })
         const answer = confirms.shift()
         if (typeof answer === "boolean" || answer instanceof Promise) return answer
+        if (typeof answer === "function") return answer()
         throw new Error(`unexpected confirm: ${title}`)
       },
       async input(title, placeholder, dialog) {
@@ -118,4 +151,10 @@ export function unanswered(dialog: DialogOptions | undefined): Promise<string | 
     dialog?.signal?.addEventListener("abort", () => resolve(undefined), { once: true })
     if (typeof dialog?.timeout === "number") setTimeout(() => resolve(undefined), dialog.timeout)
   })
+}
+
+export function jevClassifier(): ClassifyFake {
+  return async () => {
+    throw new Error("the doctor must not classify")
+  }
 }
