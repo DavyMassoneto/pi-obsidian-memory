@@ -8,8 +8,10 @@ Long-term memory for the [pi coding agent](https://pi.dev), stored in [Obsidian]
 > or unreadable. `memory_add`
 > saves explicit requests to remember in the configured global/project vaults and refreshes folder indexes; a saved
 > note remains success with a warning if filesystem maintenance fails. `memory_search` and `memory_get` search and
-> read the vaults, and session start loads every Don't forget note. Not yet: blocking the LLM's other routes to vault
-> files, update and lifecycle tools, automatic capture, doctor, dashboard and export.
+> read the vaults, and session start loads every Don't forget note. `memory_update`, `memory_archive` and `memory_succeed`
+> change notes only on an explicit request, after `memory_get` of the same note in the session, and refuse a note
+> changed on disk since; archiving moves to `archive/`, never deletes. Not yet: blocking the LLM's other routes to
+> vault files, automatic capture, doctor, dashboard and export.
 
 See [docs/VISION.md](docs/VISION.md) for what this project is and the decisions behind it.
 

@@ -5,7 +5,16 @@ import { loadIsolatedPi } from "#test-helpers"
 test("pi loads the package, registers its tools and commands, and offers /memory-setup when there is no config", async () => {
   const loaded = await loadIsolatedPi()
 
-  expect(loaded.toolNames).toEqual(expect.arrayContaining(["memory_add", "memory_search", "memory_get"]))
+  expect(loaded.toolNames).toEqual(
+    expect.arrayContaining([
+      "memory_add",
+      "memory_search",
+      "memory_get",
+      "memory_update",
+      "memory_archive",
+      "memory_succeed",
+    ]),
+  )
   expect(loaded.commandNames).toEqual(expect.arrayContaining(["memory-setup", "memory-init"]))
   expect(loaded.startNotifications).toEqual([{ message: expect.stringContaining("/memory-setup"), type: "info" }])
 })

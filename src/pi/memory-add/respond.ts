@@ -31,6 +31,9 @@ export function respondTo(result: AddMemoryResult): MemoryAddResponse {
     case "outside-vault":
     case "vault-missing":
     case "not-found":
+    case "cancelled":
+    case "stale-session":
+    case "admission-refused":
       return reply(result.problems.join("\n"), true)
   }
 }

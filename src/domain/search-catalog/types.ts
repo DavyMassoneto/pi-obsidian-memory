@@ -86,6 +86,11 @@ export interface VectorRefreshPlan {
   keep: VectorChunk[]
 }
 
+export interface ScoredPath {
+  path: string
+  similarity: number
+}
+
 export interface FusedPath {
   path: string
   score: number

@@ -1,5 +1,5 @@
 import { standardRrfK } from "./constants.ts"
-import type { FusedPath } from "./types.ts"
+import type { FusedPath, ScoredPath } from "./types.ts"
 
 export function fuseRankings(text: readonly string[], semantic: readonly string[], limit: number): FusedPath[] {
   if (!Number.isInteger(limit) || limit < 0) throw new RangeError("Fusion limit must be a non-negative integer")
@@ -20,4 +20,18 @@ function compareText(left: string, right: string): number {
   if (left < right) return -1
   if (left > right) return 1
   return 0
+}
+
+export function semanticRanking(
+  scored: readonly ScoredPath[],
+  minimumSimilarity: number | null,
+  limit: number,
+): string[] {
+  if (!Number.isInteger(limit) || limit < 0) throw new RangeError("Ranking limit must be a non-negative integer")
+
+  return scored
+    .filter((item) => typeof minimumSimilarity !== "number" || item.similarity >= minimumSimilarity)
+    .sort((left, right) => right.similarity - left.similarity || compareText(left.path, right.path))
+    .slice(0, limit)
+    .map((item) => item.path)
 }

@@ -64,6 +64,15 @@ export async function vaultWithNoteToArchive(today: string) {
   return { ...stored, request }
 }
 
+export async function questionWithLongBody() {
+  const vault = await useTempFolder()
+  const question = { ...aQuestion(), body: "A body longer than the lowered limit." }
+  const text = renderNote(question)
+  await putNoteFile(vault, "search", question.statement, text)
+  const hashWhenRead = createHash("sha256").update(text).digest("hex")
+  return { vault, question, hashWhenRead, text }
+}
+
 export async function vaultWithQuestion(today: string) {
   const vault = await useTempFolder()
   const question = aQuestion()

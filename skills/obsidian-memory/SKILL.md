@@ -73,8 +73,18 @@ The memory block at session start is only part of the memory. Search and read mo
 
 - Use `memory_add` only when the user explicitly asks you to remember something. Never save on your own initiative, and never nudge the user to save.
 - Choose the vault, the folder and the type as described above. Ask when unsure.
-- A name already taken (in any case) is refused with the existing note. If it is the same point, leave the existing note unchanged; otherwise choose a statement that says what is new.
+- A name already taken (in any case) is refused with the existing note. If it is the same point, read it with `memory_get` and, only if the user asked for a change, use `memory_update`; otherwise choose a statement that says what is new.
 - Do not save skills or instructions to a vault. Vaults hold only memory.
+
+## Changing and retiring
+
+Use these only when the user explicitly asks. Always read the note with `memory_get` in this session first, with the exact vault and path; a note not read, or changed on disk since it was read, is refused.
+
+- `memory_update`: changes the body, type or Don't forget mark of a note. It never renames: a different statement is a new note that replaces the old one.
+- `memory_archive`: retires a note that stopped being true and has no successor. It moves to `archive/`; nothing is ever deleted.
+- `memory_succeed`: replaces a note with a new one (new statement, folder, type and body). The old note moves to `archive/` and both are linked.
+- Notes under `archive/` cannot be changed.
+- After a partial result, do not call again: tell the user what was done and ask them to check the vault.
 
 ## Vault access
 

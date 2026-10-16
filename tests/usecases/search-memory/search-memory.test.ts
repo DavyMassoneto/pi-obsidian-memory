@@ -114,7 +114,7 @@ test("a note saved with addMemory is found by the next search", async () => {
       folder: "tools",
       draft: { statement: "Use pnpm, never npm", type: "lesson", body: "Always pnpm.", dontForget: true },
     },
-    { configPath: context.configPath, workingFolder: context.workingFolder },
+    context,
   )
   expect(added.succeeded).toBe(true)
 

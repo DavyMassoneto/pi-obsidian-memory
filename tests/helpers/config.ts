@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process"
 import { writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
@@ -32,4 +33,10 @@ export async function writeConfig(folder: string, config: MemoryConfig): Promise
 
 export function configTextWithLimits(limits: LimitsInput): string {
   return JSON.stringify({ ...aConfig(), limits: { maxNotesPerFolder: 20, ...limits } })
+}
+
+export function volumeGuidRoot(drive: string): string | null {
+  const output = spawnSync("cmd.exe", ["/c", "mountvol", drive, "/L"], { encoding: "utf8" }).stdout.trim()
+  if (/^\\\\\?\\Volume\{[^}]+\}\\$/i.test(output)) return output
+  return null
 }

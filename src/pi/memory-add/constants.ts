@@ -5,7 +5,7 @@ export const MEMORY_ADD_TOOL_LABEL = "Memory add"
 export const MEMORY_ADD_TOOL_DESCRIPTION = "Use only when the user explicitly asks to remember something."
 
 export const SAME_POINT_GUIDANCE =
-  "If it is the same point, leave the existing note unchanged; otherwise choose a statement that says what is new."
+  "If it is the same point, leave the existing note unchanged or, only if the user asked to change it, read it with memory_get and change it with memory_update; otherwise choose a statement that says what is new."
 
 export const NO_PROJECT_GUIDANCE =
   "Ask the user whether to run /memory-init in this folder to register the project or to save it with global scope."

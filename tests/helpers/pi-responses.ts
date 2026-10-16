@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 
-import { renderMemoryBlock } from "#src/pi"
+import type { ChangeFailure } from "#src/pi"
+import { renderMemoryBlock, reportFailure, reportSuccess } from "#src/pi"
 import type { DontForgetVault, GetMemoryResult, LoadedDontForgetNote, SearchMemoryResult } from "#src/usecases"
+import { textOf } from "./pi.ts"
 import { deliveredRead } from "./session.ts"
 
 const problems = ["a problem"]
@@ -73,4 +75,23 @@ export function blockTexts(): string[] {
 
 export function shippedSkillText(): string {
   return readFileSync(join(resolve(import.meta.dirname, "..", ".."), "skills", "obsidian-memory", "SKILL.md"), "utf8")
+}
+
+export function changeTexts(): string[] {
+  const failures: ChangeFailure[] = [
+    { succeeded: false, reason: "not-read", problems },
+    { succeeded: false, reason: "stale-vault", problems },
+    { succeeded: false, reason: "needs-fixing", problems },
+    { succeeded: false, reason: "archived", problems },
+    { succeeded: false, reason: "conflict", problems },
+    { succeeded: false, reason: "exists", problems, existingStatement: "Use pnpm" },
+    { succeeded: false, reason: "invalid", problems },
+    { succeeded: false, reason: "stale-session", problems },
+    { succeeded: false, reason: "not-configured", problems, configPath: "config.json" },
+    { succeeded: false, reason: "partial", problems, published: ["archive/a.md"], originalState: "present" },
+  ]
+  return [
+    ...failures.map((failure) => textOf(reportFailure(failure, "tools/Use pnpm.md"))),
+    textOf(reportSuccess("Updated in global: tools/Use pnpm.md", problems)),
+  ]
 }

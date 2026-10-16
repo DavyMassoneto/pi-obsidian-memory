@@ -2,6 +2,7 @@ import type { Static } from "typebox"
 
 import type { ConfigRefusal, CreateResult, NoProjectRefusal, StoredNote } from "#src/services"
 import type { Failed, Succeeded } from "#src/shared"
+import type { MemoryOperationRefusal } from "#src/usecases/operation-context"
 import type { AddMemoryRequestSchema } from "./schemas.ts"
 
 export type AddMemoryRequest = Static<typeof AddMemoryRequestSchema>
@@ -34,3 +35,4 @@ export type AddMemoryResult =
   | UnregisteredProjectRefusal
   | Extract<CreateResult, Failed>
   | ExistingMemoryRefusal
+  | MemoryOperationRefusal
