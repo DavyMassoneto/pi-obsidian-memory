@@ -23,7 +23,11 @@ describe("Laya System One adapter", () => {
       const [sent] = server.requests
       expect(sent).toBeDefined()
       if (!sent) throw new Error("No request")
-      expect(JSON.parse(sent)).toEqual({
+      const wire = JSON.parse(sent)
+      expect(Object.keys(wire)).toEqual(["model", "state", "questions", "max_len", "head_max_len"])
+      expect(Object.keys(wire.state)).toEqual(["project", "folder", "message"])
+      expect(Object.keys(wire.questions.needed)).toEqual(["type", "instructions", "criteria", "labels"])
+      expect(wire).toEqual({
         model: "multilingual",
         max_len: 8192,
         head_max_len: 192,
@@ -33,6 +37,7 @@ describe("Laya System One adapter", () => {
             type: "noul",
             instructions: expect.stringContaining("memory"),
             criteria: { true: "Memory would help", false: "Memory would not help" },
+            labels: { true: "A", false: "B" },
           },
         },
       })
@@ -55,6 +60,29 @@ describe("Laya System One adapter", () => {
       expect(JSON.stringify(result)).not.toContain("sample-token")
     } finally {
       await server.close()
+    }
+  })
+
+  it("surfaces the server detail of an HTTP 422, bounded, and nothing for other statuses or unparsable bodies", async () => {
+    const detail = "question 'needed': no 'instructions'; add the text the model should answer"
+    const cases = [
+      { status: 422, body: JSON.stringify({ detail }), expected: detail },
+      { status: 422, body: JSON.stringify({ detail: "x".repeat(900) }), expected: "x".repeat(500) },
+      { status: 422, body: JSON.stringify({ detail: [{ loc: ["body"], msg: "bad" }] }), expected: undefined },
+      { status: 422, body: "secret sample-token", expected: undefined },
+      { status: 500, body: JSON.stringify({ detail }), expected: undefined },
+    ]
+    for (const { status, body, expected } of cases) {
+      const server = await decisionServer({ body, status, delayMs: 0 })
+      try {
+        const result = await decideMemory({ context: server.context, request: memoryDecisionRequest })
+        expect(result).toMatchObject({ succeeded: false, code: "http-error", httpStatus: status })
+        expect(result).not.toHaveProperty("output")
+        if (expected) expect(result).toMatchObject({ detail: expected })
+        else expect(result).not.toHaveProperty("detail")
+      } finally {
+        await server.close()
+      }
     }
   })
 

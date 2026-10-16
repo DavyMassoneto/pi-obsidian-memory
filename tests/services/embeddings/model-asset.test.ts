@@ -8,21 +8,18 @@ import { provisionModelAsset } from "#src/services"
 import { embeddingOperation, embeddingServer, syntheticAssetTransport, syntheticModelAsset } from "#test-helpers"
 
 describe("provisionModelAsset", () => {
-  it("downloads only after consent, verifies bytes and leaves no temporary file", async () => {
+  it("downloads a missing asset, verifies bytes and leaves no temporary file", async () => {
     const directory = await mkdtemp(join(tmpdir(), "model-asset-"))
     const body = "synthetic model bytes"
     const server = await embeddingServer([body])
     const context = {
       directory,
       asset: syntheticModelAsset(body),
-      downloadConsent: false,
       signal: embeddingOperation().signal,
       transport: syntheticAssetTransport(server.endpoint),
     }
     try {
-      expect(await provisionModelAsset(context)).toEqual({ succeeded: false, status: "unavailable" })
-      expect(server.requests).toHaveLength(0)
-      const result = await provisionModelAsset({ ...context, downloadConsent: true })
+      const result = await provisionModelAsset(context)
       expect(result.succeeded).toBe(true)
       expect(await readFile(join(directory, "config.json"), "utf8")).toBe(body)
       expect(await readdir(directory)).toEqual(["config.json"])
@@ -43,7 +40,6 @@ describe("provisionModelAsset", () => {
       const result = await provisionModelAsset({
         directory,
         asset: syntheticModelAsset("correct bytes with same size"),
-        downloadConsent: true,
         signal: embeddingOperation().signal,
         transport: syntheticAssetTransport(server.endpoint),
       })
@@ -55,7 +51,7 @@ describe("provisionModelAsset", () => {
     }
   })
 
-  it("does not overwrite an invalid preexisting asset even with consent", async () => {
+  it("does not overwrite an invalid preexisting asset", async () => {
     const directory = await mkdtemp(join(tmpdir(), "model-asset-"))
     const server = await embeddingServer(["correct"])
     try {
@@ -63,7 +59,6 @@ describe("provisionModelAsset", () => {
       const result = await provisionModelAsset({
         directory,
         asset: syntheticModelAsset("correct"),
-        downloadConsent: true,
         signal: embeddingOperation().signal,
         transport: syntheticAssetTransport(server.endpoint),
       })
@@ -84,7 +79,6 @@ describe("provisionModelAsset", () => {
       const pending = provisionModelAsset({
         directory,
         asset: syntheticModelAsset("correct"),
-        downloadConsent: true,
         signal: controller.signal,
         transport: syntheticAssetTransport(server.endpoint),
       })
@@ -103,7 +97,6 @@ describe("provisionModelAsset", () => {
     const request = {
       directory,
       asset: syntheticModelAsset("correct"),
-      downloadConsent: true,
       signal: embeddingOperation().signal,
       transport: syntheticAssetTransport(server.endpoint),
     }

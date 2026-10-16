@@ -73,16 +73,16 @@ test.each([
 
 test("a new session_start stops a command still waiting for an answer before it writes", async () => {
   const { pi, configPath, globalVault, workingFolder, root } = await piRegistrationFixture()
-  const answer = Promise.withResolvers<boolean>()
+  const answer = Promise.withResolvers<string | undefined>()
   const { context, prompts } = fakePiContext(workingFolder, {
-    answers: { selects: [SETUP_CREATE_OPTION], inputs: [globalVault], confirms: [answer.promise] },
+    answers: { selects: [SETUP_CREATE_OPTION], inputs: [answer.promise], confirms: [] },
   })
   await pi.startSession(context, "startup")
 
   const running = pi.runCommand("memory-setup", context)
-  await vi.waitFor(() => expect(prompts.some((prompt) => prompt.kind === "confirm")).toBe(true))
+  await vi.waitFor(() => expect(prompts.some((prompt) => prompt.kind === "input")).toBe(true))
   await pi.startSession(fakePiContext(workingFolder, { hasUI: false }).context, "new")
-  answer.resolve(true)
+  answer.resolve(globalVault)
   await running
 
   await expect(readFile(configPath)).rejects.toMatchObject({ code: "ENOENT" })

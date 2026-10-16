@@ -3,21 +3,11 @@ import Type from "typebox"
 export const ProbabilitySchema = Type.Number({ minimum: 0, maximum: 1 })
 const TokenCountSchema = Type.Integer({ minimum: 0 })
 export const DecisionModelNameSchema = Type.String({ minLength: 1, maxLength: 200, pattern: "^[a-zA-Z0-9_./:-]+$" })
-const NoulAnswerSchema = Type.Object({
-  type: Type.Literal("noul"),
-  noul: ProbabilitySchema,
-  abstention: Type.Optional(
-    Type.Union([Type.Literal("passed"), Type.Literal("abstained"), Type.Literal("unevaluated")]),
-  ),
-  low_confidence: Type.Optional(Type.Boolean()),
-})
+const NoulAnswerSchema = Type.Object({ type: Type.Literal("noul"), noul: ProbabilitySchema })
 
 const LayaUsageSchema = Type.Object({
   input_tokens: TokenCountSchema,
   output_tokens: TokenCountSchema,
-  state_tokens_dropped: TokenCountSchema,
-  truncated: Type.Boolean(),
-  truncated_questions: Type.Array(Type.Union([Type.Literal("needed"), Type.Literal("relevant")])),
   options: Type.Optional(Type.Object({})),
 })
 
@@ -32,6 +22,10 @@ export const LayaResponseSchema = Type.Object({
   usage: LayaUsageSchema,
   routing: Type.Optional(Type.Object({ model: DecisionModelNameSchema, reason: Type.String() })),
 })
+
+export const LayaHttpDetailSchema = Type.Object({ detail: Type.String({ minLength: 1 }) })
+export const LayaResultCandidateSchema = Type.Object({})
+export const LayaBatchResponseSchema = Type.Object({ results: Type.Array(LayaResultCandidateSchema) })
 
 const JevAnswerSchema = Type.Object({ type: Type.String(), probability: Type.Optional(ProbabilitySchema) })
 

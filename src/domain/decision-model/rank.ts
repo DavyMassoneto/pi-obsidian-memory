@@ -6,9 +6,16 @@ function validateProbability(probability: number): void {
   }
 }
 
-export function shouldRetrieveMemory(probability: number): boolean {
+function validateCutoff(cutoff: number): void {
+  if (!Number.isFinite(cutoff) || cutoff < 0 || cutoff > 1) {
+    throw new RangeError("Decision cutoff must be finite and between 0 and 1")
+  }
+}
+
+export function shouldRetrieveMemory(probability: number, cutoff: number): boolean {
   validateProbability(probability)
-  return probability > 0.2
+  validateCutoff(cutoff)
+  return probability > cutoff
 }
 
 function compareScores(left: CandidateScore, right: CandidateScore): number {
@@ -22,7 +29,8 @@ function compareScores(left: CandidateScore, right: CandidateScore): number {
   return 0
 }
 
-export function rankCandidates(scores: readonly CandidateScore[]): CandidateScore[] {
+export function rankCandidates(scores: readonly CandidateScore[], cutoff: number): CandidateScore[] {
+  validateCutoff(cutoff)
   for (const score of scores) validateProbability(score.probability)
-  return scores.filter((score) => score.probability >= 0.5).sort(compareScores)
+  return scores.filter((score) => score.probability >= cutoff).sort(compareScores)
 }

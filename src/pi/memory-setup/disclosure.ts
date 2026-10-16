@@ -1,13 +1,8 @@
 import type { SetupDisclosure } from "#src/usecases"
-import {
-  CHAT_MODELS_DISCLOSURE,
-  DISCLOSURE_CONFIRM_LINE,
-  JEV_DISCLOSURE,
-  REMOTE_EMBEDDINGS_DISCLOSURE,
-} from "./constants.ts"
+import { CHAT_MODELS_DISCLOSURE, DISCLOSURE_TITLE, JEV_DISCLOSURE, REMOTE_EMBEDDINGS_DISCLOSURE } from "./constants.ts"
 
 export function disclosureText(disclosures: SetupDisclosure[]): string {
-  return [...disclosures.map(disclosureLine), DISCLOSURE_CONFIRM_LINE].join("\n")
+  return [DISCLOSURE_TITLE, ...disclosures.map(disclosureLine)].join("\n")
 }
 
 function disclosureLine(disclosure: SetupDisclosure): string {

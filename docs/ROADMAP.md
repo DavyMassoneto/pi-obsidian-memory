@@ -31,20 +31,19 @@ Every milestone:
   snapshots, repair drafts, setting-preserving setup/init proposals and guarded publication. Registration usecases
   prepare settings without writes and bootstrap only the selected global/project target before guarded config-last
   publication, retaining partial asset progress on failure. `/memory-setup` (interactive only; chat model from pi's
-  current model or a pick; create or attach; repair; confirmed disclosures; templates) and `/memory-init` (name, vault,
+  current model or a pick; create or attach; repair; warnings; templates) and `/memory-init` (name, vault,
   repoint) drive them, and both refuse overlapping vaults. Setup-only defaults require an explicitly supplied chat
   model; old incomplete files are invalid at runtime, never silently migrated.
-- Setup shows the disclosures for chat models, Jev and remote embeddings. For embeddings, the disclosure is also
-  confirmed once per runtime before a remote provider is used, including hand-edited settings. Jev has the same
-  startup disclosure, once per runtime (milestone 6).
+- Setup warns about chat models, Jev and remote embeddings. At runtime a remote embeddings provider (including a
+  hand-edited one) and Jev are used without any question.
 - Semantic search (milestone 5): the sync refreshes vectors only for changed content (moves and date-only changes
   cost nothing; a provider change re-embeds everything; partial progress is kept). `memory_search` fuses word and
   vector ranks (reciprocal rank fusion, k=60). The local E5 model has a minimum similarity of 0.80, measured on a
   40-note/40-query benchmark kept as the opt-in `npm run test:model` (recall at 0.80 at least 0.9; paraphrase top-5
   recall at least 0.9); remote providers have no minimum, since they were not measured. When
-  semantic search is off, search falls back to words with a status line. The local model (~135 MB) is downloaded only
-  after confirmation, once per runtime, into `pi-obsidian-memory/models` beside the config. No UI or a declined
-  confirmation means words only, never another provider. API keys come from pi's model registry.
+  semantic search is off, search falls back to words with a status line. The local model (~135 MB) is downloaded when
+  needed, without asking, into `pi-obsidian-memory/models` beside the config. With semantic search off, words only,
+  never another provider. API keys come from pi's model registry.
 - Automatic capture (milestone 4): a background review of user and assistant text since its last run (the cursor is a
   session custom entry, never sent to the LLM). `capture.when` picks the pi event: `after-each-turn` is `agent_end`
   (once per user prompt), `on-compaction` is `session_before_compact` (compaction is not held back), `at-session-end`
@@ -53,16 +52,20 @@ Every milestone:
   tools (receipts, conflicts); explicit `memory_add` saves are not duplicated. When unsure it asks through the UI, or
   skips without one. It adds nothing to the main prompt, and runs are serialized. Judgement quality is untested
   against a real model.
-- Relevant memory per message (milestone 6): on each user message the decision model (Laya locally, or Jev) decides
-  whether memory is needed. If so, the memory agent (`memoryAgent.model`) searches and reads (at most 8 rounds), the
-  notes are scored and ranked, and one hidden message is added after the user's message; nothing earlier is rewritten.
+- Relevant memory per message (milestone 6): on each user message the decision model (Laya locally, or Jev: classifiers
+  that answer yes/no probabilities, never search or generate) gates whether memory is needed. If so, the memory agent
+  (`memoryAgent.model`) searches and reads (at most 8 rounds), the decision model scores each candidate note (one batch;
+  a note that cannot be scored is dropped with a "could not score N of M" notice), notes at or above the relevance
+  cutoff are ranked, and one hidden message is added after the user's message; nothing earlier is rewritten.
   It says it is only part of the memory and names `memory_search` and `memory_get`. A loaded note (Don't forget
   included) that changed is added again, marked as replacing the earlier copy; a deleted or archived one is marked no
   longer valid. Session start loads relevant notes within `context.budgetChars` (12,000 by default) into the system
   section once, with Don't forget notes outside the budget. The whole step ends within the decision timeout plus the
   retrieval duration (30 s + 30 s). With Laya or Jev unavailable nothing is added and the user is told once per
-  session; no other model takes over. Jev's disclosure is confirmed once per runtime; with no UI or a declined
-  confirmation, per-message memory is off. Judgement quality is untested against a real model.
+  session; no other model takes over. Jev is used without any runtime question and works from TypeSafe's starting
+  cutoffs (0.5/0.5). **With the default Laya config per-message memory is off** and says so each session, until the user
+  sets `gateThreshold` and `relevanceThreshold` in `decisionModel`: Laya's gate measured at chance and the measurement
+  supports no default (docs/decision-thresholds.md). Judgement quality is untested against a real model.
 - `memory_search` (text; global, project or both; 10 results per vault; archived and invalid-frontmatter notes
   excluded) shows vault, path, type, Don't forget and needs fixing. `memory_get` (vault and path) returns a note in
   full with its problems, a folder's index (`""` is the root), and reads `archive/`. The catalog is synchronized
@@ -96,7 +99,8 @@ Every milestone:
   there through real-disk public operations, not exported to tests. Confirmed wiring without a test: re-exports
   (`vault/draft`, `vault/domain-rules`, `vault/folder-listing`, `vault/catalog/dont-forget`, `config/registration`,
   `config/target`, `config/vault-access`, `embeddings/configuration`, `llm/domain-rules`, `search-index/inspection`,
-  `search-index/dont-forget`, `search-index/ranking`), the constants re-export `llm/limits`, prepared SQL lists
+  `search-index/dont-forget`, `search-index/ranking`,
+  `decision-model/diagnostics`, `decision-model/failure-detail`), the constants re-export `llm/limits`, prepared SQL lists
   (`search-index/*statements`) and the one-line `vault/filesystem/hash`.
 - A test proves no LLM-facing text names a command or tool that is not registered (`tests/pi/extension.test.ts`).
 - `/memory-doctor` (UI only) reports per vault: invalid notes with problems, blank notes, duplicate ids, leftover
@@ -229,8 +233,7 @@ Every milestone:
     - VISION 3's "move or switch" is reworded to "point to another vault; the old one is left as it was" (the user's
       decision).
 - **Out of scope:** settings of later milestones (each adds its own); copying or moving notes between vaults; repeating
-  the remote-provider disclosure at startup for hand-edited settings (config.md, Disclosure); done for embeddings
-  in milestone 5 and for Jev in 6.
+  any runtime question about remote providers or Jev (config.md, Warnings); the user never asked for one.
 - **Depends on:** 0.
 - **Done when:**
   - in pi with no config, session start offers `/memory-setup` (smoke test, extending the registered-tool check);
@@ -405,17 +408,19 @@ Every milestone:
     `context.budgetChars` (12,000 by default). Don't forget notes do not count against it.
   - [x] On each message, the decision model (`decisionModel`: Laya locally by default, or Jev by API) decides whether
     memory is needed. The memory agent (`memoryAgent.model`, by default the pi model in use at setup) searches and
-    reads, and the decision model re-ranks what it found.
+    reads, and the decision model gates the message and scores each candidate note against the cutoffs
+    (`gateThreshold`/`relevanceThreshold`; defaults in config.md and docs/decision-thresholds.md).
   - [x] What is found is added at that point. Earlier messages are never rewritten. A loaded note that changed (Don't
     forget included) is added again, marked as replacing the earlier one.
   - [x] `/memory-setup` warns that Jev sends user messages and candidate notes to TypeSafe, and the warning is
-    confirmed once per runtime before Jev is used.
+    shown only there; Jev is used without a runtime question.
   - [x] Unavailable Laya or Jev adds nothing, tells the user once per session and never uses another model.
 - **Out of scope:** saving, updating or archiving (that is capture, 4).
 - **Depends on:** 5.
 - **Done when:**
-  - [x] a message that needs no memory adds nothing;
-  - [x] a related message adds only the re-ranked notes;
+  - [x] a message that needs no memory adds nothing (this holds when the cutoffs exist: Jev's starting values, or
+    values set in the config; with the default Laya config per-message memory is off and says so);
+  - [x] a related message adds only the notes scored above the relevance cutoff;
   - [x] earlier messages stay byte-identical;
   - [x] a loaded note edited in Obsidian comes back marked as replacing the earlier one;
   - [x] relevant memory at session start stays within the budget, and Don't forget notes do not count against it;

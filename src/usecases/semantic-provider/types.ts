@@ -6,7 +6,6 @@ export type RemoteProvider = "openai" | "google"
 
 export interface LocalSemanticOptions {
   cachePath: string
-  downloadConsent: boolean
 }
 
 export interface LocalSemantic {

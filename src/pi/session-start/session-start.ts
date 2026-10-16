@@ -14,6 +14,7 @@ export function sessionStartHandler(
 ): SessionStartHandler {
   return async (event, ctx) => {
     const session = sessions.start(ctx)
+    relevant.reset()
     relevant.restore(ctx)
     const result = await checkMemoryConfig({ configPath: paths.configPath, workingFolder: ctx.cwd })
     block.begin({
@@ -23,7 +24,6 @@ export function sessionStartHandler(
       relevant: () => relevant.sessionText(ctx),
       notify: (messages) => relevant.tell(ctx, messages),
     })
-    if (result.succeeded) await relevant.start(ctx)
     if (!ctx.hasUI || event.reason === "reload") return
     if (result.succeeded) return
     const problems = result.problems.map((problem) => `- ${problem}`)

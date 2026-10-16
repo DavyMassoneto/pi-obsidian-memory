@@ -80,11 +80,17 @@ export function observedEmbeddingFields(observations: ConfigFieldObservation[]):
   return fields
 }
 
+function retainThreshold(fields: DecisionFields, observation: ConfigFieldObservation): void {
+  if (observation.field === "/decisionModel/gateThreshold") fields.gateThreshold = observation.value
+  if (observation.field === "/decisionModel/relevanceThreshold") fields.relevanceThreshold = observation.value
+}
+
 export function observedDecisionFields(observations: ConfigFieldObservation[]): DecisionFields {
   const fields: DecisionFields = {}
   for (const observation of observations) {
     if (observation.field === "/decisionModel/provider") fields.provider = observation.value
     if (observation.field === "/decisionModel/model") fields.model = observation.value
+    retainThreshold(fields, observation)
   }
   if (fields.provider === "typesafe") return fields
   for (const observation of observations) {

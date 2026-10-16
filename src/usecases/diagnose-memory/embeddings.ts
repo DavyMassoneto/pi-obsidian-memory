@@ -34,6 +34,6 @@ async function checkLocal(
     provider,
     model,
     status: "model-not-downloaded",
-    problem: `The local model is not downloaded yet (about ${megabytes} MB); it is asked for on the first semantic search`,
+    problem: `The local model is not downloaded yet (about ${megabytes} MB); it is downloaded on the first semantic search`,
   }
 }

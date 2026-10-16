@@ -57,6 +57,18 @@ export interface RetrievedMemory {
   changes: LoadedChanges
 }
 
+export type CutoffSource = "config" | "typesafe" | "missing"
+
+export interface CutoffValue {
+  value: number | null
+  source: CutoffSource
+}
+
+export interface CutoffReport {
+  gate: CutoffValue
+  relevance: CutoffValue
+}
+
 export interface Refreshed {
   blocks: string[]
   changes: LoadedChanges

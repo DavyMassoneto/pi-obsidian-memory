@@ -11,3 +11,7 @@ export const decisionTimeoutMs = 30_000
 export const maxDecisionResponseBytes = 65_536
 
 export const modelVersionPattern = /^\d+(?:\.\d+)*$/
+
+export const layaNoulLabels = { true: "A", false: "B" } as const
+export const layaServeMaxBatchStates = 64
+export const maxLayaBatchResponseBytes = layaServeMaxBatchStates * maxDecisionResponseBytes

@@ -44,7 +44,7 @@ describe("Jev pi classifier adapter", () => {
     })
   })
 
-  it("sends candidate text unchanged only after consent, without stable identity", async () => {
+  it("sends candidate text unchanged, without stable identity", async () => {
     const context = jevContext(jevRelevantReply(1))
     expect(await scoreCandidate({ context, request: candidateDecisionRequest })).toMatchObject({ succeeded: true })
     expect(context.classifier.classify).toHaveBeenCalledWith(
@@ -61,13 +61,6 @@ describe("Jev pi classifier adapter", () => {
         },
       }),
     )
-    context.consent = "not-granted"
-    vi.mocked(context.classifier.classify).mockClear()
-    expect(await decideMemory({ context, request: memoryDecisionRequest })).toMatchObject({
-      succeeded: false,
-      code: "consent-required",
-    })
-    expect(context.classifier.classify).not.toHaveBeenCalled()
   })
 
   it.each([NaN, Infinity, -0.01, 1.01])("refuses invalid probability %s", async (probability) => {

@@ -5,6 +5,7 @@ import {
   memoryAdmissionRefusal,
   memoryOperationInterruption,
 } from "#src/usecases/operation-context"
+import { resolveCutoffs } from "#src/usecases/relevant-memory"
 import { resolveLeasedMemory } from "#src/usecases/resolve-memory/leased"
 import { checkDecision } from "./decision.ts"
 import { checkEmbeddings } from "./embeddings.ts"
@@ -37,10 +38,14 @@ export async function diagnoseMemory<TModel>(
     if (agentCheck) models.push({ role: "memory agent", check: agentCheck })
     const embeddings = await checkEmbeddings(memory.output.config.embeddings, request.embeddings, context.signal)
     const decision = await checkDecision(memory.output.config.decisionModel, request.decision, context.signal)
+    const cutoffs = resolveCutoffs(memory.output.config.decisionModel)
     const interrupted = memoryOperationInterruption(context)
     if (interrupted) return interrupted
     const { maxNotesPerFolder } = memory.output.config.limits
-    return { succeeded: true, output: { vaults, projectMissing, maxNotesPerFolder, models, embeddings, decision } }
+    return {
+      succeeded: true,
+      output: { vaults, projectMissing, maxNotesPerFolder, models, embeddings, decision, cutoffs },
+    }
   } finally {
     lease.release()
   }

@@ -101,16 +101,21 @@ describe("Laya response validation", () => {
     }
   })
 
-  it("accepts a native passed abstention gate without treating confidence as probability", async () => {
-    const body = layaReply(0.9).replace(
-      '"noul":0.9',
-      '"noul":0.9,"abstention":"passed","abstention_threshold":0.7,"low_confidence":false',
-    )
+  it.each([
+    ["truncated flag", layaReply(0.5).replace('"truncated":false', '"truncated":true')],
+    ["dropped state tokens", layaReply(0.5).replace('"state_tokens_dropped":0', '"state_tokens_dropped":1')],
+    ["cut question", layaReply(0.5).replace('"truncated_questions":[]', '"truncated_questions":["needed"]')],
+    ["a missing truncation report", layaReply(0.5).replace('"truncated":false,', "")],
+    [
+      "abstention fields we never request",
+      layaReply(0.5).replace('"noul":0.5', '"noul":0.5,"abstention":"abstained","low_confidence":true'),
+    ],
+  ])("scores a response with %s, because the score covers the start of the state", async (_name, body) => {
     const server = await decisionServer({ body, status: 200, delayMs: 0 })
     try {
       expect(await decideMemory({ context: server.context, request: memoryDecisionRequest })).toMatchObject({
         succeeded: true,
-        output: { probability: 0.9 },
+        output: { probability: 0.5 },
       })
     } finally {
       await server.close()
@@ -131,13 +136,6 @@ describe("Laya response validation", () => {
     ["nonfinite", layaReply(0.5).replace('"noul":0.5', '"noul":1e999'), "invalid-response"],
     ["string", layaReply(0.5).replace('"noul":0.5', '"noul":"0.5"'), "invalid-response"],
     ["invalid JSON", "sample-token-not-json", "invalid-response"],
-    ["truncation", layaReply(0.5).replace('"truncated":false', '"truncated":true'), "truncated"],
-    ["dropped", layaReply(0.5).replace('"state_tokens_dropped":0', '"state_tokens_dropped":1'), "truncated"],
-    [
-      "question cut",
-      layaReply(0.5).replace('"truncated_questions":[]', '"truncated_questions":["needed"]'),
-      "truncated",
-    ],
     [
       "collapsed",
       layaReply(0.5).replace(
@@ -147,10 +145,6 @@ describe("Laya response validation", () => {
       "collapsed-options",
     ],
     ["oversized response", " ".repeat(65_536) + layaReply(0.5), "invalid-response"],
-    ["missing truncation evidence", layaReply(0.5).replace('"truncated":false,', ""), "invalid-response"],
-    ["abstention", layaReply(0.5).replace('"noul":0.5', '"noul":0.5,"abstention":"abstained"'), "invalid-response"],
-    ["unevaluated", layaReply(0.5).replace('"noul":0.5', '"noul":0.5,"abstention":"unevaluated"'), "invalid-response"],
-    ["low confidence", layaReply(0.5).replace('"noul":0.5', '"noul":0.5,"low_confidence":true'), "invalid-response"],
   ])("refuses %s without leaking response text", async (_name, body, code) => {
     const server = await decisionServer({ body, status: 200, delayMs: 0 })
     try {

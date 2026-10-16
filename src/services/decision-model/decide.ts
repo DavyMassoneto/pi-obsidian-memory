@@ -1,20 +1,17 @@
-import type { DecisionDiagnostics, DecisionResult } from "#src/domain"
+import type { DecisionResult } from "#src/domain"
 import { withinDecisionDeadline } from "./deadline.ts"
+import { initialDiagnostics } from "./diagnostics.ts"
 import { classifyJev } from "./jev.ts"
 import { classifyLaya } from "./laya.ts"
 import { decisionPreflight, remainingDecisionMs } from "./preflight.ts"
 import { candidatePrompt, memoryPrompt } from "./prompts.ts"
 import type { CandidateDecisionCall, DecisionContext, DecisionPrompt, MemoryDecisionCall } from "./types.ts"
 
-export { rankCandidates, shouldRetrieveMemory } from "#src/domain"
+export type { DecisionCutoffs, DecisionProvider } from "#src/domain"
+export { defaultCutoffs, rankCandidates, shouldRetrieveMemory } from "#src/domain"
 
 async function decide(context: DecisionContext, prompt: DecisionPrompt): Promise<DecisionResult> {
-  const diagnostics: DecisionDiagnostics = {
-    provider: context.provider,
-    requestedModel: context.model,
-    reportedModel: null,
-    usage: null,
-  }
+  const diagnostics = initialDiagnostics(context)
   const refusal = decisionPreflight(context)
   if (refusal) return { succeeded: false, code: refusal, diagnostics }
   return withinDecisionDeadline(context, diagnostics, {

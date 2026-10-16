@@ -32,7 +32,6 @@ describe("Laya response tolerance", () => {
   it.each([
     ["an answer without noul", layaReply(0.9).replace('"noul":0.9,', "")],
     ["usage without input tokens", layaReply(0.9).replace('"input_tokens":14,', "")],
-    ["usage without truncated", layaReply(0.9).replace('"truncated":false,', "")],
     ["routing without model", layaReply(0.9).replace('"model":"multilingual",', "")],
     ["routing without reason", layaReply(0.9).replace(`"reason":"explicit model='multilingual'",`, "")],
     ["routing reason of the wrong type", layaReply(0.9).replace(`"explicit model='multilingual'"`, "7")],

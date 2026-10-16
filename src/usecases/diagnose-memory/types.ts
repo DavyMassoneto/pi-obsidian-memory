@@ -1,5 +1,6 @@
 import type { ChatModelCheck, ChatModelPort, MemoryScope, VaultDiagnosis } from "#src/services"
 import type { Succeeded } from "#src/shared"
+import type { CutoffReport } from "#src/usecases/relevant-memory"
 import type { MemoryResolutionRefusal } from "#src/usecases/resolve-memory"
 
 export interface DiagnoseMemoryRequest<TModel> {
@@ -38,6 +39,7 @@ export interface DiagnosedMemory {
   models: ModelReport[]
   embeddings: EmbeddingReport
   decision: DecisionReport
+  cutoffs: CutoffReport
 }
 
 export type DiagnoseMemoryResult = Succeeded<DiagnosedMemory> | MemoryResolutionRefusal

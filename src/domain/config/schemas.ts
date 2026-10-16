@@ -20,6 +20,7 @@ export const CaptureWhenSchema = Type.Union([
 ])
 export const LayaMaxTokensSchema = Type.Integer({ minimum: 1, maximum: 8192 })
 export const LayaHeadMaxTokensSchema = Type.Integer({ minimum: 1, maximum: 8191 })
+export const DecisionThresholdSchema = Type.Number({ minimum: 0, maximum: 1 })
 export const LayaConfigurationSchema = Type.Object(
   {
     provider: Type.Literal("laya"),
@@ -27,11 +28,18 @@ export const LayaConfigurationSchema = Type.Object(
     model: Type.Literal("multilingual"),
     maxTokens: LayaMaxTokensSchema,
     headMaxTokens: LayaHeadMaxTokensSchema,
+    gateThreshold: Type.Optional(DecisionThresholdSchema),
+    relevanceThreshold: Type.Optional(DecisionThresholdSchema),
   },
   { additionalProperties: false },
 )
 export const JevConfigurationSchema = Type.Object(
-  { provider: Type.Literal("typesafe"), model: Type.Literal("jev-latest") },
+  {
+    provider: Type.Literal("typesafe"),
+    model: Type.Literal("jev-latest"),
+    gateThreshold: Type.Optional(DecisionThresholdSchema),
+    relevanceThreshold: Type.Optional(DecisionThresholdSchema),
+  },
   { additionalProperties: false },
 )
 export const DecisionConfigurationSchema = Type.Union([LayaConfigurationSchema, JevConfigurationSchema])
@@ -46,6 +54,8 @@ export const DecisionSelectionSchema = Type.Object({
   endpoint: Type.Optional(LayaConfigurationSchema.properties.endpoint),
   maxTokens: Type.Optional(LayaMaxTokensSchema),
   headMaxTokens: Type.Optional(LayaHeadMaxTokensSchema),
+  gateThreshold: Type.Optional(DecisionThresholdSchema),
+  relevanceThreshold: Type.Optional(DecisionThresholdSchema),
 })
 
 export const ConfigFieldObservationSchema = Type.Union([
@@ -92,6 +102,16 @@ export const ConfigFieldObservationSchema = Type.Union([
     field: Type.Literal("/decisionModel/headMaxTokens"),
     index: Type.Integer(),
     value: LayaHeadMaxTokensSchema,
+  }),
+  Type.Object({
+    field: Type.Literal("/decisionModel/gateThreshold"),
+    index: Type.Integer(),
+    value: DecisionThresholdSchema,
+  }),
+  Type.Object({
+    field: Type.Literal("/decisionModel/relevanceThreshold"),
+    index: Type.Integer(),
+    value: DecisionThresholdSchema,
   }),
 ])
 

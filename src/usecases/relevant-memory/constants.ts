@@ -23,6 +23,13 @@ export const OUT_OF_TIME = "Finding memory ran out of time, so nothing more was 
 export const ROUTING_MISSING_HELP =
   "the Laya server did not say which model answered (it runs with LAYA_JEV_STRICT); run laya-serve without LAYA_JEV_STRICT and bound to 127.0.0.1 with LAYA_HOST"
 
+export const CUTOFFS_MISSING = "Per-message memory is off: the decision model has no cutoff for"
+
+export const CUTOFFS_HELP =
+  "set it under decisionModel in config.json (see docs/decision-thresholds.md); nothing was added"
+
+export const COULD_NOT_SCORE = "The decision model could not score"
+
 export const AGENT_FAILED = "The memory agent could not find memory:"
 
 export const AGENT_UNFINISHED = "The memory agent did not finish in time, so no memory was added."

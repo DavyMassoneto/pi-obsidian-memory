@@ -18,7 +18,6 @@ describe("downloadModelAsset", () => {
         {
           directory,
           asset: syntheticModelAsset("small"),
-          downloadConsent: true,
           signal: embeddingOperation().signal,
           transport: syntheticAssetTransport(server.endpoint),
         },

@@ -13,7 +13,7 @@ export async function provisionModelAsset(request: ModelAssetRequest): Promise<M
     if (status === "valid") {
       return { succeeded: true, output: path }
     }
-    if (status === "invalid" || !request.downloadConsent) {
+    if (status === "invalid") {
       return { succeeded: false, status: "unavailable" }
     }
     await mkdir(dirname(path), { recursive: true })

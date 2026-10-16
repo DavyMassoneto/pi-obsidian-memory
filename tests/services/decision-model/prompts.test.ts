@@ -19,11 +19,14 @@ describe("Decision prompt state", () => {
           diagnostics: { requestedModel: "custom-multilingual", reportedModel: "custom-multilingual" },
         },
       })
-      const sent = server.requests[0]
+      const [sent] = server.requests
+      if (!sent) throw new Error("No request")
       expect(sent).toContain("sample-token")
       expect(sent).not.toContain("stable-note")
       expect(sent).toContain('"model":"custom-multilingual"')
       expect(sent).toContain('"relevant"')
+      expect(Object.keys(JSON.parse(sent).state)).toEqual(["candidate", "message"])
+      expect(Object.keys(JSON.parse(sent).questions.relevant)).toEqual(["type", "instructions", "criteria"])
     } finally {
       await server.close()
     }

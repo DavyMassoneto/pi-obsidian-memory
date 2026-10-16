@@ -59,3 +59,7 @@
   onnxruntime-node bundles win32/x64 binaries (postinstall only fetches CUDA EP); protobufjs postinstall only warns.
   pi 1.3.0 before_agent_start is a union on `messageType` ("user" has prompt; "custom" has message). Lockfile diff:
   compare HEAD vs now `packages` maps with a node script + `npm ls <pkg>` to attribute transitive bumps.
+- 2026-10 (Laya classifier review): live laya-serve 0.4.8 at 127.0.0.1:8000 (GET /health); it silently ACCEPTS
+  unknown question keys (so "422 = too old for labels" is a guess), 422 detail is a plain string. Model-test console
+  output is hidden: rerun one file with `--silent=false` to see measurement numbers. Grep src for leftover consent
+  plumbing (`consent`, `consent-required`) after a "remove prompts" change.

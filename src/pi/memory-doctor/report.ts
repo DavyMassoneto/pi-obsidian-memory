@@ -1,4 +1,6 @@
 import type {
+  CutoffReport,
+  CutoffValue,
   DecisionReport,
   DiagnosedMemory,
   EmbeddingReport,
@@ -9,6 +11,8 @@ import type {
 import {
   BLANK_HEADING,
   COULD_NOT_CHECK,
+  CUTOFF_SOURCES,
+  CUTOFFS_HINT,
   DOCTOR_INVALID_HEADING,
   DOCTOR_NO_PROJECT_VAULT,
   DOCTOR_TITLE,
@@ -24,7 +28,7 @@ export function renderDoctorReport(diagnosed: DiagnosedMemory): string {
   const lines = [DOCTOR_TITLE, "", ...sections.flatMap((section) => [...section, ""])]
   if (diagnosed.projectMissing) lines.push(DOCTOR_NO_PROJECT_VAULT, "")
   lines.push(MODELS_HEADING, ...diagnosed.models.map(renderModel), renderEmbeddings(diagnosed.embeddings))
-  lines.push(renderDecision(diagnosed.decision))
+  lines.push(renderDecision(diagnosed.decision), renderCutoffs(diagnosed.cutoffs))
   return lines.join("\n")
 }
 
@@ -75,6 +79,18 @@ function renderDecision(report: DecisionReport): string {
   const name = `decision model ${report.provider}/${report.model}`
   if ("problem" in report) return `- ${name}: ${report.problem}`
   return `- ${name}: ready (${report.detail})`
+}
+
+function cutoffText(name: string, value: CutoffValue): string {
+  const source = CUTOFF_SOURCES.get(value.source)
+  if (typeof value.value !== "number") return `${name} ${source}`
+  return `${name} ${value.value} (${source})`
+}
+
+function renderCutoffs(cutoffs: CutoffReport): string {
+  const line = `- decision cutoffs: ${cutoffText("gate", cutoffs.gate)}, ${cutoffText("relevance", cutoffs.relevance)}`
+  if (cutoffs.gate.source === "missing" || cutoffs.relevance.source === "missing") return `${line}; ${CUTOFFS_HINT}`
+  return line
 }
 
 function renderModel(report: ModelReport): string {

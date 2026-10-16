@@ -11,7 +11,7 @@ describe("createLocalEmbedder loading", () => {
   it("retries a failed first load only on a later call and reuses the successful model", async () => {
     const cachePath = await mkdtemp(join(tmpdir(), "embedding-retry-"))
     const model = controlledLocalModelLoader()
-    const embedder = createLocalEmbedder({ cachePath, downloadConsent: false, loadModel: model.loader })
+    const embedder = createLocalEmbedder({ cachePath, loadModel: model.loader })
     const request: EmbeddingBatchRequest = { purpose: "query", inputs: [{ key: "q", text: "retry" }] }
     try {
       const failed = embedder.embed(embeddingOperation(), request)
@@ -40,7 +40,7 @@ describe("createLocalEmbedder loading", () => {
   it("does not replay a cancelled load rejection for a fresh signal", async () => {
     const cachePath = await mkdtemp(join(tmpdir(), "embedding-cancel-retry-"))
     const model = controlledLocalModelLoader()
-    const embedder = createLocalEmbedder({ cachePath, downloadConsent: false, loadModel: model.loader })
+    const embedder = createLocalEmbedder({ cachePath, loadModel: model.loader })
     const controller = new AbortController()
     const request: EmbeddingBatchRequest = { purpose: "query", inputs: [{ key: "q", text: "fresh" }] }
     try {
@@ -53,7 +53,7 @@ describe("createLocalEmbedder loading", () => {
 
       const fresh = embeddingOperation()
       const retried = embedder.embed(fresh, request)
-      model.firstLoad.resolve(loadLocalModel({ cachePath, downloadConsent: false, signal: controller.signal }))
+      model.firstLoad.resolve(loadLocalModel({ cachePath, signal: controller.signal }))
       expect(await retried).toMatchObject({
         succeeded: true,
         output: { items: [{ key: "q", vector: [1, ...Array<number>(383).fill(0)] }] },
@@ -73,7 +73,7 @@ describe("createLocalEmbedder loading", () => {
   it("disposes a cancelled late load before a queued fresh load starts", async () => {
     const cachePath = await mkdtemp(join(tmpdir(), "embedding-late-load-"))
     const model = controlledLocalModelLoader()
-    const embedder = createLocalEmbedder({ cachePath, downloadConsent: false, loadModel: model.loader })
+    const embedder = createLocalEmbedder({ cachePath, loadModel: model.loader })
     const controller = new AbortController()
     const request: EmbeddingBatchRequest = { purpose: "query", inputs: [{ key: "q", text: "fresh" }] }
     try {
@@ -110,7 +110,7 @@ describe("createLocalEmbedder loading", () => {
   it("waits for a late load during disposal without extracting or loading queued requests", async () => {
     const cachePath = await mkdtemp(join(tmpdir(), "embedding-dispose-load-"))
     const model = controlledLocalModelLoader()
-    const embedder = createLocalEmbedder({ cachePath, downloadConsent: false, loadModel: model.loader })
+    const embedder = createLocalEmbedder({ cachePath, loadModel: model.loader })
     const request: EmbeddingBatchRequest = { purpose: "query", inputs: [{ key: "q", text: "closed" }] }
     try {
       const pending = embedder.embed(embeddingOperation(), request)

@@ -22,7 +22,7 @@ test("a config missing a key gains its default after setup and every other value
   const proposal = await proposeMemorySetup({ draft: preparation.draft, vault: "", mode: "attach" }, context)
   if (!proposal.succeeded) throw new Error(proposal.problems.join("\n"))
   const result = await setupMemory(
-    { config: proposal.output.config, expectedHash, replacementConfirmed: false, disclosuresConfirmed: true },
+    { config: proposal.output.config, expectedHash, replacementConfirmed: false },
     context,
   )
 

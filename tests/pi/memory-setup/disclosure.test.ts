@@ -2,15 +2,16 @@ import { expect, test } from "vitest"
 
 import { disclosureText } from "#src/pi"
 
-test("the disclosure names each chosen item on its own line, then asks for the confirmation", () => {
+test("the disclosure is a title and one line for each chosen item, with no question", () => {
   const text = disclosureText(["chat-models", "jev", "remote-embeddings"])
   const lines = text.split("\n")
 
   expect(lines).toHaveLength(4)
-  expect(lines[0]).toContain("chat model")
-  expect(lines[1]).toContain("TypeSafe")
-  expect(lines[2]).toContain("embeddings")
-  expect(lines[3]).toBe(lines.at(-1))
+  expect(lines[0]).toContain("what leaves this machine")
+  expect(lines[1]).toContain("chat model")
+  expect(lines[2]).toContain("TypeSafe")
+  expect(lines[3]).toContain("embeddings")
+  expect(text).not.toContain("?")
 })
 
 test("only the chosen items are named", () => {
@@ -21,6 +22,6 @@ test("only the chosen items are named", () => {
   expect(text.split("\n")).toHaveLength(2)
 })
 
-test("with nothing to disclose only the confirmation line remains", () => {
+test("with nothing to disclose only the title remains", () => {
   expect(disclosureText([]).split("\n")).toHaveLength(1)
 })

@@ -17,7 +17,7 @@ import {
   slowCompletion,
 } from "#test-helpers"
 
-test("a scoring that fails adds no notes and gives one notice, without scoring the rest", async () => {
+test("when every note fails to score no notes are added and there is one notice", async () => {
   const fixture = await relevantFixture({ laya: null, decisionModel: { provider: "typesafe", model: "jev-latest" } })
   const pnpm = await putNote(fixture.vault, "Use pnpm", 1, "Always pnpm.")
   const yarn = await putNote(fixture.vault, "Use yarn", 2, "Yarn too.")
@@ -37,7 +37,7 @@ test("a scoring that fails adds no notes and gives one notice, without scoring t
     succeeded: true,
     output: { text: null, notices: [expect.stringContaining("unavailable")] },
   })
-  expect(classify).toHaveBeenCalledTimes(2)
+  expect(classify).toHaveBeenCalledTimes(3)
   expect(fixture.loaded.all()).toEqual([])
 })
 

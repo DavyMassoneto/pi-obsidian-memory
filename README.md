@@ -40,7 +40,7 @@ only after project trust is granted). You can also add the source yourself:
 ## Quick start
 
 1. `/memory-setup` chooses where the global vault lives (create a new one or attach an existing folder), picks the chat
-   model (pi's current model by default), shows the disclosures that apply and writes the config.
+   model (pi's current model by default), shows the warnings that apply and writes the config.
 2. In a project folder, `/memory-init` registers it with its own vault (created when missing). An unregistered folder
    gets the global vault only.
 
@@ -86,20 +86,23 @@ as it is on disk.
 
 - **Don't forget.** Mark a note with `dontForget: true` in its frontmatter. Every such note, in both vaults, is loaded
   in full at session start, with no limit.
-- **Relevant memory per message.** On each message, a fast decision model decides whether memory is needed. If so, the
-  memory agent searches and reads, the notes are ranked, and the relevant ones are added after your message. Earlier
+- **Relevant memory per message.** On each message, a fast decision model (a classifier that answers yes/no
+  probabilities; it never searches or generates) decides whether memory is needed. If so, the memory agent (a chat model)
+  searches and reads, the decision model scores each candidate note, and the relevant ones are added after your message. Earlier
   messages are never rewritten, so the prompt cache holds; a loaded note that changed is added again, marked as
   replacing the earlier copy. Session start also loads relevant notes within `context.budgetChars` (12,000 by
   default). The decision model is Laya, run locally, or Jev, by API; setup steps are in
-  [Running the decision model](docs/config.md#running-the-decision-model). If it is unavailable nothing is added and
-  you are told once per session; no other model takes over.
+  [Running the decision model](docs/config.md#running-the-decision-model). **With the default Laya config this is off**:
+  Laya's gate measured at chance, so it ships no cutoffs and each session tells you until you set `gateThreshold` and
+  `relevanceThreshold` (see [decision-thresholds](docs/decision-thresholds.md)). With Jev it works from TypeSafe's
+  starting values (0.5/0.5). If the decision model is unavailable nothing is added and you are told once per session;
+  no other model takes over.
 - **Automatic capture.** A background review of the conversation saves, updates, archives and succeeds notes, at the
   moment set by `capture.when`: `after-each-turn` (the default), `on-compaction` or `at-session-end`. When it is unsure
   of the vault, the folder, the type or whether something is memory, it asks you; without a UI it saves nothing. Its
   judgement quality is not yet proven against a real model.
 - **Semantic search.** `memory_search` fuses words and meaning. The default is a local multilingual model (about
-  135 MB), downloaded only after you confirm, once per runtime; OpenAI and Google are the alternatives. Declining, or
-  having no UI, means words only. The index lives outside the vaults and is rebuilt from the notes whenever needed.
+  135 MB), downloaded when needed, without asking; OpenAI and Google are the alternatives. The index lives outside the vaults and is rebuilt from the notes whenever needed.
 
 ### Vault guard
 
@@ -123,8 +126,8 @@ Archive (file name, folder, type, Don't forget, updated). Your edits to it are k
 - Capture and the memory agent send conversation and note content to the chat model you choose.
 - Choosing Jev sends your messages and candidate notes to TypeSafe; Laya runs on your machine.
 - Choosing a remote embeddings provider (OpenAI, Google) sends note content and queries to it.
-- `/memory-setup` discloses each of these before writing, and pi asks again once per runtime before a remote provider
-  is first used. Declining changes nothing, and no other provider takes its place.
+- `/memory-setup` warns about each of these before writing, as a plain warning with no question; nothing is asked at
+  runtime, and no other provider ever takes the place of the one you chose.
 - Secrets are saved as written: the vault is yours, with no masking or blocking.
 - Credentials come from pi or the environment; `config.json` never holds a key.
 - While the extension is active, pi sets `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` for its own process, so Claude Code

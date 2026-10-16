@@ -10,6 +10,7 @@ import type { MemorySucceedTool } from "#src/pi/memory-succeed"
 import type { MemoryUpdateTool } from "#src/pi/memory-update"
 import type { SessionStartHandler } from "#src/pi/session-start"
 import type { ToolCallHandler } from "#src/pi/vault-guard"
+import type { LocalModelAccess } from "#src/usecases"
 
 export interface ExtensionRegistrar {
   registerAddTool(tool: MemoryAddTool): void
@@ -30,4 +31,5 @@ export interface ExtensionRegistrar {
 
 export interface ExtensionOverrides {
   completionOf?: CompletionFactory
+  localModel?: LocalModelAccess
 }

@@ -10,7 +10,7 @@ import {
 import type { LocalModelStatus, LocalSemantic, LocalSemanticOptions } from "./types.ts"
 
 export function createLocalSemantic(options: LocalSemanticOptions): LocalSemantic {
-  const embedder = createLocalEmbedder(options)
+  const embedder = createLocalEmbedder({ cachePath: options.cachePath })
   return {
     port: { available: true, embed: (request, context) => embedder.embed(context, request) },
     dispose: () => embedder.dispose(),

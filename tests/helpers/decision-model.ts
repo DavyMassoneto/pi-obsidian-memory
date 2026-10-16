@@ -2,17 +2,21 @@ import { createServer } from "node:http"
 
 import { vi } from "vitest"
 
-import type { JevClassifierResult, JevContext, LayaContext } from "#src/services"
+import type { DecisionBatchItem, JevClassifierResult, JevContext, LayaContext } from "#src/services"
+
+export type SyntheticBodyFor = (request: string) => string
 
 export interface SyntheticDecisionResponse {
   body: string
   status: number
   delayMs: number
   location?: string
+  bodyFor?: SyntheticBodyFor
 }
 
 export async function decisionServer(reply: SyntheticDecisionResponse) {
   const requests: string[] = []
+  const urls: string[] = []
   const server = createServer((request, response) => {
     let body = ""
     request.setEncoding("utf8")
@@ -21,10 +25,12 @@ export async function decisionServer(reply: SyntheticDecisionResponse) {
     })
     request.on("end", () => {
       requests.push(body)
+      if (request.url) urls.push(request.url)
       const timer = setTimeout(() => {
         response.statusCode = reply.status
         if (reply.location) response.setHeader("location", reply.location)
-        response.end(reply.body)
+        if (reply.bodyFor) response.end(reply.bodyFor(body))
+        else response.end(reply.body)
       }, reply.delayMs)
       response.on("close", () => clearTimeout(timer))
     })
@@ -35,6 +41,7 @@ export async function decisionServer(reply: SyntheticDecisionResponse) {
   const endpoint = `http://127.0.0.1:${address.port}/v1/systemone`
   return {
     requests,
+    urls,
     context: layaContext(endpoint),
     async close() {
       server.closeAllConnections()
@@ -85,11 +92,40 @@ export function layaReply(probability: number, checkpoint?: string): string {
   })
 }
 
+export function layaBatchReply(replies: string[]): string {
+  return JSON.stringify({
+    results: replies.map((reply) => JSON.parse(reply)),
+    total_usage: { input_tokens: 0, output_tokens: 0 },
+  })
+}
+
+export function layaCandidateReply(probability: number): string {
+  return layaReply(probability).replaceAll("needed", "relevant")
+}
+
+export function candidateBatchItems(count: number): DecisionBatchItem[] {
+  return Array.from({ length: count }, (_, index) => ({
+    prompt: {
+      state: {
+        candidate: { statement: `Note ${index}`, body: "Body" },
+        message: candidateDecisionRequest.message,
+      },
+      questions: {
+        relevant: {
+          type: "bool",
+          instructions: "Would this candidate memory materially help answer the message?",
+          criteria: { true: "Candidate would help", false: "Candidate would not help" },
+        },
+      },
+    },
+    diagnostics: { provider: "laya", requestedModel: "multilingual", reportedModel: null, usage: null },
+  }))
+}
+
 export function jevContext(result: JevClassifierResult): JevContext {
   return {
     provider: "typesafe",
     model: "jev-latest",
-    consent: "messages-and-candidates",
     deadlineMs: Date.now() + 5000,
     signal: new AbortController().signal,
     classifier: { classify: vi.fn().mockResolvedValue(result) },

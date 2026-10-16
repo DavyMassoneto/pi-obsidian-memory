@@ -24,7 +24,6 @@ export function captureSetupCommit(request: SetupCommitRequest): SetupCommitCapt
         config: structuredClone(request.config),
         expectedHash: request.expectedHash,
         replacementConfirmed: request.replacementConfirmed,
-        disclosuresConfirmed: request.disclosuresConfirmed,
       },
     }
   } catch (error) {

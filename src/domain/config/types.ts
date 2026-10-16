@@ -96,6 +96,8 @@ export interface DecisionFields {
   endpoint?: string
   maxTokens?: number
   headMaxTokens?: number
+  gateThreshold?: number
+  relevanceThreshold?: number
 }
 
 export interface ConfigFields extends ConfigRegistrations {

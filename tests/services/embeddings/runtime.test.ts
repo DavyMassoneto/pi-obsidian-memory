@@ -1,5 +1,5 @@
 import { channel } from "node:diagnostics_channel"
-import { mkdtemp, readdir, rm } from "node:fs/promises"
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -27,15 +27,16 @@ describe("loadLocalModel", () => {
     }
   })
 
-  it("does not import or initialize inference before a complete verified cache exists", async () => {
+  it("does not import or initialize inference with a corrupt cache", async () => {
     const cachePath = await mkdtemp(join(tmpdir(), "runtime-cache-"))
+    const directory = join(cachePath, "Xenova", "multilingual-e5-small", "761b726dd34fb83930e26aab4e9ac3899aa1fa78")
     try {
-      await expect(
-        loadLocalModel({ cachePath, downloadConsent: false, signal: embeddingOperation().signal }),
-      ).rejects.toMatchObject({
+      await mkdir(directory, { recursive: true })
+      await writeFile(join(directory, "config.json"), "corrupt")
+      await expect(loadLocalModel({ cachePath, signal: embeddingOperation().signal })).rejects.toMatchObject({
         failure: { succeeded: false, status: "unavailable" },
       })
-      expect(await readdir(cachePath)).toEqual([])
+      expect(await readdir(directory)).toEqual(["config.json"])
     } finally {
       await rm(cachePath, { recursive: true, force: true })
     }
