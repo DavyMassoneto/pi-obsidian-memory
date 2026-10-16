@@ -15,3 +15,9 @@ test("pi lists the obsidian-memory skill shipped with the package", async () => 
 
   expect(loaded.skillNames).toContain("obsidian-memory")
 })
+
+test("pi runs the vault guard on tool calls: a vault file is blocked and another file is not", async () => {
+  const loaded = await loadIsolatedPi()
+
+  expect(loaded.guarded).toEqual({ inside: true, outside: false })
+})

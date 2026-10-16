@@ -256,6 +256,27 @@ Every milestone:
     a Claude Code session started by pi;
   - the same routes still read and write a file outside the vaults;
   - pi lists the skill, and no vault contains it.
+- **Stopped for the user's decision (2026-10-16).** The guard blocks pi's file tools (`read`, `write`, `edit`,
+  `grep`, `find`, `ls`), `bash`/`powershell` commands that write a vault path out (any case, separator, `~`, `$HOME`,
+  `%USERPROFILE%`, Git Bash drive forms, relative to the working folder), junctions, symlinks, device paths and
+  loopback shares into a vault (compared by file identity), and Claude Code sessions whose tools run through pi.
+  `grep`/`find` are refused from any folder above a vault. Writing to the memory data folder (config and index) is
+  refused, and so is any command naming it (registration changes go through `/memory-setup` and `/memory-init`).
+  Raw device paths (`\\.\C:`) are refused for the file tools. In commands, shares named by host name or IPv6, volume
+  GUID paths, 8.3 short names, and commands acting on a parent folder of a vault or of the data folder (for example
+  deleting `~/.pi/agent`) are not recognised. With no valid config no vault is known, so nothing is refused. Tools the guard does not know pass. Routes that cannot be closed from an extension, with evidence in
+  `.pi/research/vault-guard.md`:
+  - hardlinks to a vault file placed outside the vault, on every route: a path check cannot see them;
+  - shell commands that reach a vault indirectly (variables, globs, scripts, encoded paths): pi has no
+    sandbox, and a static check of the command string cannot be complete. Options: run the shell as a separate
+    Windows user denied on the vaults (custom `BashOperations`), run it in WSL2/Docker without the vaults, disable the
+    shell tools for the LLM, or accept the written-path layer;
+  - pi-claude-bridge's fail-soft path, where Claude Code keeps its own tools under `bypassPermissions`. Options:
+    `permissions.deny` in the user's Claude Code settings (unverified under bypass), make the bridge fail closed,
+    run Claude Code in WSL2, or not use the bridge;
+  - tools of other installed extensions (browser, desktop, file watchers): audit and add per-tool rules, deny unknown
+    tools by default, or uninstall them;
+  - subagent child sessions: whether this extension loads there is unverified.
 
 ### 3. Explicit updates and lifecycle
 

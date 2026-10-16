@@ -12,7 +12,7 @@ export interface CommandAccessRequest {
 
 export type VaultAccessRequest = PathAccessRequest | CommandAccessRequest
 
-export interface VaultForm {
-  text: string
-  characterBefore: RegExp
+export interface VaultForms {
+  anywhere: string[]
+  relative: string[]
 }

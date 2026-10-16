@@ -7,6 +7,7 @@ import {
   DefaultResourceLoader,
   type SessionStartEvent,
   SettingsManager,
+  type ToolCallEvent,
 } from "@earendil-works/pi-coding-agent"
 
 import {
@@ -21,9 +22,11 @@ import {
   registerExtension,
   type SessionShutdownHandler,
   type SessionStartHandler,
+  type ToolCallHandler,
 } from "#src/pi"
 import { fakePiContext } from "./pi-context.ts"
 import { promptEvent } from "./pi-prompt.ts"
+import { guardedReads } from "./pi-smoke.ts"
 
 const repoRoot = resolve(import.meta.dirname, "..", "..")
 
@@ -42,6 +45,7 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
   const commandHandlers = new Map<string, MemoryCommand["handler"]>()
   const startHandlers: SessionStartHandler[] = []
   const shutdownHandlers: SessionShutdownHandler[] = []
+  const toolCallHandlers: ToolCallHandler[] = []
 
   const registrar: ExtensionRegistrar = {
     registerAddTool(tool) {
@@ -67,6 +71,10 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
     onSessionStart(handler) {
       events.push("session_start")
       startHandlers.push(handler)
+    },
+    onToolCall(handler) {
+      events.push("tool_call")
+      toolCallHandlers.push(handler)
     },
     onSessionShutdown(handler) {
       events.push("session_shutdown")
@@ -94,6 +102,13 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
       const event = promptEvent(cwd)
       for (const handler of promptHandlers) await handler(event)
       return event.systemPromptOptions.sections
+    },
+    async runToolCall(event: ToolCallEvent, context: MemoryPiContext) {
+      for (const handler of toolCallHandlers) {
+        const result = await handler(event, context)
+        if (result) return result
+      }
+      return undefined
     },
     async shutdownSession() {
       for (const handler of shutdownHandlers) await handler()
@@ -126,7 +141,9 @@ export async function loadIsolatedPi() {
       if (!handlers) continue
       for (const handler of handlers) await handler({ type: "session_start", reason: "startup" }, context)
     }
+    const guarded = await guardedReads(loader, isolatedAgentDir, context)
     return {
+      guarded,
       skillNames: loader.getSkills().skills.map((skill) => skill.name),
       toolNames: loaded.extensions.flatMap((extension) => [...extension.tools.keys()]),
       commandNames: loaded.extensions.flatMap((extension) => [...extension.commands.keys()]),

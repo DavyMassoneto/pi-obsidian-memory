@@ -86,3 +86,11 @@ export interface ConfigPublicationRequest {
   temporaryPath: string
   warnings: string[]
 }
+
+export interface PathIdentity {
+  device: string
+  inode: string
+}
+
+export type FileIdentityResult = Succeeded<PathIdentity> | Failed
+export type PathIdentitiesResult = Succeeded<PathIdentity[]> | Failed

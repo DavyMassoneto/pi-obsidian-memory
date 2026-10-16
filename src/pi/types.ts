@@ -5,6 +5,7 @@ import type { MemoryGetTool } from "#src/pi/memory-get"
 import type { MemorySearchTool } from "#src/pi/memory-search"
 import type { SessionShutdownHandler } from "#src/pi/memory-session"
 import type { SessionStartHandler } from "#src/pi/session-start"
+import type { ToolCallHandler } from "#src/pi/vault-guard"
 
 export interface ExtensionRegistrar {
   registerAddTool(tool: MemoryAddTool): void
@@ -13,5 +14,6 @@ export interface ExtensionRegistrar {
   registerCommand(name: string, command: MemoryCommand): void
   onSessionStart(handler: SessionStartHandler): void
   onBeforeAgentStart(handler: BeforeAgentStartHandler): void
+  onToolCall(handler: ToolCallHandler): void
   onSessionShutdown(handler: SessionShutdownHandler): void
 }

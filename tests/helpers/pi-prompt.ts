@@ -1,4 +1,4 @@
-import type { BeforeAgentStartEvent, ExtensionToolContext } from "@earendil-works/pi-coding-agent"
+import type { BeforeAgentStartEvent, ExtensionToolContext, ToolCallEvent } from "@earendil-works/pi-coding-agent"
 
 export function promptEvent(cwd: string): BeforeAgentStartEvent {
   return {
@@ -55,4 +55,8 @@ export function fakeToolContext(cwd: string): ExtensionToolContext {
       throw new Error("Unexpected nested tool call")
     },
   }
+}
+
+export function toolCallEvent(toolName: string, input: ToolCallEvent["input"]): ToolCallEvent {
+  return { type: "tool_call", toolCallId: "call-guard", toolName, input }
 }

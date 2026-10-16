@@ -1,6 +1,14 @@
 import { vi } from "vitest"
 
-import type { CaptureDraft, CaptureRequest, CompletionPort, ReadObservation, RetrievalRequest } from "#src/services"
+import type {
+  CaptureDraft,
+  CaptureRequest,
+  ChatModelAuthLookup,
+  ChatModelPort,
+  CompletionPort,
+  ReadObservation,
+  RetrievalRequest,
+} from "#src/services"
 
 export function captureRequest(): CaptureRequest {
   return {
@@ -45,4 +53,19 @@ export function readObservation(): ReadObservation {
     type: "fact",
     dontForget: false,
   }
+}
+
+export interface FakeChatModel {
+  provider: string
+  id: string
+}
+
+export function fakeChatModelPort(known: FakeChatModel[], auth: ChatModelAuthLookup<FakeChatModel>) {
+  const port: ChatModelPort<FakeChatModel> = {
+    find: vi.fn((provider: string, id: string) =>
+      known.find((model) => model.provider === provider && model.id === id),
+    ),
+    auth: vi.fn(auth),
+  }
+  return port
 }

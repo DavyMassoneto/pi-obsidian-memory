@@ -20,3 +20,10 @@
   sed -i, `npx vitest run --project unit <dir> | grep -E "Tests +[0-9]|×"`, cp back; verify with grep -c + same
   `git diff --stat`. pi-coding-agent dist installs NO process unhandledRejection handler (grep) -> detached promises in
   src/pi (e.g. MemoryBlock #text) can crash pi. Find helper fns in tests: grep `^(async )?function` in *.test.ts.
+- 2026-10 (vault-guard review): Bash tool collapses `\` to `\` even inside quoted heredoc -> in probe scripts build
+  backslashes with String.fromCharCode(92). Node 22 runs tmp/*.ts with #src imports directly (`node tmp/x.ts`).
+  Verified bypass classes for path guards on Windows: `\.\C:\...` and `\localhost\C$\...` are read by Node fs;
+  trailing dot/space dirs are NOT (Node namespaces paths -> ENOENT). Guard reads config each call: check config writability.
+- 2026-10 (vault-guard re-review): more Windows path-guard bypass classes Node fs reads: `\?\Volume{guid}\...`
+  (`mountvol C: /L` gives the GUID) and `\<hostname>\C$`, `\[::1]\C$`. /tmp logs persist across runs: check the
+  "Start at" time before trusting a background test log.

@@ -1,5 +1,5 @@
 import { lstat, realpath, stat } from "node:fs/promises"
-import { isAbsolute, join, parse, resolve, sep } from "node:path"
+import { join, parse, resolve, sep } from "node:path"
 
 import {
   configLocationProblems,
@@ -9,6 +9,7 @@ import {
   parseConfig,
   registrationProblems,
 } from "#src/domain"
+import { isFullyQualifiedPath } from "./fully-qualified-path.ts"
 import type {
   CanonicalConfigResult,
   CanonicalPathResult,
@@ -17,6 +18,7 @@ import type {
   RegistrationPaths,
   RegistrationPathsResult,
 } from "./types.ts"
+import { isNamespaceVolumeRoot } from "./volume-namespace.ts"
 
 export async function canonicalizeRegistration(request: RegistrationPaths): Promise<RegistrationPathsResult> {
   const location = await canonicalizeConfigLocation(request)
@@ -132,6 +134,9 @@ async function canonicalPath(path: string): Promise<string> {
 
   const absolute = resolve(path)
   const root = parse(absolute).root
+  if (isNamespaceVolumeRoot(root)) {
+    throw new Error(`${path}: volume GUID paths are not supported`)
+  }
   const parts = absolute.slice(root.length).split(sep).filter(Boolean)
   let current = await realpath(root)
 
@@ -152,17 +157,4 @@ async function canonicalPath(path: string): Promise<string> {
   }
 
   return current
-}
-
-function isFullyQualifiedPath(path: string): boolean {
-  if (!isAbsolute(path)) {
-    return false
-  }
-
-  const root = parse(path).root.replaceAll("\\", "/")
-  if (sep === "\\" && !root.includes(":") && !root.startsWith("//")) {
-    return false
-  }
-
-  return true
 }

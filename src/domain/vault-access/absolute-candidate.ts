@@ -2,8 +2,10 @@ import { win32 } from "node:path"
 import { fileURLToPath } from "node:url"
 
 import {
-  EXTENDED_LENGTH_PREFIX,
-  EXTENDED_LENGTH_UNC_PREFIX,
+  DRIVE_OR_UNC_START,
+  LOCAL_ADMIN_SHARE,
+  NAMESPACE_PREFIX,
+  NAMESPACE_UNC_PREFIX,
   UNICODE_SPACES,
   WINDOWS_SHELL_DRIVE_PREFIX,
 } from "./constants.ts"
@@ -11,7 +13,12 @@ import {
 export function absoluteCandidate(raw: string, cwd: string, home: string): string {
   const expanded = expandedPath(raw, home)
   const resolved = win32.resolve(cwd, expanded)
-  return resolved.replace(EXTENDED_LENGTH_UNC_PREFIX, "\\\\").replace(EXTENDED_LENGTH_PREFIX, "")
+  const stripped = resolved.replace(NAMESPACE_UNC_PREFIX, "\\\\").replace(NAMESPACE_PREFIX, "")
+  if (!DRIVE_OR_UNC_START.test(stripped)) {
+    return resolved
+  }
+
+  return stripped.replace(LOCAL_ADMIN_SHARE, (_share: string, drive: string) => `${drive.toUpperCase()}:\\`)
 }
 
 function expandedPath(raw: string, home: string): string {
