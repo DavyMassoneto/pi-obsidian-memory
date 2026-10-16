@@ -11,6 +11,7 @@ import {
   piMemoryFixture,
   piUnconfiguredFixture,
   putCatalogFile,
+  writeAgentConfig,
 } from "#test-helpers"
 
 const available = [{ provider: "test-chat", id: "selected-chat" }]
@@ -27,13 +28,18 @@ test("one report names the broken note, the copy, the blank note, the temporary 
     expect(report).toContain(expected)
   }
   expect(report).toContain("- capture test-chat/selected-chat: ok")
-  expect(report).toContain("- embeddings: not used yet")
+  expect(report).toContain("- embeddings local/Xenova/multilingual-e5-small: The local model is not downloaded yet")
+  expect(report).toContain("- decision model: not used yet")
 })
 
-test("a vault with no problems is reported as clean at info level and nothing is asked", async () => {
-  const { pi, workingFolder, vaults } = await piMemoryFixture()
+test("a vault with no problems and every provider ready is reported as clean at info level and nothing is asked", async () => {
+  const { pi, workingFolder, vaults, configPath, config } = await piMemoryFixture()
+  await writeAgentConfig(
+    configPath,
+    JSON.stringify({ ...config, embeddings: { provider: "openai", model: "text-embedding-3-small" } }),
+  )
   await putCatalogFile(vaults.global, "Good.md", noteWithId(1, "Fine.", []))
-  const { context, notifications, prompts } = fakePiContext(workingFolder, { available })
+  const { context, notifications, prompts } = fakePiContext(workingFolder, { available, apiKeys: ["openai"] })
 
   await pi.runCommand("memory-doctor", context)
 
@@ -139,4 +145,38 @@ test("without a UI nothing is shown or asked", async () => {
 
   expect(prompts).toEqual([])
   expect(notifications).toEqual([])
+})
+
+test("a remote embeddings provider with an API key in pi is reported ready, without any network call", async () => {
+  const { pi, workingFolder, configPath, config } = await piMemoryFixture()
+  const openai = { provider: "openai", model: "text-embedding-3-small" }
+  await writeAgentConfig(configPath, JSON.stringify({ ...config, embeddings: openai }))
+  const { context, notifications } = fakePiContext(workingFolder, { available, apiKeys: ["openai"] })
+
+  await pi.runCommand("memory-doctor", context)
+
+  expect(notifications[0]?.message).toContain("- embeddings openai/text-embedding-3-small: ready")
+})
+
+test("a remote embeddings provider with no API key is reported", async () => {
+  const { pi, workingFolder, configPath, config } = await piMemoryFixture()
+  const google = { provider: "google", model: "gemini-embedding-001" }
+  await writeAgentConfig(configPath, JSON.stringify({ ...config, embeddings: google }))
+  const { context, notifications } = fakePiContext(workingFolder, { available })
+
+  await pi.runCommand("memory-doctor", context)
+
+  expect(notifications[0]?.message).toContain("- embeddings google/gemini-embedding-001: No API key for google")
+  expect(notifications[0]?.type).toBe("warning")
+})
+
+test("an empty API key in pi's registry is reported as no API key", async () => {
+  const { pi, workingFolder, configPath, config } = await piMemoryFixture()
+  const openai = { provider: "openai", model: "text-embedding-3-small" }
+  await writeAgentConfig(configPath, JSON.stringify({ ...config, embeddings: openai }))
+  const { context, notifications } = fakePiContext(workingFolder, { available, emptyApiKeys: ["openai"] })
+
+  await pi.runCommand("memory-doctor", context)
+
+  expect(notifications[0]?.message).toContain("- embeddings openai/text-embedding-3-small: No API key for openai")
 })

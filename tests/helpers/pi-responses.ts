@@ -2,8 +2,9 @@ import { readFileSync } from "node:fs"
 import { join, resolve } from "node:path"
 
 import type { ChangeFailure } from "#src/pi"
-import { renderMemoryBlock, reportFailure, reportSuccess } from "#src/pi"
+import { renderDoctorReport, renderMemoryBlock, reportFailure, reportSuccess, respondToSearch } from "#src/pi"
 import type { DontForgetVault, GetMemoryResult, LoadedDontForgetNote, SearchMemoryResult } from "#src/usecases"
+import { diagnosedMemory } from "./diagnose-memory.ts"
 import { textOf } from "./pi.ts"
 import { deliveredRead } from "./session.ts"
 
@@ -25,14 +26,22 @@ export function searchResponses(): SearchMemoryResult[] {
       succeeded: true,
       output: {
         projectMissing: true,
+        semantic: { mode: "text-only", problems: [] },
         vaults: [
           { vault: "global", hits: [hit], warnings: problems },
           { vault: "project", problems },
         ],
       },
     },
-    { succeeded: true, output: { projectMissing: false, vaults: [{ vault: "global", hits: [], warnings: [] }] } },
-    { succeeded: true, output: { projectMissing: true, vaults: [] } },
+    {
+      succeeded: true,
+      output: {
+        projectMissing: false,
+        semantic: { mode: "text-only", problems: [] },
+        vaults: [{ vault: "global", hits: [], warnings: [] }],
+      },
+    },
+    { succeeded: true, output: { projectMissing: true, semantic: { mode: "text-only", problems: [] }, vaults: [] } },
     { succeeded: false, reason: "not-configured", problems, configPath: "config.json" },
     { succeeded: false, reason: "invalid-config", problems, configPath: "config.json" },
     { succeeded: false, reason: "cancelled", problems },
@@ -94,4 +103,27 @@ export function changeTexts(): string[] {
     ...failures.map((failure) => textOf(reportFailure(failure, "tools/Use pnpm.md"))),
     textOf(reportSuccess("Updated in global: tools/Use pnpm.md", problems)),
   ]
+}
+
+export function semanticTexts(): string[] {
+  const problem = {
+    provider: "local",
+    model: "m",
+    status: "model-not-downloaded",
+    problem: "The local model is not downloaded yet (about 135 MB); it is asked for on the first semantic search",
+  } as const
+  const search = respondToSearch({
+    succeeded: true,
+    output: {
+      projectMissing: false,
+      semantic: {
+        mode: "text-only",
+        problems: [
+          "Semantic search is off: the local search model is not downloaded and there is no UI to ask for the download; start pi with a UI once",
+        ],
+      },
+      vaults: [{ vault: "global", hits: [], warnings: [] }],
+    },
+  })
+  return [renderDoctorReport(diagnosedMemory({ embeddings: problem })), textOf(search)]
 }

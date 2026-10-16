@@ -1,9 +1,16 @@
 import { join } from "node:path"
 
 import type { ChatModelPort, VaultContext } from "#src/services"
-import { type DiagnosedMemory, diagnoseMemory, type MemoryOperationContext, resolveMemory } from "#src/usecases"
+import {
+  type DiagnosedMemory,
+  diagnoseMemory,
+  type EmbeddingProbe,
+  type MemoryOperationContext,
+  resolveMemory,
+} from "#src/usecases"
 import { piMemoryFixture } from "./pi-memory.ts"
 import { noteWithId, searchFixture } from "./search-memory.ts"
+import { useTempFolder } from "./temp-folder.ts"
 import { putCatalogFile } from "./vault-catalog.ts"
 
 export interface FakeModel {
@@ -37,7 +44,10 @@ export async function blankMemoryFixture(text: string) {
   const fixture = await searchFixture()
   await putCatalogFile(fixture.vault, "tools/Blank.md", text)
   await putCatalogFile(fixture.vault, "tools/Other.md", noteWithId(2, "Other.", []))
-  const report = await diagnoseMemory({ port: chatModelPort([], []) }, fixture.context)
+  const report = await diagnoseMemory(
+    { port: chatModelPort([], []), embeddings: await emptyEmbeddingProbe() },
+    fixture.context,
+  )
   if (!report.succeeded) throw new Error("diagnosis failed")
   const global = report.output.vaults[0]
   if (!global || !("blanks" in global)) throw new Error("no blanks")
@@ -66,6 +76,7 @@ export function diagnosedMemory(overrides: Partial<DiagnosedMemory>): DiagnosedM
     vaults: [{ vault: "global", diagnosis: CLEAN_DIAGNOSIS, blanks: [], unreadable: [] }],
     projectMissing: false,
     maxNotesPerFolder: 20,
+    embeddings: { provider: "local", model: "Xenova/multilingual-e5-small", status: "ready" },
     models: [
       { role: "capture", check: { model: { provider: "p", id: "m" }, status: "ok" } },
       { role: "memory agent", check: { model: { provider: "p", id: "m" }, status: "ok" } },
@@ -86,4 +97,12 @@ export async function resolvedFixture() {
   const projectTarget = memory.project
   if (!projectTarget) throw new Error("project did not resolve")
   return { ...fixture, memory, projectTarget }
+}
+
+export function embeddingProbe(modelCachePath: string, credentials: string[]): EmbeddingProbe {
+  return { modelCachePath, hasCredentials: async (provider) => credentials.includes(provider) }
+}
+
+export async function emptyEmbeddingProbe(): Promise<EmbeddingProbe> {
+  return embeddingProbe(join(await useTempFolder(), "models"), [])
 }

@@ -14,7 +14,7 @@ export const DOCTOR_NO_PROJECT_VAULT = "No project vault is registered for this 
 
 export const NOT_USED_YET = "not used yet"
 
-export const UNUSED_PROVIDERS = ["embeddings", "decision model"]
+export const UNUSED_PROVIDERS = ["decision model"]
 
 export const DOCTOR_INVALID_HEADING = "Invalid notes:"
 

@@ -37,6 +37,7 @@ function describeSearched(searched: SearchedMemory): MemorySearchResponse {
   for (const entry of answered) {
     for (const warning of entry.warnings) lines.push(`Warning: ${warning}`)
   }
+  lines.push(...searched.semantic.problems)
   if (searched.projectMissing) lines.push(NO_PROJECT_VAULT)
   return reply(lines, answered.length === 0)
 }

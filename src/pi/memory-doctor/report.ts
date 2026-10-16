@@ -1,4 +1,4 @@
-import type { DiagnosedMemory, ModelReport, VaultReport, VaultReportFailure } from "#src/usecases"
+import type { DiagnosedMemory, EmbeddingReport, ModelReport, VaultReport, VaultReportFailure } from "#src/usecases"
 import {
   BLANK_HEADING,
   COULD_NOT_CHECK,
@@ -18,7 +18,7 @@ export function renderDoctorReport(diagnosed: DiagnosedMemory): string {
   const sections = diagnosed.vaults.map((report) => renderVault(report, diagnosed.maxNotesPerFolder))
   const lines = [DOCTOR_TITLE, "", ...sections.flatMap((section) => [...section, ""])]
   if (diagnosed.projectMissing) lines.push(DOCTOR_NO_PROJECT_VAULT, "")
-  lines.push(MODELS_HEADING, ...diagnosed.models.map(renderModel))
+  lines.push(MODELS_HEADING, ...diagnosed.models.map(renderModel), renderEmbeddings(diagnosed.embeddings))
   lines.push(...UNUSED_PROVIDERS.map((name) => `- ${name}: ${NOT_USED_YET}`))
   return lines.join("\n")
 }
@@ -58,6 +58,12 @@ function addGroup(groups: string[][], heading: string, items: string[]): void {
 function vaultTitle(scope: string): string {
   if (scope === "global") return "Global vault"
   return "Project vault"
+}
+
+function renderEmbeddings(report: EmbeddingReport): string {
+  const name = `embeddings ${report.provider}/${report.model}`
+  if (report.status === "ready") return `- ${name}: ready`
+  return `- ${name}: ${report.problem}`
 }
 
 function renderModel(report: ModelReport): string {

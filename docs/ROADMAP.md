@@ -33,11 +33,19 @@ Every milestone:
   current model or a pick; create or attach; repair; confirmed disclosures; templates) and `/memory-init` (name, vault,
   repoint) drive them, and both refuse overlapping vaults. Setup-only defaults require an explicitly supplied chat
   model; old incomplete files are invalid at runtime, never silently migrated.
-- Setup shows the disclosures for chat models, Jev and remote embeddings. Repeating them at startup for hand-edited
-  remote settings is not implemented (milestone 1 out of scope).
-- Embedding, decision-model and bounded capture/retrieval model resources exist, but these settings do not connect
-  them to product operations or prove live-provider/local-inference availability. Later milestones are not
-  complete.
+- Setup shows the disclosures for chat models, Jev and remote embeddings. For embeddings, the disclosure is also
+  confirmed once per runtime before a remote provider is used, including hand-edited settings; Jev's startup
+  disclosure comes with milestone 6.
+- Semantic search (milestone 5): the sync refreshes vectors only for changed content (moves and date-only changes
+  cost nothing; a provider change re-embeds everything; partial progress is kept). `memory_search` fuses word and
+  vector ranks (reciprocal rank fusion, k=60). The local E5 model has a minimum similarity of 0.80, measured on a
+  40-note/40-query benchmark kept as the opt-in `npm run test:model` (recall at 0.80 at least 0.9; paraphrase top-5
+  recall at least 0.9); remote providers have no minimum, since they were not measured. When
+  semantic search is off, search falls back to words with a status line. The local model (~135 MB) is downloaded only
+  after confirmation, once per runtime, into `pi-obsidian-memory/models` beside the config. No UI or a declined
+  confirmation means words only, never another provider. API keys come from pi's model registry.
+- Decision-model and bounded capture/retrieval model resources exist, but that setting does not connect them to
+  product operations or prove live-provider availability. Later milestones are not complete.
 - `memory_search` (text; global, project or both; 10 results per vault; archived and invalid-frontmatter notes
   excluded) shows vault, path, type, Don't forget and needs fixing. `memory_get` (vault and path) returns a note in
   full with its problems, a folder's index (`""` is the root), and reads `archive/`. The catalog is synchronized
@@ -71,7 +79,8 @@ Every milestone:
 - A test proves no LLM-facing text names a command or tool that is not registered (`tests/pi/extension.test.ts`).
 - `/memory-doctor` (UI only) reports per vault: invalid notes with problems, blank notes, duplicate ids, leftover
   temporaries and folders over the notes-per-folder limit; then config problems and the chat model (registry and
-  credentials, no network call). Embeddings and the decision model show "not used yet". It offers to complete each
+  credentials, no network call). Embeddings are checked without network (configuration, API key, local model files);
+  the decision model shows "not used yet". It offers to complete each
   blank note (type, and a body when empty; existing text is kept as the body), applied only after confirmation.
 - `/memory-export` (UI only) asks for a folder (default: the working folder) and writes
   `memory-export-YYYY-MM-DD-HHmmss.zip` with `global/` and `project/`, holding every non-hidden, non-temporary file,
@@ -197,8 +206,8 @@ Every milestone:
     - VISION 3's "move or switch" is reworded to "point to another vault; the old one is left as it was" (the user's
       decision).
 - **Out of scope:** settings of later milestones (each adds its own); copying or moving notes between vaults; repeating
-  the remote-provider disclosure at startup for hand-edited settings (config.md, Disclosure), which
-  belongs to the first milestone that runs a remote provider (5 for embeddings, 6 for Jev).
+  the remote-provider disclosure at startup for hand-edited settings (config.md, Disclosure); done for embeddings
+  in milestone 5, still pending for Jev (6).
 - **Depends on:** 0.
 - **Done when:**
   - in pi with no config, session start offers `/memory-setup` (smoke test, extending the registered-tool check);
@@ -345,20 +354,21 @@ Every milestone:
 
 - **Goal:** search finds notes by meaning, not only by words.
 - **Scope:**
-  - Embeddings (VISION 6). Providers:
+  - [x] Embeddings (VISION 6). Providers:
     - a local model that runs inside the extension with no separate install (the default);
     - OpenAI;
     - Google.
-  - Setting: `embeddings` (provider and model). `/memory-setup` warns that a remote provider receives note content,
-    secrets included.
-  - `memory_search` and capture combine text and embeddings. Only content that changed gets a new embedding.
+  - [x] Setting: `embeddings` (provider and model). `/memory-setup` warns that a remote provider receives note
+    content, secrets included.
+  - [x] `memory_search` combines text and embeddings. Only content that changed gets a new embedding.
+  - [ ] Capture combines text and embeddings (capture is milestone 4's work; not wired yet).
 - **Out of scope:** the decision model and the memory agent (6).
 - **Depends on:** 2.
 - **Done when:**
-  - a query sharing no words with a note still finds it;
-  - choosing a remote provider shows the warning;
-  - a date-only change or a move creates no new embedding;
-  - switching the provider rebuilds the embeddings.
+  - [x] a query sharing no words with a note still finds it;
+  - [x] choosing a remote provider shows the warning;
+  - [x] a date-only change or a move creates no new embedding;
+  - [x] switching the provider rebuilds the embeddings.
 
 ### 6. Context that grows with the conversation
 
@@ -394,7 +404,8 @@ Every milestone:
     - leftover temporary files;
     - folders above `limits.maxNotesPerFolder` notes (20 by default), suggesting a split.
   - [x] It shows the config's problems and checks the chat model (registry and credentials, no network call).
-  - [ ] Provider checks for embeddings and the decision model: shown as "not used yet" until milestones 5 and 6.
+  - [ ] Provider checks for embeddings (done, no network) and the decision model (shown as "not used yet" until
+    milestone 6).
   - [x] It offers to complete a blank note (new `id`, asks the type) and applies it only after the user confirms.
 - **Out of scope:** any other change. The doctor reports and suggests; it never rewrites, merges, moves or deletes.
 - **Depends on:** 2; its provider checks grow with 4–6. It can move earlier when needed.

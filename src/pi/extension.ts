@@ -15,7 +15,8 @@ import { MemorySessionKeeper } from "#src/pi/memory-session"
 import { MEMORY_SETUP_COMMAND, memorySetupCommand } from "#src/pi/memory-setup"
 import { memorySucceedTool } from "#src/pi/memory-succeed"
 import { memoryUpdateTool } from "#src/pi/memory-update"
-import { memoryConfigPath, memoryDataFolder, memoryIndexPath } from "#src/pi/paths"
+import { memoryConfigPath, memoryDataFolder, memoryIndexPath, memoryModelCachePath } from "#src/pi/paths"
+import { SemanticRuntime } from "#src/pi/semantic"
 import { sessionStartHandler } from "#src/pi/session-start"
 import { vaultGuardHandler } from "#src/pi/vault-guard"
 import { loadDontForget } from "#src/usecases"
@@ -29,7 +30,8 @@ export default function extension(pi: ExtensionAPI): void {
 export function registerExtension(registrar: ExtensionRegistrar, agentDir: string, env: NodeJS.ProcessEnv): void {
   disableClaudeCodeAutoMemory(env)
   const paths = { configPath: memoryConfigPath(agentDir), indexPath: memoryIndexPath(agentDir) }
-  const sessions = new MemorySessionKeeper()
+  const semantic = new SemanticRuntime(memoryModelCachePath(agentDir))
+  const sessions = new MemorySessionKeeper(semantic)
   const block = new MemoryBlock(loadDontForget)
   registrar.registerAddTool(memoryAddTool(paths, sessions))
   registrar.registerSearchTool(memorySearchTool(paths, sessions))
@@ -40,12 +42,13 @@ export function registerExtension(registrar: ExtensionRegistrar, agentDir: strin
   registrar.registerCommand(MEMORY_SETUP_COMMAND, memorySetupCommand(paths, sessions))
   registrar.registerCommand(MEMORY_INIT_COMMAND, memoryInitCommand(paths, sessions))
   registrar.registerCommand(MEMORY_EXPORT_COMMAND, memoryExportCommand(paths, sessions))
-  registrar.registerCommand(MEMORY_DOCTOR_COMMAND, memoryDoctorCommand(paths, sessions))
+  registrar.registerCommand(MEMORY_DOCTOR_COMMAND, memoryDoctorCommand(paths, sessions, memoryModelCachePath(agentDir)))
   registrar.onSessionStart(sessionStartHandler(paths, sessions, block))
   registrar.onBeforeAgentStart(block.beforeAgentStart())
   registrar.onToolCall(vaultGuardHandler(paths.configPath, memoryDataFolder(agentDir), homedir()))
   registrar.onSessionShutdown(() => {
     sessions.shutdown()
     block.clear()
+    void semantic.shutdown()
   })
 }

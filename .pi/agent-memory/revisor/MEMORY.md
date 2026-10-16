@@ -35,3 +35,7 @@
   -> tar.exe is not an oracle for non-Latin names. Mention guard (tests/helpers/pi.ts mentionsIn) misses backticked
   slash commands (`/memory-x`): mutate SKILL.md to prove coverage. complete-blank hash check is doubled by
   update-file.ts expectedHash, so mutating one survives (not a gap).
+- 2026-10 (M5 semantic review): fake embedder (tests/helpers/semantic-memory.ts) returns 5 dims for every provider ->
+  dimension-mismatch paths (cosine throws RangeError) are invisible to tests; mutate guards in src/usecases/semantic
+  (rank.ts fingerprint check, refresh-vectors OTHER_PROVIDER) to check coverage. Mutation script kept in /tmp/revisor/mut.sh
+  (cp .bak, sed, vitest grep "Tests|×", restore). pi ModelRegistry.getApiKeyForProvider catches and returns undefined.

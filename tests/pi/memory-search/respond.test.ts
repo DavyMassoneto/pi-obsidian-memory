@@ -18,6 +18,7 @@ test("each hit is a line with its vault, path and type, then the marks that appl
     succeeded: true,
     output: {
       projectMissing: false,
+      semantic: { mode: "text-only", problems: [] },
       vaults: [
         {
           vault: "global",
@@ -44,6 +45,7 @@ test("no hits says where it looked and how to read on", () => {
     succeeded: true,
     output: {
       projectMissing: false,
+      semantic: { mode: "text-only", problems: [] },
       vaults: [
         { vault: "global", hits: [], warnings: [] },
         { vault: "project", hits: [], warnings: [] },
@@ -62,6 +64,7 @@ test("a vault that could not be searched and the warnings of the others are list
     succeeded: true,
     output: {
       projectMissing: false,
+      semantic: { mode: "text-only", problems: [] },
       vaults: [
         { vault: "global", hits: [hit], warnings: ["index closed late"] },
         { vault: "project", problems: ["vault is missing"] },
@@ -81,7 +84,11 @@ test("a vault that could not be searched and the warnings of the others are list
 test("a folder with no registered project says so after the other lines", () => {
   const response = respondToSearch({
     succeeded: true,
-    output: { projectMissing: true, vaults: [{ vault: "global", hits: [hit], warnings: [] }] },
+    output: {
+      projectMissing: true,
+      semantic: { mode: "text-only", problems: [] },
+      vaults: [{ vault: "global", hits: [hit], warnings: [] }],
+    },
   })
 
   expect(textOf(response)).toBe(
@@ -90,7 +97,10 @@ test("a folder with no registered project says so after the other lines", () => 
 })
 
 test("a search that no vault answered is an error", () => {
-  const response = respondToSearch({ succeeded: true, output: { projectMissing: true, vaults: [] } })
+  const response = respondToSearch({
+    succeeded: true,
+    output: { projectMissing: true, semantic: { mode: "text-only", problems: [] }, vaults: [] },
+  })
 
   expect(response.isError).toBe(true)
   expect(textOf(response)).toBe("No project vault is registered for this folder.")
@@ -111,4 +121,24 @@ test("any other refusal gives its problems as an error", () => {
 
   expect(response.isError).toBe(true)
   expect(textOf(response)).toBe("a problem")
+})
+
+test("the semantic status lines come after the hits and warnings, before the missing-project line", () => {
+  const response = respondToSearch({
+    succeeded: true,
+    output: {
+      projectMissing: true,
+      semantic: { mode: "text-only", problems: ["Semantic search is off: model download declined"] },
+      vaults: [{ vault: "global", hits: [hit], warnings: ["a warning"] }],
+    },
+  })
+
+  expect(textOf(response)).toBe(
+    [
+      "global · typescript/No ternaries.md · rule",
+      "Warning: a warning",
+      "Semantic search is off: model download declined",
+      "No project vault is registered for this folder.",
+    ].join("\n"),
+  )
 })
