@@ -142,7 +142,8 @@ test("directory and file aliases preserve requested paths and canonical identity
   expect(context.session.getReceipt(context.stamp, { vault: "global", path: "alias/Note.MD" })).toMatchObject({
     canonicalPath: "physical/Note.MD",
   })
-  if (!(await tryLinkFile(join(vault.path, "physical/Note.MD"), join(vault.path, "File.md")))) testContext.skip()
+  if (!(await tryLinkFile(join(vault.path, "physical/Note.MD"), join(vault.path, "File.md"))))
+    testContext.skip("this system cannot create file links")
   await getMemory({ vault: "global", path: "File.md", sourceCallId: "file" }, context)
   expect(context.session.getReceipt(context.stamp, { vault: "global", path: "File.md" })).toMatchObject({
     canonicalPath: "physical/Note.MD",

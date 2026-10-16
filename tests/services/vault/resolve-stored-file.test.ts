@@ -71,7 +71,7 @@ test("exact resolution detects an alias retargeted to changed bytes", async (con
 })
 
 test.runIf(process.platform === "win32")(
-  "exact resolution preserves actual extension spelling and rejects case-only statement changes",
+  "on Windows: exact resolution preserves actual extension spelling and rejects case-only statement changes",
   async () => {
     const { vault, note, folder, file, hash, text } = await vaultWithStoredFile(".mD")
     const lower = note.statement.toLowerCase()

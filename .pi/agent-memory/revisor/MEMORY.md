@@ -50,3 +50,12 @@
   constants + listed renderers -> texts in usecases constants or pi folders missing from src/pi/index.ts escape it; prove by
   mutating a tool name in the text. Deadline tests that jump the clock 61 s pass on the per-step 30 s cap of completeStep,
   not on an overall deadline: mutate the overall deadline (x10 / +1e9) to check. Mutation script /tmp/revisor/mut.sh still works.
+- 2026-10 (release review): pi loader aliases only typebox, typebox/compile, typebox/value (+pi-* pkgs); other typebox
+  subpaths must stay `import type`. Tarball probe: `npm pack --pack-destination D`, tar xzf, `cmd //c mklink //J`
+  package/node_modules -> repo node_modules, temp tests/pi/x.smoke.test.ts with DefaultResourceLoader packages:[D/package];
+  remove junction with `cmd //c rmdir` BEFORE rm -rf. Global `pi` is 1.3.0, devDep/smoke is 1.0.1.
+- 2026-10 (pi 1.3.0 bump): pi installs git packages with `npm install --omit=dev --legacy-peer-deps` (dist/core/
+  package-manager.js getGitDependencyInstallArgs), no --ignore-scripts; local paths are not installed at all.
+  onnxruntime-node bundles win32/x64 binaries (postinstall only fetches CUDA EP); protobufjs postinstall only warns.
+  pi 1.3.0 before_agent_start is a union on `messageType` ("user" has prompt; "custom" has message). Lockfile diff:
+  compare HEAD vs now `packages` maps with a node script + `npm ls <pkg>` to attribute transitive bumps.

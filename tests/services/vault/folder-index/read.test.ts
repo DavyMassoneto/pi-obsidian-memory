@@ -65,7 +65,8 @@ test("rejects escaping and broken folder links and escaping index file links", a
     reason: "outside-vault",
   })
   expect(await readFolderIndex(vault, { folder: "broken" })).toMatchObject({ succeeded: false, reason: "not-found" })
-  if (!(await tryLinkFile(join(outside.path, "index.md"), join(vault.path, "index.md")))) context.skip()
+  if (!(await tryLinkFile(join(outside.path, "index.md"), join(vault.path, "index.md"))))
+    context.skip("this system cannot create file links")
   expect(await readFolderIndex(vault, { folder: "" })).toMatchObject({ succeeded: false, reason: "outside-vault" })
 })
 
@@ -73,6 +74,7 @@ test("rejects ambiguous case-variant indexes on filesystems that permit both", a
   const vault = await catalogVault()
   await putCatalogFile(vault, "index.md", "one")
   await putCatalogFile(vault, "INDEX.MD", "two")
-  if ((await readdir(vault.path)).length !== 2) context.skip()
+  if ((await readdir(vault.path)).length !== 2)
+    context.skip("this filesystem is case-insensitive, so both index files cannot exist")
   expect(await readFolderIndex(vault, { folder: "" })).toMatchObject({ succeeded: false, reason: "ambiguous-index" })
 })

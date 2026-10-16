@@ -1,4 +1,5 @@
 export * from "./capture-memory.ts"
+export * from "./capture-search.ts"
 export * from "./check-vault-access.ts"
 export * from "./config.ts"
 export * from "./decision-model.ts"

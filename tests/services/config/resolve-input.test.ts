@@ -21,8 +21,11 @@ test("registration vault paths resolve only against the supplied fully qualified
   expect(resolveRegistrationVault({ vault: "vault", workingFolder: "relative" })).toMatchObject({ succeeded: false })
 })
 
-test.runIf(process.platform === "win32")("rooted Windows paths never inherit an ambient drive", async () => {
-  const root = await useTempFolder()
-  expect(resolveRegistrationVault({ vault: "/rooted", workingFolder: root })).toMatchObject({ succeeded: false })
-  expect(resolveRegistrationVault({ vault: "vault", workingFolder: "/rooted" })).toMatchObject({ succeeded: false })
-})
+test.runIf(process.platform === "win32")(
+  "on Windows: rooted Windows paths never inherit an ambient drive",
+  async () => {
+    const root = await useTempFolder()
+    expect(resolveRegistrationVault({ vault: "/rooted", workingFolder: root })).toMatchObject({ succeeded: false })
+    expect(resolveRegistrationVault({ vault: "vault", workingFolder: "/rooted" })).toMatchObject({ succeeded: false })
+  },
+)

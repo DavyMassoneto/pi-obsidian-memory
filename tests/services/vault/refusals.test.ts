@@ -27,7 +27,7 @@ test.each([
 })
 
 test.runIf(process.platform === "win32")(
-  "reports the failed write with the note path and the system code",
+  "on Windows: reports the failed write with the note path and the system code",
   async () => {
     const vault = await useTempFolder()
     const folder = "a".repeat(256)

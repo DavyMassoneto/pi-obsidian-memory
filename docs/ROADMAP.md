@@ -1,8 +1,8 @@
 # Roadmap
 
 What will be built, in order. [VISION.md](VISION.md), [config.md](config.md) and [vault-format.md](vault-format.md)
-describe the target behaviour; the README Status says what works today; this file says what comes next and when each
-part is done.
+describe the target behaviour; the README says what works today; this file says what comes next and when each part is
+done.
 
 Every milestone:
 
@@ -10,7 +10,7 @@ Every milestone:
 - is built test first, layer by layer (AGENTS.md), with one folder per topic;
 - adds its settings to [config.md](config.md) with their defaults, and `/memory-setup` writes them;
 - ends with `npm test`, `npm run lint`, `npm run typecheck` and `npm run test:pi` passing on Windows (VISION 14);
-- ends with the README Status saying what works, and with every text the LLM or the user sees naming only commands
+- ends with the README saying what works, and with every text the LLM or the user sees naming only commands
   and tools that exist.
 
 ## Current state
@@ -18,7 +18,8 @@ Every milestone:
 - pi loads the extension and registers `memory_add`, `memory_search`, `memory_get`, `memory_update`, `memory_archive`,
   `memory_succeed`, `/memory-setup`, `/memory-init`, `/memory-doctor` and `/memory-export`. Session start notifies, with a
   UI and not on reload, when there is no config (offers `/memory-setup`), an invalid config (every problem, nothing
-  used) or an unreadable file. The real-pi smoke test checks the registrations and the no-config notice.
+  used) or an unreadable file. The real-pi smoke test checks the registrations, the no-config
+  notice, the shipped skill and the vault guard.
 - One tool, `memory_add`, for explicit requests to remember. It writes a valid note to the global or project vault,
   refuses invalid notes, existing names (in any case) and unregistered projects, and refreshes the folder indexes up to
   the root, including resolved physical ancestors for directory aliases. When the name is taken, it reads the exact
@@ -61,8 +62,7 @@ Every milestone:
   section once, with Don't forget notes outside the budget. The whole step ends within the decision timeout plus the
   retrieval duration (30 s + 30 s). With Laya or Jev unavailable nothing is added and the user is told once per
   session; no other model takes over. Jev's disclosure is confirmed once per runtime; with no UI or a declined
-  confirmation, per-message memory is off. Judgement quality is untested against a real model. Later milestones are
-  not complete.
+  confirmation, per-message memory is off. Judgement quality is untested against a real model.
 - `memory_search` (text; global, project or both; 10 results per vault; archived and invalid-frontmatter notes
   excluded) shows vault, path, type, Don't forget and needs fixing. `memory_get` (vault and path) returns a note in
   full with its problems, a folder's index (`""` is the root), and reads `archive/`. The catalog is synchronized
@@ -73,8 +73,11 @@ Every milestone:
   name/body issues; invalid-frontmatter notes are not loaded). It is present with no marked notes, absent when the
   config is missing, invalid or unreadable, and never invites saving. The skill `obsidian-memory` ships with the
   package.
-- Milestone 2 is not complete: the vault access guard is not built. Nothing stops the LLM from reading or writing vault
-  files with pi's file tools, bash or Claude Code sessions started by pi.
+- Vault access guard (milestone 2): built for pi's file tools, written-out shell paths, links into a vault and Claude
+  Code sessions whose tools run through pi; the real-pi smoke test checks that a vault file is blocked and another
+  file is not. Milestone 2 is not done: some routes cannot be closed from an extension and wait for the user's decision
+  (see the entry "Stopped for the user's decision" under milestone 2). With no valid config no vault is known, so
+  nothing is refused.
 - `memory_update`, `memory_archive` and `memory_succeed` (explicit requests only) each need a `memory_get` read of the
   exact vault and path in the same session. The receipt is consumed on success, conflict or partial result, and kept on
   preflight refusals. They refuse a note changed on disk since that read. Update keeps `id` and `created`, sets
@@ -91,8 +94,10 @@ Every milestone:
   paths. Names live in `domain/names`, paths in `domain/vault-path` and pi paths in `pi/paths`.
 - Every module with logic has a test file at its mirrored path. Modules not exported from a layer barrel are tested
   there through real-disk public operations, not exported to tests. Confirmed wiring without a test: re-exports
-  (`vault/draft`, `config/registration`, `config/target`, `embeddings/configuration`, `search-index/inspection`),
-  prepared SQL lists (`search-index/*statements`) and the one-line `vault/filesystem/hash`.
+  (`vault/draft`, `vault/domain-rules`, `vault/folder-listing`, `vault/catalog/dont-forget`, `config/registration`,
+  `config/target`, `config/vault-access`, `embeddings/configuration`, `llm/domain-rules`, `search-index/inspection`,
+  `search-index/dont-forget`, `search-index/ranking`), the constants re-export `llm/limits`, prepared SQL lists
+  (`search-index/*statements`) and the one-line `vault/filesystem/hash`.
 - A test proves no LLM-facing text names a command or tool that is not registered (`tests/pi/extension.test.ts`).
 - `/memory-doctor` (UI only) reports per vault: invalid notes with problems, blank notes, duplicate ids, leftover
   temporaries and folders over the notes-per-folder limit; then config problems and the chat model (registry and
@@ -192,7 +197,7 @@ Every milestone:
     - a name already taken shows the existing note and asks for a statement that says what is new, since no tool can
       update a note yet.
     - Milestones 1 and 3 restore these texts when the commands and tools exist.
-  - [x] The README Status says what works.
+  - [x] The README says what works.
 - **Out of scope:** new behaviour.
 - **Depends on:** nothing.
 - **Done when:**
@@ -306,8 +311,8 @@ Every milestone:
   refused, and so is any command naming it (registration changes go through `/memory-setup` and `/memory-init`).
   Raw device paths (`\\.\C:`) are refused for the file tools. In commands, shares named by host name or IPv6, volume
   GUID paths, 8.3 short names, and commands acting on a parent folder of a vault or of the data folder (for example
-  deleting `~/.pi/agent`) are not recognised. With no valid config no vault is known, so nothing is refused. Tools the guard does not know pass. Routes that cannot be closed from an extension, with evidence in
-  `.pi/research/vault-guard.md`:
+  deleting `~/.pi/agent`) are not recognised. With no valid config no vault is known, so nothing is refused. Tools the guard does not know pass. Routes that cannot be closed from an extension, with
+  evidence in `.pi/research/vault-guard.md`:
   - hardlinks to a vault file placed outside the vault, on every route: a path check cannot see them;
   - shell commands that reach a vault indirectly (variables, globs, scripts, encoded paths): pi has no
     sandbox, and a static check of the command string cannot be complete. Options: run the shell as a separate

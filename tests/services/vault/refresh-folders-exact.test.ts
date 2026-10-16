@@ -51,7 +51,8 @@ test("does not settle a folder whose note leads outside the vault", async (conte
   const vault = await useTempFolder()
   const outside = await useTempFolder()
   await writeFile(join(outside, "Secret.md"), renderNote(aNote()))
-  if (!(await tryLinkFile(join(outside, "Secret.md"), join(vault, "External.md")))) context.skip()
+  if (!(await tryLinkFile(join(outside, "Secret.md"), join(vault, "External.md"))))
+    context.skip("this system cannot create file links")
 
   const result = await refreshFolders({ path: vault, name: "Memory", limits }, [""], keepGoing, "exact")
 
@@ -118,7 +119,7 @@ test("refreshes exactly the listed folders and leaves their ancestors untouched"
 })
 
 test("does not settle a folder whose note file name cannot be resolved", async (context) => {
-  if (process.platform !== "win32") context.skip()
+  if (process.platform !== "win32") context.skip("reserved file names are only checked on Windows")
   const vault = await useTempFolder()
   const reserved = `\\\\?\\${vault}\\CON.md`
   await writeFile(reserved, renderNote(aNote()))

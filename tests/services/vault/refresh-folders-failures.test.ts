@@ -68,7 +68,8 @@ test("keeps refreshing other folders after the root index is refused as an alias
   const vault = await useTempFolder()
   await writeFile(join(vault, "Note.md"), renderNote(aNote()))
   await putNoteFile(vault, "topic", "Note", renderNote(aNote()))
-  if (!(await tryLinkFile(join(vault, "Note.md"), join(vault, "index.md")))) context.skip()
+  if (!(await tryLinkFile(join(vault, "Note.md"), join(vault, "index.md"))))
+    context.skip("this system cannot create file links")
 
   expect(
     await refreshFolders({ path: vault, name: "Memory", limits }, ["", "topic"], keepGoing, "with-ancestors"),

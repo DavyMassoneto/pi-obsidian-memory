@@ -107,7 +107,8 @@ test("refuses maintenance through an index alias to a note after truthfully comm
   const { vault, context } = await memoryReadFixture()
   const text = noteText(validFrontmatterLines(), "memory")
   await putCatalogFile(vault, "Note.md", text)
-  if (!(await tryLinkFile(`${vault.path}/Note.md`, `${vault.path}/index.md`))) testContext.skip()
+  if (!(await tryLinkFile(`${vault.path}/Note.md`, `${vault.path}/index.md`)))
+    testContext.skip("this system cannot create file links")
   const result = await synchronizeMemory({ vault: "global" }, context)
   expect(result).toMatchObject({
     succeeded: true,

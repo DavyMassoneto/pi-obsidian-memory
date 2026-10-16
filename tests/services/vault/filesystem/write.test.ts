@@ -9,7 +9,7 @@ import { aLimits, vaultWithNote } from "#test-helpers"
 const limits = aLimits()
 
 test.runIf(process.platform === "win32")(
-  "refuses a read-only note, keeping it and leaving no temporary file",
+  "on Windows: refuses a read-only note, keeping it and leaving no temporary file",
   async () => {
     const { vault, note, file, hash } = await vaultWithNote()
     const before = await readFile(file, "utf8")

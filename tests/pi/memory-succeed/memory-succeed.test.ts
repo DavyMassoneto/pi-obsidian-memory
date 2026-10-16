@@ -57,7 +57,7 @@ test("a taken successor name is an error and nothing is published", async () => 
   expect(await readFile(fixture.file, "utf8")).toContain("Always pnpm.")
 })
 
-test.runIf(process.platform === "win32")("a partly done replacement is an error that says so", async () => {
+test.runIf(process.platform === "win32")("on Windows: a partly done replacement is an error that says so", async () => {
   const fixture = await readiedPiNote()
 
   const response = await succeedResponse(fixture, { ...replacement, folder: "a".repeat(256) })

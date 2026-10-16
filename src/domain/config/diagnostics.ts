@@ -1,9 +1,9 @@
-import type { TLocalizedValidationError } from "typebox/error"
+import type { TValidationError } from "typebox/error"
 
 import { describeSchemaErrors } from "#src/domain/validation"
 import type { ConfigObjectRule } from "./types.ts"
 
-export function configValueProblems(path: string, errors: TLocalizedValidationError[]): string[] {
+export function configValueProblems(path: string, errors: readonly TValidationError[]): string[] {
   const choices: string[] = []
   for (const error of errors) {
     if (error.keyword === "const" && typeof error.params.allowedValue === "string") {
