@@ -18,6 +18,8 @@ export interface CatalogScan {
   observedPaths: string[]
   completeDirectories: string[]
   failedPaths: string[]
+  untraversedAliasDirectories: string[]
+  excludedAliasFiles: string[]
   validationFingerprint: string
   complete: boolean
 }
@@ -43,8 +45,25 @@ export interface DuplicateCatalogId {
 export interface CatalogPlan extends CatalogChanges {
   duplicateIds: DuplicateCatalogId[]
   reinspectPaths: string[]
-  touchedFolders: string[]
 }
+
+export interface UntraversedAliasDirectory {
+  kind: "untraversed-directory"
+  path: string
+}
+
+export interface ExcludedAliasFile {
+  kind: "excluded-file"
+  path: string
+}
+
+export interface FailedAliasPath {
+  kind: "failed"
+  path: string
+  problems: string[]
+}
+
+export type AliasFailureClassification = UntraversedAliasDirectory | ExcludedAliasFile | FailedAliasPath
 
 export interface SemanticContent {
   statement: string

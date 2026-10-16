@@ -3,6 +3,22 @@ import { expect, test } from "vitest"
 import { planCatalogChanges } from "#/domain"
 import { catalogEntry, catalogScan, catalogSnapshot } from "#test-helpers"
 
+test("retires positively excluded alias identities without fabricating missing-directory coverage", () => {
+  const physical = catalogEntry("physical/Note.md")
+  const entries = [catalogEntry("alias/Old.md"), catalogEntry("Alias.md"), physical]
+  const scan = {
+    ...catalogScan([physical]),
+    observedPaths: ["alias", "Alias.md", "physical", "physical/Note.md"],
+    completeDirectories: ["", "physical"],
+    untraversedAliasDirectories: ["alias"],
+    excludedAliasFiles: ["Alias.md"],
+  }
+  expect(planCatalogChanges(catalogSnapshot(entries), scan).deletes).toEqual(["alias/Old.md", "Alias.md"])
+  expect(planCatalogChanges(catalogSnapshot(entries), { ...scan, failedPaths: ["alias", "Alias.md"] }).deletes).toEqual(
+    [],
+  )
+})
+
 test("keys copies by path and deletes only covered missing children", () => {
   const old = catalogEntry("tools/Old.md")
   const next = catalogEntry("tools/New.md")
@@ -25,7 +41,6 @@ test("deletes a cached note when successful enumeration proves its path is now a
 
   expect(plan.deletes).toEqual([old.path])
   expect(plan.upserts).toEqual([])
-  expect(plan.touchedFolders).toEqual(["tools"])
   expect(plan.population).toBe("ready")
 })
 
@@ -41,7 +56,6 @@ test("retains a cached note when enumeration of its replacement directory fails"
 
   expect(plan.deletes).toEqual([])
   expect(plan.upserts).toEqual([])
-  expect(plan.touchedFolders).toEqual([])
 })
 
 test("failed ancestors protect notes even when successful directory coverage overlaps", () => {

@@ -11,6 +11,7 @@ import type {
 } from "./schemas.ts"
 
 export type {
+  AliasFailureClassification,
   CatalogChanges,
   CatalogEntry,
   CatalogPlan,

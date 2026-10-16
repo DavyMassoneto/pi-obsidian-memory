@@ -1,7 +1,7 @@
 import type { NamedVaultContext } from "#/services/vault/context"
-import { refreshFolders } from "./refresh-folders.ts"
+import { alwaysContinue, refreshFolders } from "./refresh-folders.ts"
 import type { RefreshResult } from "./types.ts"
 
 export async function refreshIndexes(vault: NamedVaultContext, folder: string): Promise<RefreshResult> {
-  return refreshFolders(vault, [folder])
+  return refreshFolders(vault, [folder], alwaysContinue)
 }

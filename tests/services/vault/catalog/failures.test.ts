@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { enumerateVault, inspectVaultFile } from "#/services"
+import { catalogIoFailure, enumerateVault, inspectVaultFile } from "#/services"
 import { catalogVault, putCatalogFile } from "#test-helpers"
 
 test("reports missing files and non-directory traversal distinctly", async () => {
@@ -16,5 +16,15 @@ test("reports missing files and non-directory traversal distinctly", async () =>
     succeeded: false,
     reason: "not-directory",
     scope: "directory",
+  })
+})
+
+test("labels a plain ELOOP I/O error as an ordinary failure, not as a directory-alias cycle", () => {
+  const error = Object.assign(new Error("ELOOP: too many symbolic links encountered"), { code: "ELOOP" })
+
+  expect(catalogIoFailure(error, { path: "a.md", scope: "file" })).toMatchObject({
+    succeeded: false,
+    path: "a.md",
+    reason: "io-error",
   })
 })

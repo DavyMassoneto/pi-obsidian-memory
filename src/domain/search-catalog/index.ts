@@ -1,4 +1,6 @@
 export * from "./coverage.ts"
+export * from "./fingerprint.ts"
+export * from "./inspection.ts"
 export * from "./plan.ts"
 export * from "./schemas.ts"
 export * from "./types.ts"

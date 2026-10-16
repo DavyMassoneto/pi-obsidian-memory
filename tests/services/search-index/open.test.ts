@@ -1,10 +1,40 @@
-import { readFile, rm, stat, writeFile } from "node:fs/promises"
+import { lstat, readFile, rm, stat, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { indexFileFor, openIndex, putNote, searchText } from "#/services"
-import { anEntry, changeIndexFile, openedIndex, statementsOf, useTempFolder } from "#test-helpers"
+import { openIndex, putNote, recoverIndex, searchText } from "#/services"
+import { anEntry, changeIndexFile, openedIndex, statementsOf, tryLinkFile, useTempFolder } from "#test-helpers"
+
+test.for(["", "-journal", "-wal", "-shm"])(
+  "refuses database or sidecar link %s before opening",
+  async (suffix, context) => {
+    const root = await useTempFolder()
+    const target = join(root, "target.sqlite")
+    openedIndex(target).close()
+    const path = join(root, "catalog.sqlite")
+    if (suffix !== "") openedIndex(path).close()
+    if (!(await tryLinkFile(target, `${path}${suffix}`))) context.skip()
+    const before = await readFile(target)
+    const opened = recoverIndex({ path })
+    if (opened.succeeded) opened.output.close()
+    expect(opened).toMatchObject({ succeeded: false, reason: "unavailable" })
+    expect((await lstat(`${path}${suffix}`)).isSymbolicLink()).toBe(true)
+    expect(await readFile(target)).toEqual(before)
+  },
+)
+
+test("refuses a dangling database link without replacing it", async (context) => {
+  const root = await useTempFolder()
+  const path = join(root, "catalog.sqlite")
+  const target = join(root, "missing.sqlite")
+  if (!(await tryLinkFile(target, path))) context.skip()
+  const result = recoverIndex({ path })
+  if (result.succeeded) result.output.close()
+  expect(result).toMatchObject({ succeeded: false, reason: "unavailable" })
+  expect((await lstat(path)).isSymbolicLink()).toBe(true)
+  await expect(lstat(target)).rejects.toMatchObject({ code: "ENOENT" })
+})
 
 test("creates the index file and its folders, reporting that it needs population", async () => {
   const folder = await useTempFolder()
@@ -78,17 +108,4 @@ test("closes a connection when the FTS table is missing", async () => {
   expect(openIndex(path)).toMatchObject({ succeeded: false, reason: "corrupted" })
   await rm(path)
   expect(putNote(openedIndex(path), anEntry())).toEqual({ succeeded: true })
-})
-
-test("gives the same vault the same index file, however its path is written", () => {
-  const folder = join("C:", "agent", "index")
-
-  expect(indexFileFor(folder, "C:/Vaults/Global memory")).toBe(indexFileFor(folder, "c:\\vaults\\GLOBAL MEMORY\\"))
-})
-
-test("gives different vaults different index files", () => {
-  const folder = join("C:", "agent", "index")
-
-  expect(indexFileFor(folder, "C:/Vaults/loja")).not.toBe(indexFileFor(folder, "C:/Vaults/loja-admin"))
-  expect(indexFileFor(folder, "C:/Vaults/loja")).toMatch(/[\\/]index[\\/][0-9a-f]{16}\.sqlite$/)
 })

@@ -3,7 +3,7 @@ import { dirname, relative, sep } from "node:path"
 import type { NamedVaultContext } from "#/services/vault/context"
 import { linkStatOf } from "#/services/vault/filesystem"
 import { writeValidatedNote } from "./publish.ts"
-import { refreshFolders } from "./refresh-folders.ts"
+import { alwaysContinue, refreshFolders } from "./refresh-folders.ts"
 import { checkRelocation, removeOriginal } from "./relocation-checks.ts"
 import { resolveFolder } from "./resolve.ts"
 import { resolveOriginalFile } from "./resolve-stored-file.ts"
@@ -51,7 +51,7 @@ export async function relocateNote(
 
   const removedFolder = relative(root.output, dirname(moved.output)).split(sep).join("/")
   const folders = [removedFolder, request.original.folder, ...request.written.map((placed) => placed.folder)]
-  const refreshed = await refreshFolders(vault, folders)
+  const refreshed = await refreshFolders(vault, folders, alwaysContinue)
   if (!refreshed.succeeded) {
     progress.maintenanceProblems.push(...refreshed.problems)
   } else if (refreshed.maintenanceProblems) {

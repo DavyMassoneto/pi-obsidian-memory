@@ -1,3 +1,5 @@
+export const CATALOG_VALIDATION_POLICY = "vault-note-analysis-v1"
+
 export const INDEX_FILE_EXTENSION = ".sqlite"
 
 export const INDEX_FILE_NAME_LENGTH = 16

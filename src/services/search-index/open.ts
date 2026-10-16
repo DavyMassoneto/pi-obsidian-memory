@@ -1,11 +1,8 @@
-import { createHash } from "node:crypto"
-import { mkdirSync } from "node:fs"
-import { dirname, join } from "node:path"
+import { lstatSync, mkdirSync } from "node:fs"
+import { dirname } from "node:path"
 import { DatabaseSync } from "node:sqlite"
 
-import { comparablePath } from "#/domain"
 import { closeFailedIndex } from "./cleanup.ts"
-import { INDEX_FILE_EXTENSION, INDEX_FILE_NAME_LENGTH } from "./constants.ts"
 import { indexFailure } from "./refusals.ts"
 import { initializeSchema } from "./schema.ts"
 import { SqliteSearchIndex } from "./storage.ts"
@@ -13,6 +10,15 @@ import type { OpenIndexResult } from "./types.ts"
 
 export function openIndex(path: string): OpenIndexResult {
   try {
+    for (const suffix of ["", "-journal", "-wal", "-shm"]) {
+      if (lstatSync(`${path}${suffix}`, { throwIfNoEntry: false })?.isSymbolicLink()) {
+        return {
+          succeeded: false,
+          reason: "unavailable",
+          problems: [`Index path must not be a link: ${path}${suffix}`],
+        }
+      }
+    }
     mkdirSync(dirname(path), { recursive: true })
     return initializeIndex(new DatabaseSync(path))
   } catch (error) {
@@ -37,11 +43,4 @@ function initializeIndex(database: DatabaseSync): OpenIndexResult {
     }
     return closeFailedIndex(database, indexFailure(error))
   }
-}
-
-export function indexFileFor(indexFolder: string, vaultPath: string): string {
-  const vaultKey = comparablePath(vaultPath)
-  const name = createHash("sha256").update(vaultKey).digest("hex").slice(0, INDEX_FILE_NAME_LENGTH)
-
-  return join(indexFolder, `${name}${INDEX_FILE_EXTENSION}`)
 }

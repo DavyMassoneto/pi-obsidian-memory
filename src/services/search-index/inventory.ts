@@ -23,7 +23,7 @@ export function validCatalogEntry(entry: CatalogEntry): boolean {
   if (!Value.Check(CatalogEntrySchema, entry) || !Number.isFinite(entry.stat.mtimeMs)) return false
   if (!entry.note) return !entry.contentFingerprint && entry.needsFixing
   if (!entry.contentFingerprint) return false
-  return entry.note.archived === (entry.path.split("/")[0]?.toLowerCase() === "archive")
+  return entry.note.archived || entry.path.split("/")[0]?.toLowerCase() !== "archive"
 }
 
 function entryFromRow(row: CatalogRow): CatalogEntry | null {

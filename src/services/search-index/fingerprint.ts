@@ -1,9 +1,17 @@
 import { createHash } from "node:crypto"
 
-import type { SemanticContent } from "#/domain"
+import type { MemoryConfig } from "#/domain"
+import { CATALOG_VALIDATION_POLICY } from "./constants.ts"
 
-export function semanticFingerprint(content: SemanticContent): string {
+export function catalogValidationFingerprint(limits: MemoryConfig["limits"]): string {
   return createHash("sha256")
-    .update(JSON.stringify([content.statement, content.body]))
+    .update(
+      JSON.stringify([
+        CATALOG_VALIDATION_POLICY,
+        limits.maxStatementChars,
+        limits.maxBodyChars,
+        limits.maxNotesPerFolder,
+      ]),
+    )
     .digest("hex")
 }

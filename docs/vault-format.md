@@ -2,8 +2,9 @@
 
 How memory is organized inside a vault (global or project). Decided with the user on 2026-10-04.
 
-The format and resource operations below exist today. Automated synchronization, templates in the vault,
-Don't forget injection, and commands such as `/memory-doctor` are target behaviour, not registered features.
+The format and resource operations below exist today, and so does an internal synchronizer (not yet triggered by
+any pi event). Templates in the vault, Don't forget injection, and commands such as `/memory-doctor` are target
+behaviour, not registered features.
 Only `memory_add` is currently a pi tool; see [ROADMAP.md](ROADMAP.md).
 
 ## Layout
@@ -27,6 +28,12 @@ Only `memory_add` is currently a pi tool; see [ROADMAP.md](ROADMAP.md).
     Folder problems are labeled `Folder`.
   - Refresh includes logical and resolved physical folders and their ancestors, up to the root, without rewriting
     the same resolved index destination twice. Lifecycle also refreshes the physical parent of the removed original.
+    An index is rendered from its physical folder, so every route that reaches the same file writes the same content.
+  - An `index.md` that is an alias is followed only when its target is the `index.md` of the same resolved folder;
+    an index aliased to a note or to another folder's index is refused and reported, never written through.
+  - An index whose rendered content equals the file on disk is not rewritten.
+  - A folder that fails (unrepresentable name, unreadable, read-only index) is reported and the other folders are
+    still refreshed. A cancelled or stale operation stops before the next index write.
   - Valid dot-prefixed `.md` notes remain ordinary notes and appear in indexes. Actual temporary files are excluded.
   - Not subjects: hidden folders (`.obsidian/`), and at the vault root `archive/` and `_templates/`. Below the root,
     folders with those names are ordinary subjects.
@@ -91,7 +98,8 @@ is the source of truth; the search index lives outside it, one per machine, and 
   compared).
 - Only content that really changed is indexed again and gets a new embedding. A date-only change (sync tools do this)
   costs nothing, and a move only updates the path.
-- The `index.md` of every folder touched by those changes is regenerated, with the folders above it.
+- The `index.md` of every fully enumerated physical folder is re-checked on each synchronization and rewritten only
+  when its content differs.
 - A new note without valid frontmatter (created blank in Obsidian) stays out of search and is listed under
   `## Needs fixing`. `/memory-doctor` offers to complete it (a new `id`, asking the type) and applies it only after the
   user confirms.
