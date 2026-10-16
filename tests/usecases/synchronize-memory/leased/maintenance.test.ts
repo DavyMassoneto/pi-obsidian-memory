@@ -146,7 +146,7 @@ test("folders not reached before cancellation are rendered by the next sync", as
   expect(await readFile(join(vault.path, "b/index.md"), "utf8")).toContain("Note")
 })
 
-test.skipIf(process.platform !== "win32")("a lost search index leads to a full folder pass", async () => {
+test.skipIf(process.platform !== "win32")("on Windows: a lost search index leads to a full folder pass", async () => {
   const { vault, context } = await twoFolderFixture()
   const before = await readFile(join(vault.path, "a/index.md"), "utf8")
   await rm(await synchronizedIndexPath(context, vault.path))
@@ -154,19 +154,22 @@ test.skipIf(process.platform !== "win32")("a lost search index leads to a full f
   expect(await readFile(join(vault.path, "a/index.md"), "utf8")).not.toBe(before)
 })
 
-test.skipIf(process.platform !== "win32")("changing the note limits renders every folder again", async () => {
-  const { vault, context, config } = await twoFolderFixture()
-  const before = await readFile(join(vault.path, "a/index.md"), "utf8")
-  const limits = { ...config.limits, maxBodyChars: config.limits.maxBodyChars + 1 }
-  await writeRegistrationSnapshot(context, JSON.stringify({ ...config, limits }))
-  await whileLocked(join(vault.path, "a/Note.md"), () =>
-    synchronizeMemory({ vault: "global" }, inFreshSession(context)),
-  )
-  expect(await readFile(join(vault.path, "a/index.md"), "utf8")).not.toBe(before)
-})
+test.skipIf(process.platform !== "win32")(
+  "on Windows: changing the note limits renders every folder again",
+  async () => {
+    const { vault, context, config } = await twoFolderFixture()
+    const before = await readFile(join(vault.path, "a/index.md"), "utf8")
+    const limits = { ...config.limits, maxBodyChars: config.limits.maxBodyChars + 1 }
+    await writeRegistrationSnapshot(context, JSON.stringify({ ...config, limits }))
+    await whileLocked(join(vault.path, "a/Note.md"), () =>
+      synchronizeMemory({ vault: "global" }, inFreshSession(context)),
+    )
+    expect(await readFile(join(vault.path, "a/index.md"), "utf8")).not.toBe(before)
+  },
+)
 
 test.skipIf(process.platform !== "win32")(
-  "a corrupt folder state table is cleared instead of warning on every sync",
+  "on Windows: a corrupt folder state table is cleared instead of warning on every sync",
   async () => {
     const { vault, context } = await twoFolderFixture()
     corruptFolderIndexRows(await synchronizedIndexPath(context, vault.path))

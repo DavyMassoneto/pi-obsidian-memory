@@ -22,7 +22,8 @@ test("refuses an index alias to an ordinary note without replacing its bytes", a
   const vault = await useTempFolder()
   const text = renderNote(aNote())
   await writeFile(join(vault, "Note.md"), text)
-  if (!(await tryLinkFile(join(vault, "Note.md"), join(vault, "index.md")))) context.skip()
+  if (!(await tryLinkFile(join(vault, "Note.md"), join(vault, "index.md"))))
+    context.skip("this system cannot create file links")
   expect(await refreshIndexes({ path: vault, name: "Memory", limits }, "")).toMatchObject({
     succeeded: false,
     reason: "invalid",
@@ -37,7 +38,7 @@ test("refuses an index alias to another folder's index without writing the root 
   const target = join(vault, "physical", "INDEX.MD")
   await writeFile(target, "old index")
   const alias = join(vault, "index.md")
-  if (!(await tryLinkFile(target, alias))) context.skip()
+  if (!(await tryLinkFile(target, alias))) context.skip("this system cannot create file links")
   const named = { path: vault, name: "Memory", limits }
 
   expect(await refreshFolders(named, ["", "physical"], keepGoing, "with-ancestors")).toMatchObject({

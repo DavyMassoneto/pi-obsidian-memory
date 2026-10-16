@@ -176,7 +176,7 @@ test("a derived database link into the vault refuses before initialization or ma
   opened.output.close()
   const path = await synchronizedIndexPath(context, vault.path)
   await mkdir(dirname(path), { recursive: true })
-  if (!(await tryLinkFile(target, path))) testContext.skip()
+  if (!(await tryLinkFile(target, path))) testContext.skip("this system cannot create file links")
   const before = await memoryReadTree(root)
   const bytes = await readFile(target)
   expect(await synchronizeMemory({ vault: "global" }, context)).toMatchObject({

@@ -21,7 +21,8 @@ test("a note replaced by a direct archive alias retains exact identity but loses
   await synchronizeMemory({ vault: "global" }, context)
   await mkdir(join(vault.path, "archive"))
   await rename(join(vault.path, "Note.md"), join(vault.path, "archive/Note.md"))
-  if (!(await tryLinkFile(join(vault.path, "archive/Note.md"), join(vault.path, "Note.md")))) testContext.skip()
+  if (!(await tryLinkFile(join(vault.path, "archive/Note.md"), join(vault.path, "Note.md"))))
+    testContext.skip("this system cannot create file links")
   const result = await synchronizeMemory({ vault: "global" }, context)
   expect(result).toMatchObject({
     succeeded: true,
@@ -51,14 +52,16 @@ test("direct file aliases are independent exact path rows and are revalidated af
   const { vault, context } = await memoryReadFixture()
   await putCatalogFile(vault, "Note.md", noteText(validFrontmatterLines(), "memory"))
   for (const alias of ["One.MD", "Two.md"]) {
-    if (!(await tryLinkFile(join(vault.path, "Note.md"), join(vault.path, alias)))) testContext.skip()
+    if (!(await tryLinkFile(join(vault.path, "Note.md"), join(vault.path, alias))))
+      testContext.skip("this system cannot create file links")
   }
   expect(await synchronizeMemory({ vault: "global" }, context)).toMatchObject({
     succeeded: true,
     output: { duplicateIds: [{ paths: ["Note.md", "One.MD", "Two.md"] }] },
   })
   await rm(join(vault.path, "One.MD"))
-  if (!(await tryLinkFile(join(vault.path, "index.md"), join(vault.path, "One.MD")))) testContext.skip()
+  if (!(await tryLinkFile(join(vault.path, "index.md"), join(vault.path, "One.MD"))))
+    testContext.skip("this system cannot create file links")
   await synchronizeMemory({ vault: "global" }, context)
   expect(
     synchronizedCatalog(await synchronizedIndexPath(context, vault.path))

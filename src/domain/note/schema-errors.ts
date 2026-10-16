@@ -1,44 +1,38 @@
-import type { TLocalizedValidationError } from "typebox/error"
+import type { TValidationError } from "typebox/error"
 
-import { describeSchemaErrors } from "#src/domain/validation"
+import { describeSchemaErrorsWith } from "#src/domain/validation"
 import { NoteTypeSchema } from "./schemas.ts"
 
-export function describeNoteSchemaErrors(errors: TLocalizedValidationError[], label: string): string[] {
-  return describeSchemaErrors(
-    errors.map((error) => withNoteMessage(error, label)),
-    label,
-  )
+export function describeNoteSchemaErrors(errors: readonly TValidationError[], label: string): string[] {
+  return describeSchemaErrorsWith(errors, label, (error) => noteMessage(error, label))
 }
 
-function withNoteMessage(error: TLocalizedValidationError, label: string): TLocalizedValidationError {
+function noteMessage(error: TValidationError, label: string): string | null {
   const field = fieldNameOf(error, label)
   if (error.keyword === "pattern" && field === "id") {
-    return { ...error, message: "must be a ULID" }
+    return "must be a ULID"
   }
 
   if (error.keyword === "pattern" && (field === "replaces" || field === "replacedBy")) {
-    return {
-      ...error,
-      message: "must be a wikilink without an alias, heading or block reference ([[folder/Statement]])",
-    }
+    return "must be a wikilink without an alias, heading or block reference ([[folder/Statement]])"
   }
 
   if (error.keyword === "format" && error.params.format === "date") {
-    return { ...error, message: "must be a date (YYYY-MM-DD)" }
+    return "must be a date (YYYY-MM-DD)"
   }
 
   if (error.keyword === "enum") {
-    return { ...error, message: `must be one of: ${NoteTypeSchema.enum.join(", ")}` }
+    return `must be one of: ${NoteTypeSchema.enum.join(", ")}`
   }
 
   if (error.keyword === "const" && typeof error.params.allowedValue === "boolean" && error.params.allowedValue) {
-    return { ...error, message: "must be true (or left out)" }
+    return "must be true (or left out)"
   }
 
-  return error
+  return null
 }
 
-function fieldNameOf(error: TLocalizedValidationError, label: string): string {
+function fieldNameOf(error: TValidationError, label: string): string {
   if (error.instancePath.length === 0) {
     return label
   }

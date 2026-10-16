@@ -163,7 +163,7 @@ test("refuses duplicate canonical working folders while allowing nested roots", 
   }
 })
 
-test.runIf(process.platform === "win32")("does not infer a drive for rooted Windows paths", async () => {
+test.runIf(process.platform === "win32")("on Windows: does not infer a drive for rooted Windows paths", async () => {
   const fixture = await registrationFixture()
   try {
     expect(

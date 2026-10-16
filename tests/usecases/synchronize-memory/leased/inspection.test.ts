@@ -16,7 +16,7 @@ import {
 } from "#test-helpers"
 
 test.skipIf(process.platform !== "win32")(
-  "unchanged unreadable notes are reused; changed unreadable notes retain cached rows",
+  "on Windows: unchanged unreadable notes are reused; changed unreadable notes retain cached rows",
   async (testContext) => {
     const { vault, context } = await memoryReadFixture()
     await putCatalogFile(vault, "Note.md", noteText(validFrontmatterLines(), "memory original"))

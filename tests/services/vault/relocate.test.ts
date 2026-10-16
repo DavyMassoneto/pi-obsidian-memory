@@ -20,7 +20,7 @@ test("reports completed relocation with a warning when index maintenance is refu
 })
 
 test.runIf(process.platform === "win32")(
-  "reports the archived copy and retains the original when the successor write fails",
+  "on Windows: reports the archived copy and retains the original when the successor write fails",
   async () => {
     const { vault, request, file } = await vaultWithQuestion("2026-10-06")
     const folder = "a".repeat(256)

@@ -190,3 +190,12 @@ test("a note loaded into the section at session start is watched too: an edit la
 
   expect(String(message?.content)).toContain(`replaces the earlier copy of "global · ${PNPM}"`)
 })
+
+test("a run started by a custom message adds nothing and never starts retrieval", async () => {
+  const { pi, context, complete } = await startedPiFixture({ laya: RANKED, session: [], turns: [] }, false)
+  await pi.startSession(context, "startup")
+  const calls = complete.mock.calls.length
+
+  expect(await pi.runCustomStart(context)).toBeNull()
+  expect(complete.mock.calls.length).toBe(calls)
+})

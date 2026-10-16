@@ -100,7 +100,7 @@ test("exact succession rejects differently named canonical originals before publ
 })
 
 test.runIf(process.platform === "win32")(
-  "exact succession retains both publications in order when original removal is denied",
+  "on Windows: exact succession retains both publications in order when original removal is denied",
   async () => {
     const { vault, note, folder, path, file, hash, text } = await vaultWithStoredFile(".mD")
     const successor = { folder, note: aDecision() }
@@ -135,7 +135,7 @@ test.runIf(process.platform === "win32")(
 )
 
 test.runIf(process.platform === "win32")(
-  "exact succession observes the mixed-case original after a late failure",
+  "on Windows: exact succession observes the mixed-case original after a late failure",
   async () => {
     const { vault, note, folder, path, file, hash, text } = await vaultWithStoredFile(".mD")
     expect(

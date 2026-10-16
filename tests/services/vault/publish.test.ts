@@ -45,7 +45,7 @@ test("publishes only one of concurrent creates without replacing the winner", as
 })
 
 test.runIf(process.platform === "win32")(
-  "reports the actual winning filename after case-insensitive concurrent creation",
+  "on Windows: reports the actual winning filename after case-insensitive concurrent creation",
   async () => {
     const vault = await useTempFolder()
     const attempts = ["Mixed case", "MIXED CASE", "mixed case"].map((statement) => ({ ...aNote(), statement }))

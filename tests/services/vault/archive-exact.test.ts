@@ -121,7 +121,7 @@ test("exact archive rejects a differently named file target with no published co
 })
 
 test.runIf(process.platform === "win32")(
-  "exact archive reports the retained original when removal is denied",
+  "on Windows: exact archive reports the retained original when removal is denied",
   async () => {
     const { vault, note, folder, path, file, hash, text } = await vaultWithStoredFile(".mD")
     const release = await holdFileWithoutDeleteSharing(file)

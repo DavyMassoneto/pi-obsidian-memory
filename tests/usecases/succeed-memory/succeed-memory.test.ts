@@ -84,7 +84,7 @@ test("a note edited after the read is a conflict and stays as the user left it",
 })
 
 test.runIf(process.platform === "win32")(
-  "when the successor cannot be written the result lists the archived copy and says the original is still there",
+  "on Windows: when the successor cannot be written the result lists the archived copy and says the original is still there",
   async () => {
     const { context, vault, file } = await readiedNote("Always pnpm.", [])
 

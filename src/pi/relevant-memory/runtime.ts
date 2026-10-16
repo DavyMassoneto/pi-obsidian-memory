@@ -60,6 +60,7 @@ export class RelevantMemoryRuntime {
 
   beforeAgentStart(): BeforeAgentStartHandler {
     return async (event, ctx) => {
+      if (event.messageType !== "user") return undefined
       const operation = this.#deps.sessions.retrievalOperation(ctx.cwd, this.#deps.paths)
       if (!operation) return undefined
       const result = await retrieveMemory({ message: event.prompt }, operation, {

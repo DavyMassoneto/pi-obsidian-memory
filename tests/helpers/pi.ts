@@ -23,7 +23,7 @@ import {
   type ToolCallHandler,
 } from "#src/pi"
 import { fakePiContext } from "./pi-context.ts"
-import { promptEventFor } from "./pi-prompt.ts"
+import { customStartEvent, promptEventFor } from "./pi-prompt.ts"
 import type { TurnOutcome } from "./types.ts"
 
 export function registerWithFakePi(env: NodeJS.ProcessEnv) {
@@ -142,6 +142,15 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv, overr
         if (result?.message) message = result.message
       }
       return { sections: event.systemPromptOptions.sections, message }
+    },
+    async runCustomStart(context: MemoryPiContext): Promise<TurnOutcome["message"]> {
+      const event = customStartEvent(context.cwd)
+      let message: TurnOutcome["message"] = null
+      for (const handler of promptHandlers) {
+        const result = await handler(event, context)
+        if (result?.message) message = result.message
+      }
+      return message
     },
     async runToolCall(event: ToolCallEvent, context: MemoryPiContext) {
       for (const handler of toolCallHandlers) {
