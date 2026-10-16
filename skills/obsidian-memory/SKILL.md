@@ -71,6 +71,7 @@ The memory block at session start is only part of the memory. Search and read mo
 
 ## Saving
 
+- Memory is captured, updated and retired automatically by a background review of the conversation; you don't need to save anything for it.
 - Use `memory_add` only when the user explicitly asks you to remember something. Never save on your own initiative, and never nudge the user to save.
 - Choose the vault, the folder and the type as described above. Ask when unsure.
 - A name already taken (in any case) is refused with the existing note. If it is the same point, read it with `memory_get` and, only if the user asked for a change, use `memory_update`; otherwise choose a statement that says what is new.

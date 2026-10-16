@@ -44,7 +44,7 @@ test.each([
 
   expect(response).toEqual({
     content: [{ type: "text", text: `Saved in ${vaultName}: tools/pnpm/${params.statement}.md` }],
-    details: undefined,
+    details: { vault: scope, path: `tools/pnpm/${params.statement}.md` },
     isError: false,
   })
   expect(existing).toMatchObject({

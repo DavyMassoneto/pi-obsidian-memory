@@ -1,5 +1,6 @@
 export * from "./add-memory/index.ts"
 export * from "./archive-memory/index.ts"
+export * from "./capture-memory/index.ts"
 export * from "./check-vault-access/index.ts"
 export * from "./complete-blank-memory/index.ts"
 export * from "./diagnose-memory/index.ts"

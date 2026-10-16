@@ -65,7 +65,14 @@ test("registers the six tools, the four commands and the session events", () => 
     "memory_archive",
     "memory_succeed",
   ])
-  expect(events).toEqual(["session_start", "before_agent_start", "tool_call", "session_shutdown"])
+  expect(events).toEqual([
+    "session_start",
+    "before_agent_start",
+    "tool_call",
+    "agent_end",
+    "session_before_compact",
+    "session_shutdown",
+  ])
   expect(commands).toEqual(["memory-setup", "memory-init", "memory-export", "memory-doctor"])
 })
 
@@ -74,7 +81,7 @@ test("shutting the session down drops the memory block", async () => {
   await pi.startSession(piContext, "startup")
   expect(Object.keys(await pi.runPrompt(workingFolder))).toEqual(["obsidian_memory"])
 
-  await pi.shutdownSession()
+  await pi.shutdownSession(piContext)
 
   expect(await pi.runPrompt(workingFolder)).toEqual({})
 })
@@ -96,6 +103,7 @@ test("no LLM-facing text names a command or tool that is not registered", async 
     {
       succeeded: true,
       output: {
+        scope: "global",
         vaultName: "Global memory",
         folder: "tools",
         notePath: "tools/Use pnpm.md",
@@ -118,7 +126,7 @@ test("no LLM-facing text names a command or tool that is not registered", async 
     { succeeded: false, reason: "not-found", problems },
   ]
   const constantTexts = Object.values(pi).filter(
-    (value) => typeof value === "string" && value !== pi.MEMORY_BLOCK_SECTION,
+    (value) => typeof value === "string" && value !== pi.MEMORY_BLOCK_SECTION && value !== pi.CURSOR_TYPE,
   )
   const texts = [
     ...[...tools, ...searchTools, ...getTools, ...updateTools, ...archiveTools, ...succeedTools].map((tool) =>

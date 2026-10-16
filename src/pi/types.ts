@@ -1,3 +1,4 @@
+import type { AgentEndHandler, BeforeCompactHandler, CompletionFactory, CursorData } from "#src/pi/capture"
 import type { MemoryCommand } from "#src/pi/context"
 import type { MemoryAddTool } from "#src/pi/memory-add"
 import type { MemoryArchiveTool } from "#src/pi/memory-archive"
@@ -21,5 +22,12 @@ export interface ExtensionRegistrar {
   onSessionStart(handler: SessionStartHandler): void
   onBeforeAgentStart(handler: BeforeAgentStartHandler): void
   onToolCall(handler: ToolCallHandler): void
+  onAgentEnd(handler: AgentEndHandler): void
+  onBeforeCompact(handler: BeforeCompactHandler): void
+  appendCursor(data: CursorData): void
   onSessionShutdown(handler: SessionShutdownHandler): void
+}
+
+export interface ExtensionOverrides {
+  completionOf?: CompletionFactory
 }

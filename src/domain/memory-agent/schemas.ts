@@ -18,6 +18,17 @@ export const CandidateSchema = Type.Object(
   { additionalProperties: false },
 )
 
+export const ListedNoteSchema = Type.Object(
+  {
+    vault: VaultSchema,
+    path: PathSchema,
+    type: NoteTypeSchema,
+    statement: TextSchema,
+    dontForget: Type.Optional(Type.Boolean()),
+  },
+  { additionalProperties: false },
+)
+
 export const ReadObservationSchema = Type.Object(
   {
     kind: Type.Literal("read"),
@@ -45,7 +56,8 @@ export const ObservationSchema = Type.Union([
       vault: VaultSchema,
       folder: PathSchema,
       folders: Type.Array(PathSchema, { maxItems: 20 }),
-      notes: Type.Array(CandidateSchema, { maxItems: 20 }),
+      notes: Type.Array(ListedNoteSchema, { maxItems: 20 }),
+      truncated: Type.Boolean(),
     },
     { additionalProperties: false },
   ),

@@ -215,7 +215,7 @@ test("shutting the session down while a question is open stops the setup before 
 
   const running = pi.runCommand("memory-setup", context)
   await vi.waitFor(() => expect(prompts.some((prompt) => prompt.kind === "confirm")).toBe(true))
-  await pi.shutdownSession()
+  await pi.shutdownSession(context)
   answer.resolve(true)
   await running
 

@@ -14,11 +14,17 @@ export class MemorySession {
   #controller = new AbortController()
   #aborted = false
   #configuration: ConfigurationBinding = { bound: false }
-  #leases = new SessionLeases()
+  #leases: SessionLeases
   #receipts = new GetReceipts()
 
-  constructor(identity: SessionIdentity) {
+  constructor(identity: SessionIdentity, leases?: SessionLeases) {
     this.#stamp = Object.freeze({ sessionId: identity.sessionId, branchId: identity.branchId, generation: 0 })
+    this.#leases = new SessionLeases()
+    if (leases) this.#leases = leases
+  }
+
+  sibling(identity: SessionIdentity): MemorySession {
+    return new MemorySession(identity, this.#leases)
   }
 
   stamp(): OperationStamp {

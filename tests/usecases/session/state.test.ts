@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, test } from "vitest"
 
 import { createMemorySession } from "#src/usecases"
 import { deliveredRead, sessionIdentity } from "#test-helpers"
@@ -137,4 +137,40 @@ describe("MemorySession generation", () => {
     expect(replacement.isCurrent(replacement.stamp())).toBe(true)
     expect(replacement.isCurrent(stamp)).toBe(false)
   })
+})
+
+test("a sibling session keeps its own receipts but shares the leases with the session it came from", async () => {
+  const session = createMemorySession(sessionIdentity())
+  const sibling = session.sibling({ sessionId: "session-one", branchId: "capture" })
+  const read = deliveredRead()
+  const address = { vault: read.vault, path: read.path }
+
+  session.rememberGet(session.stamp(), read)
+  expect(sibling.getReceipt(sibling.stamp(), address)).toBeNull()
+  sibling.rememberGet(sibling.stamp(), { ...read, sourceCallId: "capture-get" })
+  expect(session.getReceipt(session.stamp(), address)?.sourceCallId).toBe(read.sourceCallId)
+
+  const held = await session.acquire(session.stamp(), AbortSignal.timeout(1000))
+  const waiting = sibling.acquire(sibling.stamp(), AbortSignal.timeout(1000))
+  const early = await Promise.race([
+    waiting,
+    new Promise<string>((resolve) => setTimeout(() => resolve("waiting"), 100)),
+  ])
+  held?.release()
+
+  expect(early).toBe("waiting")
+  expect(await waiting).not.toBeNull()
+})
+
+test("a sibling's receipts are not cleared by the session's own invalidation, and each has its own stamp", () => {
+  const session = createMemorySession(sessionIdentity())
+  const sibling = session.sibling({ sessionId: "session-one", branchId: "capture" })
+  const read = deliveredRead()
+  sibling.rememberGet(sibling.stamp(), read)
+
+  session.invalidate(session.stamp())
+
+  expect(sibling.getReceipt(sibling.stamp(), { vault: read.vault, path: read.path })).not.toBeNull()
+  expect(sibling.stamp()).not.toBe(session.stamp())
+  expect(sibling.stamp().branchId).toBe("capture")
 })

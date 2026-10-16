@@ -51,7 +51,7 @@ test("each handler is subscribed to its own pi event and runs when pi fires it",
     registrar.onSessionStart(async () => void fired.push("session_start"))
     registrar.onBeforeAgentStart(async () => void fired.push("before_agent_start"))
     registrar.onToolCall(async () => void fired.push("tool_call"))
-    registrar.onSessionShutdown(() => void fired.push("session_shutdown"))
+    registrar.onSessionShutdown(async () => void fired.push("session_shutdown"))
   })
   await loaded.handlers.get("session_start")?.[0]?.({ type: "session_start", reason: "startup" }, context)
   await loaded.handlers.get("before_agent_start")?.[0]?.(promptEvent("work"), context)

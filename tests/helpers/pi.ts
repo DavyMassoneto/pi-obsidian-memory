@@ -11,9 +11,12 @@ import {
 } from "@earendil-works/pi-coding-agent"
 
 import {
+  type AgentEndHandler,
   type BeforeAgentStartHandler,
+  type BeforeCompactHandler,
+  type CursorData,
+  type ExtensionOverrides,
   type ExtensionRegistrar,
-  type MemoryAddResponse,
   type MemoryAddTool,
   type MemoryArchiveTool,
   type MemoryCommand,
@@ -37,7 +40,7 @@ export function registerWithFakePi(env: NodeJS.ProcessEnv) {
   return registerFakePiAt(join("C:", "agent"), env)
 }
 
-export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
+export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv, overrides?: ExtensionOverrides) {
   const tools: MemoryAddTool[] = []
   const searchTools: MemorySearchTool[] = []
   const getTools: MemoryGetTool[] = []
@@ -52,6 +55,9 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
   const startHandlers: SessionStartHandler[] = []
   const shutdownHandlers: SessionShutdownHandler[] = []
   const toolCallHandlers: ToolCallHandler[] = []
+  const agentEndHandlers: AgentEndHandler[] = []
+  const compactHandlers: BeforeCompactHandler[] = []
+  const cursors: CursorData[] = []
 
   const registrar: ExtensionRegistrar = {
     registerAddTool(tool) {
@@ -90,6 +96,15 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
       events.push("session_start")
       startHandlers.push(handler)
     },
+    onAgentEnd(handler) {
+      events.push("agent_end")
+      agentEndHandlers.push(handler)
+    },
+    onBeforeCompact(handler) {
+      events.push("session_before_compact")
+      compactHandlers.push(handler)
+    },
+    appendCursor: (data) => cursors.push(data),
     onToolCall(handler) {
       events.push("tool_call")
       toolCallHandlers.push(handler)
@@ -99,7 +114,7 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
       shutdownHandlers.push(handler)
     },
   }
-  registerExtension(registrar, agentDir, env)
+  registerExtension(registrar, agentDir, env, overrides)
 
   return {
     tools,
@@ -131,9 +146,17 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
       }
       return undefined
     },
-    async shutdownSession() {
-      for (const handler of shutdownHandlers) await handler()
+    async shutdownSession(context: MemoryPiContext) {
+      for (const handler of shutdownHandlers) await handler({ type: "session_shutdown", reason: "quit" }, context)
     },
+    async endAgent(context: MemoryPiContext) {
+      for (const handler of agentEndHandlers) await handler({ type: "agent_end", messages: [] }, context)
+    },
+    async compact(context: MemoryPiContext) {
+      for (const handler of compactHandlers)
+        await handler({ type: "session_before_compact", reason: "manual" }, context)
+    },
+    cursors,
   }
 }
 
@@ -183,30 +206,4 @@ function restoreEnv(name: string, previous: string | undefined): void {
   } else {
     process.env[name] = previous
   }
-}
-
-export function textOf(response: MemoryAddResponse): string {
-  const texts = response.content.flatMap((part) => {
-    if (part.type === "text") {
-      return [part.text]
-    }
-
-    return []
-  })
-
-  return texts.join("")
-}
-
-export function mentionsIn(texts: string[]): string[] {
-  return texts.flatMap((text) =>
-    [
-      ...text.matchAll(/(?<=^|[\s`(])\/[a-z][\w-]*/g),
-      ...text.matchAll(/\b[a-z]+(?:_[a-z]+)+\b/g),
-      ...text.matchAll(/(?<![\w/])memory-\w+/g),
-    ].map((mention) => mention[0]),
-  )
-}
-
-export function unregisteredMentions(texts: string[], registered: string[]): string[] {
-  return mentionsIn(texts).filter((mention) => !registered.includes(mention))
 }

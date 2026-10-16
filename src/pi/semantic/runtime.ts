@@ -19,6 +19,7 @@ import {
   NO_UI_DISCLOSURE,
   NO_UI_DOWNLOAD,
   REMOTE_DISCLOSURE_TITLE,
+  SHUTDOWN_FAILED,
 } from "./constants.ts"
 
 export class SemanticRuntime {
@@ -44,9 +45,16 @@ export class SemanticRuntime {
 
   async shutdown(): Promise<void> {
     const local = this.#local
+    const context = this.#context
     this.#local = null
     this.#context = null
-    if (local) await local.dispose()
+    if (!local) return
+    try {
+      await local.dispose()
+    } catch (error) {
+      if (!(error instanceof Error)) throw error
+      if (context?.hasUI) context.ui.notify(`${SHUTDOWN_FAILED} ${error.message}`, "warning")
+    }
   }
 
   async #localPort(): Promise<SemanticPort> {

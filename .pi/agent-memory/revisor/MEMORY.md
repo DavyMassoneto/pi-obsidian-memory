@@ -39,3 +39,10 @@
   dimension-mismatch paths (cosine throws RangeError) are invisible to tests; mutate guards in src/usecases/semantic
   (rank.ts fingerprint check, refresh-vectors OTHER_PROVIDER) to check coverage. Mutation script kept in /tmp/revisor/mut.sh
   (cp .bak, sed, vitest grep "Tests|×", restore). pi ModelRegistry.getApiKeyForProvider catches and returns undefined.
+- 2026-10 (M4 capture review): write-safety of capture/main-LLM changes rests on SESSION receipts (shared by capture's
+  getMemory sourceCallId "capture" and memory_get), not on the action's expectedHash -> probe: edit file + another
+  getMemory between capture's get and update overwrites the edit. Probe tests: temp tests/<dir>/revisor-probe.test.ts
+  writing results to tmp/ (console.log is swallowed by grep), delete after. ui.input accepts {signal,timeout}.
+- 2026-10 (M4 re-review): pi ctx getters (cwd, ui, hasUI, sessionManager...) throw after session replacement/reload
+  (runner.assertActive); pi awaits session_shutdown handlers (no timeout) BEFORE invalidate, so work awaited there is
+  safe. When using sed line addresses in mutations, get line numbers from `grep -n` on the file, not concatenated cat -n.

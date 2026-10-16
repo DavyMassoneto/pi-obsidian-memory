@@ -9,11 +9,11 @@ description: Map of pi-obsidian-memory — areas and owners, interfaces between 
 
 | Owner | Paths (src + mirrored tests/) | Purpose |
 | --- | --- | --- |
-| nucleo | `src/domain`, `src/shared`, `tests/domain` | Pure rules (note, config incl. `disclosures.ts`, names, vault-path, capture, lifecycle, catalogs, `*/dont-forget.ts`); generic result types |
-| cofre | `src/services/vault`, `tests/services/vault` | Notes on disk: read/write/archive/relocate/list, bootstrap, catalog, folder indexes, `inspect-folder.ts` |
-| indice | `src/services/{search-index,embeddings}` + tests | SQLite search index, reconcile/recovery, embedding providers; `search-index/inspection.ts` (domain re-export seam) |
-| ponte | `src/services/{config,llm,decision-model,clock,id}`, `src/services/index.ts` + tests | Config I/O, LLM, decision model, clock, ids |
-| maestro | `src/usecases` (incl. `registration/{propose,prepare-init,check}.ts`), `src/pi` (incl. `registrar.ts`, `memory-setup`, `memory-init`, `session-start`, `registration-report`, `memory-session`, `context`), `tests/usecases`, `tests/pi` | Operation flows; pi tools/events/commands, extension entry (`src/pi/extension.ts`) |
+| nucleo | `src/domain`, `src/shared`, `tests/domain` | Pure rules (note, config incl. `disclosures.ts`, `vault-access/`, names, vault-path, capture, lifecycle, catalogs, `*/dont-forget.ts`, `vault-diagnosis`, `vault-assets`); generic result types |
+| cofre | `src/services/vault`, `tests/services/vault` | Notes on disk: read/write/archive/relocate/list, bootstrap, catalog, folder indexes, `inspect-folder.ts`; seams `domain-rules.ts`, `folder-listing.ts`, `catalog/dont-forget.ts` |
+| indice | `src/services/{search-index,embeddings}` + tests | SQLite search index, reconcile/recovery, embedding providers; seams `search-index/{inspection,dont-forget,ranking}.ts` |
+| ponte | `src/services/{config,llm,decision-model,clock,id}`, `src/services/index.ts` + tests | Config I/O (`config/vault-access.ts` seam), LLM (`llm/domain-rules.ts` seam), decision model, clock, ids |
+| maestro | `src/usecases` (incl. `registration/`, `check-vault-access/`, `load-dont-forget/`, `memory-change/`, `semantic*/`, `diagnose-memory/`, `export-memory/`, `search-memory/`, `archive-memory/`, `succeed-memory/`, `update-memory/`, `complete-blank-memory/`), `src/pi` (incl. `registrar.ts`, `vault-guard/`, `memory-{setup,init,search,get,update,archive,succeed,doctor,export}`, `memory-block`, `semantic`, `change-report`, `registration-report`, `memory-session`, `session-start`, `context`), `tests/usecases`, `tests/pi` | Operation flows; pi tools/events/commands, vault guard, extension entry (`src/pi/extension.ts`) |
 | cartografo | `.pi/skills/project-map/SKILL.md` | Keeps this map |
 
 Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`, `tsconfig.json`, `vitest.config.ts`,
@@ -21,18 +21,21 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 
 ## Test helpers (`tests/helpers/`, one file per topic)
 
-- nucleo: `config.ts`, `settings.ts`, `types.ts` (only `LimitsInput`, used by config.ts)
-- cofre: `vault.ts` (`keepGoing`, `nestedAliasVault`, `allowing`), `vault-catalog.ts` (`anInspectedFile`, `aCatalogFailure`, `aVaultCatalogEntry`), `vault-exact.ts`, `windows-file-handle.ts`, `note.ts`, `limits.ts`, `temp-folder.ts`
-- indice: `search-index.ts`, `search-catalog.ts`, `embeddings.ts`
-- ponte: `llm.ts`, `decision-model.ts`, `registration.ts` (used by tests/services/config)
-- maestro: `memory.ts`, `memory.test.ts`, `memory-read.ts`, `registration-usecases.ts`, `session.ts`, `synchronize-memory.ts`, `pi.ts`, `pi-context.ts`, `pi-registration.ts`, `index.ts` (barrel)
+- nucleo: `config.ts`, `settings.ts`, `types.ts` (only `LimitsInput`, used by config.ts), `registration.ts` (used by tests/services/config)
+- cofre: `vault.ts` (`keepGoing`, `nestedAliasVault`, `allowing`), `vault-catalog.ts`, `vault-exact.ts`, `vault-diagnosis.ts`, `folder-listing.ts`, `locked-file-contents.ts`, `windows-file-handle.ts`, `note.ts`, `limits.ts`, `temp-folder.ts`
+- indice: `search-index.ts`, `search-catalog.ts`, `search-vectors.ts`, `embeddings.ts`, `embedding-benchmark.ts`
+- ponte: `llm.ts`, `decision-model.ts`
+- maestro: `check-vault-access.ts`, `diagnose-memory.ts`, `export-memory.ts`, `memory.ts`, `memory-change.ts`, `memory-read.ts`, `operation-context.ts`, `registration-usecases.ts`, `search-memory.ts`, `semantic-memory.ts`, `session.ts`, `synchronize-memory.ts`, `pi.ts`, `pi-context.ts`, `pi-memory.ts`, `pi-prompt.ts`, `pi-registration.ts`, `pi-responses.ts`, `pi-smoke.ts`, `index.ts` (barrel)
+- Owners are by topic (verify the first lines of a helper before editing it). `tests/helpers/memory.test.ts` is a test file in helpers, not exported by the barrel.
+- Test projects (`vitest.config.ts`, `maxWorkers: 8`): `unit` (`tests/**/*.test.ts` minus `*.smoke.test.ts`, `*.model.test.ts`); `pi` (`*.smoke.test.ts`, 30 s); `model` (`*.model.test.ts`, 600 s, `npm run test:model`, real models, only when asked).
 - Shared helpers (`note`, `temp-folder`, `settings`, `config`, `index`) are used across areas: others request additions via the orchestrator.
 
 ## Interfaces
 
 - Ladder: pi → usecases → services → domain, each imports only the layer below; `shared` is importable by all and imports
   no layer (`biome/layer-*.grit`).
-- Seam: usecases reach domain rules only through `#src/services` re-exports, never `#src/domain` directly.
+- Seam: usecases reach domain rules only through `#src/services` re-exports, never `#src/domain` directly. Re-export-only seam files (one `export ... from "#src/domain"` each): `services/vault/{domain-rules,folder-listing}.ts`, `services/vault/catalog/dont-forget.ts`, `services/search-index/{inspection,dont-forget,ranking}.ts`, `services/llm/domain-rules.ts`, `services/config/vault-access.ts`.
+- Vault guard (`src/pi/vault-guard`, maestro): `accessRequestsOf` maps read/write/edit/grep/find/ls/bash/powershell to requests (file, config-write, tree, listing, command); each goes to `checkVaultAccess`. A `config-protected` refusal blocks with `CONFIG_PROTECTED_REFUSAL`; other refusals block with their problems.
 - Aliases (`package.json` `imports`): `#src/<layer-or-folder>` → `./src/<x>/index.ts` (`#src/domain`, `#src/services`,
   `#src/usecases`, `#src/shared`); `#test-helpers` → `tests/helpers/index.ts`.
 - Barrels: every `index.ts` only has `export * from "./x.ts"` / `"./folder/index.ts"` (`biome/index-reexports-only.grit`).
@@ -53,8 +56,8 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 
 ## Build / test / run
 
-- `npm test` (vitest project `unit`: `tests/**/*.test.ts` minus `*.smoke.test.ts`); `npm run test:pi` (project `pi`, real pi
-  smoke, 30 s timeout; only when the orchestrator asks); `npm run lint` (`biome check .`); `npm run typecheck`
+- `npm test` (vitest project `unit`: `tests/**/*.test.ts` minus `*.smoke.test.ts` and `*.model.test.ts`); `npm run test:pi` (project `pi`, real pi
+  smoke, 30 s timeout; only when the orchestrator asks); `npm run test:model` (project `model`, 600 s, only when asked); `npm run lint` (`biome check .`); `npm run typecheck`
   (`tsc --noEmit`); `npm run format` (`biome check --write .`).
 - One file: `npx vitest run --project unit tests/services/vault/save.test.ts` (add `-t "name"` for one test).
 - Conventions: `tests/` mirrors `src/`; real disk in temp folders (`useTempFolder`), never a mocked filesystem or the user's
@@ -91,7 +94,9 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
   see a test fail) must back up to a file named with your agent name inside the repo-ignored `tmp/`, never a shared
   `/tmp/x.bak`, and restore immediately; confirm with `git diff -- <file>` afterwards. Never use git stash/checkout.
 - Test files hold only `describe`/`it`: any helper function or fixture builder goes to `tests/helpers/<topic>.ts`,
-  exported via `#test-helpers` (checked by grep `^function` in `*.test.ts`).
+  exported via `#test-helpers` (checked by grep `^function` in `*.test.ts`; currently no matches).
+- Every logic module under `src/` needs a mirrored `tests/` file (re-export-only seam files excluded).
+- Usecases never import `#src/domain` directly (grep-verified): add a re-export seam in `src/services` first.
 - Lint/typecheck errors in files you don't own may be another owner's work in progress: report, don't fix.
 
 ## Pitfalls — runtime

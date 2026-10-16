@@ -44,6 +44,14 @@ Every milestone:
   semantic search is off, search falls back to words with a status line. The local model (~135 MB) is downloaded only
   after confirmation, once per runtime, into `pi-obsidian-memory/models` beside the config. No UI or a declined
   confirmation means words only, never another provider. API keys come from pi's model registry.
+- Automatic capture (milestone 4): a background review of user and assistant text since its last run (the cursor is a
+  session custom entry, never sent to the LLM). `capture.when` picks the pi event: `after-each-turn` is `agent_end`
+  (once per user prompt), `on-compaction` is `session_before_compact` (compaction is not held back), `at-session-end`
+  is `session_shutdown` (pi awaits it on quit). The model may search, list, get, add, update, archive, succeed or
+  clarify, at most 8 rounds per window and within `MAX_CAPTURE_DURATION_MS`. Writes use the same usecases as the
+  tools (receipts, conflicts); explicit `memory_add` saves are not duplicated. When unsure it asks through the UI, or
+  skips without one. It adds nothing to the main prompt, and runs are serialized. Judgement quality is untested
+  against a real model.
 - Decision-model and bounded capture/retrieval model resources exist, but that setting does not connect them to
   product operations or prove live-provider availability. Later milestones are not complete.
 - `memory_search` (text; global, project or both; 10 results per vault; archived and invalid-frontmatter notes
@@ -328,27 +336,29 @@ Every milestone:
 
 - **Goal:** memory grows from the conversation, without the user asking.
 - **Scope:**
-  - A background process reviews the conversation since its last run. It captures, updates, archives and succeeds
+  - [x] A background process reviews the conversation since its last run. It captures, updates, archives and succeeds
     notes (VISION 5), placing each one by walking the subject tree and using search (vault-format, Layout).
-  - It picks the global or the project vault (VISION 2).
-  - When unsure of the vault, the folder, the type or whether something is memory, it asks the user through pi's UI.
+  - [x] It picks the global or the project vault (VISION 2).
+  - [x] When unsure of the vault, the folder, the type or whether something is memory, it asks the user through pi's UI.
     Without a UI it saves nothing it is unsure of.
-  - It follows the types and the Not memory list, and writes notes in English (VISION 7). Secrets are saved like any
+  - [ ] It follows the types and the Not memory list, and writes notes in English (VISION 7). Secrets are saved like any
     note (VISION 11).
-  - It reaches the vaults only through the memory system, like the main LLM (VISION 12).
-  - Settings: `capture.model`, `capture.when` (Settled behaviour).
+  - [x] It reaches the vaults only through the memory system, like the main LLM (VISION 12).
+  - [x] Settings: `capture.model`, `capture.when` (Settled behaviour).
 - **Out of scope:** memory added per message (6).
 - **Depends on:** 3.
 - **Done when:**
-  - a preference stated in conversation becomes a global note, with no memory tool call by the main LLM;
-  - new detail on an existing point updates that note instead of adding a new one;
-  - a point that stopped being true gets a successor;
-  - something saved explicitly with `memory_add` is not saved a second time;
-  - tasks, TODOs and session logs are not saved; a stated secret is saved as written;
-  - when the vault or the folder is unclear, the user is asked; without a UI nothing is saved;
-  - an edit made in Obsidian while capture runs is never overwritten;
-  - each `capture.when` value runs capture at that moment, with the configured model;
-  - nothing in the main prompt tells the LLM to save.
+  - [x] a preference stated in conversation becomes a global note, with no memory tool call by the main LLM;
+  - [x] new detail on an existing point updates that note instead of adding a new one;
+  - [x] a point that stopped being true gets a successor;
+  - [x] something saved explicitly with `memory_add` is not saved a second time;
+  - [ ] tasks, TODOs and session logs are not saved; a stated secret is saved as written;
+  - [x] when the vault or the folder is unclear, the user is asked; without a UI nothing is saved;
+  - [x] an edit made in Obsidian while capture runs is never overwritten;
+  - [x] each `capture.when` value runs capture at that moment, with the configured model;
+  - [x] nothing in the main prompt tells the LLM to save.
+  - Unticked: the judgement items (Not memory list, English, tasks and session logs not saved, secrets saved as
+    written) need a real model to prove; no test does.
 
 ### 5. Semantic search
 

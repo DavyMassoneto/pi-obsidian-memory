@@ -9,10 +9,10 @@ import type {
   MemoryUpdateParams,
 } from "#src/pi"
 import { READIED_PATH } from "./memory-change.ts"
-import { textOf } from "./pi.ts"
 import { fakePiContext } from "./pi-context.ts"
 import { fakeToolContext, toolCallEvent } from "./pi-prompt.ts"
 import { piRegistrationFixture, writeAgentConfig } from "./pi-registration.ts"
+import { textOf } from "./pi-text.ts"
 import { noteWithId } from "./search-memory.ts"
 import { putCatalogFile } from "./vault-catalog.ts"
 

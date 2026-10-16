@@ -189,3 +189,27 @@ test("an empty API key counts as no API key", async () => {
 
   expect(await runtime.source(openai)).toEqual({ available: false, reason: "no API key for openai" })
 })
+
+test("a local model that fails to shut down is reported to the user and never rejects", async () => {
+  const folder = await useTempFolder()
+  const { access } = recordingLocalAccess("cached")
+  const failing = {
+    ...access,
+    create: (options: Parameters<typeof access.create>[0]) => ({
+      ...access.create(options),
+      dispose: async () => {
+        throw new Error("model busy")
+      },
+    }),
+  }
+  const runtime = new SemanticRuntime(join(folder, "models"), failing)
+  const { context, notifications } = fakePiContext(folder, {})
+  runtime.attach(context)
+  await runtime.source(local)
+
+  await expect(runtime.shutdown()).resolves.toBeUndefined()
+
+  expect(notifications).toEqual([
+    { message: "The local search model did not shut down cleanly: model busy", type: "warning" },
+  ])
+})

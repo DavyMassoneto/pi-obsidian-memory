@@ -1,4 +1,6 @@
-import type { ChatModelSource, MemoryPiContext } from "#src/pi"
+import type { SessionEntry } from "@earendil-works/pi-coding-agent"
+
+import type { ChatModelSource, DialogOptions, MemoryPiContext } from "#src/pi"
 
 export interface PromptScript {
   selects: (string | undefined)[]
@@ -11,6 +13,7 @@ export interface AskedPrompt {
   title: string
   message: string
   options: string[]
+  dialog: DialogOptions | null
 }
 
 export interface RecordedNotification {
@@ -26,6 +29,8 @@ export interface FakePiContextOptions {
   available: ChatModelSource[]
   noCredentials: string[]
   apiKeys: string[]
+  hangingInputs: boolean
+  branch: SessionEntry[]
   emptyApiKeys: string[]
   answers: Partial<PromptScript>
 }
@@ -43,6 +48,8 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
     available: [],
     noCredentials: [],
     apiKeys: [],
+    hangingInputs: false,
+    branch: [],
     emptyApiKeys: [],
     answers: {},
   }
@@ -65,29 +72,35 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
         if (options.noCredentials.includes(`${model.provider}/${model.id}`)) return { ok: false, error: "No API key" }
         return { ok: true }
       },
+      async complete() {
+        throw new Error("unexpected model completion")
+      },
       async getApiKeyForProvider(provider) {
         if (options.apiKeys.includes(provider)) return `key-${provider}`
         if (options.emptyApiKeys.includes(provider)) return ""
         return undefined
       },
     },
-    sessionManager: { getSessionId: () => options.sessionId },
+    sessionManager: { getSessionId: () => options.sessionId, getBranch: () => options.branch },
     ui: {
       async select(title, choices) {
-        prompts.push({ kind: "select", title, message: "", options: choices })
+        prompts.push({ kind: "select", title, message: "", options: choices, dialog: null })
         if (selects.length === 0) throw new Error(`unexpected select: ${title}`)
         return selects.shift()
       },
       async confirm(title, message) {
-        prompts.push({ kind: "confirm", title, message, options: [] })
+        prompts.push({ kind: "confirm", title, message, options: [], dialog: null })
         const answer = confirms.shift()
         if (typeof answer === "boolean" || answer instanceof Promise) return answer
         throw new Error(`unexpected confirm: ${title}`)
       },
-      async input(title, placeholder) {
+      async input(title, placeholder, dialog) {
         let message = ""
         if (typeof placeholder === "string") message = placeholder
-        prompts.push({ kind: "input", title, message, options: [] })
+        let recorded: DialogOptions | null = null
+        if (dialog) recorded = dialog
+        prompts.push({ kind: "input", title, message, options: [], dialog: recorded })
+        if (inputs.length === 0 && options.hangingInputs) return unanswered(dialog)
         if (inputs.length === 0) throw new Error(`unexpected input: ${title}`)
         return inputs.shift()
       },
@@ -97,4 +110,12 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
     },
   }
   return { context, prompts, notifications }
+}
+
+export function unanswered(dialog: DialogOptions | undefined): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    if (dialog?.signal?.aborted) return resolve(undefined)
+    dialog?.signal?.addEventListener("abort", () => resolve(undefined), { once: true })
+    if (typeof dialog?.timeout === "number") setTimeout(() => resolve(undefined), dialog.timeout)
+  })
 }
