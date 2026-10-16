@@ -18,7 +18,18 @@ export async function readConfig(path: string): Promise<ReadConfigResult> {
       }
     }
 
-    throw error
+    let code = "UNKNOWN"
+    if (error instanceof Error && "code" in error && typeof error.code === "string") {
+      code = error.code
+    }
+
+    return {
+      succeeded: false,
+      reason: "unreadable",
+      configPath: path,
+      code,
+      problems: [`${path}: cannot read config (${code})`],
+    }
   }
 
   const parsed = parseConfig(text)

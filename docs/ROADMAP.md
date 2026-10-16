@@ -15,7 +15,9 @@ Every milestone:
 
 ## Current state
 
-- pi loads the extension and registers `memory_add` silently. The real-pi smoke test checks that registration.
+- pi loads the extension and registers `memory_add`, `/memory-setup` and `/memory-init`. Session start notifies, with a
+  UI and not on reload, when there is no config (offers `/memory-setup`), an invalid config (every problem, nothing
+  used) or an unreadable file. The real-pi smoke test checks the registrations and the no-config notice.
 - One tool, `memory_add`, for explicit requests to remember. It writes a valid note to the global or project vault,
   refuses invalid notes, existing names (in any case) and unregistered projects, and refreshes the folder indexes up to
   the root, including resolved physical ancestors for directory aliases. When the name is taken, it reads the exact
@@ -26,12 +28,15 @@ Every milestone:
 - The complete product config is read strictly, and a folder is matched to its project. Config resources provide
   snapshots, repair drafts, setting-preserving setup/init proposals and guarded publication. Registration usecases
   prepare settings without writes and bootstrap only the selected global/project target before guarded config-last
-  publication, retaining partial asset progress on failure. Setup/init commands and consent UI are not wired; milestone
-  1 remains incomplete. Setup-only defaults require an explicitly supplied chat model; old incomplete files are invalid
-  at runtime, never silently migrated.
+  publication, retaining partial asset progress on failure. `/memory-setup` (interactive only; chat model from pi's
+  current model or a pick; create or attach; repair; confirmed disclosures; templates) and `/memory-init` (name, vault,
+  repoint) drive them, and both refuse overlapping vaults. Setup-only defaults require an explicitly supplied chat
+  model; old incomplete files are invalid at runtime, never silently migrated.
+- Setup shows the disclosures for chat models, Jev and remote embeddings. Repeating them at startup for hand-edited
+  remote settings is not implemented (milestone 1 out of scope).
 - Embedding, decision-model and bounded capture/retrieval model resources exist, but these settings do not connect
-  them to product operations or prove live-provider/local-inference availability. Disclosures and consent UI remain
-  unimplemented; registration and later milestones are not complete.
+  them to product operations or prove live-provider/local-inference availability. Later milestones are not
+  complete.
 - Read usecases resolve strict configured global/current-project scope, get exact full diagnostic notes with session
   receipts, and read existing folder indexes without generating assets. They are not pi tools. A leased internal
   synchronizer now reconciles per-vault catalogs and re-checks every fully enumerated folder's index. Search wiring,
@@ -43,7 +48,8 @@ Every milestone:
   cached rows under failed coverage and reporting incomplete population separately. Search is not connected to a tool.
 - Nothing stops the LLM from reading or writing vault files with pi's file tools, bash or Claude Code sessions started
   by pi.
-- Guidance points to manual configuration/global scope and never offers unavailable setup/init/update operations.
+- Guidance names `/memory-setup` when memory is off and `/memory-init` for an unregistered folder, and never offers
+  update operations that do not exist yet.
 - Frontmatter, name/path, diagnostic, pi response, search-write and lifecycle regression tests now use source-named
   paths. Names live in `domain/names`, paths in `domain/vault-path` and pi paths in `pi/paths`.
 - Every module with logic has a test file at its mirrored path. Modules not exported from a layer barrel are tested
@@ -146,25 +152,27 @@ Every milestone:
 
 - **Goal:** the user turns memory on from pi, without editing JSON.
 - **Scope:** VISION 3 and 13, [config.md](config.md).
-  - `/memory-setup` asks where the global vault lives, creates a new dedicated vault or attaches an existing folder,
+  - [x] `/memory-setup` asks where the global vault lives, creates a new dedicated vault or attaches an existing folder,
     and writes the config with every key. Re-run, it follows Settled behaviour (config growth, repoint only). With an
     invalid config it is the repair: it keeps every valid value and names what it could not keep.
-  - `/memory-init` registers the working folder as a project. It asks:
+  - [x] `/memory-init` registers the working folder as a project. It asks:
     - the name, by default the folder name, unique in any case;
     - the vault, created with `_templates/` when missing.
     In a registered folder it repoints that project. With no global vault it refuses and offers `/memory-setup`.
-  - The config rejects a vault used twice, or one vault inside another, so the global and project layers never mix
+  - [x] The config rejects a vault used twice, or one vault inside another, so the global and project layers never mix
     (VISION 2). Both commands refuse it, and a hand-edited file with it is invalid.
-  - With no config, session start says there is no memory and offers `/memory-setup`. With an invalid config, it
+  - [x] With no config, session start says there is no memory and offers `/memory-setup`. With an invalid config, it
     shows every problem at once and uses nothing from the file.
-  - Every vault created or attached gets each note template in `_templates/` (vault-format, Templates); existing
+  - [x] Every vault created or attached gets each note template in `_templates/` (vault-format, Templates); existing
     templates are left as they are.
-  - The texts changed in milestone 0 name the commands again.
-  - Docs:
+  - [x] The texts changed in milestone 0 name the commands again.
+  - [x] Docs:
     - config.md describes both commands, the repoint rule and the vault overlap rule;
     - VISION 3's "move or switch" is reworded to "point to another vault; the old one is left as it was" (the user's
       decision).
-- **Out of scope:** settings of later milestones (each adds its own); copying or moving notes between vaults.
+- **Out of scope:** settings of later milestones (each adds its own); copying or moving notes between vaults; repeating
+  the remote-provider disclosure at startup for hand-edited settings (config.md, Disclosure), which
+  belongs to the first milestone that runs a remote provider (5 for embeddings, 6 for Jev).
 - **Depends on:** 0.
 - **Done when:**
   - in pi with no config, session start offers `/memory-setup` (smoke test, extending the registered-tool check);

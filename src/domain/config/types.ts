@@ -138,3 +138,5 @@ export interface VaultRegistration {
   field: string
   path: string
 }
+
+export type SetupDisclosure = "chat-models" | "jev" | "remote-embeddings"

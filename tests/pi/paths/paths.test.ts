@@ -2,8 +2,12 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { memoryConfigPath } from "#src/pi"
+import { memoryConfigPath, memoryIndexPath } from "#src/pi"
 
 test("keeps the config in the pi agent folder", () => {
   expect(memoryConfigPath(join("C:", "agent"))).toBe(join("C:", "agent", "pi-obsidian-memory", "config.json"))
+})
+
+test("keeps the search index beside the config, outside every vault", () => {
+  expect(memoryIndexPath(join("C:", "agent"))).toBe(join("C:", "agent", "pi-obsidian-memory", "index"))
 })

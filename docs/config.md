@@ -1,10 +1,9 @@
 # Config
 
 One local JSON file on the machine, outside the vaults (`~/.pi/agent/pi-obsidian-memory/config.json`). The user can
-edit it by hand. Strict reading, repair drafts, registration proposals and guarded publication are implemented as
-resources. Registration usecases now prepare settings and bootstrap the selected vault before publishing config last.
-`/memory-setup` and `/memory-init` are planned commands, not currently registered. Preparing settings does not execute
-models, download anything, look up credentials or collect consent.
+edit it by hand, or write it with `/memory-setup` and `/memory-init` (below). Strict reading, repair drafts,
+registration proposals and guarded publication are implemented as resources; the two commands and the session-start
+notice use them. Preparing settings does not execute models, download anything or look up credentials.
 
 ## Complete format
 
@@ -77,6 +76,40 @@ There is no `schemaVersion`, secret/key field, arbitrary provider options bag or
 for future remote execution come from pi or the environment, never from this file. No credential lookup occurs when
 reading, repairing, proposing or publishing configuration.
 
+## Commands
+
+Both commands work only with a UI: without one they ask nothing and write nothing. Vaults are never copied, moved or deleted.
+
+`/memory-setup` writes the config with every key:
+
+- The chat model for `capture.model` and `memoryAgent.model` defaults to pi's current model. A valid model already in
+  the file is never overwritten. When a reference is missing and pi has no current model, the user picks from pi's
+  available models; with none available, setup is refused.
+- It asks to create a new vault or attach an existing folder, and for the vault path. Create refuses a non-empty
+  folder or a file; attach refuses a missing folder or a file. Re-run, it offers the current vault (an empty answer
+  keeps it) and attaches it by default.
+- An invalid config is repaired: every valid value is kept, and one list names each missing key and each value that
+  could not be kept. A file that is not valid JSON is replaced only after the user confirms.
+- Before writing, the user confirms the disclosures that apply (below): chat models always; Jev when selected; remote
+  embeddings when selected. Declining changes nothing.
+- Re-run with another path points the config to that vault; the old vault is left as it was. Every note template is
+  written to `_templates/` of the vault; templates already there are kept.
+
+`/memory-init` registers the working folder as a project:
+
+- With no valid global setup it refuses and offers `/memory-setup`; with an unreadable config file it refuses and names
+  the cause, without that offer.
+- The name defaults to the folder name and must be unique ignoring case; a taken name is asked again.
+- The vault is created, with `_templates/`, when missing. In an already registered folder the name stays and only the
+  vault is repointed; the old vault is left as it was.
+
+Both refuse a vault equal to, inside or containing another registered vault, whatever layer. A hand-edited config with
+such an overlap, or the same vault twice, is invalid.
+
+At session start (startup, new, resume and fork, not reload; only with a UI): no config shows a notice offering
+`/memory-setup`; an invalid config shows every problem at once and nothing from the file is used; a file that cannot
+be read shows a warning naming the cause.
+
 ## Strict reading and explicit repair
 
 - Every key is always written, defaults included, so every value in effect is visible. Missing, invalid or unknown
@@ -94,29 +127,30 @@ reading, repairing, proposing or publishing configuration.
   Registration conflicts retain every involved entry for correction, rather than choosing a first winner.
 - `prepareSetupDefaults(model)` is setup-only. An explicitly supplied valid selected chat model supplies both initial
   chat references; no production provider/id is hardcoded. Passing `null` leaves both unresolved. Repair never
-  invents the current chat model. Future setup must request an explicit selection or refuse if a model is unresolved;
-  it must retain valid existing model siblings rather than overwrite them with a newly selected model.
+  invents the current chat model. `/memory-setup` supplies pi's current model, asks for a selection or refuses if a
+  model is unresolved; it retains valid existing model siblings rather than overwriting them with the selected model.
 - Malformed JSON cannot be salvaged and is marked as requiring explicit replacement confirmation. Drafts carry
   problems and replacement metadata; these are not config keys. Setup proposals serialize only the complete settings
   and registrations and refuse unresolved values. Publication validates again and checks the expected snapshot hash.
 - Setup proposals change only the global vault registration. Init proposals add a project or repoint the most
   specific matching project, retaining its original working-folder mapping. Both preserve all settings. Repointing
   does not copy, move or delete the old vault. Registration usecases create missing target assets without replacing
-  existing templates or dashboard edits. Setup requires caller-supplied disclosure confirmation; consent UI remains
-  future work. Preparation creates nothing. Failed bootstrap or publication retains created assets and reports progress,
+  existing templates or dashboard edits. Setup requires disclosure confirmation, which `/memory-setup` collects.
+  Preparation creates nothing. Failed bootstrap or publication retains created assets and reports progress,
   not rollback. A session lease serializes local registration; external hash/path check-use windows remain. Cancellation
   stops before the next resource write, not one already started; successful config publication remains success.
 - Vault paths must not be equal or nested across registrations; the global and project layers must not mix. Resource
   validation also checks physical aliases and keeps configuration/index infrastructure outside vaults.
 - A vault is named after its folder (`.../Global memory` is "Global memory").
 
-## Required future UI disclosure
+## Disclosure
 
-The config resources do not implement these interactions or claim consent has been collected. Future setup must
-separately disclose capture/memory-agent use of conversation and note content; TypeSafe receives user messages and
-candidate notes when Jev is selected; remote embeddings providers receive note content, **secrets included**, and
-queries. Unconfirmed remote choices must cancel the change. A hand-edited remote configuration is explicit selection;
-startup must repeat disclosure, not silently replace the provider with a local one. Local model first-download consent
+`/memory-setup` shows one confirmation before writing, with a line for each that applies: capture and the memory agent
+send conversation and note content to the chosen chat model (always); TypeSafe receives user messages and candidate
+notes when Jev is selected; remote embeddings providers receive note content, **secrets included**, and queries.
+Declining cancels the change. A hand-edited remote configuration is explicit selection; repeating the disclosure at
+startup is not implemented yet and is planned with the first milestone that runs a remote provider, rather than
+silently replacing the provider with a local one. Local model first-download consent
 must remain an explicit per-runtime grant, initially false, not a side effect of creating defaults. An unavailable
 Laya service must be diagnosed rather than silently replaced or installed.
 

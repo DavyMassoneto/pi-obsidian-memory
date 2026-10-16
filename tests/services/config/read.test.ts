@@ -85,3 +85,17 @@ test("refuses an invalid file with every problem", async () => {
     problems: ["theme: not a known field"],
   })
 })
+
+test("reports an unreadable config path with its cause instead of throwing", async () => {
+  const folder = await useTempFolder()
+  const path = join(folder, "config.json")
+  await mkdir(path)
+
+  expect(await readConfig(path)).toEqual({
+    succeeded: false,
+    reason: "unreadable",
+    configPath: path,
+    code: "EISDIR",
+    problems: [`${path}: cannot read config (EISDIR)`],
+  })
+})

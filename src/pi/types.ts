@@ -1,10 +1,11 @@
-import type { ExtensionContext, SessionStartEvent } from "@earendil-works/pi-coding-agent"
-
+import type { MemoryCommand } from "#src/pi/context"
 import type { MemoryAddTool } from "#src/pi/memory-add"
-
-export type SessionStartHandler = (event: SessionStartEvent, ctx: ExtensionContext) => void
+import type { SessionShutdownHandler } from "#src/pi/memory-session"
+import type { SessionStartHandler } from "#src/pi/session-start"
 
 export interface ExtensionRegistrar {
   registerTool(tool: MemoryAddTool): void
-  on(event: "session_start", handler: SessionStartHandler): void
+  registerCommand(name: string, command: MemoryCommand): void
+  onSessionStart(handler: SessionStartHandler): void
+  onSessionShutdown(handler: SessionShutdownHandler): void
 }

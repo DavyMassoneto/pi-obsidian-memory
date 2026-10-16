@@ -5,8 +5,8 @@ import { respondTo } from "#src/pi"
 import type { AddMemoryResult } from "#src/usecases"
 import { aNote, mentionsIn, registerWithFakePi, textOf, unregisteredMentions } from "#test-helpers"
 
-test("registers the memory_add tool for explicit requests only", () => {
-  const { tools, events } = registerWithFakePi({})
+test("registers the memory_add tool for explicit requests only, the two commands and the session events", () => {
+  const { tools, events, commands } = registerWithFakePi({})
 
   expect(tools).toEqual([
     expect.objectContaining({
@@ -14,7 +14,8 @@ test("registers the memory_add tool for explicit requests only", () => {
       description: "Use only when the user explicitly asks to remember something.",
     }),
   ])
-  expect(events).toEqual([])
+  expect(events).toEqual(["session_start", "session_shutdown"])
+  expect(commands).toEqual(["memory-setup", "memory-init"])
 })
 
 test("turns off Claude Code's own memory in pi's environment", () => {
@@ -46,6 +47,7 @@ test("no LLM-facing text names a command or tool that is not registered", () => 
     { succeeded: false, reason: "no-project", problems, workingFolder: "work", configPath: "config.json" },
     { succeeded: false, reason: "not-configured", problems, configPath: "config.json" },
     { succeeded: false, reason: "invalid-config", problems, configPath: "config.json" },
+    { succeeded: false, reason: "unreadable", problems, configPath: "config.json" },
     { succeeded: false, reason: "not-directory", problems },
     { succeeded: false, reason: "not-readable", problems },
     { succeeded: false, reason: "not-writable", problems },
@@ -59,7 +61,7 @@ test("no LLM-facing text names a command or tool that is not registered", () => 
     ...responses.map((r) => textOf(respondTo(r))),
     ...constantTexts,
   ]
-  const registered = [...tools.map((tool) => tool.name), ...commands.map((name) => `/${name}`)]
+  const registered = [...tools.map((tool) => tool.name), ...commands, ...commands.map((name) => `/${name}`)]
 
   expect(mentionsIn(texts).length).toBeGreaterThan(0)
   expect(unregisteredMentions(texts, registered)).toEqual([])

@@ -1,4 +1,7 @@
+export * from "./check.ts"
 export * from "./init.ts"
 export * from "./prepare.ts"
+export * from "./prepare-init.ts"
+export * from "./propose.ts"
 export * from "./setup.ts"
 export * from "./types.ts"

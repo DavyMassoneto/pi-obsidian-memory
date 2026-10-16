@@ -41,12 +41,18 @@ test("includes the current note without proposing an unavailable update operatio
   expect(textOf(response)).toContain("leave the existing note unchanged")
 })
 
-test("guides setup and project selection using config paths and global scope", () => {
+test("guides a missing or invalid config to /memory-setup and a project-less folder to /memory-init or global scope", () => {
   const missing = respondTo({
     succeeded: false,
     reason: "not-configured",
     configPath: "C:/agent/memory/config.json",
     problems: ["memory is not configured"],
+  })
+  const invalid = respondTo({
+    succeeded: false,
+    reason: "invalid-config",
+    configPath: "C:/agent/memory/config.json",
+    problems: ["limits: invalid", "context: missing"],
   })
   const noProject = respondTo({
     succeeded: false,
@@ -56,8 +62,23 @@ test("guides setup and project selection using config paths and global scope", (
     problems: ["D:/work has no registered project"],
   })
 
-  expect(textOf(missing)).toContain("C:/agent/memory/config.json")
+  expect(textOf(missing)).toContain("ask the user to run /memory-setup")
+  expect(textOf(invalid)).toContain("limits: invalid\ncontext: missing")
+  expect(textOf(invalid)).toContain("ask the user to run /memory-setup")
   expect(textOf(noProject)).toContain("global scope")
-  expect(missing.isError).toBe(true)
-  expect(noProject.isError).toBe(true)
+  expect(textOf(noProject)).toContain("/memory-init")
+  expect([missing, invalid, noProject].map((response) => response.isError)).toEqual([true, true, true])
+})
+
+test("reports an unreadable config without sending the user to /memory-setup", () => {
+  const unreadable = respondTo({
+    succeeded: false,
+    reason: "unreadable",
+    configPath: "C:/agent/memory/config.json",
+    problems: ["C:/agent/memory/config.json: cannot read config (EACCES)"],
+  })
+
+  expect(unreadable.isError).toBe(true)
+  expect(textOf(unreadable)).toContain("cannot read config (EACCES)")
+  expect(textOf(unreadable)).not.toContain("/memory-setup")
 })
