@@ -59,3 +59,33 @@ export type {
   RetrievalInput,
   RetrievalResult,
 } from "#src/domain"
+
+export interface ChatModelAuthResolved {
+  ok: true
+}
+
+export interface ChatModelAuthRefused {
+  ok: false
+  error: string
+}
+
+export type ChatModelAuth = ChatModelAuthResolved | ChatModelAuthRefused
+export type ChatModelAuthLookup<TModel> = (model: TModel) => Promise<ChatModelAuth>
+
+export interface ChatModelPort<TModel> {
+  find(provider: string, id: string): TModel | undefined
+  auth: ChatModelAuthLookup<TModel>
+}
+
+export interface ChatModelAvailable {
+  model: ChatModelReference
+  status: "ok"
+}
+
+export interface ChatModelUnavailable {
+  model: ChatModelReference
+  status: "model-not-found" | "no-credentials"
+  problem: string
+}
+
+export type ChatModelCheck = ChatModelAvailable | ChatModelUnavailable

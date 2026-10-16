@@ -4,7 +4,7 @@ import { join } from "node:path"
 import type { MemoryGetParams, MemorySearchParams } from "#src/pi"
 import { textOf } from "./pi.ts"
 import { fakePiContext } from "./pi-context.ts"
-import { fakeToolContext } from "./pi-prompt.ts"
+import { fakeToolContext, toolCallEvent } from "./pi-prompt.ts"
 import { piRegistrationFixture, writeAgentConfig } from "./pi-registration.ts"
 
 export async function piMemoryFixture() {
@@ -55,4 +55,14 @@ export async function readText(fixture: MemoryFixture, params: MemoryGetParams) 
   const tool = fixture.pi.getTools[0]
   if (!tool) throw new Error("memory_get not registered")
   return tool.execute("call-get", params, undefined, undefined, fakeToolContext(fixture.workingFolder))
+}
+
+export async function vaultRefusalText(): Promise<string> {
+  const fixture = await piMemoryFixture()
+  const blocked = await fixture.pi.runToolCall(
+    toolCallEvent("read", { path: join(fixture.globalVault, "Note.md") }),
+    fixture.piContext,
+  )
+  if (!blocked || typeof blocked.reason !== "string") throw new Error("vault path was not blocked")
+  return blocked.reason
 }

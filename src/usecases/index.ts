@@ -1,4 +1,5 @@
 export * from "./add-memory/index.ts"
+export * from "./check-vault-access/index.ts"
 export * from "./get-memory/index.ts"
 export * from "./list-memory/index.ts"
 export * from "./load-dont-forget/index.ts"

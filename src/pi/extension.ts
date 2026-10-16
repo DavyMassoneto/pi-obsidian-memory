@@ -1,3 +1,5 @@
+import { homedir } from "node:os"
+
 import { type ExtensionAPI, getAgentDir } from "@earendil-works/pi-coding-agent"
 
 import { disableClaudeCodeAutoMemory } from "#src/pi/claude-code"
@@ -8,8 +10,9 @@ import { MEMORY_INIT_COMMAND, memoryInitCommand } from "#src/pi/memory-init"
 import { memorySearchTool } from "#src/pi/memory-search"
 import { MemorySessionKeeper } from "#src/pi/memory-session"
 import { MEMORY_SETUP_COMMAND, memorySetupCommand } from "#src/pi/memory-setup"
-import { memoryConfigPath, memoryIndexPath } from "#src/pi/paths"
+import { memoryConfigPath, memoryDataFolder, memoryIndexPath } from "#src/pi/paths"
 import { sessionStartHandler } from "#src/pi/session-start"
+import { vaultGuardHandler } from "#src/pi/vault-guard"
 import { loadDontForget } from "#src/usecases"
 import { registrarFor } from "./registrar.ts"
 import type { ExtensionRegistrar } from "./types.ts"
@@ -30,6 +33,7 @@ export function registerExtension(registrar: ExtensionRegistrar, agentDir: strin
   registrar.registerCommand(MEMORY_INIT_COMMAND, memoryInitCommand(paths, sessions))
   registrar.onSessionStart(sessionStartHandler(paths, sessions, block))
   registrar.onBeforeAgentStart(block.beforeAgentStart())
+  registrar.onToolCall(vaultGuardHandler(paths.configPath, memoryDataFolder(agentDir), homedir()))
   registrar.onSessionShutdown(() => {
     sessions.shutdown()
     block.clear()

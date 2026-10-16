@@ -8,6 +8,8 @@ const VAULT = "D:\\Notes"
 const HOME_VAULT = "C:\\Users\\ana\\Documents\\Vault"
 const CWD_VAULT = "D:\\work\\project\\memory"
 const UNC_VAULT = "\\\\srv\\share\\Team Vault"
+const SPACED_VAULT = "D:\\work\\project\\vault mem"
+const HOME_MEMORY = "C:\\Users\\ana\\memory"
 
 test.each([
   ["an absolute path", "cat D:\\Notes\\a.md"],
@@ -159,6 +161,43 @@ test.each([
 
 test("does not find a UNC vault in a longer folder name", () => {
   expect(commandMentionsVault("type \\\\srv\\share\\Team Vault2\\a.md", CWD, HOME, [UNC_VAULT])).toBeNull()
+})
+
+test.each([
+  ['git commit -m "fix vault mem notes"'],
+  ["git commit -m 'fix vault mem notes'"],
+  ['echo "the vault mem is old"'],
+  ["echo vault mem"],
+])("does not find a relative vault name used as a word in %s", (command) => {
+  expect(commandMentionsVault(command, CWD, HOME, [SPACED_VAULT])).toBeNull()
+})
+
+test("does not find a home vault name used as a word inside a quoted sentence", () => {
+  expect(commandMentionsVault('git commit -m "memory fix"', HOME, HOME, [HOME_MEMORY])).toBeNull()
+})
+
+test.each([
+  ['ls "vault mem"'],
+  ["ls 'vault mem'"],
+  ['git commit -m "vault mem"'],
+  ['cat "vault mem/x.md"'],
+  ['cat "./vault mem"'],
+  ['cd "vault mem" && cat x.md'],
+])("finds a spaced relative vault in %s", (command) => {
+  expect(commandMentionsVault(command, CWD, HOME, [SPACED_VAULT])).toBe(SPACED_VAULT)
+})
+
+test.each([
+  ["ls memory"],
+  ['ls "memory"'],
+  ["cat memory/x.md"],
+  ["cd memory && cat x.md"],
+  ["ls memory;"],
+  ["(ls memory)"],
+  ["ls memory."],
+  ["tool --dir=memory"],
+])("finds the working folder vault as a whole argument in %s", (command) => {
+  expect(commandMentionsVault(command, CWD, HOME, [CWD_VAULT])).toBe(CWD_VAULT)
 })
 
 test("finds a quoted vault path with spaces", () => {

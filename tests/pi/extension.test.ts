@@ -14,6 +14,7 @@ import {
   shippedSkillText,
   textOf,
   unregisteredMentions,
+  vaultRefusalText,
 } from "#test-helpers"
 
 test("registers the three tools, the two commands and the session events", () => {
@@ -34,7 +35,7 @@ test("registers the three tools, the two commands and the session events", () =>
   ])
   expect(getTools).toEqual([expect.objectContaining({ name: "memory_get" })])
   expect(registered).toEqual(["memory_add", "memory_search", "memory_get"])
-  expect(events).toEqual(["session_start", "before_agent_start", "session_shutdown"])
+  expect(events).toEqual(["session_start", "before_agent_start", "tool_call", "session_shutdown"])
   expect(commands).toEqual(["memory-setup", "memory-init"])
 })
 
@@ -56,7 +57,7 @@ test("turns off Claude Code's own memory in pi's environment", () => {
   expect(env.CLAUDE_CODE_DISABLE_AUTO_MEMORY).toBe("1")
 })
 
-test("no LLM-facing text names a command or tool that is not registered", () => {
+test("no LLM-facing text names a command or tool that is not registered", async () => {
   const { tools, searchTools, getTools, registered, commands } = registerWithFakePi({})
   const problems = ["a problem"]
   const existing = { note: aNote(), hash: "hash" }
@@ -94,6 +95,7 @@ test("no LLM-facing text names a command or tool that is not registered", () => 
     ...getResponses().map((result) => textOf(respondToGet({ vault: "global", path: "p" }, result))),
     ...blockTexts(),
     shippedSkillText(),
+    await vaultRefusalText(),
     ...responses.map((r) => textOf(respondTo(r))),
     ...constantTexts,
   ]
