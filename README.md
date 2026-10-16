@@ -91,11 +91,11 @@ as it is on disk.
   searches and reads, the decision model scores each candidate note, and the relevant ones are added after your message. Earlier
   messages are never rewritten, so the prompt cache holds; a loaded note that changed is added again, marked as
   replacing the earlier copy. Session start also loads relevant notes within `context.budgetChars` (12,000 by
-  default). The decision model is Laya, run locally, or Jev, by API; setup steps are in
-  [Running the decision model](docs/config.md#running-the-decision-model). **With the default Laya config this is off**:
-  Laya's gate measured at chance, so it ships no cutoffs and each session tells you until you set `gateThreshold` and
-  `relevanceThreshold` (see [decision-thresholds](docs/decision-thresholds.md)). With Jev it works from TypeSafe's
-  starting values (0.5/0.5). If the decision model is unavailable nothing is added and you are told once per session;
+  default). The decision model is Jev by default (by API; it needs `TYPESAFE_API_KEY`; $0.042 per million input tokens, per
+  docs.typesafe.ai), working from TypeSafe's starting cutoffs (0.5/0.5). Laya, run locally, is an optional choice that
+  needs explicit `gateThreshold` and `relevanceThreshold`: it ships none because its gate measured at chance (see
+  [decision-thresholds](docs/decision-thresholds.md)), so with Laya and no cutoffs per-message memory is off and each
+  session tells you. Setup steps are in [Running the decision model](docs/config.md#running-the-decision-model). If the decision model is unavailable nothing is added and you are told once per session;
   no other model takes over.
 - **Automatic capture.** A background review of the conversation saves, updates, archives and succeeds notes, at the
   moment set by `capture.when`: `after-each-turn` (the default), `on-compaction` or `at-session-end`. When it is unsure
@@ -124,7 +124,7 @@ Archive (file name, folder, type, Don't forget, updated). Your edits to it are k
 ## Privacy
 
 - Capture and the memory agent send conversation and note content to the chat model you choose.
-- Choosing Jev sends your messages and candidate notes to TypeSafe; Laya runs on your machine.
+- Jev, the default decision model, sends your messages and candidate notes to TypeSafe; Laya, the optional local choice, runs on your machine.
 - Choosing a remote embeddings provider (OpenAI, Google) sends note content and queries to it.
 - `/memory-setup` warns about each of these before writing, as a plain warning with no question; nothing is asked at
   runtime, and no other provider ever takes the place of the one you chose.

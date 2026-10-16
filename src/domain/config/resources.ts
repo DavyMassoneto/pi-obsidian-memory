@@ -41,8 +41,19 @@ export function repairEmbeddings(fields: EmbeddingFields): EmbeddingFields {
   return { provider: "local", model: "Xenova/multilingual-e5-small", ...fields }
 }
 
+function showsLaya(fields: DecisionFields): boolean {
+  return (
+    fields.provider === "laya" ||
+    fields.model === "multilingual" ||
+    typeof fields.endpoint === "string" ||
+    typeof fields.maxTokens === "number" ||
+    typeof fields.headMaxTokens === "number"
+  )
+}
+
 export function repairDecision(fields: DecisionFields): DecisionFields {
-  if (fields.provider === "typesafe") return { model: "jev-latest", ...fields }
+  if (fields.provider === "typesafe" || !showsLaya(fields))
+    return { provider: "typesafe", model: "jev-latest", ...fields }
   return {
     provider: "laya",
     endpoint: "http://127.0.0.1:8000/v1/systemone",

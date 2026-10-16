@@ -68,8 +68,31 @@ test("a Laya that does not answer is a warning with the cause, and one that answ
   expect(notifications[0]?.type).toBe("warning")
 })
 
-test("the report lists the cutoffs with their source, and a missing one is a warning that points to the docs", async () => {
-  const { pi, workingFolder } = await piMemoryFixture()
+test("Jev lists TypeSafe's starting values as its cutoffs", async () => {
+  const { pi, workingFolder, configPath, config } = await piMemoryFixture()
+  await writeAgentConfig(
+    configPath,
+    JSON.stringify({ ...config, decisionModel: { provider: "typesafe", model: "jev-latest" } }),
+  )
+  const { context, notifications } = fakePiContext(workingFolder, { available })
+
+  await pi.runCommand("memory-doctor", context)
+
+  expect(notifications[0]?.message).toContain(
+    "- decision cutoffs: gate 0.5 (TypeSafe starting value), relevance 0.5 (TypeSafe starting value)",
+  )
+})
+
+test("a Laya with no cutoffs set is a warning that points to the docs", async () => {
+  const { pi, workingFolder, configPath, config } = await piMemoryFixture()
+  const bareLaya = {
+    provider: "laya",
+    endpoint: "http://127.0.0.1:1/v1/systemone",
+    model: "multilingual",
+    maxTokens: 8192,
+    headMaxTokens: 192,
+  }
+  await writeAgentConfig(configPath, JSON.stringify({ ...config, decisionModel: bareLaya }))
   const { context, notifications } = fakePiContext(workingFolder, { available })
 
   await pi.runCommand("memory-doctor", context)

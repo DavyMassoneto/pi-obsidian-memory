@@ -21,7 +21,10 @@ test("setup writes every key, creates the vault with templates and memory_add th
 
   await pi.runCommand("memory-setup", context)
 
-  expect(JSON.parse(await readFile(configPath, "utf8"))).toEqual(config)
+  expect(JSON.parse(await readFile(configPath, "utf8"))).toEqual({
+    ...config,
+    decisionModel: { provider: "typesafe", model: "jev-latest" },
+  })
   expect(await readdir(join(globalVault, "_templates"))).toHaveLength(12)
   expect(notifications).toEqual([
     { message: expect.stringContaining("chat model"), type: "warning" },
@@ -38,7 +41,7 @@ test("setup writes every key, creates the vault with templates and memory_add th
   expect(await readdir(join(globalVault, "tools"))).toContain("Use pnpm.md")
 })
 
-test("the disclosure is a plain warning that names chat models, and also Jev and remote embeddings when chosen", async () => {
+test("the disclosure is a plain warning that names chat models and Jev (the default), and also remote embeddings when chosen", async () => {
   const plain = await piRegistrationFixture()
   const plainContext = fakePiContext(plain.workingFolder, {
     answers: { selects: [SETUP_CREATE_OPTION], inputs: [plain.globalVault] },
@@ -46,7 +49,7 @@ test("the disclosure is a plain warning that names chat models, and also Jev and
   await plain.pi.runCommand("memory-setup", plainContext.context)
   const plainWarning = plainContext.notifications.find((item) => item.type === "warning")
   expect(plainWarning?.message).toContain("chat model")
-  expect(plainWarning?.message).not.toContain("TypeSafe")
+  expect(plainWarning?.message).toContain("TypeSafe")
   expect(plainWarning?.message).not.toContain("secrets")
   expect(plainContext.prompts.filter((prompt) => prompt.kind === "confirm")).toEqual([])
 
