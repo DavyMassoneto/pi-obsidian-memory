@@ -1,11 +1,17 @@
 import { createHash } from "node:crypto"
 import { existsSync } from "node:fs"
-import { mkdir, readFile, symlink, writeFile } from "node:fs/promises"
+import { mkdir, readFile, stat, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, parse } from "node:path"
 
 import { renderNote } from "#src/domain"
-import type { RefreshContinuation } from "#src/services"
+import {
+  type IndexStat,
+  type ListResult,
+  listSettledFolder,
+  type RefreshContinuation,
+  type VaultContext,
+} from "#src/services"
 import { aDecision, aNote, aQuestion } from "./note.ts"
 import { useTempFolder } from "./temp-folder.ts"
 
@@ -72,6 +78,17 @@ export async function vaultWithQuestion(today: string) {
     today,
   }
   return { vault, request, file: join(vault, "search", `${question.statement}.md`) }
+}
+
+export async function indexStatOnDisk(vault: string, folder: string): Promise<IndexStat> {
+  const { size, mtimeMs, ctimeMs, dev, ino } = await stat(join(vault, folder, "index.md"))
+  return { size, mtimeMs, ctimeMs, device: dev, inode: ino }
+}
+
+export async function listFolder(vault: VaultContext, folder: string): Promise<ListResult> {
+  const listed = await listSettledFolder(vault, folder)
+  if (!listed.succeeded) return listed
+  return { succeeded: true, output: listed.output.listing }
 }
 
 export function keepGoing(): boolean {

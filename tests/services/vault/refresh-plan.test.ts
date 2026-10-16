@@ -85,7 +85,9 @@ test("renders the same index for a nested alias target whether it is refreshed b
   const physicalFolders = ["", "physical", "physical/subject", "other", "other/deep"]
 
   expect(await refreshIndexes({ path: added, name: "Memory", limits }, "alias/child")).toEqual({ succeeded: true })
-  expect(await refreshFolders({ path: synced, name: "Memory", limits }, physicalFolders, keepGoing)).toEqual({
+  expect(
+    await refreshFolders({ path: synced, name: "Memory", limits }, physicalFolders, keepGoing, "with-ancestors"),
+  ).toMatchObject({
     succeeded: true,
   })
 

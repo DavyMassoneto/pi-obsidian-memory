@@ -10,7 +10,7 @@ export const BODY_WEIGHT = 1
 
 export const WORD_PATTERN = /[\p{L}\p{N}]+/gu
 
-export const INDEX_SCHEMA_VERSION = 2
+export const INDEX_SCHEMA_VERSION = 3
 
 export const SQLITE_PRIMARY_CODE_MASK = 0xff
 
@@ -26,12 +26,21 @@ export const REBUILD_SCHEMA_SQL = `
   DROP TABLE IF EXISTS catalog_state;
   DROP TABLE IF EXISTS vector_chunks;
   DROP TABLE IF EXISTS vector_generation;
+  DROP TABLE IF EXISTS folder_indexes;
   CREATE TABLE catalog_state (
     singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
     revision INTEGER NOT NULL,
     population TEXT NOT NULL
   );
   INSERT INTO catalog_state VALUES (1, 0, 'needs-population');
+  CREATE TABLE folder_indexes (
+    folder TEXT PRIMARY KEY,
+    fingerprint TEXT NOT NULL,
+    index_size INTEGER NOT NULL,
+    index_mtime_ms REAL NOT NULL,
+    index_ctime_ms REAL NOT NULL,
+    index_ino TEXT NOT NULL
+  );
   CREATE TABLE vector_generation (
     singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
     fingerprint TEXT NOT NULL,

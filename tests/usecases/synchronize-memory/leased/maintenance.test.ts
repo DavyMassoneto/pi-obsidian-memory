@@ -6,12 +6,19 @@ import { expect, test } from "vitest"
 
 import { synchronizeMemory } from "#src/usecases"
 import {
+  abortWhileFileExists,
+  corruptFolderIndexRows,
   expectRegistrationLeaseReleased,
+  inFreshSession,
   linkFolder,
   memoryReadFixture,
   noteText,
   putCatalogFile,
+  synchronizedIndexPath,
+  twoFolderFixture,
   validFrontmatterLines,
+  whileLocked,
+  writeRegistrationSnapshot,
 } from "#test-helpers"
 
 test("refreshes affected physical and logical ancestors without rewriting unrelated indexes", async () => {
@@ -126,3 +133,51 @@ test("a folder name the vault path rules refuse does not block the other folder 
   expect(await readFile(join(vault.path, "topic/index.md"), "utf8")).toContain("Note")
   expect(await readFile(join(vault.path, "index.md"), "utf8")).toContain("topic/index")
 })
+
+test("folders not reached before cancellation are rendered by the next sync", async () => {
+  const { vault, context, controller } = await memoryReadFixture()
+  await putCatalogFile(vault, "a/Note.md", noteText(validFrontmatterLines(), "memory"))
+  await putCatalogFile(vault, "b/Note.md", noteText(validFrontmatterLines(), "memory"))
+  const abort = abortWhileFileExists(controller, join(vault.path, "index.md"))
+  expect(await synchronizeMemory({ vault: "global" }, context)).toMatchObject({ succeeded: false, reason: "cancelled" })
+  abort.disarm()
+  expect(await synchronizeMemory({ vault: "global" }, context)).toMatchObject({ succeeded: true })
+  expect(await readFile(join(vault.path, "a/index.md"), "utf8")).toContain("Note")
+  expect(await readFile(join(vault.path, "b/index.md"), "utf8")).toContain("Note")
+})
+
+test.skipIf(process.platform !== "win32")("a lost search index leads to a full folder pass", async () => {
+  const { vault, context } = await twoFolderFixture()
+  const before = await readFile(join(vault.path, "a/index.md"), "utf8")
+  await rm(await synchronizedIndexPath(context, vault.path))
+  await whileLocked(join(vault.path, "a/Note.md"), () => synchronizeMemory({ vault: "global" }, context))
+  expect(await readFile(join(vault.path, "a/index.md"), "utf8")).not.toBe(before)
+})
+
+test.skipIf(process.platform !== "win32")("changing the note limits renders every folder again", async () => {
+  const { vault, context, config } = await twoFolderFixture()
+  const before = await readFile(join(vault.path, "a/index.md"), "utf8")
+  const limits = { ...config.limits, maxBodyChars: config.limits.maxBodyChars + 1 }
+  await writeRegistrationSnapshot(context, JSON.stringify({ ...config, limits }))
+  await whileLocked(join(vault.path, "a/Note.md"), () =>
+    synchronizeMemory({ vault: "global" }, inFreshSession(context)),
+  )
+  expect(await readFile(join(vault.path, "a/index.md"), "utf8")).not.toBe(before)
+})
+
+test.skipIf(process.platform !== "win32")(
+  "a corrupt folder state table is cleared instead of warning on every sync",
+  async () => {
+    const { vault, context } = await twoFolderFixture()
+    corruptFolderIndexRows(await synchronizedIndexPath(context, vault.path))
+    const repaired = await whileLocked(join(vault.path, "a/Note.md"), () =>
+      synchronizeMemory({ vault: "global" }, context),
+    )
+    if (!repaired.succeeded) throw new Error("sync required")
+    expect(repaired.output.warnings.length).toBeGreaterThan(0)
+    expect(await synchronizeMemory({ vault: "global" }, context)).toMatchObject({
+      succeeded: true,
+      output: { warnings: [] },
+    })
+  },
+)

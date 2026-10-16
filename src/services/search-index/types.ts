@@ -5,6 +5,8 @@ import type { Done, Failed, Succeeded } from "#src/shared"
 import type {
   CatalogHitSchema,
   CatalogRowSchema,
+  FolderIndexRowSchema,
+  FolderIndexStateSchema,
   IndexEntrySchema,
   SearchHitSchema,
   SearchOptionsSchema,
@@ -25,6 +27,9 @@ export type {
 } from "#src/domain"
 export type CatalogHit = Static<typeof CatalogHitSchema>
 export type CatalogRow = Static<typeof CatalogRowSchema>
+export type FolderIndexState = Static<typeof FolderIndexStateSchema>
+export type FolderIndexRow = Static<typeof FolderIndexRowSchema>
+export type FolderIndexStatesResult = Succeeded<FolderIndexState[]> | SearchIndexRefusal
 export type InventoryResult = Succeeded<CatalogSnapshot> | SearchIndexRefusal
 export type CatalogSearchResult = Succeeded<CatalogHit[]> | SearchIndexRefusal
 export type VectorCacheResult = Succeeded<VectorCache> | SearchIndexRefusal
@@ -56,6 +61,8 @@ export interface SearchIndex {
   searchCatalog(request: CatalogQuery): CatalogSearchResult
   vectors(): VectorCacheResult
   replaceVectors(request: VectorReplacement): IndexWriteResult
+  folderIndexes(): FolderIndexStatesResult
+  recordFolderIndexes(states: FolderIndexState[], keepFolders: string[]): IndexWriteResult
   close(): IndexWriteResult
 }
 

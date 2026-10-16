@@ -39,7 +39,9 @@ Every milestone:
   complete.
 - Read usecases resolve strict configured global/current-project scope, get exact full diagnostic notes with session
   receipts, and read existing folder indexes without generating assets. They are not pi tools. A leased internal
-  synchronizer now reconciles per-vault catalogs and re-checks every fully enumerated folder's index. Search wiring,
+  synchronizer now reconciles per-vault catalogs and maintains folder indexes incrementally: a folder is re-rendered only when its
+  listing fingerprint or `index.md` stat changed (warm sync, 20 notes/folder: 780→151 ms at 200 notes, 3587→680 at
+  1000, 18733→3416 at 5000; the remaining cost is the catalog scan). Search wiring,
   mandatory context and universal vault isolation remain incomplete; milestone 2 is not complete.
 - Built but not reachable by any tool or command: updating, archiving and succeeding notes. Lifecycle reports partial
   progress after late failures; update/removal hash checks and link checks still have check/use windows.
@@ -61,6 +63,11 @@ Every milestone:
 
 ## Completed correction work
 
+- [x] Incremental folder-index maintenance: each synchronization computes a per-folder listing fingerprint and
+  re-renders `index.md` only when it or the index file's size, dates or file id differ from the last recorded clean render.
+  Problem folders are re-checked every sync; a new or rebuilt search index re-checks all; state-table failures fall
+  back to re-checking all with a warning. Replaces the full per-sync folder re-check.
+
 - [x] Adversarial review of pending synchronization changes: retry folder maintenance after catalog publication,
   remove stale parent links after empty-folder deletion, and preserve unchanged folder-index files. Synchronization
   now checks every completely enumerated physical folder; this adds reads, without rewriting identical indexes.
@@ -71,7 +78,7 @@ Every milestone:
   folders' indexes; cancellation is checked before every index write; stable aliases and alias-to-ancestor cycles are
   positive exclusions (plain ELOOP lowers coverage); an index alias is followed only to its own folder's index;
   indexes render from the physical folder; the catalog-entry, reuse and alias-classification rules live in the domain.
-  Reading every note on each synchronization remains a measured-later limit before wiring sync to search.
+  The full-read limit was later resolved by incremental folder-index maintenance (see above).
 
 - [x] Bounded catalog-synchronization usecase: one lease, strict configured scope, per-canonical-root index paths,
   real scan coverage, validation/content fingerprints, exact direct-file aliases, duplicate IDs and affected/missing

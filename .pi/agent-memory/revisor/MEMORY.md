@@ -10,3 +10,9 @@
   PI_CODING_AGENT_DIR from tests/helpers/pi.ts loadIsolatedPi makes the smoke test fail (isolation is proven).
   Mutation recipe: cp file tmp/revisor-x.bak; sed; npx vitest run --project unit <dir>; cp back; untracked files
   don't show in git diff, verify restore with grep. tmp/ is NOT gitignored: delete scratch logs.
+- 2026-xx (folder-index dirty check): ACL-deny tests (denySynchronizationRead) SKIP on this machine (Administrator
+  reads despite ACL) -> any behaviour proven only by them is unproven here; mutate and check. Find src-dead exports
+  after refactors with `git grep -n <fn> HEAD -- src` vs now. Mutation via sed on a .bak copy kept outside tmp/.
+- 2026-10 (folder-index re-review): Windows byte-range lock helper `whileLocked` (tests/helpers) makes reads fail for
+  real on this machine (unlike ACL deny) -> use it to prove "re-rendered vs skipped". registration/flow.test.ts
+  failed 2 of 3 full runs, passes alone: flaky under load, not tied to sync changes.

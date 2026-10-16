@@ -1087,3 +1087,18 @@ sincronização, que fica como limite a medir antes de ligar a sincronização �
 - P3 (resíduos, camadas, tipos): `touchedFolders` removido; `semanticFingerprint` e as três regras puras foram para o
   domínio, expostas aos usecases por `services/search-index/inspection.ts`; `writeChangedIndex` tipado;
   `docs/vault-format.md` atualizado.
+
+## Resolução do P2 de leitura integral — 2026-10-16
+
+A manutenção dos índices de pasta passou a ser incremental. A cada sincronização calcula-se, por pasta, uma impressão
+da listagem (notas diretas por nome, tamanho, mtime, ctime e id do arquivo; subpastas por nome; stat dos destinos de alias; mais a chave de
+renderização: versão do formato, nome do vault e limites). O `index.md` só é renderizado de novo quando a impressão ou
+o tamanho, mtime, ctime ou id do próprio `index.md` difere do registrado após a última renderização bem-sucedida (tabela
+`folder_indexes` do índice de busca).
+
+- Pastas com falha de enumeração, `index.md` com alias, notas ilegíveis ou entradas com problema nunca são gravadas
+  como limpas e são revistas a cada sync.
+- Índice de busca novo ou reconstruído revisa todas as pastas; falha na tabela de estado revisa todas, com aviso.
+- Edições manuais em `index.md` continuam sendo sobrescritas no próximo sync.
+- Medição (Node 22, 20 notas/pasta, ~2,5 KB/nota), sync morno sem mudança: 780→151 ms (200 notas), 3587→680 ms
+  (1000), 18733→3416 ms (5000). O custo restante é a varredura do catálogo.

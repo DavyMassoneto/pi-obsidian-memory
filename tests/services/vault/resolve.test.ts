@@ -4,8 +4,8 @@ import { join } from "node:path"
 import { expect, test } from "vitest"
 
 import { renderNote } from "#src/domain"
-import { createMemoryNote, listFolder, readNote } from "#src/services"
-import { aLimits, aNote, linkFolder, otherDriveRoots, tryLinkFile, useTempFolder } from "#test-helpers"
+import { createMemoryNote, readNote } from "#src/services"
+import { aLimits, aNote, linkFolder, listFolder, otherDriveRoots, tryLinkFile, useTempFolder } from "#test-helpers"
 
 test("creates missing folders under the resolved vault", async () => {
   const vault = await useTempFolder()

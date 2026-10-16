@@ -97,8 +97,13 @@ is the source of truth; the search index lives outside it, one per machine, and 
   compared).
 - Only content that really changed is indexed again and gets a new embedding. A date-only change (sync tools do this)
   costs nothing, and a move only updates the path.
-- The `index.md` of every fully enumerated physical folder is re-checked on each synchronization and rewritten only
-  when its content differs.
+- Each synchronization fingerprints every folder's listing (direct notes by name, size, dates and file id;
+  subfolders by name; alias targets' stat; plus the index format version, vault name and limits). A folder's `index.md` is re-rendered
+  only when that fingerprint, or the `index.md` size, dates or file id, differs from what was recorded after the last
+  successful render. Folders with enumeration failures, an aliased `index.md`, unreadable notes or problem entries
+  are never recorded as clean and are re-checked every time. A new or rebuilt search index re-checks every folder,
+  and so does a failure of the state table (with a warning). Manual edits to `index.md` are overwritten at the next
+  synchronization.
 - A new note without valid frontmatter (created blank in Obsidian) stays out of search and is listed under
   `## Needs fixing`. `/memory-doctor` offers to complete it (a new `id`, asking the type) and applies it only after the
   user confirms.

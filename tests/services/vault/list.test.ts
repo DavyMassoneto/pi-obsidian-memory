@@ -4,12 +4,13 @@ import { join } from "node:path"
 import { expect, test } from "vitest"
 
 import { renderNote } from "#src/domain"
-import { createMemoryNote, listFolder } from "#src/services"
+import { createMemoryNote } from "#src/services"
 import {
   aLimits,
   aNote,
   frontmatterLinesWithListKey,
   linkFolder,
+  listFolder,
   noteText,
   tryLinkFile,
   useTempFolder,

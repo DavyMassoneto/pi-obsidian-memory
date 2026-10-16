@@ -34,3 +34,8 @@ export interface RootFolder {
 }
 
 export type FolderContents = SubjectFolder | RootFolder
+
+export interface FolderListingFingerprint {
+  folder: string
+  fingerprint: string | null
+}

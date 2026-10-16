@@ -40,7 +40,7 @@ test("refuses an index alias to another folder's index without writing the root 
   if (!(await tryLinkFile(target, alias))) context.skip()
   const named = { path: vault, name: "Memory", limits }
 
-  expect(await refreshFolders(named, ["", "physical"], keepGoing)).toMatchObject({
+  expect(await refreshFolders(named, ["", "physical"], keepGoing, "with-ancestors")).toMatchObject({
     succeeded: false,
     reason: "invalid",
     problems: [expect.stringContaining("index.md")],

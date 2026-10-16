@@ -24,7 +24,12 @@ test("refreshes the other folders when a folder name is not representable as a l
   await putNoteFile(vault, "c#", "Note", renderNote(aNote()))
   await putNoteFile(vault, "topic", "Note", renderNote(aNote()))
 
-  const result = await refreshFolders({ path: vault, name: "Memory", limits }, ["c#", "topic"], keepGoing)
+  const result = await refreshFolders(
+    { path: vault, name: "Memory", limits },
+    ["c#", "topic"],
+    keepGoing,
+    "with-ancestors",
+  )
 
   expect(result).toMatchObject({ succeeded: false, reason: "invalid", problems: [expect.stringContaining("c#")] })
   expect(await readIndexOf(vault, "topic")).toContain("## Notes")
@@ -43,7 +48,12 @@ test("refreshes the remaining folders after one index cannot be written", async 
   await chmod(blocked, 0o444)
 
   try {
-    const result = await refreshFolders({ path: vault, name: "Memory", limits }, ["a", "b"], keepGoing)
+    const result = await refreshFolders(
+      { path: vault, name: "Memory", limits },
+      ["a", "b"],
+      keepGoing,
+      "with-ancestors",
+    )
 
     expect(result).toMatchObject({ succeeded: false, problems: [expect.stringContaining("a/index")] })
     expect(await readFile(blocked, "utf8")).toBe("STALE")
@@ -60,7 +70,9 @@ test("keeps refreshing other folders after the root index is refused as an alias
   await putNoteFile(vault, "topic", "Note", renderNote(aNote()))
   if (!(await tryLinkFile(join(vault, "Note.md"), join(vault, "index.md")))) context.skip()
 
-  expect(await refreshFolders({ path: vault, name: "Memory", limits }, ["", "topic"], keepGoing)).toMatchObject({
+  expect(
+    await refreshFolders({ path: vault, name: "Memory", limits }, ["", "topic"], keepGoing, "with-ancestors"),
+  ).toMatchObject({
     succeeded: false,
     reason: "invalid",
   })
@@ -72,7 +84,12 @@ test("stops writing indexes as soon as the continuation probe says stop", async 
   await putNoteFile(vault, "a", "Note", renderNote(aNote()))
   await putNoteFile(vault, "b", "Note", renderNote(aNote()))
 
-  const result = await refreshFolders({ path: vault, name: "Memory", limits }, ["a", "b"], allowing(2))
+  const result = await refreshFolders(
+    { path: vault, name: "Memory", limits },
+    ["a", "b"],
+    allowing(2),
+    "with-ancestors",
+  )
 
   expect(result).toMatchObject({ succeeded: false, reason: "interrupted" })
   expect(await readdir(vault)).toEqual(["a", "b"])
@@ -84,7 +101,7 @@ test("does not write a folder's index when the stop arrives while its notes are 
   const vault = await useTempFolder()
   await putNoteFile(vault, "a", "Note", renderNote(aNote()))
 
-  const result = await refreshFolders({ path: vault, name: "Memory", limits }, ["a"], allowing(1))
+  const result = await refreshFolders({ path: vault, name: "Memory", limits }, ["a"], allowing(1), "with-ancestors")
 
   expect(result).toMatchObject({ succeeded: false, reason: "interrupted" })
   expect(await readdir(vault)).toEqual(["a"])
@@ -97,7 +114,12 @@ test("writes nothing through a logical alias whose physical target is not repres
   await putNoteFile(vault, "topic", "Note", renderNote(aNote()))
   await linkFolder(join(vault, "c#"), join(vault, "alias"))
 
-  const result = await refreshFolders({ path: vault, name: "Memory", limits }, ["alias", "topic"], keepGoing)
+  const result = await refreshFolders(
+    { path: vault, name: "Memory", limits },
+    ["alias", "topic"],
+    keepGoing,
+    "with-ancestors",
+  )
 
   expect(result).toMatchObject({ succeeded: false, reason: "invalid", problems: [expect.stringContaining("c#")] })
   expect(await readdir(join(vault, "c#"))).toEqual(["Note.md"])
