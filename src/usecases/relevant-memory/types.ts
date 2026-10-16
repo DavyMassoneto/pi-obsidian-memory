@@ -9,7 +9,6 @@ import type {
   RetrievalAction,
 } from "#src/services"
 import type { Succeeded } from "#src/shared"
-import type { MemoryOperationContext } from "#src/usecases/operation-context"
 import type { MemoryResolutionRefusal } from "#src/usecases/resolve-memory"
 import type { LoadedChangesSchema } from "./schemas.ts"
 
@@ -61,12 +60,6 @@ export interface RetrievedMemory {
 export interface Refreshed {
   blocks: string[]
   changes: LoadedChanges
-}
-
-export interface LimitedOperation {
-  context: MemoryOperationContext
-  expired(): boolean
-  release(): void
 }
 
 export type RetrieveMemoryResult = Succeeded<RetrievedMemory> | MemoryResolutionRefusal

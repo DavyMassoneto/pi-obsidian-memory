@@ -1,17 +1,22 @@
 import { fitBudget, loadedNoteBlock, MAX_RETRIEVAL_DURATION_MS } from "#src/services"
-import { captureMemoryOperationContext, type MemoryOperationContext } from "#src/usecases/operation-context"
+import {
+  captureMemoryOperationContext,
+  type LimitedOperation,
+  limitOperation,
+  type MemoryOperationContext,
+} from "#src/usecases/operation-context"
 import { resolveMemory } from "#src/usecases/resolve-memory"
 import { findNotes } from "./agent.ts"
 import {
   BLOCK_SEPARATOR,
   NO_CHANGES,
   NO_PROJECT,
+  OUT_OF_TIME,
   SESSION_INTRO,
   SESSION_LOAD_FAILED,
   SESSION_QUERY_PREFIX,
 } from "./constants.ts"
-import { limitOperation } from "./deadline.ts"
-import type { LimitedOperation, RetrievedMemory, RetrieveMemoryResult, SessionMemoryDeps } from "./types.ts"
+import type { RetrievedMemory, RetrieveMemoryResult, SessionMemoryDeps } from "./types.ts"
 
 export async function loadSessionMemory(
   callerContext: MemoryOperationContext,
@@ -47,7 +52,7 @@ async function loadWithin(limited: LimitedOperation, deps: SessionMemoryDeps): P
     context,
     deps.complete,
   )
-  if (!found.succeeded) return { succeeded: true, output: failedLoad(found.notice) }
+  if (!found.succeeded) return { succeeded: true, output: failedLoad(found.notice, limited.expired()) }
   const fitted = fitBudget(
     found.output.filter((note) => !note.dontForget),
     config.context.budgetChars,
@@ -58,8 +63,10 @@ async function loadWithin(limited: LimitedOperation, deps: SessionMemoryDeps): P
   return { succeeded: true, output: { text, notices: [], changes: NO_CHANGES } }
 }
 
-function failedLoad(notice: string | null): RetrievedMemory {
-  if (typeof notice !== "string") return { text: null, notices: [], changes: NO_CHANGES }
-  const text = `${SESSION_LOAD_FAILED} ${notice}`
+function failedLoad(notice: string | null, expired: boolean): RetrievedMemory {
+  let reason = notice
+  if (typeof reason !== "string" && expired) reason = OUT_OF_TIME
+  if (typeof reason !== "string") return { text: null, notices: [], changes: NO_CHANGES }
+  const text = `${SESSION_LOAD_FAILED} ${reason}`
   return { text, notices: [text], changes: NO_CHANGES }
 }

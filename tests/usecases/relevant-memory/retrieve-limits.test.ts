@@ -3,7 +3,7 @@ import { expect, onTestFinished, test, vi } from "vitest"
 import { decisionTimeoutMs, MAX_RETRIEVAL_DURATION_MS } from "#src/services"
 import { loadSessionMemory, retrieveMemory } from "#src/usecases"
 import {
-  advanceUntil,
+  advanceWhen,
   decisionServer,
   FINISH_WITH_READS,
   getNote,
@@ -11,12 +11,11 @@ import {
   jevReply,
   layaReplyWithoutRouting,
   putNote,
+  relevanceScript,
   relevantFixture,
   retrievalCompletion,
   slowCompletion,
 } from "#test-helpers"
-
-const SLACK_MS = 5000
 
 test("a scoring that fails adds no notes and gives one notice, without scoring the rest", async () => {
   const fixture = await relevantFixture({ laya: null, decisionModel: { provider: "typesafe", model: "jev-latest" } })
@@ -56,20 +55,18 @@ test("the whole message ends within the decision timeout plus the retrieval limi
     vi.useRealTimers()
   })
   const started = Date.now()
-  let finishedAt = 0
 
   const pending = retrieveMemory({ message: "package managers?" }, fixture.context, {
     complete,
     jev: async () => ({ available: true, classifier: { classify } }),
     loaded: fixture.loaded,
-  }).then((result) => {
-    finishedAt = Date.now()
-    return result
   })
-  await advanceUntil(() => finishedAt > 0, 1000)
+  await advanceWhen(() => complete.mock.calls.length === 1, 25_000)
+  await advanceWhen(() => complete.mock.calls.length === 2, 25_000)
+  await advanceWhen(() => complete.mock.calls.length === 3, 10_000)
   const result = await pending
 
-  expect(finishedAt - started).toBeLessThanOrEqual(decisionTimeoutMs + MAX_RETRIEVAL_DURATION_MS + SLACK_MS)
+  expect(Date.now() - started).toBe(decisionTimeoutMs + MAX_RETRIEVAL_DURATION_MS)
   expect(result).toMatchObject({
     succeeded: true,
     output: { text: null, notices: expect.arrayContaining([expect.stringContaining("ran out of time")]) },
@@ -103,16 +100,13 @@ test("the session-start load stops at the retrieval limit and says the notes cou
     vi.useRealTimers()
   })
   const started = Date.now()
-  let finishedAt = 0
 
-  const pending = loadSessionMemory(fixture.context, { complete, loaded: fixture.loaded }).then((result) => {
-    finishedAt = Date.now()
-    return result
-  })
-  await advanceUntil(() => finishedAt > 0, 1000)
+  const pending = loadSessionMemory(fixture.context, { complete, loaded: fixture.loaded })
+  await advanceWhen(() => complete.mock.calls.length === 1, 25_000)
+  await advanceWhen(() => complete.mock.calls.length === 2, MAX_RETRIEVAL_DURATION_MS - 25_000)
   const result = await pending
 
-  expect(finishedAt - started).toBeLessThanOrEqual(MAX_RETRIEVAL_DURATION_MS + SLACK_MS)
+  expect(Date.now() - started).toBe(MAX_RETRIEVAL_DURATION_MS)
   expect(result).toMatchObject({
     succeeded: true,
     output: {
@@ -120,4 +114,71 @@ test("the session-start load stops at the retrieval limit and says the notes cou
       notices: [expect.stringContaining("could not be loaded")],
     },
   })
+})
+
+test("when the limit cuts the scoring off, only the out-of-time notice is shown", async () => {
+  const fixture = await relevantFixture({ laya: null, decisionModel: { provider: "typesafe", model: "jev-latest" } })
+  const pnpm = await putNote(fixture.vault, "Use pnpm", 1, "Always pnpm.")
+  const complete = slowCompletion(17_000, [getNote(pnpm), FINISH_WITH_READS])
+  const classify = vi
+    .fn()
+    .mockResolvedValueOnce(jevReply(0.9))
+    .mockImplementation(() => new Promise<never>(() => undefined))
+  vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] })
+  onTestFinished(() => {
+    vi.useRealTimers()
+  })
+
+  const pending = retrieveMemory({ message: "pnpm?" }, fixture.context, {
+    complete,
+    jev: async () => ({ available: true, classifier: { classify } }),
+    loaded: fixture.loaded,
+  })
+  await advanceWhen(() => complete.mock.calls.length === 1, 17_000)
+  await advanceWhen(() => complete.mock.calls.length === 2, 17_000)
+  await advanceWhen(() => classify.mock.calls.length === 2, decisionTimeoutMs + MAX_RETRIEVAL_DURATION_MS - 34_000)
+  const result = await pending
+
+  expect(classify).toHaveBeenCalledTimes(2)
+  expect(result).toMatchObject({
+    succeeded: true,
+    output: { text: null, notices: [expect.stringContaining("ran out of time")] },
+  })
+})
+
+test("a message that cannot even start because the memory is busy ends at the limit with the out-of-time notice", async () => {
+  const fixture = await relevantFixture({ laya: relevanceScript(0.9, new Map()) })
+  const lease = await fixture.context.session.acquire(fixture.context.stamp, new AbortController().signal)
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+  onTestFinished(() => {
+    lease?.release()
+    vi.useRealTimers()
+  })
+
+  const pending = retrieveMemory({ message: "pnpm?" }, fixture.context, {
+    complete: retrievalCompletion([]),
+    jev: fixture.unavailable,
+    loaded: fixture.loaded,
+  })
+  await vi.advanceTimersByTimeAsync(decisionTimeoutMs + MAX_RETRIEVAL_DURATION_MS)
+
+  expect(await pending).toMatchObject({
+    succeeded: true,
+    output: { text: null, notices: [expect.stringContaining("ran out of time")] },
+  })
+})
+
+test("a session-start load that cannot start because the memory is busy ends at the limit", async () => {
+  const fixture = await relevantFixture({ laya: null })
+  const lease = await fixture.context.session.acquire(fixture.context.stamp, new AbortController().signal)
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+  onTestFinished(() => {
+    lease?.release()
+    vi.useRealTimers()
+  })
+
+  const pending = loadSessionMemory(fixture.context, { complete: retrievalCompletion([]), loaded: fixture.loaded })
+  await vi.advanceTimersByTimeAsync(MAX_RETRIEVAL_DURATION_MS)
+
+  expect(await pending).toMatchObject({ succeeded: false })
 })

@@ -151,3 +151,13 @@ test("the loaded notes are kept for the session and start empty with the next on
 
   expect(keeper.loaded()).not.toBe(first)
 })
+
+test("capture and retrieval operations share the semantic runtime's source with the main session", () => {
+  const runtime = new SemanticRuntime("models")
+  const keeper = new MemorySessionKeeper(runtime)
+  const { context } = fakePiContext("work", {})
+  keeper.start(context)
+
+  expect(keeper.captureOperation("work", paths)?.semantic).toBe(runtime.source)
+  expect(keeper.retrievalOperation("work", paths)?.semantic).toBe(runtime.source)
+})
