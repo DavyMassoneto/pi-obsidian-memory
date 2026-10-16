@@ -1,8 +1,9 @@
 import { Value } from "typebox/value"
 
-import { type CatalogEntry, CatalogEntrySchema, CatalogNoteSchema } from "#src/domain"
+import type { CatalogEntry } from "#src/domain"
 import type { prepareCatalogStatements } from "./catalog-statements.ts"
-import { CatalogRowSchema, CatalogStateSchema } from "./schemas.ts"
+import { CatalogEntryValidator, CatalogNoteValidator, CatalogRowValidator } from "./constants.ts"
+import { CatalogStateSchema } from "./schemas.ts"
 import type { CatalogRow, InventoryResult, SearchIndexRefusal } from "./types.ts"
 
 export function readInventory(statements: ReturnType<typeof prepareCatalogStatements>): InventoryResult {
@@ -11,7 +12,7 @@ export function readInventory(statements: ReturnType<typeof prepareCatalogStatem
 
   const entries: CatalogEntry[] = []
   for (const row of statements.inventory.all()) {
-    if (!Value.Check(CatalogRowSchema, row)) return corruptCatalog()
+    if (!CatalogRowValidator.Check(row)) return corruptCatalog()
     const entry = entryFromRow(row)
     if (!entry || !validCatalogEntry(entry)) return corruptCatalog()
     entries.push(entry)
@@ -20,7 +21,7 @@ export function readInventory(statements: ReturnType<typeof prepareCatalogStatem
 }
 
 export function validCatalogEntry(entry: CatalogEntry): boolean {
-  if (!Value.Check(CatalogEntrySchema, entry) || !Number.isFinite(entry.stat.mtimeMs)) return false
+  if (!CatalogEntryValidator.Check(entry) || !Number.isFinite(entry.stat.mtimeMs)) return false
   if (!entry.note) return !entry.contentFingerprint && entry.needsFixing
   if (!entry.contentFingerprint) return false
   return entry.note.archived || entry.path.split("/")[0]?.toLowerCase() !== "archive"
@@ -57,7 +58,7 @@ function noteFromRow(row: CatalogRow): CatalogEntry["note"] {
     dontForget: row.dont_forget === 1,
     archived: row.archived === 1,
   }
-  if (!Value.Check(CatalogNoteSchema, note)) return null
+  if (!CatalogNoteValidator.Check(note)) return null
   return note
 }
 

@@ -2,9 +2,10 @@
 
 How memory is organized inside a vault (global or project). Decided with the user on 2026-10-04.
 
-The format and resource operations below exist today, and so does an internal synchronizer (not yet triggered by
-any pi event). Setup and init write the templates to `_templates/`. Don't forget injection and commands such as
-`/memory-doctor` are target behaviour, not registered features. Only `memory_add` is currently a pi tool; see [ROADMAP.md](ROADMAP.md).
+The format and resource operations below exist today, and so does the synchronizer, which runs at session start and
+before each search. Setup and init write the templates to `_templates/`. Don't forget notes are injected at session
+start. Commands such as `/memory-doctor` are target behaviour, not registered features. The pi tools today are
+`memory_add`, `memory_search` and `memory_get`; see [ROADMAP.md](ROADMAP.md).
 
 ## Layout
 

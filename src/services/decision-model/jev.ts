@@ -14,11 +14,8 @@ export async function classifyJev(context: JevContext, call: ProviderCall): Prom
   if (!Value.Check(JevResultSchema, result)) return { succeeded: false, code: "invalid-response", diagnostics }
   if (result.stopReason === "aborted") return { succeeded: false, code: "aborted", diagnostics }
   if (result.stopReason === "error") return { succeeded: false, code: "unavailable", diagnostics }
-  if (
-    result.model !== context.model ||
-    result.answer?.type !== "bool" ||
-    typeof result.answer.probability !== "number"
-  ) {
+  const answer = result.answers[call.question]
+  if (result.model !== context.model || answer?.type !== "bool" || typeof answer.probability !== "number") {
     return { succeeded: false, code: "invalid-response", diagnostics }
   }
   let usage: DecisionUsage | null = null
@@ -26,7 +23,7 @@ export async function classifyJev(context: JevContext, call: ProviderCall): Prom
   return {
     succeeded: true,
     output: {
-      probability: result.answer.probability,
+      probability: answer.probability,
       diagnostics: { ...diagnostics, reportedModel: result.model, usage },
     },
   }

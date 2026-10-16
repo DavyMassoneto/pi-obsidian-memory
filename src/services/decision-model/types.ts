@@ -109,16 +109,37 @@ export interface JevAnswer {
   probability?: number
 }
 
+export interface JevAnswers {
+  needed?: JevAnswer
+  relevant?: JevAnswer
+}
+
+export interface JevCost {
+  input: number
+  output: number
+  cacheRead: number
+  cacheWrite: number
+  total: number
+}
+
 export interface JevUsage {
   input: number
   output: number
+  cacheRead: number
+  cacheWrite: number
+  totalTokens: number
+  cost: JevCost
 }
 
 export interface JevClassifierResult {
-  stopReason: "stop" | "error" | "aborted"
+  api: string
+  provider: string
   model: string
-  answer: JevAnswer | null
+  answers: JevAnswers
   usage?: JevUsage
+  stopReason: "stop" | "error" | "aborted"
+  errorMessage?: string
+  timestamp: number
 }
 
 export interface JevClassifierPort {

@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { addMemory, initProjectMemory, prepareProjectInit, setupMemory } from "#src/usecases"
-import { registrationUsecaseFixture } from "#test-helpers"
+import { addMemory, initProjectMemory, prepareProjectInit, setupMemory, synchronizeMemory } from "#src/usecases"
+import { registrationDiskTree, registrationUsecaseFixture } from "#test-helpers"
 
 const draft = {
   statement: "Use pnpm, never npm",
@@ -47,4 +47,27 @@ test("after setup and init a project memory from a subfolder lands in the projec
   expect(refused).toMatchObject({ succeeded: false, reason: "no-project" })
   expect(global).toMatchObject({ succeeded: true })
   expect(await readdir(join(config.global.vault, "tools"))).toContain("Use pnpm, never npm.md")
+})
+
+test("setup, init and sync never write the shipped skill into a vault", async () => {
+  const { root, context, request, config } = await registrationUsecaseFixture()
+  expect((await setupMemory(request, context)).succeeded).toBe(true)
+  const preparation = await prepareProjectInit(context)
+  if (!preparation.succeeded) throw new Error(preparation.problems.join("; "))
+  const projectVault = join(root, "loja-vault")
+  const fresh = { ...context, stamp: context.session.stamp() }
+  const init = await initProjectMemory(
+    { name: "loja", vault: projectVault, expectedHash: preparation.output.expectedHash },
+    fresh,
+  )
+  expect(init.succeeded).toBe(true)
+  const synced = { ...context, stamp: context.session.stamp() }
+  expect((await synchronizeMemory({ vault: "global" }, synced)).succeeded).toBe(true)
+  expect((await synchronizeMemory({ vault: "project" }, synced)).succeeded).toBe(true)
+
+  for (const vault of [config.global.vault, projectVault]) {
+    const tree = await registrationDiskTree(vault)
+    expect(tree).toContain("Memory.base")
+    expect(tree.filter((path) => /skill|obsidian-memory/i.test(path))).toEqual([])
+  }
 })

@@ -1,10 +1,11 @@
 import Type from "typebox"
 
 import { NoteIdSchema, NoteTypeSchema } from "#src/domain/note"
+import { maxTextChars } from "./constants.ts"
 
 export const VaultSchema = Type.Enum(["global", "project"])
 export const PathSchema = Type.String({ maxLength: 1024 })
-export const TextSchema = Type.String({ minLength: 1, maxLength: 16000 })
+export const TextSchema = Type.String({ minLength: 1, maxLength: maxTextChars })
 export const HashSchema = Type.String({ pattern: "^[a-f0-9]{64}$" })
 
 export const IdentitySchema = Type.Object(

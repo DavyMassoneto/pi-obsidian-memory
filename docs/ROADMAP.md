@@ -15,7 +15,7 @@ Every milestone:
 
 ## Current state
 
-- pi loads the extension and registers `memory_add`, `/memory-setup` and `/memory-init`. Session start notifies, with a
+- pi loads the extension and registers `memory_add`, `memory_search`, `memory_get`, `/memory-setup` and `/memory-init`. Session start notifies, with a
   UI and not on reload, when there is no config (offers `/memory-setup`), an invalid config (every problem, nothing
   used) or an unreadable file. The real-pi smoke test checks the registrations and the no-config notice.
 - One tool, `memory_add`, for explicit requests to remember. It writes a valid note to the global or project vault,
@@ -37,19 +37,23 @@ Every milestone:
 - Embedding, decision-model and bounded capture/retrieval model resources exist, but these settings do not connect
   them to product operations or prove live-provider/local-inference availability. Later milestones are not
   complete.
-- Read usecases resolve strict configured global/current-project scope, get exact full diagnostic notes with session
-  receipts, and read existing folder indexes without generating assets. They are not pi tools. A leased internal
-  synchronizer now reconciles per-vault catalogs and maintains folder indexes incrementally: a folder is re-rendered only when its
-  listing fingerprint or `index.md` stat changed (warm sync, 20 notes/folder: 780→151 ms at 200 notes, 3587→680 at
-  1000, 18733→3416 at 5000; the remaining cost is the catalog scan). Search wiring,
-  mandatory context and universal vault isolation remain incomplete; milestone 2 is not complete.
+- `memory_search` (text; global, project or both; 10 results per vault; archived and invalid-frontmatter notes
+  excluded) shows vault, path, type, Don't forget and needs fixing. `memory_get` (vault and path) returns a note in
+  full with its problems, a folder's index (`""` is the root), and reads `archive/`. The catalog is synchronized
+  before each search and at session start, and the index is rebuilt when missing or corrupt. Warm sync (20
+  notes/folder): ~196 ms at 1000 notes, ~960 ms at 5000 (earlier: 470 / 1688 ms).
+- Session start adds a memory block as a system prompt section: it says it is only part of the memory, names
+  `memory_search` and `memory_get`, and holds every Don't forget note of both vaults in full (with problems for
+  name/body issues; invalid-frontmatter notes are not loaded). It is present with no marked notes, absent when the
+  config is missing, invalid or unreadable, and never invites saving. The skill `obsidian-memory` ships with the
+  package.
+- Milestone 2 is not complete: the vault access guard is not built. Nothing stops the LLM from reading or writing vault
+  files with pi's file tools, bash or Claude Code sessions started by pi.
 - Built but not reachable by any tool or command: updating, archiving and succeeding notes. Lifecycle reports partial
   progress after late failures; update/removal hash checks and link checks still have check/use windows.
 - The text search resource has a private SQLite connection, prepared statements and transactional rowid-linked FTS5
   writes with structured failures. Synchronization populates missing/corrupt catalogs from vault files, retaining
-  cached rows under failed coverage and reporting incomplete population separately. Search is not connected to a tool.
-- Nothing stops the LLM from reading or writing vault files with pi's file tools, bash or Claude Code sessions started
-  by pi.
+  cached rows under failed coverage and reporting incomplete population separately.
 - Guidance names `/memory-setup` when memory is off and `/memory-init` for an unregistered folder, and never offers
   update operations that do not exist yet.
 - Frontmatter, name/path, diagnostic, pi response, search-write and lifecycle regression tests now use source-named
@@ -197,25 +201,25 @@ Every milestone:
 - **Goal:** what was saved shapes the next session, and the LLM can search and read further, only through the memory
   tools.
 - **Scope:**
-  - Session start adds every Don't forget note of the global and the project vault, in full, with no limit
+  - [x] Session start adds every Don't forget note of the global and the project vault, in full, with no limit
     (VISION 4, vault-format Don't forget). A marked note with problems is included, with its problems. Nothing else is
     loaded (Settled behaviour).
-  - Every memory block says it is only part of the memory and that `memory_search` and `memory_get` reach the rest.
+  - [x] Every memory block says it is only part of the memory and that `memory_search` and `memory_get` reach the rest.
     This holds for every block added by any later milestone. The block is added even when no note is marked, so the
     LLM always knows the tools exist. It never invites the LLM to save.
-  - `memory_search` (text, VISION 6): one or both vaults. Each result gives the vault, the path, the type, the Don't
+  - [x] `memory_search` (text, VISION 6): one or both vaults. Each result gives the vault, the path, the type, the Don't
     forget mark and whether the note needs fixing.
-  - `memory_get` takes a vault and a path:
+  - [x] `memory_get` takes a vault and a path:
     - a note comes back in full, with every problem if it breaks any rule;
     - a folder gives its index, so the LLM can walk the tree to place notes (vault-format, Layout);
     - `archive/` paths can be read.
-  - Search follows vault-format ("Changes made outside the system"): a note without valid frontmatter stays out of
+  - [x] Search follows vault-format ("Changes made outside the system"): a note without valid frontmatter stays out of
     search and is listed under `Needs fixing`. This covers a file with no closed frontmatter block (a blank note) and
     a note with any frontmatter problem (a missing or invalid `id`, an unknown or repeated field, a wrong value). A
     note with valid frontmatter whose name or body breaks a rule (for example, a limit lowered later) is searched, and
     its result says it needs fixing. Archived notes are out of search. `memory_get` still reads every note with a
     closed frontmatter block, with all its problems (vault-format, Notes).
-  - The index follows the vault: at session start and before each search, new, deleted, moved and changed notes are
+  - [x] The index follows the vault: at session start and before each search, new, deleted, moved and changed notes are
     picked up ("Changes made outside the system"). A missing or corrupt index is rebuilt from the notes (VISION 6).
     Writes through the tools update it.
   - Vault access only through the memory system (VISION 12, Settled behaviour):

@@ -1,6 +1,7 @@
 import type { MemoryPaths, MemoryPiContext } from "#src/pi/context"
-import { createMemorySession, type MemorySession } from "#src/usecases"
-import type { RegistrationFlow } from "./types.ts"
+import { createMemorySession, type MemoryOperationContext, type MemorySession } from "#src/usecases"
+import { STALE_SESSION_REASON } from "./constants.ts"
+import type { ReadOutcome, ReadRun, RegistrationFlow } from "./types.ts"
 
 export class MemorySessionKeeper {
   #session: MemorySession | null = null
@@ -17,20 +18,52 @@ export class MemorySessionKeeper {
     this.#session = null
   }
 
+  operationContext(
+    session: MemorySession,
+    workingFolder: string,
+    paths: MemoryPaths,
+    callerSignal: AbortSignal | undefined,
+  ): MemoryOperationContext {
+    const stamp = session.stamp()
+    let signal = session.signal(stamp)
+    if (callerSignal) signal = AbortSignal.any([signal, callerSignal])
+    return {
+      configPath: paths.configPath,
+      indexPath: paths.indexPath,
+      workingFolder,
+      session,
+      stamp,
+      signal,
+    }
+  }
+
+  currentOperation(
+    workingFolder: string,
+    paths: MemoryPaths,
+    callerSignal: AbortSignal | undefined,
+  ): MemoryOperationContext | null {
+    if (!this.#session) return null
+    return this.operationContext(this.#session, workingFolder, paths, callerSignal)
+  }
+
+  async readFresh<Outcome extends ReadOutcome>(
+    workingFolder: string,
+    paths: MemoryPaths,
+    callerSignal: AbortSignal | undefined,
+    run: ReadRun<Outcome>,
+  ): Promise<Outcome | null> {
+    const first = this.currentOperation(workingFolder, paths, callerSignal)
+    if (!first) return null
+    const result = await run(first)
+    if (result.succeeded || result.reason !== STALE_SESSION_REASON) return result
+    const second = this.currentOperation(workingFolder, paths, callerSignal)
+    if (!second) return result
+    return run(second)
+  }
+
   registrationFlow(ctx: MemoryPiContext, paths: MemoryPaths): RegistrationFlow {
     let session = this.#session
     if (!session) session = this.start(ctx)
-    const stamp = session.stamp()
-    return {
-      session,
-      registration: {
-        configPath: paths.configPath,
-        indexPath: paths.indexPath,
-        workingFolder: ctx.cwd,
-        session,
-        stamp,
-        signal: session.signal(stamp),
-      },
-    }
+    return { session, registration: this.operationContext(session, ctx.cwd, paths, undefined) }
   }
 }

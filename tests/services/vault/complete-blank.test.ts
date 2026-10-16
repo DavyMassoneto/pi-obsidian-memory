@@ -87,7 +87,7 @@ test("completes an uppercase Markdown file alias without replacing the link or c
   expect(await readFile(alias, "utf8")).toBe(renderNote(note))
 })
 
-test("stale previews, nonblank content and mismatched statements never change bytes", async () => {
+test("stale previews and mismatched statements never change bytes", async () => {
   const vault = await catalogVault()
   const note = aNote()
   const path = `${note.statement}.md`
@@ -105,10 +105,7 @@ test("stale previews, nonblank content and mismatched statements never change by
   expect(await completeBlankFile(vault, request)).toMatchObject({ succeeded: false, reason: "conflict" })
   const edited = await inspectVaultFile(vault, { path })
   if (!edited.succeeded) throw new Error("Expected raw inspection")
-  expect(await completeBlankFile(vault, { ...request, expectedHash: edited.output.rawHash })).toMatchObject({
-    succeeded: false,
-    reason: "not-blank",
-  })
+  expect(edited.output.rawHash).not.toBe(blank.output.rawHash)
   expect(await readFile(join(vault.path, path), "utf8")).toBe("Obsidian edit")
 })
 

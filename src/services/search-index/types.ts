@@ -1,6 +1,13 @@
 import type { Static } from "typebox"
 
-import type { CatalogChanges, CatalogSnapshot, VectorCache, VectorReplacement } from "#src/domain"
+import type {
+  CatalogChanges,
+  CatalogSnapshot,
+  VectorCache,
+  VectorChunk,
+  VectorGeneration,
+  VectorReplacement,
+} from "#src/domain"
 import type { Done, Failed, Succeeded } from "#src/shared"
 import type {
   CatalogHitSchema,
@@ -33,6 +40,20 @@ export type FolderIndexStatesResult = Succeeded<FolderIndexState[]> | SearchInde
 export type InventoryResult = Succeeded<CatalogSnapshot> | SearchIndexRefusal
 export type CatalogSearchResult = Succeeded<CatalogHit[]> | SearchIndexRefusal
 export type VectorCacheResult = Succeeded<VectorCache> | SearchIndexRefusal
+export type VectorCoverageResult = Succeeded<VectorCoverage> | SearchIndexRefusal
+
+export interface VectorUpdate {
+  expectedRevision: number
+  generation: VectorGeneration
+  add: VectorChunk[]
+  remove: string[]
+}
+
+export interface VectorCoverage {
+  generation: VectorGeneration | null
+  embedded: number
+  current: number
+}
 
 export interface IndexLocation {
   path: string
@@ -61,6 +82,8 @@ export interface SearchIndex {
   searchCatalog(request: CatalogQuery): CatalogSearchResult
   vectors(): VectorCacheResult
   replaceVectors(request: VectorReplacement): IndexWriteResult
+  updateVectors(request: VectorUpdate): IndexWriteResult
+  vectorCoverage(): VectorCoverageResult
   folderIndexes(): FolderIndexStatesResult
   recordFolderIndexes(states: FolderIndexState[], keepFolders: string[]): IndexWriteResult
   close(): IndexWriteResult

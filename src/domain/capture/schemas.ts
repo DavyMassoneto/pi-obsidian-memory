@@ -11,6 +11,7 @@ import {
   VaultSchema,
 } from "#src/domain/memory-agent"
 import { NoteIdSchema, NoteTypeSchema } from "#src/domain/note"
+import { maxTranscriptItems } from "./constants.ts"
 
 export const CaptureDraftSchema = Type.Object(
   { folder: PathSchema, statement: TextSchema, body: TextSchema, type: NoteTypeSchema, dontForget: Type.Boolean() },
@@ -60,14 +61,23 @@ export const WriteObservationSchema = Type.Object(
   { additionalProperties: false },
 )
 
-export const CaptureObservationSchema = Type.Union([ObservationSchema, WriteObservationSchema])
+export const ClarificationObservationSchema = Type.Object(
+  { kind: Type.Literal("clarification"), question: TextSchema, answer: Type.Union([TextSchema, Type.Null()]) },
+  { additionalProperties: false },
+)
+
+export const CaptureObservationSchema = Type.Union([
+  ObservationSchema,
+  WriteObservationSchema,
+  ClarificationObservationSchema,
+])
 
 export const CaptureInputSchema = Type.Object(
   {
     context: AgentContextSchema,
     transcriptDelta: Type.Array(
       Type.Object({ role: Type.Enum(["user", "assistant"]), text: TextSchema }, { additionalProperties: false }),
-      { minItems: 1, maxItems: 100 },
+      { minItems: 1, maxItems: maxTranscriptItems },
     ),
     observations: Type.Array(CaptureObservationSchema, { maxItems: 20 }),
     explicitSaves: Type.Array(ReadObservationSchema, { maxItems: 20 }),

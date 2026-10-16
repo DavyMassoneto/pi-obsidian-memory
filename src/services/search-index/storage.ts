@@ -26,9 +26,11 @@ import type {
   SearchOptions,
   SearchResult,
   VectorCacheResult,
+  VectorCoverageResult,
+  VectorUpdate,
 } from "./types.ts"
 import { prepareVectorStatements } from "./vector-statements.ts"
-import { readVectors, writeVectors } from "./vector-storage.ts"
+import { readVectorCoverage, readVectors, updateVectors, writeVectors } from "./vector-storage.ts"
 
 export class SqliteSearchIndex implements SearchIndex {
   readonly #database: DatabaseSync
@@ -60,6 +62,24 @@ export class SqliteSearchIndex implements SearchIndex {
 
   replaceVectors(request: VectorReplacement): IndexWriteResult {
     return this.#write(() => writeVectors(this.#vectors, this.#catalog, request))
+  }
+
+  updateVectors(request: VectorUpdate): IndexWriteResult {
+    return this.#write(() => updateVectors(this.#vectors, this.#catalog, request))
+  }
+
+  vectorCoverage(): VectorCoverageResult {
+    if (!this.#usable || !this.#database.isOpen) return closedIndex()
+
+    try {
+      this.#database.exec("BEGIN")
+      const result = readVectorCoverage(this.#vectors)
+      this.#database.exec("COMMIT")
+      return result
+    } catch (error) {
+      if (!(error instanceof Error)) throw error
+      return this.#rollBack(indexFailure(error))
+    }
   }
 
   recordFolderIndexes(states: FolderIndexState[], keepFolders: string[]): IndexWriteResult {

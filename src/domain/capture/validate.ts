@@ -54,7 +54,7 @@ function checkMutation(identity: MemoryIdentity, input: CaptureInput): string[] 
     (item) =>
       (item.kind === "read" || item.kind === "write") && item.vault === identity.vault && item.path === identity.path,
   )
-  const reads = input.observations.filter((item) => item.kind !== "write")
+  const reads = input.observations.filter((item) => item.kind !== "write" && item.kind !== "clarification")
   if (latest?.kind !== "read" || !hasReadIdentity(identity, reads)) {
     return ["Mutation requires a fresh matching read identity and hash"]
   }

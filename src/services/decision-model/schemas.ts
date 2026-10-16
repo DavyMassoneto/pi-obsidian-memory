@@ -76,23 +76,17 @@ export const LayaResponseSchema = Type.Object(
   { additionalProperties: false },
 )
 
+const JevAnswerSchema = Type.Object({ type: Type.String(), probability: Type.Optional(ProbabilitySchema) })
+
 export const JevResultSchema = Type.Object(
   {
     stopReason: Type.Union([Type.Literal("stop"), Type.Literal("error"), Type.Literal("aborted")]),
     model: DecisionModelNameSchema,
-    answer: Type.Union([
-      Type.Null(),
-      Type.Object(
-        {
-          type: Type.String(),
-          probability: Type.Optional(ProbabilitySchema),
-        },
-        { additionalProperties: false },
-      ),
-    ]),
-    usage: Type.Optional(
-      Type.Object({ input: TokenCountSchema, output: TokenCountSchema }, { additionalProperties: false }),
-    ),
+    answers: Type.Object({
+      needed: Type.Optional(JevAnswerSchema),
+      relevant: Type.Optional(JevAnswerSchema),
+    }),
+    usage: Type.Optional(Type.Object({ input: TokenCountSchema, output: TokenCountSchema })),
   },
-  { additionalProperties: false },
+  { additionalProperties: true },
 )

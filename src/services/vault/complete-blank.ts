@@ -1,7 +1,8 @@
-import { checkMemoryFolder } from "#src/domain"
+import { checkMemoryFolder, type Note, parseNote } from "#src/domain"
 import { inspectVaultFile } from "#src/services/vault/catalog"
 import type { VaultContext } from "#src/services/vault/context"
-import type { CompleteBlankRequest, CompleteBlankResult } from "./types.ts"
+import type { Succeeded } from "#src/shared"
+import type { BlankCompletionRefusal, CompleteBlankRequest, CompleteBlankResult } from "./types.ts"
 import { updateNoteFile } from "./update-file.ts"
 
 export async function completeBlankFile(
@@ -14,11 +15,28 @@ export async function completeBlankFile(
   if (current.rawHash !== request.expectedHash) {
     return { succeeded: false, reason: "conflict", problems: ["The blank file changed since its preview"] }
   }
-  if (current.text.trim() !== "") {
-    return { succeeded: false, reason: "not-blank", problems: ["Only whitespace-empty files can be completed"] }
-  }
+  const note = noteToComplete(request.note, current.text)
+  if (!note.succeeded) return note
 
-  return completeInspectedBlank(vault, request, current.canonicalPath)
+  return completeInspectedBlank(vault, { ...request, note: note.output }, current.canonicalPath)
+}
+
+function noteToComplete(note: Note, text: string): Succeeded<Note> | BlankCompletionRefusal {
+  if (text.trim() === "") return { succeeded: true, output: note }
+  const parsed = parseNote(note.statement, text)
+  if (parsed.succeeded) {
+    return { succeeded: false, reason: "not-blank", problems: ["The file already has frontmatter"] }
+  }
+  if (parsed.problems.includes("frontmatter is not closed")) {
+    return { succeeded: false, reason: "not-blank", problems: parsed.problems }
+  }
+  const normalized = text.replaceAll("\r\n", "\n")
+  return { succeeded: true, output: { ...note, body: withoutFinalNewline(normalized) } }
+}
+
+function withoutFinalNewline(text: string): string {
+  if (text.endsWith("\n")) return text.slice(0, -1)
+  return text
 }
 
 async function completeInspectedBlank(

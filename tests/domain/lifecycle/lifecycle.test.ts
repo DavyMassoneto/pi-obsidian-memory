@@ -1,9 +1,10 @@
 import { expect, test } from "vitest"
 
-import { archiveNote, type NoteType, succeedNote } from "#src/domain"
-import { aDecision, aQuestion, noteAbout } from "#test-helpers"
+import { archiveNote, type NoteType, succeedNote, updatedNote } from "#src/domain"
+import { aDecision, aDontForgetNote, aNote, aQuestion, noteAbout } from "#test-helpers"
 
 const today = "2026-10-06"
+const updatedOn = "2026-11-02"
 
 const question = { folder: "search", note: aQuestion() }
 const decision = { folder: "search", note: aDecision() }
@@ -57,4 +58,42 @@ test.each<[NoteType, NoteType]>([
 
   expect(archived.note.frontmatter.type).toBe(from)
   expect(successor.note.frontmatter.type).toBe(to)
+})
+
+test("update keeps id, created and statement, sets updated and changes body, type and dontForget", () => {
+  const note = aNote()
+  const result = updatedNote(note, { body: "New body.", type: "decision", dontForget: true }, updatedOn)
+
+  expect(result).toEqual({
+    statement: note.statement,
+    frontmatter: { ...note.frontmatter, type: "decision", updated: updatedOn, dontForget: true },
+    body: "New body.",
+  })
+})
+
+test("update removes dontForget when the change turns it off", () => {
+  const note = aDontForgetNote("Use pnpm")
+  const result = updatedNote(note, { body: "Body.", type: "rule", dontForget: false }, updatedOn)
+
+  expect(result.frontmatter).not.toHaveProperty("dontForget")
+})
+
+test("update keeps replaces, replacedBy and archived", () => {
+  const note = aNote()
+  const links = { replaces: "[[archive/a/Old]]", replacedBy: "[[a/New]]", archived: "2026-10-05" } as const
+  const result = updatedNote(
+    { ...note, frontmatter: { ...note.frontmatter, ...links } },
+    { body: "Body.", type: "rule", dontForget: false },
+    updatedOn,
+  )
+
+  expect(result.frontmatter).toMatchObject(links)
+})
+
+test("update does not change the note it was given", () => {
+  const note = aDontForgetNote("Use pnpm")
+  const snapshot = structuredClone(note)
+  updatedNote(note, { body: "Other.", type: "fact", dontForget: false }, updatedOn)
+
+  expect(note).toEqual(snapshot)
 })

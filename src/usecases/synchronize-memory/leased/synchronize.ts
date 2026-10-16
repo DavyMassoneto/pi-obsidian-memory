@@ -3,6 +3,7 @@ import {
   closeIndex,
   indexFileFor,
   type OpenedIndex,
+  type OpenIndexResult,
   readIndexInventory,
   recoverIndex,
 } from "#src/services"
@@ -43,13 +44,12 @@ async function synchronizeSelectedMemory(
 ): Promise<SynchronizeMemoryResult> {
   const interrupted = memoryOperationInterruption(context)
   if (interrupted) return { ...interrupted, progress: null }
-  const path = indexFileFor(memory.indexPath, target.vault.path)
-  const opened = recoverIndex({ path })
+  const opened = openVaultIndex(memory, target)
   if (!opened.succeeded) return { ...opened, progress: null }
   const warnings: string[] = []
   let result: SynchronizeMemoryResult
   try {
-    result = await synchronizeOpenedMemory(opened, target, context, catalogValidationFingerprint(memory.config.limits))
+    result = await synchronizeOpenedMemory(opened, memory, target, context)
   } finally {
     const closed = closeIndex(opened.output)
     if (!closed.succeeded) warnings.push(...closed.problems)
@@ -59,11 +59,15 @@ async function synchronizeSelectedMemory(
   return result
 }
 
-async function synchronizeOpenedMemory(
+export function openVaultIndex(memory: ResolvedMemory, target: ResolvedVault): OpenIndexResult {
+  return recoverIndex({ path: indexFileFor(memory.indexPath, target.vault.path) })
+}
+
+export async function synchronizeOpenedMemory(
   opened: OpenedIndex,
+  memory: ResolvedMemory,
   target: ResolvedVault,
   context: MemoryOperationContext,
-  validationFingerprint: string,
 ): Promise<SynchronizeMemoryResult> {
   const inventory = readIndexInventory(opened.output)
   if (!inventory.succeeded) return { ...inventory, progress: null }
@@ -78,6 +82,7 @@ async function synchronizeOpenedMemory(
     warnings: [],
   }
   const work: CatalogSynchronization = { context, target, index: opened.output, progress }
+  const validationFingerprint = catalogValidationFingerprint(memory.config.limits)
   const scanned = await scanMemoryCatalog(work, inventory.output, validationFingerprint)
   const interrupted = memoryOperationInterruption(context)
   if (interrupted) return { ...interrupted, progress }
