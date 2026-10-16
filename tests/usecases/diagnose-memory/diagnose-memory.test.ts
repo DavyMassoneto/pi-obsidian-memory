@@ -5,6 +5,7 @@ import { expect, test } from "vitest"
 import { diagnoseMemory } from "#src/usecases"
 import {
   chatModelPort,
+  emptyEmbeddingProbe,
   expectRegistrationLeaseReleased,
   memoryReadTree,
   noteWithId,
@@ -25,7 +26,7 @@ test("the doctor changes nothing on disk, in either vault", async () => {
   await putCatalogFile(project, "Deploy.md", noteWithId(40, "Deploy.", []))
   const before = [await memoryReadTree(vault.path), await memoryReadTree(project.path)]
 
-  await diagnoseMemory({ port: chatModelPort(models, []) }, context)
+  await diagnoseMemory({ port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe() }, context)
 
   expect([await memoryReadTree(vault.path), await memoryReadTree(project.path)]).toEqual(before)
 })
@@ -35,7 +36,10 @@ test("both vaults are reported, a missing project vault is a problem for that va
   await putCatalogFile(vault, "Good.md", noteWithId(1, "Fine.", []))
   await rm(project.path, { recursive: true })
 
-  const result = await diagnoseMemory({ port: chatModelPort(models, []) }, context)
+  const result = await diagnoseMemory(
+    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe() },
+    context,
+  )
 
   expect(result).toMatchObject({
     succeeded: true,
@@ -52,7 +56,10 @@ test("both vaults are reported, a missing project vault is a problem for that va
 test("a folder with no registered project reports projectMissing and only the global vault", async () => {
   const { context, root } = await searchFixture()
 
-  const result = await diagnoseMemory({ port: chatModelPort(models, []) }, { ...context, workingFolder: root })
+  const result = await diagnoseMemory(
+    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe() },
+    { ...context, workingFolder: root },
+  )
 
   expect(result).toMatchObject({ succeeded: true, output: { projectMissing: true, vaults: [{ vault: "global" }] } })
 })
@@ -62,9 +69,15 @@ test("each configured chat model is checked against pi's registry and credential
   const memoryAgent = { model: { provider: "other", id: "agent" } }
   await writeRegistrationSnapshot(context, JSON.stringify({ ...config, memoryAgent }))
 
-  const allGood = await diagnoseMemory({ port: chatModelPort(models, []) }, context)
+  const allGood = await diagnoseMemory(
+    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe() },
+    context,
+  )
   const broken = await diagnoseMemory(
-    { port: chatModelPort([{ provider: "test-chat", id: "selected-chat" }], ["test-chat/selected-chat"]) },
+    {
+      port: chatModelPort([{ provider: "test-chat", id: "selected-chat" }], ["test-chat/selected-chat"]),
+      embeddings: await emptyEmbeddingProbe(),
+    },
     context,
   )
 
@@ -90,8 +103,27 @@ test("with no config the doctor reports the config problem", async () => {
   const { context } = await searchFixture()
   await rm(context.configPath)
 
-  const result = await diagnoseMemory({ port: chatModelPort(models, []) }, context)
+  const result = await diagnoseMemory(
+    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe() },
+    context,
+  )
 
   expect(result).toMatchObject({ succeeded: false, reason: "not-configured" })
   await expectRegistrationLeaseReleased(context)
+})
+
+test("the embeddings provider is checked and reported with the models", async () => {
+  const { context } = await searchFixture()
+
+  const result = await diagnoseMemory(
+    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe() },
+    context,
+  )
+
+  expect(result).toMatchObject({
+    succeeded: true,
+    output: {
+      embeddings: { provider: "local", model: "Xenova/multilingual-e5-small", status: "model-not-downloaded" },
+    },
+  })
 })

@@ -1,4 +1,11 @@
-import { closeIndex, type MemoryScope, type OpenedIndex, searchCatalog } from "#src/services"
+import {
+  closeIndex,
+  embeddingFingerprint,
+  type MemoryScope,
+  type OpenedIndex,
+  readVectorCoverage,
+  searchCatalog,
+} from "#src/services"
 import {
   captureMemoryOperationContext,
   type MemoryOperationContext,
@@ -11,14 +18,17 @@ import {
   resolveLeasedMemory,
   selectMemoryVault,
 } from "#src/usecases/resolve-memory/leased"
+import { fuseSearchHits, prepareSemanticSearch, rankSemantically, semanticPortOf } from "#src/usecases/semantic"
 import { openVaultIndex, synchronizeOpenedMemory } from "#src/usecases/synchronize-memory/leased"
-import { SEARCH_RESULT_LIMIT } from "./constants.ts"
+import { SEARCH_RESULT_LIMIT, SEMANTIC_PARTIAL_LINE } from "./constants.ts"
+import { textLimitFor } from "./limit.ts"
 import type {
   SearchedMemory,
   SearchMemoryRequest,
   SearchMemoryResult,
   VaultSearchFailure,
   VaultSearchHits,
+  VaultSemantic,
 } from "./types.ts"
 
 export async function searchMemory(
@@ -43,7 +53,12 @@ async function searchResolvedMemory(
   memory: ResolvedMemory,
   context: MemoryOperationContext,
 ): Promise<SearchMemoryResult> {
-  const output: SearchedMemory = { vaults: [], projectMissing: false }
+  const port = await semanticPortOf(context, memory)
+  const prepared = await prepareSemanticSearch(port, request.query, context)
+  const semantic: VaultSemantic = { port, query: prepared.query }
+  const problems = [...prepared.problems]
+  const output: SearchedMemory = { vaults: [], projectMissing: false, semantic: { mode: "text-only", problems } }
+  if (prepared.query) output.semantic.mode = "fused"
   for (const scope of scopesOf(request.vault)) {
     const interrupted = memoryOperationInterruption(context)
     if (interrupted) return interrupted
@@ -52,7 +67,7 @@ async function searchResolvedMemory(
       output.projectMissing = true
       continue
     }
-    output.vaults.push(await searchLeasedVault(request.query, memory, target.output, context))
+    output.vaults.push(await searchLeasedVault(request.query, memory, target.output, context, semantic, problems))
   }
   const stale = memoryOperationInterruption(context)
   if (stale) return stale
@@ -69,13 +84,15 @@ async function searchLeasedVault(
   memory: ResolvedMemory,
   target: ResolvedVault,
   context: MemoryOperationContext,
+  semantic: VaultSemantic,
+  problems: string[],
 ): Promise<VaultSearchHits | VaultSearchFailure> {
   const opened = openVaultIndex(memory, target)
   if (!opened.succeeded) return { vault: target.scope, problems: opened.problems }
   const warnings: string[] = []
   let result: VaultSearchHits | VaultSearchFailure
   try {
-    result = await searchSynchronizedVault(query, opened, memory, target, context)
+    result = await searchSynchronizedVault(query, opened, memory, target, context, semantic, problems)
   } finally {
     const closed = closeIndex(opened.output)
     if (!closed.succeeded) warnings.push(...closed.problems)
@@ -91,10 +108,26 @@ async function searchSynchronizedVault(
   memory: ResolvedMemory,
   target: ResolvedVault,
   context: MemoryOperationContext,
+  semantic: VaultSemantic,
+  problems: string[],
 ): Promise<VaultSearchHits | VaultSearchFailure> {
-  const synchronized = await synchronizeOpenedMemory(opened, memory, target, context)
+  const synchronized = await synchronizeOpenedMemory(opened, memory, target, context, semantic.port)
   if (!synchronized.succeeded) return { vault: target.scope, problems: synchronized.problems }
-  const found = searchCatalog(opened.output, { query, limit: SEARCH_RESULT_LIMIT })
+  const found = searchCatalog(opened.output, { query, limit: textLimitFor(semantic.query) })
   if (!found.succeeded) return { vault: target.scope, problems: found.problems }
-  return { vault: target.scope, hits: found.output, warnings: synchronized.output.warnings }
+  const warnings = [...synchronized.output.warnings]
+  if (!semantic.query) return { vault: target.scope, hits: found.output.slice(0, SEARCH_RESULT_LIMIT), warnings }
+  const ranked = rankSemantically(opened.output, semantic.query, memory.config.embeddings.provider)
+  warnings.push(...ranked.problems)
+  const missing = missingVectors(opened, memory)
+  if (missing > 0) problems.push(`${target.scope}: ${missing} ${SEMANTIC_PARTIAL_LINE}`)
+  return { vault: target.scope, hits: fuseSearchHits(found.output, ranked, SEARCH_RESULT_LIMIT), warnings }
+}
+
+function missingVectors(opened: OpenedIndex, memory: ResolvedMemory): number {
+  const coverage = readVectorCoverage(opened.output)
+  if (!coverage.succeeded) return 0
+  const { generation, embedded, current } = coverage.output
+  if (generation?.fingerprint !== embeddingFingerprint(memory.config.embeddings)) return current
+  return Math.max(0, current - embedded)
 }

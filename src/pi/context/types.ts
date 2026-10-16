@@ -27,6 +27,7 @@ export interface AvailableModels {
   getAvailable(): ChatModelSource[]
   find(provider: string, modelId: string): ChatModelSource | undefined
   getApiKeyAndHeaders(model: ChatModelSource): Promise<ModelAuthResult>
+  getApiKeyForProvider(provider: string): Promise<string | undefined>
 }
 
 export interface SessionIdSource {

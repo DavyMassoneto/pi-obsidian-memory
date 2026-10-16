@@ -90,7 +90,9 @@ test("a note found by memory_search is read in full with memory_get", async () =
   )
   await fixture.pi.startSession(fixture.piContext, "startup")
 
-  const found = await searchedText(fixture, { query: "freeze", vault: "both" })
+  const answer = await searchedText(fixture, { query: "freeze", vault: "both" })
+  const [found] = answer.split("\n")
+  if (typeof found !== "string") throw new Error(answer)
   const [vault, path] = found.split(" · ")
   if ((vault !== "project" && vault !== "global") || typeof path !== "string") throw new Error(found)
   const read = await readText(fixture, { vault, path })

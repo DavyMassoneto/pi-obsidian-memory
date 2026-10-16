@@ -37,6 +37,7 @@
     "lint": "biome check .",
     "test": "vitest run --project unit",
     "test:pi": "vitest run --project pi",
+    "test:model": "vitest run --project model",
     "typecheck": "tsc --noEmit"
   },
   "pi": {

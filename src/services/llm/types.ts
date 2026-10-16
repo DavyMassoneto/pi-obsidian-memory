@@ -1,4 +1,6 @@
-import type { CaptureInput, ChatModelReference, RetrievalInput } from "#src/domain"
+import type { Static } from "typebox"
+
+import type { CaptureInput, ChatModelReference, ClarificationObservationSchema, RetrievalInput } from "#src/domain"
 import type { Failed, Succeeded } from "#src/shared"
 
 export interface CompletionTiming {
@@ -89,3 +91,5 @@ export interface ChatModelUnavailable {
 }
 
 export type ChatModelCheck = ChatModelAvailable | ChatModelUnavailable
+
+export type ClarificationObservation = Static<typeof ClarificationObservationSchema>

@@ -148,11 +148,13 @@ be read shows a warning naming the cause.
 `/memory-setup` shows one confirmation before writing, with a line for each that applies: capture and the memory agent
 send conversation and note content to the chosen chat model (always); TypeSafe receives user messages and candidate
 notes when Jev is selected; remote embeddings providers receive note content, **secrets included**, and queries.
-Declining cancels the change. A hand-edited remote configuration is explicit selection; repeating the disclosure at
-startup is not implemented yet and is planned with the first milestone that runs a remote provider, rather than
-silently replacing the provider with a local one. Local model first-download consent
-must remain an explicit per-runtime grant, initially false, not a side effect of creating defaults. An unavailable
-Laya service must be diagnosed rather than silently replaced or installed.
+Declining cancels the change. A hand-edited remote configuration is explicit selection and is never replaced by a
+local provider. Before the first semantic use in a runtime, pi asks once to confirm sending note content and queries
+to the remote embeddings provider. The local model (~135 MB) is downloaded only after a confirmation, once per
+runtime, into `pi-obsidian-memory/models` beside `config.json`; consent is never a side effect of creating defaults.
+With no UI or a declined confirmation, search uses words only (with a status line), never another provider. API keys
+come from pi's model registry; `/memory-doctor` checks embeddings without network. Jev's startup disclosure is
+planned with milestone 6. An unavailable Laya service must be diagnosed rather than silently replaced or installed.
 
 ## Which project a folder belongs to
 

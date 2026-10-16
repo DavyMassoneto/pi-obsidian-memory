@@ -1,7 +1,7 @@
 import type { MemoryOperationContext, MemoryOperationRefusal } from "./types.ts"
 
 export function captureMemoryOperationContext(context: MemoryOperationContext): MemoryOperationContext {
-  return {
+  const captured: MemoryOperationContext = {
     configPath: context.configPath,
     workingFolder: context.workingFolder,
     indexPath: context.indexPath,
@@ -9,6 +9,8 @@ export function captureMemoryOperationContext(context: MemoryOperationContext): 
     stamp: context.stamp,
     signal: context.signal,
   }
+  if (context.semantic) captured.semantic = context.semantic
+  return captured
 }
 
 export function memoryOperationInterruption(context: MemoryOperationContext): MemoryOperationRefusal | null {

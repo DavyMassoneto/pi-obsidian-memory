@@ -6,6 +6,7 @@ import {
   completeBlankMemory,
   type DiagnosedMemory,
   diagnoseMemory,
+  type EmbeddingProbe,
   type MemoryOperationContext,
   type VaultReport,
 } from "#src/usecases"
@@ -21,23 +22,31 @@ import {
 import { renderDoctorReport } from "./report.ts"
 import type { BlankTarget, DoctorModelPort } from "./types.ts"
 
-export function memoryDoctorCommand(paths: MemoryPaths, sessions: MemorySessionKeeper): MemoryCommand {
+export function memoryDoctorCommand(
+  paths: MemoryPaths,
+  sessions: MemorySessionKeeper,
+  modelCachePath: string,
+): MemoryCommand {
   return {
     description: MEMORY_DOCTOR_DESCRIPTION,
     async handler(_args, ctx) {
       if (!ctx.hasUI) return
       const { registration } = sessions.registrationFlow(ctx, paths)
-      await runMemoryDoctor(ctx, registration)
+      await runMemoryDoctor(ctx, registration, modelCachePath)
     },
   }
 }
 
-async function runMemoryDoctor(ctx: MemoryPiContext, context: MemoryOperationContext): Promise<void> {
+async function runMemoryDoctor(
+  ctx: MemoryPiContext,
+  context: MemoryOperationContext,
+  modelCachePath: string,
+): Promise<void> {
   const port: DoctorModelPort = {
     find: (provider, id) => ctx.modelRegistry.find(provider, id),
     auth: (model) => ctx.modelRegistry.getApiKeyAndHeaders(model),
   }
-  const diagnosed = await diagnoseMemory({ port }, context)
+  const diagnosed = await diagnoseMemory({ port, embeddings: embeddingProbeOf(ctx, modelCachePath) }, context)
   if (!diagnosed.succeeded) {
     return ctx.ui.notify([...diagnosed.problems, DOCTOR_SETUP_HINT].join("\n"), "error")
   }
@@ -59,6 +68,7 @@ function levelOf(diagnosed: DiagnosedMemory): "info" | "warning" {
     if (found.some((items) => items.length > 0) || report.unreadable.length > 0) return "warning"
   }
   if (diagnosed.models.some((report) => report.check.status !== "ok")) return "warning"
+  if (diagnosed.embeddings.status !== "ready") return "warning"
   return "info"
 }
 
@@ -95,4 +105,14 @@ async function offerCompletion(
 
 function isNoteType(value: string | undefined): value is (typeof BLANK_NOTE_TYPES)[number] {
   return typeof value === "string" && BLANK_NOTE_TYPES.some((type) => type === value)
+}
+
+function embeddingProbeOf(ctx: MemoryPiContext, modelCachePath: string): EmbeddingProbe {
+  return {
+    modelCachePath,
+    async hasCredentials(provider) {
+      const key = await ctx.modelRegistry.getApiKeyForProvider(provider)
+      return typeof key === "string" && key !== ""
+    },
+  }
 }

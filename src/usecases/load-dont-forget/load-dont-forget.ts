@@ -71,7 +71,7 @@ async function loadSynchronizedVault(
   target: ResolvedVault,
   context: MemoryOperationContext,
 ): Promise<void> {
-  const synchronized = await synchronizeOpenedMemory(opened, memory, target, context)
+  const synchronized = await synchronizeOpenedMemory(opened, memory, target, context, null)
   if (!synchronized.succeeded) {
     result.problems.push(...synchronized.problems)
     return

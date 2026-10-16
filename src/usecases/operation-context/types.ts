@@ -1,4 +1,5 @@
 import type { Failed } from "#src/shared"
+import type { SemanticSource } from "#src/usecases/semantic-port"
 import type { MemorySession, OperationStamp } from "#src/usecases/session"
 
 export interface MemoryOperationContext {
@@ -8,6 +9,7 @@ export interface MemoryOperationContext {
   session: MemorySession
   stamp: OperationStamp
   signal: AbortSignal
+  semantic?: SemanticSource
 }
 
 export interface MemoryOperationRefusal extends Failed {

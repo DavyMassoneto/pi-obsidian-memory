@@ -50,5 +50,5 @@ test("a config edited by hand during the session does not surface a stale-sessio
   const response = await searchResponse(fixture, { query: "pnpm", vault: "global" })
 
   expect(response.isError).toBe(false)
-  expect(textOf(response)).toBe("global · Use pnpm.md · rule")
+  expect(textOf(response).split("\n")[0]).toBe("global · Use pnpm.md · rule")
 })

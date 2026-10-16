@@ -1,14 +1,21 @@
 import type { MemoryPaths, MemoryPiContext } from "#src/pi/context"
+import type { SemanticRuntime } from "#src/pi/semantic"
 import { createMemorySession, type MemoryOperationContext, type MemorySession } from "#src/usecases"
 import { STALE_SESSION_REASON } from "./constants.ts"
 import type { ReadOutcome, ReadRun, RegistrationFlow } from "./types.ts"
 
 export class MemorySessionKeeper {
   #session: MemorySession | null = null
+  #semantic: SemanticRuntime | null = null
+
+  constructor(semantic?: SemanticRuntime) {
+    if (semantic) this.#semantic = semantic
+  }
 
   start(ctx: MemoryPiContext): MemorySession {
     if (this.#session) this.#session.abortPending()
     const session = createMemorySession({ sessionId: ctx.sessionManager.getSessionId(), branchId: null })
+    if (this.#semantic) this.#semantic.attach(ctx)
     this.#session = session
     return session
   }
@@ -27,7 +34,7 @@ export class MemorySessionKeeper {
     const stamp = session.stamp()
     let signal = session.signal(stamp)
     if (callerSignal) signal = AbortSignal.any([signal, callerSignal])
-    return {
+    const context: MemoryOperationContext = {
       configPath: paths.configPath,
       indexPath: paths.indexPath,
       workingFolder,
@@ -35,6 +42,8 @@ export class MemorySessionKeeper {
       stamp,
       signal,
     }
+    if (this.#semantic) context.semantic = this.#semantic.source
+    return context
   }
 
   currentOperation(

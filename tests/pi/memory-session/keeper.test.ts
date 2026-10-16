@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { MemorySessionKeeper } from "#src/pi"
+import { MemorySessionKeeper, SemanticRuntime } from "#src/pi"
 import { fakePiContext } from "#test-helpers"
 
 const paths = { configPath: "config.json", indexPath: "index" }
@@ -80,4 +80,28 @@ test("a tool call context stops when the session ends", () => {
 
   expect(operation?.signal.aborted).toBe(true)
   expect(keeper.currentOperation("work", paths, undefined)).toBeNull()
+})
+
+test("a keeper with a semantic runtime gives every operation its source, and one without gives none", () => {
+  const runtime = new SemanticRuntime("models")
+  const { context } = fakePiContext("work", {})
+  const withRuntime = new MemorySessionKeeper(runtime)
+  const without = new MemorySessionKeeper()
+
+  const session = withRuntime.start(context)
+
+  expect(withRuntime.operationContext(session, "work", paths, undefined).semantic).toBe(runtime.source)
+  expect(withRuntime.registrationFlow(context, paths).registration).toMatchObject({ semantic: runtime.source })
+  expect(without.operationContext(without.start(context), "work", paths, undefined)).not.toHaveProperty("semantic")
+})
+
+test("starting a session attaches its UI to the semantic runtime", async () => {
+  const runtime = new SemanticRuntime("models")
+  const { context, prompts } = fakePiContext("work", { apiKeys: ["openai"], answers: { confirms: [true] } })
+
+  new MemorySessionKeeper(runtime).start(context)
+  const port = await runtime.source({ provider: "openai", model: "text-embedding-3-small" })
+
+  expect(port).toMatchObject({ available: true })
+  expect(prompts).toHaveLength(1)
 })

@@ -62,7 +62,7 @@ Secrets (keys, passwords, tokens) are memory: the vault is the user's own safe. 
 
 The memory block at session start is only part of the memory. Search and read more when you need it.
 
-- `memory_search`: text search over one or both vaults. Each result gives the vault, the path, the type, the Don't forget mark and whether the note needs fixing. Archived notes and notes with invalid frontmatter are not searched.
+- `memory_search`: search by words and, when semantic search is on, by meaning, over one or both vaults. When it says semantic search is off, try other words too. Each result gives the vault, the path, the type, the Don't forget mark and whether the note needs fixing. Archived notes and notes with invalid frontmatter are not searched.
 - `memory_get`: takes a vault and a path.
   - A note path returns the note in full, with every problem if it breaks any rule.
   - A folder path returns its index. `""` is the vault root.

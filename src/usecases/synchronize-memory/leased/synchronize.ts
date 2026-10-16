@@ -14,6 +14,8 @@ import {
   resolveLeasedMemory,
   selectMemoryVault,
 } from "#src/usecases/resolve-memory/leased"
+import { refreshSemantic, semanticPortOf } from "#src/usecases/semantic"
+import type { SemanticPort } from "#src/usecases/semantic-port"
 import { maintainMemoryFolders } from "./maintenance.ts"
 import { publishMemoryCatalog } from "./publication.ts"
 import { scanMemoryCatalog } from "./scan.ts"
@@ -47,9 +49,10 @@ async function synchronizeSelectedMemory(
   const opened = openVaultIndex(memory, target)
   if (!opened.succeeded) return { ...opened, progress: null }
   const warnings: string[] = []
+  const semantic = await semanticPortOf(context, memory)
   let result: SynchronizeMemoryResult
   try {
-    result = await synchronizeOpenedMemory(opened, memory, target, context)
+    result = await synchronizeOpenedMemory(opened, memory, target, context, semantic)
   } finally {
     const closed = closeIndex(opened.output)
     if (!closed.succeeded) warnings.push(...closed.problems)
@@ -68,6 +71,7 @@ export async function synchronizeOpenedMemory(
   memory: ResolvedMemory,
   target: ResolvedVault,
   context: MemoryOperationContext,
+  semantic: SemanticPort | null,
 ): Promise<SynchronizeMemoryResult> {
   const inventory = readIndexInventory(opened.output)
   if (!inventory.succeeded) return { ...inventory, progress: null }
@@ -91,6 +95,7 @@ export async function synchronizeOpenedMemory(
   const published = publishMemoryCatalog(work, inventory.output, scanned.output.catalog)
   if (!published.succeeded) return { ...published, progress }
   await maintainMemoryFolders(work, scanned.output)
+  progress.warnings.push(...(await refreshSemantic(opened.output, memory, semantic, context)))
   const stale = memoryOperationInterruption(context)
   if (stale) return { ...stale, progress }
   return { succeeded: true, output: progress }
