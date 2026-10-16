@@ -4,8 +4,8 @@ import { mkdir, readFile, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, parse } from "node:path"
 
-import { renderNote } from "#/domain"
-import type { RefreshContinuation } from "#/services"
+import { renderNote } from "#src/domain"
+import type { RefreshContinuation } from "#src/services"
 import { aDecision, aNote, aQuestion } from "./note.ts"
 import { useTempFolder } from "./temp-folder.ts"
 

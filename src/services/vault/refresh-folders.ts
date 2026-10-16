@@ -1,8 +1,8 @@
 import { basename, dirname, relative, sep } from "node:path"
 
-import { renderFolderIndex } from "#/domain"
-import type { NamedVaultContext } from "#/services/vault/context"
-import { readRawFile, realPathOf, type WriteResult, writeAtomically } from "#/services/vault/filesystem"
+import { renderFolderIndex } from "#src/domain"
+import type { NamedVaultContext } from "#src/services/vault/context"
+import { readRawFile, realPathOf, type WriteResult, writeAtomically } from "#src/services/vault/filesystem"
 import { FOLDER_INDEX_FILE_NAME } from "./constants.ts"
 import { contentsOf } from "./folder-contents.ts"
 import { listFolder } from "./list.ts"

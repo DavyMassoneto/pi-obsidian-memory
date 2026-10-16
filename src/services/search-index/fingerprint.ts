@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto"
 
-import type { MemoryConfig } from "#/domain"
+import type { MemoryConfig } from "#src/domain"
 import { CATALOG_VALIDATION_POLICY } from "./constants.ts"
 
 export function catalogValidationFingerprint(limits: MemoryConfig["limits"]): string {

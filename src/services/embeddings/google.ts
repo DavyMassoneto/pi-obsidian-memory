@@ -1,4 +1,4 @@
-import { type EmbeddingBatchRequest, type EmbeddingResult, googleEmbeddingConfiguration } from "#/domain"
+import { type EmbeddingBatchRequest, type EmbeddingResult, googleEmbeddingConfiguration } from "#src/domain"
 import { finishEmbeddingBatch } from "./batch.ts"
 import { prepareChunks } from "./chunks.ts"
 import { postEmbedding } from "./http.ts"

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { parseGoogleEmbedding, parseOpenAIEmbeddings } from "#/services"
+import { parseGoogleEmbedding, parseOpenAIEmbeddings } from "#src/services"
 import { embeddingVector, openAIResponse } from "#test-helpers"
 
 describe("parseOpenAIEmbeddings", () => {

@@ -1,4 +1,4 @@
-import type { InspectedVaultFile, MemoryScope, ParsedVaultNote } from "#/services"
+import type { InspectedVaultFile, MemoryScope, ParsedVaultNote } from "#src/services"
 
 export interface SessionIdentity {
   readonly sessionId: string

@@ -1,7 +1,7 @@
 import type { Static } from "typebox"
 
-import type { ConfigRefusal, CreateResult, NoProjectRefusal, StoredNote } from "#/services"
-import type { Failed, Succeeded } from "#/shared"
+import type { ConfigRefusal, CreateResult, NoProjectRefusal, StoredNote } from "#src/services"
+import type { Failed, Succeeded } from "#src/shared"
 import type { AddMemoryRequestSchema } from "./schemas.ts"
 
 export type AddMemoryRequest = Static<typeof AddMemoryRequestSchema>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { decideMemory } from "#/services"
+import { decideMemory } from "#src/services"
 import { decisionServer, layaReply, memoryDecisionRequest } from "#test-helpers"
 
 describe("Laya response validation", () => {

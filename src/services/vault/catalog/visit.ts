@@ -1,4 +1,4 @@
-import { catalogFileKind, isCatalogHidden, isCatalogNotePath, isRootArchive, isRootTemplate } from "#/domain"
+import { catalogFileKind, isCatalogHidden, isCatalogNotePath, isRootArchive, isRootTemplate } from "#src/domain"
 import { catalogFailure } from "./failures.ts"
 import { resolveCatalogEntry } from "./resolve.ts"
 import type { CatalogWalk, ResolvedCatalogEntry } from "./types.ts"

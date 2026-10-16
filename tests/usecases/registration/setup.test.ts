@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { setupMemory } from "#/usecases"
+import { setupMemory } from "#src/usecases"
 import {
   deliveredRead,
   expectRegistrationAssets,

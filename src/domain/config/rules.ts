@@ -1,6 +1,6 @@
 import type { TObject } from "typebox"
 
-import { EmbeddingConfigurationSchema } from "#/domain/embeddings"
+import { EmbeddingConfigurationSchema } from "#src/domain/embeddings"
 import {
   DecisionSelectionSchema,
   EmbeddingSelectionSchema,

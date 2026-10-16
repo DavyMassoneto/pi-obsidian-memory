@@ -32,11 +32,11 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 
 - Ladder: pi → usecases → services → domain, each imports only the layer below; `shared` is importable by all and imports
   no layer (`biome/layer-*.grit`).
-- Aliases (`package.json` `imports`): `#/<layer-or-folder>` → `./src/<x>/index.ts` (`#/domain`, `#/services`,
-  `#/usecases`, `#/shared`); `#test-helpers` → `tests/helpers/index.ts`.
+- Aliases (`package.json` `imports`): `#src/<layer-or-folder>` → `./src/<x>/index.ts` (`#src/domain`, `#src/services`,
+  `#src/usecases`, `#src/shared`); `#test-helpers` → `tests/helpers/index.ts`.
 - Barrels: every `index.ts` only has `export * from "./x.ts"` / `"./folder/index.ts"` (`biome/index-reexports-only.grit`).
-  Another layer is imported through its layer barrel (`#/services`, never `#/services/vault`); another folder in the same
-  layer through `#/<folder>`; same folder via `./file.ts`; no `../../` (`biome/highest-barrel-*.grit`,
+  Another layer is imported through its layer barrel (`#src/services`, never `#src/services/vault`); another folder in the same
+  layer through `#src/<folder>`; same folder via `./file.ts`; no `../../` (`biome/highest-barrel-*.grit`,
   `barrel-imports.grit`, `no-deep-relative-import.grit`). A new service export needs a line in the service folder's
   index.ts (and `src/services/index.ts` for a new service: ponte adds it).
 - Seams, usecase → services (from imports in `src/usecases`):
@@ -47,7 +47,7 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
   - synchronize-memory: vault (`inspectVaultFile`, `observeVaultPath`, `refreshFolders`) + search-index (`reconcileCatalog`, `applyIndexChanges`, `readIndexInventory`).
   - session, operation-context: shared flow pieces used by the above.
 - Services consume domain types (note, catalog entry, config snapshot, `MemoryDraftSchema`, `MemoryScopeSchema`);
-  results use `#/shared` result types (`{ succeeded, output | problems }`).
+  results use `#src/shared` result types (`{ succeeded, output | problems }`).
 - pi: `src/pi/{memory-add,claude-code,paths}` call usecases only; `src/pi/claude-code` sets `CLAUDE_CODE_DISABLE_AUTO_MEMORY`.
 
 ## Build / test / run
@@ -91,6 +91,12 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 - Test files hold only `describe`/`it`: any helper function or fixture builder goes to `tests/helpers/<topic>.ts`,
   exported via `#test-helpers` (checked by grep `^function` in `*.test.ts`).
 - Lint/typecheck errors in files you don't own may be another owner's work in progress: report, don't fix.
+
+## Pitfalls — runtime
+
+- pi supports Node >= 22.19 and loads the extension through jiti; the real `pi` here runs on Node 22 (first `node`
+  on PATH). Subpath aliases must be valid there: use `#src/<layer>`, never `#/`. `npm run test:pi` must pass on the
+  default PATH node.
 
 ## Definition of done (every item)
 

@@ -3,8 +3,8 @@ import { dirname, join } from "node:path"
 
 import { expect } from "vitest"
 
-import { readConfigSnapshot } from "#/services"
-import { createMemorySession, type RegistrationContext } from "#/usecases"
+import { readConfigSnapshot } from "#src/services"
+import { createMemorySession, type RegistrationContext } from "#src/usecases"
 import { sessionIdentity } from "./session.ts"
 import { productSettings } from "./settings.ts"
 import { useTempFolder } from "./temp-folder.ts"

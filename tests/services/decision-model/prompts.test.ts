@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { scoreCandidate } from "#/services"
+import { scoreCandidate } from "#src/services"
 import { candidateDecisionRequest, decisionServer, layaReply } from "#test-helpers"
 
 describe("Decision prompt state", () => {

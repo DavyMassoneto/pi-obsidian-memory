@@ -1,5 +1,5 @@
-import type { Failed } from "#/shared"
-import type { MemorySession, OperationStamp } from "#/usecases/session"
+import type { Failed } from "#src/shared"
+import type { MemorySession, OperationStamp } from "#src/usecases/session"
 
 export interface MemoryOperationContext {
   configPath: string

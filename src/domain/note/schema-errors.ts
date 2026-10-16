@@ -1,6 +1,6 @@
 import type { TLocalizedValidationError } from "typebox/error"
 
-import { describeSchemaErrors } from "#/domain/validation"
+import { describeSchemaErrors } from "#src/domain/validation"
 import { NoteTypeSchema } from "./schemas.ts"
 
 export function describeNoteSchemaErrors(errors: TLocalizedValidationError[], label: string): string[] {

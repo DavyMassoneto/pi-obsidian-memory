@@ -1,4 +1,4 @@
-import { isLoopbackEndpoint } from "#/domain/decision-model"
+import { isLoopbackEndpoint } from "#src/domain/decision-model"
 import { ConfigFieldObservationSchema } from "./schemas.ts"
 import type {
   ConfigDocumentInspection,

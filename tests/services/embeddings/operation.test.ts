@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { runEmbeddingOperation } from "#/services"
+import { runEmbeddingOperation } from "#src/services"
 import { embeddingOperation } from "#test-helpers"
 
 describe("runEmbeddingOperation", () => {

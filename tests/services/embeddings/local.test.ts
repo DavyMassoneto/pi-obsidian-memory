@@ -4,7 +4,7 @@ import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
-import { createLocalEmbedder } from "#/services"
+import { createLocalEmbedder } from "#src/services"
 import { embeddingOperation, localModelDouble } from "#test-helpers"
 
 describe("createLocalEmbedder", () => {

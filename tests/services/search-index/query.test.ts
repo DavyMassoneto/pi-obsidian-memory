@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { putNote, searchText } from "#/services"
+import { putNote, searchText } from "#src/services"
 import { anEntry, changeIndexFile, useIndexFile, useTempIndex } from "#test-helpers"
 
 const defaults = { limit: 10, includeArchived: false }

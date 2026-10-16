@@ -8,6 +8,6 @@ export type {
   ProjectEntry,
   ResolveProjectResult,
   SetupProposal,
-} from "#/domain"
-export { inspectConfigForRepair, prepareSetupDefaults, proposeInit, proposeSetup, resolveProject } from "#/domain"
+} from "#src/domain"
+export { inspectConfigForRepair, prepareSetupDefaults, proposeInit, proposeSetup, resolveProject } from "#src/domain"
 export { checkConfigSnapshot } from "./publication.ts"

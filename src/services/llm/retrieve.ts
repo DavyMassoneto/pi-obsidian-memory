@@ -1,6 +1,6 @@
 import { Value } from "typebox/value"
 
-import { parseRetrievalAction, RetrievalActionSchema, RetrievalInputSchema, type RetrievalResult } from "#/domain"
+import { parseRetrievalAction, RetrievalActionSchema, RetrievalInputSchema, type RetrievalResult } from "#src/domain"
 import { checkStep, completeStep, completionRequest } from "./complete.ts"
 import { DATA_POLICY, MAX_RETRIEVAL_DURATION_MS, RETRIEVAL_POLICY } from "./constants.ts"
 import type { CompletionPort, RetrievalRequest } from "./types.ts"

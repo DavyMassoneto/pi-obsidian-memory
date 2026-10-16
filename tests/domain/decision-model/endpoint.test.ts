@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { isLoopbackEndpoint } from "#/domain"
+import { isLoopbackEndpoint } from "#src/domain"
 
 test.each(["http://127.0.0.1:8000/v1/systemone", "https://[::1]:9000/v1/systemone", "http://127.1/v1/systemone"])(
   "preserves the existing parsed loopback URL policy: %s",

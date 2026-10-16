@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { decideMemory } from "#/services"
+import { decideMemory } from "#src/services"
 import { decisionServer, jevContext, jevReply, layaReply, memoryDecisionRequest } from "#test-helpers"
 
 describe("decide entry points", () => {

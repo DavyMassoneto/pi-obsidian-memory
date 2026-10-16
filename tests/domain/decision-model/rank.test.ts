@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { rankCandidates, shouldRetrieveMemory } from "#/domain"
+import { rankCandidates, shouldRetrieveMemory } from "#src/domain"
 
 describe("decision model initial ranking policy", () => {
   it("retrieves unless a valid probability is at most 0.2", () => {

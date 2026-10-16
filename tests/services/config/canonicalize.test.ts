@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { canonicalizeConfigLocation, canonicalizeRegistration, canonicalizeWorkingFolder } from "#/services"
+import { canonicalizeConfigLocation, canonicalizeRegistration, canonicalizeWorkingFolder } from "#src/services"
 import { productSettings, registrationFixture, useTempFolder } from "#test-helpers"
 
 test("working-folder resolution uses supplied absolute paths and rejects files and broken aliases", async () => {

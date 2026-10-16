@@ -3,8 +3,8 @@ import {
   type MemoryOperationContext,
   memoryAdmissionRefusal,
   memoryOperationInterruption,
-} from "#/usecases/operation-context"
-import { resolveLeasedMemory } from "#/usecases/resolve-memory/leased"
+} from "#src/usecases/operation-context"
+import { resolveLeasedMemory } from "#src/usecases/resolve-memory/leased"
 import type { ResolveMemoryResult } from "./types.ts"
 
 export async function resolveMemory(callerContext: MemoryOperationContext): Promise<ResolveMemoryResult> {

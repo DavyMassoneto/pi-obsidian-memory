@@ -1,6 +1,6 @@
 import { relative, sep } from "node:path"
 
-import { checkMemoryFolder } from "#/domain"
+import { checkMemoryFolder } from "#src/domain"
 import { resolveFolder } from "./resolve.ts"
 import type { ResolveResult } from "./types.ts"
 

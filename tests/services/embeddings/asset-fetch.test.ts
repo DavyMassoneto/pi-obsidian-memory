@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { allowedModelAssetUrl } from "#/services"
+import { allowedModelAssetUrl } from "#src/services"
 
 describe("allowedModelAssetUrl", () => {
   it("accepts only HTTPS pinned download hosts without URL credentials", () => {

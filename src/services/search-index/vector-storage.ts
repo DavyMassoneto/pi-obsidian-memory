@@ -1,6 +1,6 @@
 import { Value } from "typebox/value"
 
-import { type CatalogSnapshot, type VectorChunk, VectorGenerationSchema, type VectorReplacement } from "#/domain"
+import { type CatalogSnapshot, type VectorChunk, VectorGenerationSchema, type VectorReplacement } from "#src/domain"
 import type { prepareCatalogStatements } from "./catalog-statements.ts"
 import { corruptCatalog, readInventory } from "./inventory.ts"
 import { invalidCatalog, staleCatalog } from "./reconcile.ts"

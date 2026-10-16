@@ -2,4 +2,4 @@ export type {
   SynchronizationProgress,
   SynchronizeMemoryRequest,
   SynchronizeMemoryResult,
-} from "#/usecases/synchronize-memory/leased"
+} from "#src/usecases/synchronize-memory/leased"

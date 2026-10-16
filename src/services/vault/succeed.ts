@@ -1,5 +1,5 @@
-import { checkMemoryFolder, succeedNote } from "#/domain"
-import type { NamedVaultContext } from "#/services/vault/context"
+import { checkMemoryFolder, succeedNote } from "#src/domain"
+import type { NamedVaultContext } from "#src/services/vault/context"
 import { resolveMemoryFolder } from "./memory-folder.ts"
 import { relocateNote } from "./relocate.ts"
 import type { ExactSucceedRequest, SucceedRequest, SuccessionResult } from "./types.ts"

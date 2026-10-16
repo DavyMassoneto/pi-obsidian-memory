@@ -4,8 +4,8 @@ import {
   inspectVaultFile,
   observeVaultPath,
   type VaultCatalogFailure,
-} from "#/services"
-import { memoryOperationInterruption } from "#/usecases/operation-context"
+} from "#src/services"
+import { memoryOperationInterruption } from "#src/usecases/operation-context"
 import type { CatalogSynchronization, SynchronizationScan, SynchronizationScanResult } from "./types.ts"
 
 export async function inspectScanAliases(

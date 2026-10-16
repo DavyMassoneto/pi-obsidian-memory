@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { renderNote } from "#/domain"
+import { renderNote } from "#src/domain"
 import { aNote } from "#test-helpers"
 
 test("writes the frontmatter in a fixed order, then the body after a blank line", () => {

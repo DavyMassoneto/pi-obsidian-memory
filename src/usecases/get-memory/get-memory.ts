@@ -1,14 +1,14 @@
-import { inspectVaultFile, observeVaultPath } from "#/services"
-import { readLeasedFolder } from "#/usecases/list-memory/leased"
+import { inspectVaultFile, observeVaultPath } from "#src/services"
+import { readLeasedFolder } from "#src/usecases/list-memory/leased"
 import {
   captureMemoryOperationContext,
   type MemoryOperationContext,
   memoryAdmissionRefusal,
   memoryOperationInterruption,
   staleMemorySession,
-} from "#/usecases/operation-context"
-import type { ResolvedVault } from "#/usecases/resolve-memory"
-import { resolveLeasedMemory, selectMemoryVault } from "#/usecases/resolve-memory/leased"
+} from "#src/usecases/operation-context"
+import type { ResolvedVault } from "#src/usecases/resolve-memory"
+import { resolveLeasedMemory, selectMemoryVault } from "#src/usecases/resolve-memory/leased"
 import type { GetMemoryRequest, GetMemoryResult } from "./types.ts"
 
 export async function getMemory(

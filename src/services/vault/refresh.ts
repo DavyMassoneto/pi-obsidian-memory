@@ -1,4 +1,4 @@
-import type { NamedVaultContext } from "#/services/vault/context"
+import type { NamedVaultContext } from "#src/services/vault/context"
 import { alwaysContinue, refreshFolders } from "./refresh-folders.ts"
 import type { RefreshResult } from "./types.ts"
 

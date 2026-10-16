@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { applyIndexChanges, readIndexInventory, searchCatalog } from "#/services"
+import { applyIndexChanges, readIndexInventory, searchCatalog } from "#src/services"
 import { catalogChanges, catalogEntry, changeIndexFile, useIndexFile } from "#test-helpers"
 
 test("persists path identities, invalid-frontmatter inventory and full search metadata", async () => {

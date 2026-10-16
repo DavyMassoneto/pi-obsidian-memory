@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { checkEdges, checkFileName, checkFileSystemName, checkLinkCharacters, checkTrailingEdge } from "#/domain"
+import { checkEdges, checkFileName, checkFileSystemName, checkLinkCharacters, checkTrailingEdge } from "#src/domain"
 
 test.each([
   ["a note", "Use pnpm, never npm.md"],

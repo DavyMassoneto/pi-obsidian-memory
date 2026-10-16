@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { readFolderIndex } from "#/services"
+import { readFolderIndex } from "#src/services"
 import { catalogVault, linkFolder, memoryReadTree, putCatalogFile, tryLinkFile } from "#test-helpers"
 
 test("reads exact case-preserved index text and bytes without generating assets", async () => {

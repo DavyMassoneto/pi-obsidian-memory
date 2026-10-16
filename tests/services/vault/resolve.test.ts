@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { renderNote } from "#/domain"
-import { createMemoryNote, listFolder, readNote } from "#/services"
+import { renderNote } from "#src/domain"
+import { createMemoryNote, listFolder, readNote } from "#src/services"
 import { aLimits, aNote, linkFolder, otherDriveRoots, tryLinkFile, useTempFolder } from "#test-helpers"
 
 test("creates missing folders under the resolved vault", async () => {

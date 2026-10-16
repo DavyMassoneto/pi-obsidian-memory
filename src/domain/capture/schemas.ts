@@ -9,8 +9,8 @@ import {
   ReadObservationSchema,
   TextSchema,
   VaultSchema,
-} from "#/domain/memory-agent"
-import { NoteIdSchema, NoteTypeSchema } from "#/domain/note"
+} from "#src/domain/memory-agent"
+import { NoteIdSchema, NoteTypeSchema } from "#src/domain/note"
 
 export const CaptureDraftSchema = Type.Object(
   { folder: PathSchema, statement: TextSchema, body: TextSchema, type: NoteTypeSchema, dontForget: Type.Boolean() },

@@ -7,5 +7,5 @@ JsModuleSource() as $source where {
     r".\.\./.*"
   },
   $source <: not r".\.\./index\.ts.",
-  register_diagnostic(span=$source, message="Another folder is imported through its barrel with #/ (#/domain/note); from the same folder, import the file (./file.ts), never ./index.ts; ../index.ts only when it creates no cycle.")
+  register_diagnostic(span=$source, message="Another folder is imported through its barrel with #src/ (#src/domain/note); from the same folder, import the file (./file.ts), never ./index.ts; ../index.ts only when it creates no cycle.")
 }

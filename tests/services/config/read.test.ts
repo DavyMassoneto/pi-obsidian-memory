@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { readConfig } from "#/services"
+import { readConfig } from "#src/services"
 import { customizedSettings, memoryConfigAt, registrationFixture, useTempFolder } from "#test-helpers"
 
 test("old config is refused without migration or partial settings while its exact bytes survive", async () => {

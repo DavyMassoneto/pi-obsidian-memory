@@ -1,4 +1,4 @@
-import { addMemory, type MemoryContext } from "#/usecases"
+import { addMemory, type MemoryContext } from "#src/usecases"
 import { MEMORY_ADD_TOOL_DESCRIPTION, MEMORY_ADD_TOOL_LABEL, MEMORY_ADD_TOOL_NAME } from "./constants.ts"
 import { respondTo } from "./respond.ts"
 import { MemoryAddParamsSchema } from "./schemas.ts"

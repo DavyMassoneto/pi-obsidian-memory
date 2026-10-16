@@ -1,4 +1,4 @@
-import type { Note } from "#/domain/note"
+import type { Note } from "#src/domain/note"
 
 export interface PlacedNote {
   folder: string

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { captureStep, retrieveStep } from "#/services"
+import { captureStep, retrieveStep } from "#src/services"
 import { captureRequest, completionPort, pendingCompletion, retrievalRequest } from "#test-helpers"
 
 afterEach(() => vi.useRealTimers())

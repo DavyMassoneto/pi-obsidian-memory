@@ -1,8 +1,8 @@
 import { realpath, stat } from "node:fs/promises"
 import { isAbsolute, join, relative, sep } from "node:path"
 
-import { isSafeCatalogPath } from "#/domain"
-import type { VaultContext } from "#/services/vault/context"
+import { isSafeCatalogPath } from "#src/domain"
+import type { VaultContext } from "#src/services/vault/context"
 import { catalogFailure, catalogIoFailure } from "./failures.ts"
 import { catalogEntryKind, catalogStat } from "./stat.ts"
 import type { CatalogLocation, CatalogResolveResult, CatalogRootResult } from "./types.ts"

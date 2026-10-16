@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { captureStep } from "#/services"
+import { captureStep } from "#src/services"
 import { captureRequest, completionPort, memoryDraft, readObservation } from "#test-helpers"
 
 describe("captureStep", () => {

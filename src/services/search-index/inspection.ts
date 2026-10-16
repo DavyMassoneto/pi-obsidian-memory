@@ -1,1 +1,1 @@
-export { classifyAliasFailure, inspectedCatalogEntry, reusableCatalogEntry } from "#/domain"
+export { classifyAliasFailure, inspectedCatalogEntry, reusableCatalogEntry } from "#src/domain"

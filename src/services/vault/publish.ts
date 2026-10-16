@@ -1,5 +1,5 @@
-import { type Note, renderNote } from "#/domain"
-import { createDirectory, findFileIgnoringCase, hashOf, publishExclusively } from "#/services/vault/filesystem"
+import { type Note, renderNote } from "#src/domain"
+import { createDirectory, findFileIgnoringCase, hashOf, publishExclusively } from "#src/services/vault/filesystem"
 import { noteFileName } from "./paths.ts"
 import { refuseExisting, refuseWrite } from "./refusals.ts"
 import { resolveFile, resolveFolder } from "./resolve.ts"

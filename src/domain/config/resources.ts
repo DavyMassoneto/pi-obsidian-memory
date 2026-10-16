@@ -1,5 +1,5 @@
-import { isLoopbackEndpoint } from "#/domain/decision-model"
-import { EmbeddingConfigurationSchema } from "#/domain/embeddings"
+import { isLoopbackEndpoint } from "#src/domain/decision-model"
+import { EmbeddingConfigurationSchema } from "#src/domain/embeddings"
 import { readConfigInspection } from "./inspection.ts"
 import { configRuleSelection, observedDecisionFields, observedEmbeddingFields } from "./observations.ts"
 import type { ConfigDocumentInspection, DecisionFields, EmbeddingFields } from "./types.ts"

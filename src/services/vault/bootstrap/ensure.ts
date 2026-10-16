@@ -5,9 +5,9 @@ import {
   type VaultBootstrapProgress,
   type VaultBootstrapResult,
   type VaultCatalogFailure,
-} from "#/domain"
-import { catalogIoFailure, resolveCatalogRoot } from "#/services/vault/catalog"
-import type { NamedVaultContext } from "#/services/vault/context"
+} from "#src/domain"
+import { catalogIoFailure, resolveCatalogRoot } from "#src/services/vault/catalog"
+import type { NamedVaultContext } from "#src/services/vault/context"
 import { ensureTemplateFolder } from "./paths.ts"
 import { createAssetExclusively } from "./write.ts"
 

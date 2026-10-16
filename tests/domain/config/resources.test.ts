@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { inspectConfigForRepair, parseConfig } from "#/domain"
+import { inspectConfigForRepair, parseConfig } from "#src/domain"
 import { aConfig } from "#test-helpers"
 
 test.each([

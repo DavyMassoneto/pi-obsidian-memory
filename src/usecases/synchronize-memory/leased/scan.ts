@@ -1,5 +1,5 @@
-import { type CatalogSnapshot, enumerateVault } from "#/services"
-import { memoryOperationInterruption } from "#/usecases/operation-context"
+import { type CatalogSnapshot, enumerateVault } from "#src/services"
+import { memoryOperationInterruption } from "#src/usecases/operation-context"
 import { inspectScanAliases, recordAliasFailure } from "./aliases.ts"
 import { inspectScanEntries } from "./inspection.ts"
 import type { CatalogSynchronization, SynchronizationScan, SynchronizationScanResult } from "./types.ts"

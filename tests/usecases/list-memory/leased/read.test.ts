@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { type GetMemoryRequest, getMemory, listMemory } from "#/usecases"
+import { type GetMemoryRequest, getMemory, listMemory } from "#src/usecases"
 import { memoryReadFixture, noteText, putCatalogFile, validFrontmatterLines } from "#test-helpers"
 
 test("folder listing cannot overwrite a prior get receipt and returns caller-owned index bytes", async () => {

@@ -5,14 +5,14 @@ import {
   type OpenedIndex,
   readIndexInventory,
   recoverIndex,
-} from "#/services"
-import { type MemoryOperationContext, memoryOperationInterruption } from "#/usecases/operation-context"
+} from "#src/services"
+import { type MemoryOperationContext, memoryOperationInterruption } from "#src/usecases/operation-context"
 import {
   type ResolvedMemory,
   type ResolvedVault,
   resolveLeasedMemory,
   selectMemoryVault,
-} from "#/usecases/resolve-memory/leased"
+} from "#src/usecases/resolve-memory/leased"
 import { maintainMemoryFolders } from "./maintenance.ts"
 import { publishMemoryCatalog } from "./publication.ts"
 import { scanMemoryCatalog } from "./scan.ts"

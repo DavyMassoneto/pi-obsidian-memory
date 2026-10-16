@@ -5,7 +5,7 @@ import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
-import { loadCachedLocalModel, loadLocalModel } from "#/services"
+import { loadCachedLocalModel, loadLocalModel } from "#src/services"
 import { embeddingOperation } from "#test-helpers"
 
 describe("loadLocalModel", () => {

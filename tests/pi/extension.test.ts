@@ -1,8 +1,8 @@
 import { expect, test } from "vitest"
 
-import * as pi from "#/pi"
-import { respondTo } from "#/pi"
-import type { AddMemoryResult } from "#/usecases"
+import * as pi from "#src/pi"
+import { respondTo } from "#src/pi"
+import type { AddMemoryResult } from "#src/usecases"
 import { aNote, mentionsIn, registerWithFakePi, textOf, unregisteredMentions } from "#test-helpers"
 
 test("registers the memory_add tool for explicit requests only", () => {

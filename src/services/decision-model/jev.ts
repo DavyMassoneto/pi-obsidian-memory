@@ -1,6 +1,6 @@
 import { Value } from "typebox/value"
 
-import type { DecisionResult, DecisionUsage } from "#/domain"
+import type { DecisionResult, DecisionUsage } from "#src/domain"
 import { JevResultSchema } from "./schemas.ts"
 import type { JevContext, ProviderCall } from "./types.ts"
 

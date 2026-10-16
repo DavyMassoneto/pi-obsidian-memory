@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { catalogFolder, confirmedMissing } from "#/domain"
+import { catalogFolder, confirmedMissing } from "#src/domain"
 import { catalogScan } from "#test-helpers"
 
 test("root failure protects every row and coverage means direct children only", () => {

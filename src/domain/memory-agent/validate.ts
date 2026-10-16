@@ -1,6 +1,6 @@
 import { Value } from "typebox/value"
 
-import { checkVaultPath } from "#/domain/vault-path"
+import { checkVaultPath } from "#src/domain/vault-path"
 import { RetrievalActionSchema } from "./schemas.ts"
 import type {
   AgentContext,

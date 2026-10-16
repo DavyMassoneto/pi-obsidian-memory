@@ -3,8 +3,8 @@ import {
   type MemoryOperationContext,
   memoryAdmissionRefusal,
   memoryOperationInterruption,
-} from "#/usecases/operation-context"
-import { synchronizeLeasedMemory } from "#/usecases/synchronize-memory/leased"
+} from "#src/usecases/operation-context"
+import { synchronizeLeasedMemory } from "#src/usecases/synchronize-memory/leased"
 import type { SynchronizeMemoryRequest, SynchronizeMemoryResult } from "./types.ts"
 
 export async function synchronizeMemory(

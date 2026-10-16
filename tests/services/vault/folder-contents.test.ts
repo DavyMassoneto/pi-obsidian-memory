@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { refreshIndexes } from "#/services"
+import { refreshIndexes } from "#src/services"
 import { aLimits, linkFolder, readIndexOf, useTempFolder } from "#test-helpers"
 
 const limits = aLimits()

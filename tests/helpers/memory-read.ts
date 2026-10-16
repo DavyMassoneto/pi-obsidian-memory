@@ -2,7 +2,7 @@ import { createHash } from "node:crypto"
 import { mkdir, readdir, readFile, readlink } from "node:fs/promises"
 import { join } from "node:path"
 
-import type { MemoryConfig } from "#/services"
+import type { MemoryConfig } from "#src/services"
 import { registrationUsecaseFixture, writeRegistrationSnapshot } from "./registration-usecases.ts"
 
 export async function memoryReadFixture() {

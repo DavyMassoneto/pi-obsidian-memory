@@ -1,4 +1,4 @@
-import type { ConfigFields, MemoryConfig } from "#/domain"
+import type { ConfigFields, MemoryConfig } from "#src/domain"
 
 export function emptyConfigFields(): ConfigFields {
   return {

@@ -1,8 +1,8 @@
 import { Value } from "typebox/value"
 
-import { checkAgentVault, checkReadAction, hasReadIdentity, type MemoryIdentity } from "#/domain/memory-agent"
-import { checkNoteText } from "#/domain/note"
-import { checkMemoryFolder, checkVaultPath, joinVaultPath } from "#/domain/vault-path"
+import { checkAgentVault, checkReadAction, hasReadIdentity, type MemoryIdentity } from "#src/domain/memory-agent"
+import { checkNoteText } from "#src/domain/note"
+import { checkMemoryFolder, checkVaultPath, joinVaultPath } from "#src/domain/vault-path"
 import { CaptureActionSchema } from "./schemas.ts"
 import type { CaptureAction, CaptureAdd, CaptureDraft, CaptureInput, CaptureResult } from "./types.ts"
 

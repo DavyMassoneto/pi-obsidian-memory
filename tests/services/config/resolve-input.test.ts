@@ -2,7 +2,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { resolveRegistrationVault } from "#/services"
+import { resolveRegistrationVault } from "#src/services"
 import { useTempFolder } from "#test-helpers"
 
 test("registration vault paths resolve only against the supplied fully qualified working folder", async () => {

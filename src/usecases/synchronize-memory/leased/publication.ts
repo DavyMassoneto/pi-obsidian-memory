@@ -5,8 +5,8 @@ import {
   type CatalogSnapshot,
   readIndexInventory,
   reconcileCatalog,
-} from "#/services"
-import { memoryOperationInterruption } from "#/usecases/operation-context"
+} from "#src/services"
+import { memoryOperationInterruption } from "#src/usecases/operation-context"
 import type { CatalogPublicationResult, CatalogSynchronization } from "./types.ts"
 
 export function publishMemoryCatalog(

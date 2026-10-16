@@ -2,5 +2,5 @@ language js
 
 JsModuleSource() as $source where {
   $source <: r".\.\./\.\./.*",
-  register_diagnostic(span=$source, message="Imports with ../../ are forbidden: import the folder through #/ (#/domain/note).")
+  register_diagnostic(span=$source, message="Imports with ../../ are forbidden: import the folder through #src/ (#src/domain/note).")
 }

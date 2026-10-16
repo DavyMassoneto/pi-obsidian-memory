@@ -3,7 +3,7 @@ import { dirname, join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { initProjectMemory, prepareMemorySetup, setupMemory } from "#/usecases"
+import { initProjectMemory, prepareMemorySetup, setupMemory } from "#src/usecases"
 import {
   expectRegistrationAssets,
   expectRegistrationLeaseReleased,

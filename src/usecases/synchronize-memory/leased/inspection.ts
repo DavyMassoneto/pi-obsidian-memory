@@ -1,5 +1,5 @@
-import { type CatalogSnapshot, inspectedCatalogEntry, inspectVaultFile, reusableCatalogEntry } from "#/services"
-import { memoryOperationInterruption } from "#/usecases/operation-context"
+import { type CatalogSnapshot, inspectedCatalogEntry, inspectVaultFile, reusableCatalogEntry } from "#src/services"
+import { memoryOperationInterruption } from "#src/usecases/operation-context"
 import type { CatalogSynchronization, SynchronizationScan, SynchronizationScanResult } from "./types.ts"
 
 export async function inspectScanEntries(

@@ -5,8 +5,8 @@ import {
   targetVault,
   type VaultBootstrapProgress,
   writeConfig,
-} from "#/services"
-import type { Failed } from "#/shared"
+} from "#src/services"
+import type { Failed } from "#src/shared"
 import type {
   RegistrationCause,
   RegistrationContext,

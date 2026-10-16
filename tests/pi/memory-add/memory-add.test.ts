@@ -2,8 +2,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { memoryConfigPath } from "#/pi"
-import { addMemory } from "#/usecases"
+import { memoryConfigPath } from "#src/pi"
+import { addMemory } from "#src/usecases"
 import { fakeToolContext, registerFakePiAt, setupRegisteredMemoryAdd, textOf } from "#test-helpers"
 
 const params = {

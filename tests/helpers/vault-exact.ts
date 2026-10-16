@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import { join } from "node:path"
 
-import { renderNote } from "#/domain"
+import { renderNote } from "#src/domain"
 import { aNote } from "./note.ts"
 import { catalogVault, putCatalogFile } from "./vault-catalog.ts"
 

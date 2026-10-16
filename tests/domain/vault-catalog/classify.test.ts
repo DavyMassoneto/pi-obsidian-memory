@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { catalogFileKind, isCatalogHidden, isCatalogNotePath, isRootArchive, isRootTemplate } from "#/domain"
+import { catalogFileKind, isCatalogHidden, isCatalogNotePath, isRootArchive, isRootTemplate } from "#src/domain"
 
 test("classifies reserved roots case-insensitively, but nested names are ordinary subjects", () => {
   expect(catalogFileKind("INDEX.MD")).toBe("index")

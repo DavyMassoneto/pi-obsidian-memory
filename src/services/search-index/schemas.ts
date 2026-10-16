@@ -7,7 +7,7 @@ import {
   NoteIdSchema,
   NoteTypeSchema,
   VectorGenerationSchema,
-} from "#/domain"
+} from "#src/domain"
 
 export const SearchHitSchema = Type.Object(
   {

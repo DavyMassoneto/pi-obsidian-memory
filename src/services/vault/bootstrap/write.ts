@@ -1,9 +1,9 @@
 import { join } from "node:path"
 
-import type { VaultCatalogFailure } from "#/domain"
-import { catalogFailure, catalogIoFailure, resolveCatalogEntry } from "#/services/vault/catalog"
-import { publishExclusively } from "#/services/vault/filesystem"
-import type { Done } from "#/shared"
+import type { VaultCatalogFailure } from "#src/domain"
+import { catalogFailure, catalogIoFailure, resolveCatalogEntry } from "#src/services/vault/catalog"
+import { publishExclusively } from "#src/services/vault/filesystem"
+import type { Done } from "#src/shared"
 import { existingAsset } from "./paths.ts"
 import type { AssetWriteRequest } from "./types.ts"
 

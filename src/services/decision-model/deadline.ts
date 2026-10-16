@@ -1,4 +1,4 @@
-import type { DecisionDiagnostics, DecisionResult } from "#/domain"
+import type { DecisionDiagnostics, DecisionResult } from "#src/domain"
 import { remainingDecisionMs } from "./preflight.ts"
 import type { DecisionContext, DecisionOperation } from "./types.ts"
 

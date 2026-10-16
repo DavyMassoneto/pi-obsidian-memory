@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { infrastructureProblems, registeredVaults, registrationProblems } from "#/domain"
+import { infrastructureProblems, registeredVaults, registrationProblems } from "#src/domain"
 import { aConfig } from "#test-helpers"
 
 test("reports every side of a conflicting registration without choosing one to discard", () => {

@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { enumerateVault, inspectVaultFile } from "#/services"
-import { synchronizeMemory } from "#/usecases"
+import { enumerateVault, inspectVaultFile } from "#src/services"
+import { synchronizeMemory } from "#src/usecases"
 import {
   denySynchronizationRead,
   memoryReadFixture,

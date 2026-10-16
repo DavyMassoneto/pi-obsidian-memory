@@ -1,4 +1,4 @@
-import type { Note, NoteFrontmatter } from "#/domain/note"
+import type { Note, NoteFrontmatter } from "#src/domain/note"
 import type { MemoryDraft } from "./types.ts"
 
 export function newNote(draft: MemoryDraft, id: string, day: string): Note {

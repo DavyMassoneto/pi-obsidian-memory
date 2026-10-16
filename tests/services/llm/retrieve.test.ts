@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { retrieveStep } from "#/services"
+import { retrieveStep } from "#src/services"
 import { completionPort, memoryDraft, retrievalRequest } from "#test-helpers"
 
 describe("retrieveStep", () => {

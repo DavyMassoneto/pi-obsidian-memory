@@ -1,4 +1,4 @@
-import { localEmbeddingConfiguration, localEmbeddingPolicy } from "#/domain"
+import { localEmbeddingConfiguration, localEmbeddingPolicy } from "#src/domain"
 import { EmbeddingResourceError } from "./errors.ts"
 import type { ModelAssetFetchRequest } from "./types.ts"
 

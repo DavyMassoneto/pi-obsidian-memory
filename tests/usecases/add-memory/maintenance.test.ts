@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { readNote } from "#/services"
-import { addMemory, maintenanceProblemsOf } from "#/usecases"
+import { readNote } from "#src/services"
+import { addMemory, maintenanceProblemsOf } from "#src/usecases"
 import { aLimits, aNote, linkFolder, setupVaults } from "#test-helpers"
 
 const draft = {

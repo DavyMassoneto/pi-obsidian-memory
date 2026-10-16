@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { createMemorySession, type GetMemoryRequest, getMemory, listMemory } from "#/usecases"
+import { createMemorySession, type GetMemoryRequest, getMemory, listMemory } from "#src/usecases"
 import {
   expectRegistrationLeaseReleased,
   memoryReadFixture,

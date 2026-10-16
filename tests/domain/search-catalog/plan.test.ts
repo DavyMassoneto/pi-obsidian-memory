@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { planCatalogChanges } from "#/domain"
+import { planCatalogChanges } from "#src/domain"
 import { catalogEntry, catalogScan, catalogSnapshot } from "#test-helpers"
 
 test("retires positively excluded alias identities without fabricating missing-directory coverage", () => {

@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { renderNote } from "#/domain"
-import { createMemoryNote, succeedStoredNote } from "#/services"
+import { renderNote } from "#src/domain"
+import { createMemoryNote, succeedStoredNote } from "#src/services"
 import { aDecision, aLimits, aNote, linkFolder, useTempFolder, vaultWithQuestion } from "#test-helpers"
 
 const limits = aLimits()

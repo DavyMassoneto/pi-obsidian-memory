@@ -3,7 +3,7 @@ import { dirname, join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { proposeInit, proposeSetup, readConfigSnapshot, writeConfig } from "#/services"
+import { proposeInit, proposeSetup, readConfigSnapshot, writeConfig } from "#src/services"
 import { customizedSettings, registrationFixture } from "#test-helpers"
 
 test("publishes only once, replaces only matching bytes and never touches old vault files", async () => {

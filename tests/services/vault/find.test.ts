@@ -2,7 +2,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { createMemoryNote, findNote } from "#/services"
+import { createMemoryNote, findNote } from "#src/services"
 import { aLimits, aNote, linkFolder, useTempFolder } from "#test-helpers"
 
 const limits = aLimits()

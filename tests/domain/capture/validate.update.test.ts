@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { parseCaptureAction } from "#/domain"
+import { parseCaptureAction } from "#src/domain"
 import { captureRequest, memoryDraft, readObservation } from "#test-helpers"
 
 test.each(["MD", "mD", "Md"])("updates an exact read receipt with a %s extension unchanged", (extension) => {

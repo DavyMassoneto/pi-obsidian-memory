@@ -1,6 +1,6 @@
 import Type from "typebox"
 
-import { EmbeddingConfigurationSchema } from "#/domain/embeddings"
+import { EmbeddingConfigurationSchema } from "#src/domain/embeddings"
 
 export const ConfigPathSchema = Type.String({
   pattern: "^(?:[A-Za-z]:[/\\\\]|/(?!/)|[/\\\\]{2}[^/\\\\]+[/\\\\][^/\\\\]+)",

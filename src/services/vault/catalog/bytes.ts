@@ -1,8 +1,8 @@
 import { open, stat } from "node:fs/promises"
 
-import type { VaultCatalogFailure } from "#/domain"
-import type { VaultContext } from "#/services/vault/context"
-import { hashOf } from "#/services/vault/filesystem"
+import type { VaultCatalogFailure } from "#src/domain"
+import type { VaultContext } from "#src/services/vault/context"
+import { hashOf } from "#src/services/vault/filesystem"
 import { catalogFailure, catalogIoFailure } from "./failures.ts"
 import { resolveCatalogEntry, resolveCatalogRoot } from "./resolve.ts"
 import { catalogStat, sameCatalogStat } from "./stat.ts"

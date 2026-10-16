@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { renderNote, validateNote } from "#/domain"
+import { renderNote, validateNote } from "#src/domain"
 import { aConfig, aNote, aParsedNote, frontmatterLinesWith, readBack, validFrontmatterLines } from "#test-helpers"
 
 const limits = aConfig().limits

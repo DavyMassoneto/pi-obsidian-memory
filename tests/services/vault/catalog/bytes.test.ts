@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { readCatalogBytes } from "#/services"
+import { readCatalogBytes } from "#src/services"
 import { catalogVault, putCatalogFile } from "#test-helpers"
 
 test("a scan fingerprint refuses a subsequent edit without changing the file", async () => {

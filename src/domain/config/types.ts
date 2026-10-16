@@ -1,6 +1,6 @@
 import type { Static, TSchema } from "typebox"
 
-import type { Absent, Failed, Succeeded } from "#/shared"
+import type { Absent, Failed, Succeeded } from "#src/shared"
 import type {
   ChatModelReferenceSchema,
   ConfigFieldObservationSchema,

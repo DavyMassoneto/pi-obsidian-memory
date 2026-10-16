@@ -8,7 +8,7 @@ import {
   NoteIdSchema,
   NoteLinkSchema,
   NoteTypeSchema,
-} from "#/domain"
+} from "#src/domain"
 
 test("describes an invalid id as a ULID rather than a regular expression", () => {
   expect(describeNoteSchemaErrors(Value.Errors(NoteIdSchema, "invalid"), "id")).toEqual(["id: must be a ULID"])

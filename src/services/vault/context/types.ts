@@ -1,4 +1,4 @@
-import type { NoteLimits } from "#/domain"
+import type { NoteLimits } from "#src/domain"
 
 export interface VaultContext {
   path: string

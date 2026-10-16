@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { inspectConfigForRepair, prepareSetupDefaults, proposeSetup } from "#/domain"
+import { inspectConfigForRepair, prepareSetupDefaults, proposeSetup } from "#src/domain"
 import { productSettings } from "#test-helpers"
 
 test("setup alone can use the explicitly supplied model and null leaves both models unresolved", () => {

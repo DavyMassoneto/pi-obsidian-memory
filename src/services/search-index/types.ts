@@ -1,7 +1,7 @@
 import type { Static } from "typebox"
 
-import type { CatalogChanges, CatalogSnapshot, VectorCache, VectorReplacement } from "#/domain"
-import type { Done, Failed, Succeeded } from "#/shared"
+import type { CatalogChanges, CatalogSnapshot, VectorCache, VectorReplacement } from "#src/domain"
+import type { Done, Failed, Succeeded } from "#src/shared"
 import type {
   CatalogHitSchema,
   CatalogRowSchema,
@@ -22,7 +22,7 @@ export type {
   VectorChunk,
   VectorGeneration,
   VectorReplacement,
-} from "#/domain"
+} from "#src/domain"
 export type CatalogHit = Static<typeof CatalogHitSchema>
 export type CatalogRow = Static<typeof CatalogRowSchema>
 export type InventoryResult = Succeeded<CatalogSnapshot> | SearchIndexRefusal

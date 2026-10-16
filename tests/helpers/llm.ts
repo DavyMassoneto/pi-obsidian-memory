@@ -1,6 +1,6 @@
 import { vi } from "vitest"
 
-import type { CaptureDraft, CaptureRequest, CompletionPort, ReadObservation, RetrievalRequest } from "#/services"
+import type { CaptureDraft, CaptureRequest, CompletionPort, ReadObservation, RetrievalRequest } from "#src/services"
 
 export function captureRequest(): CaptureRequest {
   return {

@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { observeVaultPath } from "#/services"
+import { observeVaultPath } from "#src/services"
 import { catalogVault, linkFolder, memoryReadTree, putCatalogFile } from "#test-helpers"
 
 test("observes real path kind without extension guessing or file slash coercion", async () => {

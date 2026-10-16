@@ -1,7 +1,7 @@
 import { expect, test } from "vitest"
 import { isMap, isScalar, isSeq, parseDocument } from "yaml"
 
-import { readFrontmatter, renderVaultAssets } from "#/domain"
+import { readFrontmatter, renderVaultAssets } from "#src/domain"
 
 test("hand templates use invalid explicit ULID placeholder, date placeholders, and all twelve types", () => {
   const assets = renderVaultAssets()

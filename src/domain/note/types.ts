@@ -1,7 +1,7 @@
 import type { Static } from "typebox"
 import type { Pair, ParsedNode } from "yaml"
 
-import type { Absent, Failed, Succeeded } from "#/shared"
+import type { Absent, Failed, Succeeded } from "#src/shared"
 import type { NoteFrontmatterSchema, NoteTypeSchema } from "./schemas.ts"
 
 export type NoteType = Static<typeof NoteTypeSchema>

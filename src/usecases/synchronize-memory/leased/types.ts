@@ -8,10 +8,10 @@ import type {
   SearchIndexRefusal,
   VaultCatalogFailure,
   VaultEnumeration,
-} from "#/services"
-import type { Succeeded } from "#/shared"
-import type { MemoryOperationContext, MemoryOperationRefusal } from "#/usecases/operation-context"
-import type { MemoryResolutionRefusal, ResolvedVault } from "#/usecases/resolve-memory/leased"
+} from "#src/services"
+import type { Succeeded } from "#src/shared"
+import type { MemoryOperationContext, MemoryOperationRefusal } from "#src/usecases/operation-context"
+import type { MemoryResolutionRefusal, ResolvedVault } from "#src/usecases/resolve-memory/leased"
 
 export interface SynchronizeMemoryRequest {
   vault: MemoryScope

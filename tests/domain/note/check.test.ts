@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { checkNote } from "#/domain"
+import { checkNote } from "#src/domain"
 import { aConfig, aNote, aNoteWithBody, aNoteWithStatement } from "#test-helpers"
 
 const limits = aConfig().limits

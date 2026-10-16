@@ -1,6 +1,6 @@
 import { Value } from "typebox/value"
 
-import { CaptureActionSchema, CaptureInputSchema, type CaptureResult, parseCaptureAction } from "#/domain"
+import { CaptureActionSchema, CaptureInputSchema, type CaptureResult, parseCaptureAction } from "#src/domain"
 import { checkStep, completeStep, completionRequest } from "./complete.ts"
 import { CAPTURE_POLICY, DATA_POLICY, MAX_CAPTURE_DURATION_MS } from "./constants.ts"
 import type { CaptureRequest, CompletionPort } from "./types.ts"

@@ -1,4 +1,4 @@
-import type { CatalogChanges, CatalogEntry, CatalogScan, CatalogSnapshot } from "#/domain"
+import type { CatalogChanges, CatalogEntry, CatalogScan, CatalogSnapshot } from "#src/domain"
 
 export function catalogEntry(path: string): CatalogEntry {
   return {

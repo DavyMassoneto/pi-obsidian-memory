@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { decideMemory, scoreCandidate } from "#/services"
+import { decideMemory, scoreCandidate } from "#src/services"
 import { candidateDecisionRequest, jevContext, jevReply, memoryDecisionRequest } from "#test-helpers"
 
 describe("Jev pi classifier adapter", () => {

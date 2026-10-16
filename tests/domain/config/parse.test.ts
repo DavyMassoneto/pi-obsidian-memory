@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { parseConfig } from "#/domain"
+import { parseConfig } from "#src/domain"
 import { aConfig, configTextWithLimits } from "#test-helpers"
 
 test("reads a complete config", () => {

@@ -1,5 +1,5 @@
-import type { CatalogChanges, CatalogPlan, CatalogScan, CatalogSnapshot } from "#/domain"
-import { planCatalogChanges } from "#/domain"
+import type { CatalogChanges, CatalogPlan, CatalogScan, CatalogSnapshot } from "#src/domain"
+import { planCatalogChanges } from "#src/domain"
 import type { CatalogQuery, CatalogSearchResult, IndexWriteResult, InventoryResult, SearchIndex } from "./types.ts"
 
 export function readIndexInventory(index: SearchIndex): InventoryResult {

@@ -1,4 +1,4 @@
-import { resolveRegistrationVault, type WriteConfigRequest } from "#/services"
+import { resolveRegistrationVault, type WriteConfigRequest } from "#src/services"
 import { captureRegistrationContext, captureSetupCommit } from "./entry.ts"
 import { publishRegistration, registrationInterruption, registrationValidationFailure } from "./publication.ts"
 import type { RegistrationContext, RegistrationResult, SetupCommitRequest } from "./types.ts"

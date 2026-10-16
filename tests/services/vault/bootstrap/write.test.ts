@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { ensureVaultAssets } from "#/services"
+import { ensureVaultAssets } from "#src/services"
 import { catalogVault } from "#test-helpers"
 
 test("concurrent explicit bootstraps never clobber or duplicate assets", async () => {

@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { succeedStoredFile } from "#/services"
+import { succeedStoredFile } from "#src/services"
 import {
   aDecision,
   holdFileWithoutDeleteSharing,

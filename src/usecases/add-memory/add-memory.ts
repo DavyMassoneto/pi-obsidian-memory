@@ -9,7 +9,7 @@ import {
   readNote,
   targetVault,
   today,
-} from "#/services"
+} from "#src/services"
 import { maintainAddedMemory } from "./maintenance.ts"
 import type { AddMemoryRequest, AddMemoryResult, MemoryContext } from "./types.ts"
 

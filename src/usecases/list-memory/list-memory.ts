@@ -1,11 +1,11 @@
-import { readLeasedFolder } from "#/usecases/list-memory/leased"
+import { readLeasedFolder } from "#src/usecases/list-memory/leased"
 import {
   captureMemoryOperationContext,
   type MemoryOperationContext,
   memoryAdmissionRefusal,
   memoryOperationInterruption,
-} from "#/usecases/operation-context"
-import { resolveLeasedMemory, selectMemoryVault } from "#/usecases/resolve-memory/leased"
+} from "#src/usecases/operation-context"
+import { resolveLeasedMemory, selectMemoryVault } from "#src/usecases/resolve-memory/leased"
 import type { ListMemoryRequest, ListMemoryResult } from "./types.ts"
 
 export async function listMemory(

@@ -6,7 +6,7 @@ import {
   type EmbeddingResult,
   embeddingFingerprint,
   embeddingPolicy,
-} from "#/domain"
+} from "#src/domain"
 import type { PreparedChunk } from "./types.ts"
 
 export function finishEmbeddingBatch(

@@ -1,6 +1,6 @@
 language js
 
 JsModuleSource() as $source where {
-  $source <: r".#/(?:domain|pi)(?:/.*)?.",
-  register_diagnostic(span=$source, message="usecases only imports the step right below it (pi → usecases → services → domain): #/services.")
+  $source <: r".#src/(?:domain|pi)(?:/.*)?.",
+  register_diagnostic(span=$source, message="usecases only imports the step right below it (pi → usecases → services → domain): #src/services.")
 }

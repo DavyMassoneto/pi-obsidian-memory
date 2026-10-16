@@ -1,5 +1,5 @@
-import type { VaultContext } from "#/services/vault/context"
-import { findFileIgnoringCase } from "#/services/vault/filesystem"
+import type { VaultContext } from "#src/services/vault/context"
+import { findFileIgnoringCase } from "#src/services/vault/filesystem"
 import { NOTE_EXTENSION } from "./constants.ts"
 import { displayNotePath } from "./display.ts"
 import { noteFileName } from "./paths.ts"

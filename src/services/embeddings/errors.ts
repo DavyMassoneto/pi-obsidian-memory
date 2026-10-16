@@ -1,4 +1,4 @@
-import type { EmbeddingFailure } from "#/domain"
+import type { EmbeddingFailure } from "#src/domain"
 
 export class EmbeddingResourceError extends Error {
   readonly failure: EmbeddingFailure

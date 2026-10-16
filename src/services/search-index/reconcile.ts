@@ -1,7 +1,7 @@
 import { Value } from "typebox/value"
 
-import type { CatalogChanges, CatalogEntry } from "#/domain"
-import { catalogFolder } from "#/domain"
+import type { CatalogChanges, CatalogEntry } from "#src/domain"
+import { catalogFolder } from "#src/domain"
 import type { prepareCatalogStatements } from "./catalog-statements.ts"
 import { corruptCatalog, validCatalogEntry } from "./inventory.ts"
 import { CatalogChangesSchema, CatalogStateSchema } from "./schemas.ts"

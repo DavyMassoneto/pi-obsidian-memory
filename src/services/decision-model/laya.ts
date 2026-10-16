@@ -1,4 +1,4 @@
-import type { DecisionResult } from "#/domain"
+import type { DecisionResult } from "#src/domain"
 import { readLayaResponse } from "./laya-response.ts"
 import type { LayaContext, ProviderCall } from "./types.ts"
 

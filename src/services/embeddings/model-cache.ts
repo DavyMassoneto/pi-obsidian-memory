@@ -1,6 +1,6 @@
 import { isAbsolute, join } from "node:path"
 
-import { localEmbeddingConfiguration, localEmbeddingPolicy } from "#/domain"
+import { localEmbeddingConfiguration, localEmbeddingPolicy } from "#src/domain"
 import { fetchPublicModelAsset } from "./asset-fetch.ts"
 import { localModelAssets } from "./constants.ts"
 import { provisionModelAsset } from "./model-asset.ts"

@@ -3,7 +3,7 @@ import { dirname } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { type SynchronizeMemoryRequest, synchronizeMemory } from "#/usecases"
+import { type SynchronizeMemoryRequest, synchronizeMemory } from "#src/usecases"
 import {
   expectRegistrationLeaseReleased,
   holdIndexLock,

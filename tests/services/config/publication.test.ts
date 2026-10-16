@@ -3,7 +3,7 @@ import { basename, dirname, join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { writeConfig } from "#/services"
+import { writeConfig } from "#src/services"
 import { registrationFixture } from "#test-helpers"
 
 test("an existing cooperative writer lock is never stolen or removed", async () => {

@@ -1,6 +1,6 @@
 import type { Static } from "typebox"
 
-import type { Failed, Succeeded } from "#/shared"
+import type { Failed, Succeeded } from "#src/shared"
 import type {
   CaptureActionSchema,
   CaptureDraftSchema,

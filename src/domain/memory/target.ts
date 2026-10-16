@@ -1,4 +1,4 @@
-import { type MemoryConfig, resolveProject, vaultNameOf } from "#/domain/config"
+import { type MemoryConfig, resolveProject, vaultNameOf } from "#src/domain/config"
 import type { MemoryScope, TargetVaultResult } from "./types.ts"
 
 export function targetVault(config: MemoryConfig, scope: MemoryScope, workingFolder: string): TargetVaultResult {

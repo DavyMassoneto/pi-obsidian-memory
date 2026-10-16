@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { collectExportFiles } from "#/services"
+import { collectExportFiles } from "#src/services"
 import { catalogVault, linkFolder, putCatalogFile, useTempFolder } from "#test-helpers"
 
 test("export collects exact visible bytes including attachments, archive, templates and dashboard", async () => {

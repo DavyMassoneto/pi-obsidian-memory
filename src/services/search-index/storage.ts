@@ -1,6 +1,6 @@
 import type { DatabaseSync } from "node:sqlite"
 
-import type { CatalogChanges, VectorReplacement } from "#/domain"
+import type { CatalogChanges, VectorReplacement } from "#src/domain"
 import { readCatalogHits } from "./catalog-query.ts"
 import { prepareCatalogStatements } from "./catalog-statements.ts"
 import { closeFailedIndex } from "./cleanup.ts"

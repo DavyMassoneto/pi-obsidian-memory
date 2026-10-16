@@ -1,4 +1,4 @@
-import type { MemoryScope, ParsedVaultNote } from "#/services"
+import type { MemoryScope, ParsedVaultNote } from "#src/services"
 import type { DeliveredRead, MemoryAddress } from "./types.ts"
 
 export class GetReceipts {

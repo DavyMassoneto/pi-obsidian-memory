@@ -1,8 +1,8 @@
 import { relative, sep } from "node:path"
 
-import { ancestorFolders } from "#/domain"
-import { linkStatOf } from "#/services/vault/filesystem"
-import type { Succeeded } from "#/shared"
+import { ancestorFolders } from "#src/domain"
+import { linkStatOf } from "#src/services/vault/filesystem"
+import type { Succeeded } from "#src/shared"
 import { resolveFolder } from "./resolve.ts"
 import type { RefreshPlan, RefreshRefusal, ResolveRefusal } from "./types.ts"
 

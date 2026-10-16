@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { chunkText, prepareChunks } from "#/services"
+import { chunkText, prepareChunks } from "#src/services"
 
 describe("chunkText", () => {
   it("preserves all text with bounded overlap and includes prefix in token budget", () => {

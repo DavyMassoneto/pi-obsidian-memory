@@ -1,5 +1,5 @@
-import { archiveNote } from "#/domain"
-import type { NamedVaultContext } from "#/services/vault/context"
+import { archiveNote } from "#src/domain"
+import type { NamedVaultContext } from "#src/services/vault/context"
 import { relocateNote } from "./relocate.ts"
 import type { ArchiveRequest, ExactArchiveRequest, PlacedResult } from "./types.ts"
 

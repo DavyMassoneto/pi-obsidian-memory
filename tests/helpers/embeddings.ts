@@ -11,7 +11,7 @@ import type {
   ModelAsset,
   ModelAssetTransport,
   RemoteEmbeddingContext,
-} from "#/services"
+} from "#src/services"
 
 export interface RecordedEmbeddingHeaders {
   authorization: string | undefined

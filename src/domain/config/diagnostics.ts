@@ -1,6 +1,6 @@
 import type { TLocalizedValidationError } from "typebox/error"
 
-import { describeSchemaErrors } from "#/domain/validation"
+import { describeSchemaErrors } from "#src/domain/validation"
 import type { ConfigObjectRule } from "./types.ts"
 
 export function configValueProblems(path: string, errors: TLocalizedValidationError[]): string[] {

@@ -1,7 +1,7 @@
 import { dirname, relative, sep } from "node:path"
 
-import type { NamedVaultContext } from "#/services/vault/context"
-import { linkStatOf } from "#/services/vault/filesystem"
+import type { NamedVaultContext } from "#src/services/vault/context"
+import { linkStatOf } from "#src/services/vault/filesystem"
 import { writeValidatedNote } from "./publish.ts"
 import { alwaysContinue, refreshFolders } from "./refresh-folders.ts"
 import { checkRelocation, removeOriginal } from "./relocation-checks.ts"

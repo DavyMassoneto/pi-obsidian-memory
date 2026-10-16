@@ -1,5 +1,5 @@
-import type { Note } from "#/domain"
-import type { VaultContext } from "#/services/vault/context"
+import type { Note } from "#src/domain"
+import type { VaultContext } from "#src/services/vault/context"
 import { noteFileName, storedFilePath } from "./paths.ts"
 import type { ExactUpdateRequest, UpdateResult } from "./types.ts"
 import { updateNoteFile } from "./update-file.ts"

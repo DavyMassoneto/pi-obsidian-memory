@@ -1,6 +1,6 @@
-import { checkMemoryFolder } from "#/domain"
-import { inspectVaultFile } from "#/services/vault/catalog"
-import type { VaultContext } from "#/services/vault/context"
+import { checkMemoryFolder } from "#src/domain"
+import { inspectVaultFile } from "#src/services/vault/catalog"
+import type { VaultContext } from "#src/services/vault/context"
 import type { CompleteBlankRequest, CompleteBlankResult } from "./types.ts"
 import { updateNoteFile } from "./update-file.ts"
 

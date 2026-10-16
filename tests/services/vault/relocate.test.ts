@@ -3,8 +3,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { renderNote } from "#/domain"
-import { archiveStoredNote, readNote, succeedStoredNote } from "#/services"
+import { renderNote } from "#src/domain"
+import { archiveStoredNote, readNote, succeedStoredNote } from "#src/services"
 import { aLimits, linkFolder, useTempFolder, vaultWithNoteToArchive, vaultWithQuestion } from "#test-helpers"
 
 test("reports completed relocation with a warning when index maintenance is refused", async () => {

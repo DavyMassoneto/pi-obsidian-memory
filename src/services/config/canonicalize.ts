@@ -8,7 +8,7 @@ import {
   type ProjectEntry,
   parseConfig,
   registrationProblems,
-} from "#/domain"
+} from "#src/domain"
 import type {
   CanonicalConfigResult,
   CanonicalPathResult,

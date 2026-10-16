@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { createMemorySession } from "#/usecases"
+import { createMemorySession } from "#src/usecases"
 import { deliveredRead, sessionIdentity } from "#test-helpers"
 
 describe("MemorySession full-read receipts", () => {

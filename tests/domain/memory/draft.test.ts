@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { newNote } from "#/domain"
+import { newNote } from "#src/domain"
 
 const draft = {
   statement: "Use pnpm, never npm",

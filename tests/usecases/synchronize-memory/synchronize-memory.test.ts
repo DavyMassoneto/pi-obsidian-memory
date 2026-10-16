@@ -3,8 +3,8 @@ import { dirname, join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { openIndex } from "#/services"
-import { getMemory, synchronizeMemory } from "#/usecases"
+import { openIndex } from "#src/services"
+import { getMemory, synchronizeMemory } from "#src/usecases"
 import {
   expectRegistrationLeaseReleased,
   memoryReadFixture,

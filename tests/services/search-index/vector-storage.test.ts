@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { applyIndexChanges, readVectorCache, replaceVectorCache } from "#/services"
+import { applyIndexChanges, readVectorCache, replaceVectorCache } from "#src/services"
 import { catalogChanges, catalogEntry, changeIndexFile, useIndexFile } from "#test-helpers"
 
 test.each(["FAIL", "ABORT", "ROLLBACK"])("keeps the previous generation on %s", async (mode) => {

@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises"
 
-import { parseConfig } from "#/domain"
+import { parseConfig } from "#src/domain"
 import { canonicalizeConfigLocation } from "./canonicalize.ts"
 import type { ReadConfigResult } from "./types.ts"
 

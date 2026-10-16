@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { parseRetrievalAction } from "#/domain"
+import { parseRetrievalAction } from "#src/domain"
 import { readObservation, retrievalRequest } from "#test-helpers"
 
 describe("parseRetrievalAction", () => {

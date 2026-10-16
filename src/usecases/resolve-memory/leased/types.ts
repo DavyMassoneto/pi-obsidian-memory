@@ -1,6 +1,6 @@
-import type { ConfigRefusal, MemoryConfig, MemoryScope, NamedVaultContext, NoProjectRefusal } from "#/services"
-import type { Failed, Succeeded } from "#/shared"
-import type { MemoryOperationRefusal } from "#/usecases/operation-context"
+import type { ConfigRefusal, MemoryConfig, MemoryScope, NamedVaultContext, NoProjectRefusal } from "#src/services"
+import type { Failed, Succeeded } from "#src/shared"
+import type { MemoryOperationRefusal } from "#src/usecases/operation-context"
 
 export interface ResolvedVault {
   scope: MemoryScope

@@ -6,8 +6,8 @@ import {
   type VaultExportFile,
   type VaultFileRequest,
   type VaultInspectionResult,
-} from "#/domain"
-import type { VaultContext } from "#/services/vault/context"
+} from "#src/domain"
+import type { VaultContext } from "#src/services/vault/context"
 import { readCatalogBytes } from "./bytes.ts"
 import { catalogFailure } from "./failures.ts"
 import { resolveCatalogEntry, resolveCatalogRoot } from "./resolve.ts"

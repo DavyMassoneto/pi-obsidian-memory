@@ -1,6 +1,6 @@
-import type { VaultCatalogFailure, VaultEnumeration, VaultExportFile, VaultFileStat } from "#/domain"
-import type { VaultContext } from "#/services/vault/context"
-import type { Succeeded } from "#/shared"
+import type { VaultCatalogFailure, VaultEnumeration, VaultExportFile, VaultFileStat } from "#src/domain"
+import type { VaultContext } from "#src/services/vault/context"
+import type { Succeeded } from "#src/shared"
 
 export type {
   InspectedVaultFile,
@@ -20,7 +20,7 @@ export type {
   VaultInspectionResult,
   VaultNoteAnalysis,
   VaultNoteProblems,
-} from "#/domain"
+} from "#src/domain"
 
 export interface CatalogLocation {
   root: string

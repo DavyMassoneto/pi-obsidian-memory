@@ -6,8 +6,8 @@ import type {
   ProblemFolder,
   Succession,
   VaultCatalogFailure,
-} from "#/domain"
-import type { Done, Failed, Succeeded } from "#/shared"
+} from "#src/domain"
+import type { Done, Failed, Succeeded } from "#src/shared"
 
 export interface ExactUpdateRequest {
   path: string

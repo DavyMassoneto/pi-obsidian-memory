@@ -4,8 +4,8 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { renderNote } from "#/domain"
-import { readNote, refreshIndexes, updateNote } from "#/services"
+import { renderNote } from "#src/domain"
+import { readNote, refreshIndexes, updateNote } from "#src/services"
 import { aLimits, linkFolder, readIndexOf, tryLinkFile, useTempFolder, vaultWithNote } from "#test-helpers"
 
 const limits = aLimits()

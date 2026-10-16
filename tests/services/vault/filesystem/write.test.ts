@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { updateNote } from "#/services"
+import { updateNote } from "#src/services"
 import { aLimits, vaultWithNote } from "#test-helpers"
 
 const limits = aLimits()

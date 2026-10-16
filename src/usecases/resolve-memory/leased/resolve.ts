@@ -6,12 +6,12 @@ import {
   type MemoryScope,
   readConfigSnapshot,
   targetVault,
-} from "#/services"
+} from "#src/services"
 import {
   type MemoryOperationContext,
   memoryOperationInterruption,
   staleMemorySession,
-} from "#/usecases/operation-context"
+} from "#src/usecases/operation-context"
 import type { ResolvedMemory, ResolveMemoryResult, SelectMemoryVaultResult } from "./types.ts"
 
 export async function resolveLeasedMemory(context: MemoryOperationContext): Promise<ResolveMemoryResult> {

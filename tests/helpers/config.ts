@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
-import type { MemoryConfig } from "#/domain"
+import type { MemoryConfig } from "#src/domain"
 import { productSettings } from "./settings.ts"
 import type { LimitsInput } from "./types.ts"
 

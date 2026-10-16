@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { ensureVaultAssets } from "#/services"
+import { ensureVaultAssets } from "#src/services"
 import { catalogVault, linkFolder, useTempFolder } from "#test-helpers"
 
 test("explicit bootstrap creates twelve templates and dashboard, preserving case-insensitive existing assets", async () => {

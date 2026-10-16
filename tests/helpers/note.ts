@@ -7,7 +7,7 @@ import {
   readFrontmatter,
   type ValidateNoteResult,
   validateNote,
-} from "#/domain"
+} from "#src/domain"
 import { aLimits } from "./limits.ts"
 
 export function aNote(): Note {

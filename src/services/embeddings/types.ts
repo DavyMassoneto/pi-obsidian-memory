@@ -1,5 +1,5 @@
-import type { EmbeddingBatchRequest, EmbeddingFailure, EmbeddingResult } from "#/domain"
-import type { Succeeded } from "#/shared"
+import type { EmbeddingBatchRequest, EmbeddingFailure, EmbeddingResult } from "#src/domain"
+import type { Succeeded } from "#src/shared"
 
 export type {
   EmbeddedInput,
@@ -10,7 +10,7 @@ export type {
   EmbeddingFailureStatus,
   EmbeddingInput,
   EmbeddingResult,
-} from "#/domain"
+} from "#src/domain"
 
 export interface EmbeddingOperationContext {
   signal: AbortSignal

@@ -4,7 +4,7 @@ import { join } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
-import { downloadModelAsset } from "#/services"
+import { downloadModelAsset } from "#src/services"
 import { embeddingOperation, embeddingServer, syntheticAssetTransport, syntheticModelAsset } from "#test-helpers"
 
 describe("downloadModelAsset", () => {

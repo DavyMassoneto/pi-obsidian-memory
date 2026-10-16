@@ -1,5 +1,5 @@
-import { isCatalogHidden, isRootTemplate, type VaultFileRequest } from "#/domain"
-import type { VaultContext } from "#/services/vault/context"
+import { isCatalogHidden, isRootTemplate, type VaultFileRequest } from "#src/domain"
+import type { VaultContext } from "#src/services/vault/context"
 import { catalogFailure } from "./failures.ts"
 import { resolveCatalogEntry, resolveCatalogRoot } from "./resolve.ts"
 import type { CatalogResolveResult } from "./types.ts"

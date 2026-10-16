@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import { readFile } from "node:fs/promises"
 
-import { assessConfig } from "#/domain"
+import { assessConfig } from "#src/domain"
 import type { ConfigLocation, ReadConfigSnapshotResult } from "./types.ts"
 
 export async function readConfigSnapshot(request: ConfigLocation): Promise<ReadConfigSnapshotResult> {

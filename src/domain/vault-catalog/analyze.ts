@@ -1,4 +1,4 @@
-import { checkNoteText, parseNote, readFrontmatter } from "#/domain/note"
+import { checkNoteText, parseNote, readFrontmatter } from "#src/domain/note"
 import type { AnalyzeVaultNoteRequest, ParsedVaultNote, VaultNoteAnalysis, VaultNoteProblems } from "./types.ts"
 
 export function analyzeVaultNote(request: AnalyzeVaultNoteRequest): VaultNoteAnalysis {

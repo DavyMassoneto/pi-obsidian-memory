@@ -3,7 +3,7 @@ import { DatabaseSync } from "node:sqlite"
 
 import { onTestFinished } from "vitest"
 
-import { type IndexEntry, openIndex, type SearchHit, type SearchIndex, type SearchResult } from "#/services"
+import { type IndexEntry, openIndex, type SearchHit, type SearchIndex, type SearchResult } from "#src/services"
 import { useTempFolder } from "./temp-folder.ts"
 
 export async function useTempIndex(): Promise<SearchIndex> {

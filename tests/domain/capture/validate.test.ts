@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { parseCaptureAction } from "#/domain"
+import { parseCaptureAction } from "#src/domain"
 import { captureRequest, memoryDraft, readObservation } from "#test-helpers"
 
 describe("parseCaptureAction", () => {

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { parseConfig } from "#/domain"
+import { parseConfig } from "#src/domain"
 import { aConfig } from "#test-helpers"
 
 test("an empty object names each missing root field once, in schema order, under the name config", () => {

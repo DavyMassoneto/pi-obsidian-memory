@@ -1,7 +1,7 @@
 import { isAbsolute, join, relative, sep } from "node:path"
 
-import { checkFileName, checkVaultPath, joinVaultPath, VAULT_PATH_SEPARATOR } from "#/domain"
-import { linkStatOf, realPathOf } from "#/services/vault/filesystem"
+import { checkFileName, checkVaultPath, joinVaultPath, VAULT_PATH_SEPARATOR } from "#src/domain"
+import { linkStatOf, realPathOf } from "#src/services/vault/filesystem"
 import type { ResolveResult } from "./types.ts"
 
 export async function resolveFolder(vault: string, folder: string): Promise<ResolveResult> {
