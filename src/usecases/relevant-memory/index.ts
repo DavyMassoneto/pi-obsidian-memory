@@ -1,6 +1,5 @@
 export * from "./agent.ts"
 export * from "./constants.ts"
-export * from "./deadline.ts"
 export * from "./decision.ts"
 export * from "./loaded.ts"
 export * from "./prepare.ts"

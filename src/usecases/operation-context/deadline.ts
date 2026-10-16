@@ -1,5 +1,4 @@
-import type { MemoryOperationContext } from "#src/usecases/operation-context"
-import type { LimitedOperation } from "./types.ts"
+import type { LimitedOperation, MemoryOperationContext } from "./types.ts"
 
 export function limitOperation(context: MemoryOperationContext, limitMs: number): LimitedOperation {
   const controller = new AbortController()

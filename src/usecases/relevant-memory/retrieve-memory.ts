@@ -5,7 +5,11 @@ import {
   MAX_RETRIEVAL_DURATION_MS,
   shouldRetrieveMemory,
 } from "#src/services"
-import { captureMemoryOperationContext, type MemoryOperationContext } from "#src/usecases/operation-context"
+import {
+  captureMemoryOperationContext,
+  limitOperation,
+  type MemoryOperationContext,
+} from "#src/usecases/operation-context"
 import { type ResolvedMemory, resolveMemory } from "#src/usecases/resolve-memory"
 import { findNotes } from "./agent.ts"
 import {
@@ -16,7 +20,6 @@ import {
   OUT_OF_TIME,
   RELEVANT_INTRO,
 } from "./constants.ts"
-import { limitOperation } from "./deadline.ts"
 import { decisionContextOf, decisionNotice, needsMemory, rankNotes } from "./decision.ts"
 import { refreshLoaded } from "./refresh.ts"
 import type { RankedNotes, RetrieveDeps, RetrieveMemoryResult, RetrieveRequest } from "./types.ts"
@@ -38,7 +41,7 @@ export async function retrieveMemory(
 
 function timedOut(result: RetrieveMemoryResult): RetrieveMemoryResult {
   if (!result.succeeded) return { succeeded: true, output: { text: null, notices: [OUT_OF_TIME], changes: NO_CHANGES } }
-  return { succeeded: true, output: { ...result.output, notices: [...result.output.notices, OUT_OF_TIME] } }
+  return { succeeded: true, output: { ...result.output, notices: [OUT_OF_TIME] } }
 }
 
 async function retrieveWithin(

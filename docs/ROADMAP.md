@@ -381,7 +381,7 @@ Every milestone:
   - [x] Setting: `embeddings` (provider and model). `/memory-setup` warns that a remote provider receives note
     content, secrets included.
   - [x] `memory_search` combines text and embeddings. Only content that changed gets a new embedding.
-  - [ ] Capture combines text and embeddings (capture is milestone 4's work; not wired yet).
+  - [x] Capture combines text and embeddings: its search goes through the same fused search.
 - **Out of scope:** the decision model and the memory agent (6).
 - **Depends on:** 2.
 - **Done when:**

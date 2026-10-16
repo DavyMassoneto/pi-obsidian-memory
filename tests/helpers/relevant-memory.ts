@@ -111,22 +111,21 @@ export async function rmNote(vaultPath: string, path: string): Promise<void> {
   await rm(join(vaultPath, path))
 }
 
-export function slowCompletion(delayMs: number, steps: RetrievalAction[]) {
+export function slowCompletion(delayMs: number, steps: RetrievalStep[]) {
   const remaining = [...steps]
-  return vi.fn<CompletionPort>(async () => {
+  return vi.fn<CompletionPort>(async (request) => {
     await new Promise<void>((resolve) => setTimeout(resolve, delayMs))
     const step = remaining.shift()
     if (!step) return { status: "completed", text: JSON.stringify({ action: "finish", notes: [] }) }
+    if (typeof step === "function") return { status: "completed", text: JSON.stringify(step(retrievedInput(request))) }
     return { status: "completed", text: JSON.stringify(step) }
   })
 }
 
 const REAL_SET_TIMEOUT = globalThis.setTimeout
-const REAL_WAIT_MS = 5
+const REAL_WAIT_MS = 1
 
-export async function advanceUntil(isDone: Done, stepMs: number): Promise<void> {
-  for (let step = 0; step < 400 && !isDone(); step++) {
-    await vi.advanceTimersByTimeAsync(stepMs)
-    await new Promise<void>((resolve) => REAL_SET_TIMEOUT(resolve, REAL_WAIT_MS))
-  }
+export async function advanceWhen(ready: Done, ms: number): Promise<void> {
+  while (!ready()) await new Promise<void>((resolve) => REAL_SET_TIMEOUT(resolve, REAL_WAIT_MS))
+  await vi.advanceTimersByTimeAsync(ms)
 }
