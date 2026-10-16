@@ -1,12 +1,23 @@
 import { expect, test } from "vitest"
 
 import * as pi from "#src/pi"
-import { respondTo } from "#src/pi"
+import { respondTo, respondToGet, respondToSearch } from "#src/pi"
 import type { AddMemoryResult } from "#src/usecases"
-import { aNote, mentionsIn, registerWithFakePi, textOf, unregisteredMentions } from "#test-helpers"
+import {
+  aNote,
+  blockTexts,
+  getResponses,
+  mentionsIn,
+  piMemoryFixture,
+  registerWithFakePi,
+  searchResponses,
+  shippedSkillText,
+  textOf,
+  unregisteredMentions,
+} from "#test-helpers"
 
-test("registers the memory_add tool for explicit requests only, the two commands and the session events", () => {
-  const { tools, events, commands } = registerWithFakePi({})
+test("registers the three tools, the two commands and the session events", () => {
+  const { tools, searchTools, getTools, registered, events, commands } = registerWithFakePi({})
 
   expect(tools).toEqual([
     expect.objectContaining({
@@ -14,8 +25,27 @@ test("registers the memory_add tool for explicit requests only, the two commands
       description: "Use only when the user explicitly asks to remember something.",
     }),
   ])
-  expect(events).toEqual(["session_start", "session_shutdown"])
+  expect(searchTools).toEqual([
+    expect.objectContaining({
+      name: "memory_search",
+      description:
+        "Search long-term memory by words. Archived notes and notes without valid frontmatter are not searched.",
+    }),
+  ])
+  expect(getTools).toEqual([expect.objectContaining({ name: "memory_get" })])
+  expect(registered).toEqual(["memory_add", "memory_search", "memory_get"])
+  expect(events).toEqual(["session_start", "before_agent_start", "session_shutdown"])
   expect(commands).toEqual(["memory-setup", "memory-init"])
+})
+
+test("shutting the session down drops the memory block", async () => {
+  const { pi, piContext, workingFolder } = await piMemoryFixture()
+  await pi.startSession(piContext, "startup")
+  expect(Object.keys(await pi.runPrompt(workingFolder))).toEqual(["obsidian_memory"])
+
+  await pi.shutdownSession()
+
+  expect(await pi.runPrompt(workingFolder)).toEqual({})
 })
 
 test("turns off Claude Code's own memory in pi's environment", () => {
@@ -27,7 +57,7 @@ test("turns off Claude Code's own memory in pi's environment", () => {
 })
 
 test("no LLM-facing text names a command or tool that is not registered", () => {
-  const { tools, commands } = registerWithFakePi({})
+  const { tools, searchTools, getTools, registered, commands } = registerWithFakePi({})
   const problems = ["a problem"]
   const existing = { note: aNote(), hash: "hash" }
   const responses: AddMemoryResult[] = [
@@ -55,16 +85,22 @@ test("no LLM-facing text names a command or tool that is not registered", () => 
     { succeeded: false, reason: "vault-missing", problems },
     { succeeded: false, reason: "not-found", problems },
   ]
-  const constantTexts = Object.values(pi).filter((value) => typeof value === "string")
+  const constantTexts = Object.values(pi).filter(
+    (value) => typeof value === "string" && value !== pi.MEMORY_BLOCK_SECTION,
+  )
   const texts = [
-    ...tools.map((tool) => JSON.stringify(tool)),
+    ...[...tools, ...searchTools, ...getTools].map((tool) => JSON.stringify(tool)),
+    ...searchResponses().map((result) => textOf(respondToSearch(result))),
+    ...getResponses().map((result) => textOf(respondToGet({ vault: "global", path: "p" }, result))),
+    ...blockTexts(),
+    shippedSkillText(),
     ...responses.map((r) => textOf(respondTo(r))),
     ...constantTexts,
   ]
-  const registered = [...tools.map((tool) => tool.name), ...commands, ...commands.map((name) => `/${name}`)]
+  const names = [...registered, ...commands, ...commands.map((name) => `/${name}`)]
 
   expect(mentionsIn(texts).length).toBeGreaterThan(0)
-  expect(unregisteredMentions(texts, registered)).toEqual([])
+  expect(unregisteredMentions(texts, names)).toEqual([])
 })
 
 test("a registered slash command mention is accepted and an unregistered one is reported", () => {

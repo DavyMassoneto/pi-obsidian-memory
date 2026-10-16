@@ -1,3 +1,5 @@
 # indice notes
 - 2026-xx: SearchIndex methods live in storage.ts (SqliteSearchIndex); each feature = *-statements.ts + *-storage.ts + public wrapper file + barrel line. Version bump = INDEX_SCHEMA_VERSION in constants.ts; mismatch test pattern: `changeIndexFile(path, "PRAGMA user_version = N-1")` then openIndex -> rebuilt true.
 - TypeBox `Type` only importable in schemas.ts (lint). Don't run `biome check --write` on whole tests/ (reformats other owners' WIP); scope to own paths.
+- Perf: TypeBox `Value.Check` ≈37-67 µs/row vs `Compile(...).Check` ≈1.5 µs; compiled validators live in search-index/constants.ts (schemas.ts allows only `Type.*`). Inventory 88→14 ms @1000. FTS 'integrity-check' on open is O(n) (29 ms @1000) and kept (only check catching lost postings). Selecting body costs ~1 ms/1000 — not the bottleneck.
+- Vectors: partial coverage allowed; `updateVectors` (add/remove + expectedRevision; generation change clears all), `vectorCoverage`. Python edits: use open(newline='') to preserve LF/CRLF.

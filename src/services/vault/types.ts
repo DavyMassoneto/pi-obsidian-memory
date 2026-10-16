@@ -191,3 +191,9 @@ export type ListResult = Succeeded<FolderListing> | ReadRefusal
 export type SettledListResult = Succeeded<SettledListing> | ReadRefusal
 export type VaultFolderState = "missing" | "empty" | "populated" | "not-directory"
 export type VaultFolderResult = Succeeded<VaultFolderState> | IoRefusal
+
+export interface NewFileRefusal extends Failed {
+  reason: "exists" | "not-found" | "io-error"
+}
+
+export type WriteNewFileResult = Done | NewFileRefusal

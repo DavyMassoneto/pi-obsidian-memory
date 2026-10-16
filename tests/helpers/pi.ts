@@ -3,23 +3,27 @@ import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 
 import {
+  type BeforeAgentStartEvent,
   DefaultResourceLoader,
-  type ExtensionToolContext,
   type SessionStartEvent,
   SettingsManager,
 } from "@earendil-works/pi-coding-agent"
 
 import {
+  type BeforeAgentStartHandler,
   type ExtensionRegistrar,
   type MemoryAddResponse,
   type MemoryAddTool,
   type MemoryCommand,
+  type MemoryGetTool,
   type MemoryPiContext,
+  type MemorySearchTool,
   registerExtension,
   type SessionShutdownHandler,
   type SessionStartHandler,
 } from "#src/pi"
 import { fakePiContext } from "./pi-context.ts"
+import { promptEvent } from "./pi-prompt.ts"
 
 const repoRoot = resolve(import.meta.dirname, "..", "..")
 
@@ -29,6 +33,10 @@ export function registerWithFakePi(env: NodeJS.ProcessEnv) {
 
 export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
   const tools: MemoryAddTool[] = []
+  const searchTools: MemorySearchTool[] = []
+  const getTools: MemoryGetTool[] = []
+  const registered: string[] = []
+  const promptHandlers: BeforeAgentStartHandler[] = []
   const events: string[] = []
   const commands: string[] = []
   const commandHandlers = new Map<string, MemoryCommand["handler"]>()
@@ -36,7 +44,22 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
   const shutdownHandlers: SessionShutdownHandler[] = []
 
   const registrar: ExtensionRegistrar = {
-    registerTool: (tool) => tools.push(tool),
+    registerAddTool(tool) {
+      registered.push(tool.name)
+      tools.push(tool)
+    },
+    registerSearchTool(tool) {
+      registered.push(tool.name)
+      searchTools.push(tool)
+    },
+    registerGetTool(tool) {
+      registered.push(tool.name)
+      getTools.push(tool)
+    },
+    onBeforeAgentStart(handler) {
+      events.push("before_agent_start")
+      promptHandlers.push(handler)
+    },
     registerCommand(name, command) {
       commands.push(name)
       commandHandlers.set(name, command.handler)
@@ -54,6 +77,9 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
 
   return {
     tools,
+    searchTools,
+    getTools,
+    registered,
     events,
     commands,
     async runCommand(name: string, context: MemoryPiContext) {
@@ -64,46 +90,13 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv) {
     async startSession(context: MemoryPiContext, reason: SessionStartEvent["reason"]) {
       for (const handler of startHandlers) await handler({ type: "session_start", reason }, context)
     },
+    async runPrompt(cwd: string): Promise<BeforeAgentStartEvent["systemPromptOptions"]["sections"]> {
+      const event = promptEvent(cwd)
+      for (const handler of promptHandlers) await handler(event)
+      return event.systemPromptOptions.sections
+    },
     async shutdownSession() {
       for (const handler of shutdownHandlers) await handler()
-    },
-  }
-}
-
-export function fakeToolContext(cwd: string): ExtensionToolContext {
-  return {
-    cwd,
-    mode: "rpc",
-    hasUI: false,
-    model: undefined,
-    scopedModels: [],
-    signal: undefined,
-    tools: [],
-    get ui(): never {
-      throw new Error("Unexpected UI access")
-    },
-    get sessionManager(): never {
-      throw new Error("Unexpected session access")
-    },
-    get modelRegistry(): never {
-      throw new Error("Unexpected model access")
-    },
-    isIdle: () => true,
-    isProjectTrusted: () => false,
-    abort: () => {
-      throw new Error("Unexpected abort")
-    },
-    hasPendingMessages: () => false,
-    shutdown: () => {
-      throw new Error("Unexpected shutdown")
-    },
-    getContextUsage: () => undefined,
-    compact: () => {
-      throw new Error("Unexpected compaction")
-    },
-    getSystemPrompt: () => "",
-    executeTool: () => {
-      throw new Error("Unexpected nested tool call")
     },
   }
 }
@@ -116,10 +109,7 @@ export async function loadIsolatedPi() {
   const loader = new DefaultResourceLoader({
     cwd: isolatedAgentDir,
     agentDir: isolatedAgentDir,
-    settingsManager: SettingsManager.inMemory(),
-    additionalExtensionPaths: [repoRoot],
-    noExtensions: true,
-    noSkills: true,
+    settingsManager: SettingsManager.inMemory({ packages: [repoRoot] }),
     noPromptTemplates: true,
     noThemes: true,
     noContextFiles: true,
@@ -137,6 +127,7 @@ export async function loadIsolatedPi() {
       for (const handler of handlers) await handler({ type: "session_start", reason: "startup" }, context)
     }
     return {
+      skillNames: loader.getSkills().skills.map((skill) => skill.name),
       toolNames: loaded.extensions.flatMap((extension) => [...extension.tools.keys()]),
       commandNames: loaded.extensions.flatMap((extension) => [...extension.commands.keys()]),
       startNotifications: notifications,

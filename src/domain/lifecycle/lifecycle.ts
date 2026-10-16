@@ -1,5 +1,13 @@
+import type { Note } from "#src/domain/note"
 import { ARCHIVE_FOLDER, joinVaultPath } from "#src/domain/vault-path"
-import type { PlacedNote, Succession } from "./types.ts"
+import type { NoteChange, PlacedNote, Succession } from "./types.ts"
+
+export function updatedNote(note: Note, change: NoteChange, today: string): Note {
+  const { dontForget: _previous, ...kept } = note.frontmatter
+  const frontmatter = { ...kept, type: change.type, updated: today }
+  if (change.dontForget) return { ...note, frontmatter: { ...frontmatter, dontForget: true }, body: change.body }
+  return { ...note, frontmatter, body: change.body }
+}
 
 export function archiveNote(placed: PlacedNote, today: string): PlacedNote {
   const { note } = placed

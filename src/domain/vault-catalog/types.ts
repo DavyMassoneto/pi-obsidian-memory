@@ -102,6 +102,11 @@ export interface VaultExportFile {
   stat: VaultFileStat
 }
 
+export interface VaultExportEntry {
+  path: string
+  bytes: Uint8Array
+}
+
 export interface VaultExportFailure extends Failed {
   failures: VaultCatalogFailure[]
 }

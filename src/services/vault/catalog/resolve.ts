@@ -1,4 +1,5 @@
-import { realpath, stat } from "node:fs/promises"
+import type { Dirent } from "node:fs"
+import { lstat, realpath, stat } from "node:fs/promises"
 import { isAbsolute, join, relative, sep } from "node:path"
 
 import { isSafeCatalogPath } from "#src/domain"
@@ -46,6 +47,24 @@ export async function resolveCatalogEntry(location: CatalogLocation): Promise<Ca
         kind: catalogEntryKind(stats),
         stat: catalogStat(stats),
       },
+    }
+  } catch (error) {
+    if (error instanceof Error) return catalogIoFailure(error, { path: location.path, scope: "entry" })
+    throw error
+  }
+}
+
+export async function resolveListedEntry(location: CatalogLocation, listed: Dirent): Promise<CatalogResolveResult> {
+  if (!(listed.isFile() || listed.isDirectory()) || !isSafeCatalogPath(location.path)) {
+    return resolveCatalogEntry(location)
+  }
+  const absolutePath = join(location.root, ...location.path.split("/"))
+  try {
+    const stats = await lstat(absolutePath)
+    if (stats.isSymbolicLink()) return resolveCatalogEntry(location)
+    return {
+      succeeded: true,
+      output: { absolutePath, canonicalPath: location.path, kind: catalogEntryKind(stats), stat: catalogStat(stats) },
     }
   } catch (error) {
     if (error instanceof Error) return catalogIoFailure(error, { path: location.path, scope: "entry" })

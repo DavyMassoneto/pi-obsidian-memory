@@ -16,3 +16,7 @@
 - 2026-10 (folder-index re-review): Windows byte-range lock helper `whileLocked` (tests/helpers) makes reads fail for
   real on this machine (unlike ACL deny) -> use it to prove "re-rendered vs skipped". registration/flow.test.ts
   failed 2 of 3 full runs, passes alone: flaky under load, not tied to sync changes.
+- 2026-10 (M2 review): mutation helper pattern that worked: script `f sedexpr testdir` -> cp to tmp/revisor-<base>.bak,
+  sed -i, `npx vitest run --project unit <dir> | grep -E "Tests +[0-9]|×"`, cp back; verify with grep -c + same
+  `git diff --stat`. pi-coding-agent dist installs NO process unhandledRejection handler (grep) -> detached promises in
+  src/pi (e.g. MemoryBlock #text) can crash pi. Find helper fns in tests: grep `^(async )?function` in *.test.ts.

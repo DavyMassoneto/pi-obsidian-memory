@@ -1,7 +1,16 @@
 import { describe, expect, it, vi } from "vitest"
 
 import { decideMemory, scoreCandidate } from "#src/services"
-import { candidateDecisionRequest, jevContext, jevReply, memoryDecisionRequest } from "#test-helpers"
+import { candidateDecisionRequest, jevContext, jevRelevantReply, jevReply, memoryDecisionRequest } from "#test-helpers"
+
+const jevUsage = {
+  input: 10,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+  totalTokens: 10,
+  cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+}
 
 describe("Jev pi classifier adapter", () => {
   it("uses selected typesafe classifier with a single bool question and bounded options", async () => {
@@ -36,7 +45,7 @@ describe("Jev pi classifier adapter", () => {
   })
 
   it("sends candidate text unchanged only after consent, without stable identity", async () => {
-    const context = jevContext(jevReply(1))
+    const context = jevContext(jevRelevantReply(1))
     expect(await scoreCandidate({ context, request: candidateDecisionRequest })).toMatchObject({ succeeded: true })
     expect(context.classifier.classify).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -71,16 +80,36 @@ describe("Jev pi classifier adapter", () => {
   })
 
   it.each([
-    { ...jevReply(0.5), answer: null },
-    { ...jevReply(0.5), answer: { type: "bool" } },
-    { ...jevReply(0.5), answer: { type: "score", probability: 0.5 } },
+    { ...jevReply(0.5), answers: {} },
+    { ...jevReply(0.5), answers: { needed: { type: "bool" } } },
+    { ...jevReply(0.5), answers: { needed: { type: "score", score: 0.5, confidence: 1 } } },
     { ...jevReply(0.5), model: "other-model" },
-    { ...jevReply(0.5), usage: { input: -1, output: 0 } },
+    { ...jevReply(0.5), usage: { ...jevUsage, input: -1 } },
   ])("refuses empty, wrong or mismatched answers", async (reply) => {
     expect(await decideMemory({ context: jevContext(reply), request: memoryDecisionRequest })).toMatchObject({
       succeeded: false,
       code: "invalid-response",
     })
+  })
+
+  it("reads the relevant probability when scoring a candidate", async () => {
+    const context = jevContext(jevRelevantReply(0.25))
+    expect(await scoreCandidate({ context, request: candidateDecisionRequest })).toMatchObject({
+      succeeded: true,
+      output: { probability: 0.25 },
+    })
+  })
+
+  it("refuses a memory result that only answers relevant", async () => {
+    expect(
+      await decideMemory({ context: jevContext(jevRelevantReply(0.5)), request: memoryDecisionRequest }),
+    ).toMatchObject({ succeeded: false, code: "invalid-response" })
+  })
+
+  it("refuses a candidate result that only answers needed", async () => {
+    expect(
+      await scoreCandidate({ context: jevContext(jevReply(0.5)), request: candidateDecisionRequest }),
+    ).toMatchObject({ succeeded: false, code: "invalid-response" })
   })
 
   it.each(["error", "aborted"] as const)("handles pi terminal %s", async (stopReason) => {

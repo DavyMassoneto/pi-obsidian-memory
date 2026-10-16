@@ -1,3 +1,8 @@
+import { Compile } from "typebox/compile"
+
+import { CatalogEntrySchema, CatalogNoteSchema } from "#src/domain"
+import { CatalogRowSchema } from "./schemas.ts"
+
 export const CATALOG_VALIDATION_POLICY = "vault-note-analysis-v1"
 
 export const INDEX_FILE_EXTENSION = ".sqlite"
@@ -11,6 +16,12 @@ export const BODY_WEIGHT = 1
 export const WORD_PATTERN = /[\p{L}\p{N}]+/gu
 
 export const INDEX_SCHEMA_VERSION = 3
+
+export const CatalogRowValidator = Compile(CatalogRowSchema)
+
+export const CatalogEntryValidator = Compile(CatalogEntrySchema)
+
+export const CatalogNoteValidator = Compile(CatalogNoteSchema)
 
 export const SQLITE_PRIMARY_CODE_MASK = 0xff
 

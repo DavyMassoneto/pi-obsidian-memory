@@ -34,3 +34,20 @@ export function aggregateVectors(vectors: readonly (readonly number[])[], dimens
   }
   return normalizeVector(sum, dimensions)
 }
+
+export function cosine(left: readonly number[], right: readonly number[]): number {
+  if (left.length !== right.length) throw new RangeError("Vectors must have the same dimensions")
+
+  let dot = 0
+  let leftNorm = 0
+  let rightNorm = 0
+  for (const [index, value] of left.entries()) {
+    const other = right[index]
+    if (typeof other !== "number") throw new RangeError("Vectors must have the same dimensions")
+    dot += value * other
+    leftNorm += value * value
+    rightNorm += other * other
+  }
+  if (leftNorm === 0 || rightNorm === 0) throw new RangeError("Vectors must be nonzero")
+  return dot / Math.sqrt(leftNorm * rightNorm)
+}

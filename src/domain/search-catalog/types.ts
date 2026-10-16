@@ -81,6 +81,16 @@ export interface VectorCache {
   chunks: VectorChunk[]
 }
 
+export interface VectorRefreshPlan {
+  embed: CatalogEntry[]
+  keep: VectorChunk[]
+}
+
+export interface FusedPath {
+  path: string
+  score: number
+}
+
 export interface VectorReplacement {
   expectedRevision: number
   generation: VectorGeneration

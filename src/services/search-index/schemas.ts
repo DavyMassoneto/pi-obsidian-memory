@@ -122,6 +122,16 @@ export const VectorReplacementSchema = Type.Object(
   { additionalProperties: false },
 )
 
+export const VectorUpdateSchema = Type.Object(
+  {
+    expectedRevision: Type.Integer({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }),
+    generation: VectorGenerationSchema,
+    add: Type.Array(VectorChunkSchema),
+    remove: Type.Array(Type.String({ minLength: 1 })),
+  },
+  { additionalProperties: false },
+)
+
 export const VectorRowSchema = Type.Object(
   {
     content_fingerprint: Type.String({ minLength: 1 }),

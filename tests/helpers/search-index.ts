@@ -1,9 +1,10 @@
 import { join } from "node:path"
 import { DatabaseSync } from "node:sqlite"
 
-import { onTestFinished } from "vitest"
+import { expect, onTestFinished } from "vitest"
 
 import {
+  applyIndexChanges,
   type FolderIndexState,
   type IndexEntry,
   openIndex,
@@ -11,6 +12,8 @@ import {
   type SearchIndex,
   type SearchResult,
 } from "#src/services"
+import { catalogChanges } from "./search-catalog.ts"
+import { entryWithContent } from "./search-vectors.ts"
 import { useTempFolder } from "./temp-folder.ts"
 
 export async function useTempIndex(): Promise<SearchIndex> {
@@ -23,6 +26,13 @@ export async function useIndexFile() {
   const path = join(folder, "vault.sqlite")
   const index = openedIndex(path)
   return { index, path }
+}
+
+export async function populatedIndex() {
+  const file = await useIndexFile()
+  const entries = [entryWithContent("alpha", false), entryWithContent("beta", false), entryWithContent("gamma", false)]
+  expect(applyIndexChanges(file.index, catalogChanges(entries, 0))).toEqual({ succeeded: true })
+  return file
 }
 
 export function openedIndex(path: string): SearchIndex {

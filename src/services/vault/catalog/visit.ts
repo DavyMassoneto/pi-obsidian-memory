@@ -1,10 +1,8 @@
 import { catalogFileKind, isCatalogHidden, isCatalogNotePath, isRootArchive, isRootTemplate } from "#src/domain"
 import { catalogFailure } from "./failures.ts"
-import { resolveCatalogEntry } from "./resolve.ts"
-import type { CatalogWalk, ResolvedCatalogEntry } from "./types.ts"
+import type { CatalogResolveResult, CatalogWalk, ResolvedCatalogEntry } from "./types.ts"
 
-export async function visitCatalogEntry(walk: CatalogWalk, path: string): Promise<void> {
-  const result = await resolveCatalogEntry({ root: walk.root, path })
+export function visitCatalogEntry(walk: CatalogWalk, path: string, result: CatalogResolveResult): void {
   if (!result.succeeded) {
     walk.inventory.failures.push(result)
     return

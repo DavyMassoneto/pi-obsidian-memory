@@ -1,4 +1,5 @@
-import { mkdir, writeFile } from "node:fs/promises"
+import type { Dirent } from "node:fs"
+import { mkdir, readdir, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
 
 import {
@@ -7,8 +8,9 @@ import {
   type VaultCatalogEntry,
   type VaultCatalogFailure,
 } from "#src/domain"
-import type { VaultContext } from "#src/services"
+import { type CompleteBlankRequest, inspectVaultFile, type VaultContext } from "#src/services"
 import { aLimits } from "./limits.ts"
+import { aNote } from "./note.ts"
 import { useTempFolder } from "./temp-folder.ts"
 
 export async function catalogVault(): Promise<VaultContext> {
@@ -47,4 +49,18 @@ export function aVaultCatalogEntry(size: number, mtimeMs: number): VaultCatalogE
     archived: false,
     stat: { size, mtimeMs, ctimeMs: 1, device: 1, inode: 1 },
   }
+}
+
+export async function listedEntry(folder: string, name: string): Promise<Dirent> {
+  const entries = await readdir(folder, { withFileTypes: true })
+  const found = entries.find((entry) => entry.name === name)
+  if (!found) throw new Error(`Expected ${name} in ${folder}`)
+  return found
+}
+
+export async function blankFileRequest(vault: VaultContext, path: string, text: string): Promise<CompleteBlankRequest> {
+  await putCatalogFile(vault, path, text)
+  const blank = await inspectVaultFile(vault, { path })
+  if (!blank.succeeded) throw new Error("Expected raw inspection")
+  return { path, expectedHash: blank.output.rawHash, note: aNote(), confirmed: true }
 }

@@ -6,3 +6,7 @@
 - extension.test mention guard: bare command names (`memory-setup`) match its regex, so the registered list holds both `name` and `/name`.
 - After a registration usecase succeeds the session stamp is invalidated: a second usecase call in the same test needs `{...context, stamp: context.session.stamp()}`.
 - pi `notify` is a no-op without UI (runner.js noOpUIContext); still guard with ctx.hasUI.
+- Background read usecases (block load at session_start) invalidate the session stamp when config is missing → race with registration commands; gate the load behind `checkMemoryConfig` first.
+- vitest default workers on this 16-core box oversubscribe fs-heavy tests → 5s timeouts; `--maxWorkers=8` is stable (measured).
+- pi: set sections via `event.systemPromptOptions.sections[name]` in before_agent_start (name regex `^[a-z][a-z0-9_-]*$`); package skills load via `pi.skills` in package.json, smoke test loads package with `SettingsManager.inMemory({packages:[repoRoot]})`.
+- Registrar tool registration is one method per tool type (union of ToolDefinition fails under exactOptionalPropertyTypes).

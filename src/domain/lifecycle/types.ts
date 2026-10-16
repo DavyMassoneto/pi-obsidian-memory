@@ -1,4 +1,10 @@
-import type { Note } from "#src/domain/note"
+import type { Note, NoteType } from "#src/domain/note"
+
+export interface NoteChange {
+  body: string
+  type: NoteType
+  dontForget: boolean
+}
 
 export interface PlacedNote {
   folder: string

@@ -5,7 +5,7 @@ import { catalogFolder } from "#src/domain"
 import type { prepareCatalogStatements } from "./catalog-statements.ts"
 import { corruptCatalog, validCatalogEntry } from "./inventory.ts"
 import { CatalogChangesSchema, CatalogStateSchema } from "./schemas.ts"
-import type { CatalogWriteRow, IndexWriteResult } from "./types.ts"
+import type { CatalogWriteRow, IndexWriteResult, SearchIndexRefusal } from "./types.ts"
 
 export function writeCatalog(
   statements: ReturnType<typeof prepareCatalogStatements>,
@@ -88,6 +88,6 @@ export function invalidCatalog(problem: string): IndexWriteResult {
   return { succeeded: false, reason: "invalid", problems: [problem] }
 }
 
-export function staleCatalog(): IndexWriteResult {
+export function staleCatalog(): SearchIndexRefusal {
   return { succeeded: false, reason: "conflict", problems: ["the catalog changed since its inventory was read"] }
 }

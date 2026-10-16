@@ -50,3 +50,34 @@ test("shutdown aborts the session and a later flow starts a fresh one", () => {
   expect(fresh.session).not.toBe(session)
   expect(fresh.session.isCurrent(fresh.registration.stamp)).toBe(true)
 })
+
+test("a tool call has no operation context before a session started", () => {
+  expect(new MemorySessionKeeper().currentOperation("work", paths, undefined)).toBeNull()
+})
+
+test("a tool call gets the current stamp and stops when its own signal aborts", () => {
+  const keeper = new MemorySessionKeeper()
+  const { context } = fakePiContext("work", {})
+  const session = keeper.start(context)
+  const controller = new AbortController()
+
+  const operation = keeper.currentOperation("work", paths, controller.signal)
+
+  expect(operation).toMatchObject({ configPath: "config.json", indexPath: "index", workingFolder: "work", session })
+  expect(operation?.stamp).toBe(session.stamp())
+  expect(operation?.signal.aborted).toBe(false)
+  controller.abort()
+  expect(operation?.signal.aborted).toBe(true)
+})
+
+test("a tool call context stops when the session ends", () => {
+  const keeper = new MemorySessionKeeper()
+  const { context } = fakePiContext("work", {})
+  keeper.start(context)
+  const operation = keeper.currentOperation("work", paths, undefined)
+
+  keeper.shutdown()
+
+  expect(operation?.signal.aborted).toBe(true)
+  expect(keeper.currentOperation("work", paths, undefined)).toBeNull()
+})

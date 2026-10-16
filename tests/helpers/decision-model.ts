@@ -97,11 +97,29 @@ export function jevContext(result: JevClassifierResult): JevContext {
 }
 
 export function jevReply(probability: number): JevClassifierResult {
+  return jevAnswerReply({ needed: { type: "bool", probability } })
+}
+
+export function jevRelevantReply(probability: number): JevClassifierResult {
+  return jevAnswerReply({ relevant: { type: "bool", probability } })
+}
+
+function jevAnswerReply(answers: JevClassifierResult["answers"]): JevClassifierResult {
   return {
-    stopReason: "stop",
+    api: "typesafe-classifier",
+    provider: "typesafe",
     model: "jev-latest",
-    answer: { type: "bool", probability },
-    usage: { input: 10, output: 0 },
+    answers,
+    usage: {
+      input: 10,
+      output: 0,
+      cacheRead: 0,
+      cacheWrite: 0,
+      totalTokens: 10,
+      cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+    },
+    stopReason: "stop",
+    timestamp: 1_700_000_000_000,
   }
 }
 

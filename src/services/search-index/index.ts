@@ -1,5 +1,6 @@
 export * from "./catalog.ts"
 export * from "./close.ts"
+export * from "./dont-forget.ts"
 export * from "./fingerprint.ts"
 export * from "./folder-indexes.ts"
 export * from "./inspection.ts"
