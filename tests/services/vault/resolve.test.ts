@@ -115,14 +115,6 @@ test.each(["self", "pair"])("refuses a %s link loop", async (kind) => {
   expect(await listFolder({ path: vault, limits: aLimits() }, "a")).toMatchObject({ reason: "outside-vault" })
 })
 
-test("reports an unreadable vault link loop rather than calling it missing", async () => {
-  const root = await useTempFolder()
-  const vault = join(root, "loop")
-  await linkFolder(vault, vault)
-
-  expect(await listFolder({ path: vault, limits: aLimits() }, "")).toMatchObject({ reason: "not-readable" })
-})
-
 test("preserves a permitted folder alias while writing to its target", async () => {
   const vault = await useTempFolder()
   await mkdir(join(vault, "real"))

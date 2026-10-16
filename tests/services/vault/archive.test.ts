@@ -1,19 +1,11 @@
-import { lstat, readdir, readFile, writeFile } from "node:fs/promises"
+import { lstat, readdir, readFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
 import { renderNote } from "#/domain"
 import { archiveStoredNote, createMemoryNote, readNote, refreshIndexes } from "#/services"
-import {
-  aLimits,
-  aNote,
-  linkFolder,
-  putNoteFile,
-  tryLinkFile,
-  useTempFolder,
-  vaultWithNoteToArchive,
-} from "#test-helpers"
+import { aLimits, aNote, linkFolder, tryLinkFile, useTempFolder, vaultWithNoteToArchive } from "#test-helpers"
 
 const limits = aLimits()
 const today = "2026-10-06"
@@ -75,34 +67,6 @@ test("refreshes the indexes on both sides", async () => {
   expect(await readFile(join(vault, "pnpm", "index.md"), "utf8")).not.toContain(note.statement)
   expect(await readFile(join(vault, "archive", "pnpm", "index.md"), "utf8")).toContain(note.statement)
   expect(await readFile(join(vault, "index.md"), "utf8")).toContain("## Archive")
-})
-
-test("refuses with a conflict when the note changed since it was read, changing nothing", async () => {
-  const { vault, note, request, file } = await vaultWithNoteToArchive(today)
-  const edited = renderNote({ ...note, body: "Edited in Obsidian." })
-  await writeFile(file, edited)
-
-  expect(await archiveStoredNote({ path: vault, name: "Global memory", limits }, request)).toEqual({
-    succeeded: false,
-    reason: "conflict",
-    problems: [`pnpm/${note.statement}.md changed on disk since it was read`],
-  })
-  expect(await readFile(file, "utf8")).toBe(edited)
-  expect(await readdir(vault)).toEqual(["pnpm"])
-})
-
-test("refuses when the archive already has a note with that name, changing nothing", async () => {
-  const { vault, note, request, file } = await vaultWithNoteToArchive(today)
-  await putNoteFile(vault, "archive/pnpm", note.statement, renderNote(note))
-  const before = await readFile(file, "utf8")
-
-  expect(await archiveStoredNote({ path: vault, name: "Global memory", limits }, request)).toEqual({
-    succeeded: false,
-    reason: "exists",
-    existingStatement: note.statement,
-    problems: [`archive/pnpm/${note.statement}.md already exists`],
-  })
-  expect(await readFile(file, "utf8")).toBe(before)
 })
 
 test("leaves no temporary file behind", async () => {

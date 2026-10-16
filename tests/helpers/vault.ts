@@ -5,6 +5,7 @@ import { tmpdir } from "node:os"
 import { join, parse } from "node:path"
 
 import { renderNote } from "#/domain"
+import type { RefreshContinuation } from "#/services"
 import { aDecision, aNote, aQuestion } from "./note.ts"
 import { useTempFolder } from "./temp-folder.ts"
 
@@ -71,4 +72,26 @@ export async function vaultWithQuestion(today: string) {
     today,
   }
   return { vault, request, file: join(vault, "search", `${question.statement}.md`) }
+}
+
+export function keepGoing(): boolean {
+  return true
+}
+
+export async function nestedAliasVault(): Promise<string> {
+  const vault = await useTempFolder()
+  await mkdir(join(vault, "physical", "subject"), { recursive: true })
+  await mkdir(join(vault, "other", "deep"), { recursive: true })
+  await linkFolder(join(vault, "physical", "subject"), join(vault, "alias"))
+  await linkFolder(join(vault, "other", "deep"), join(vault, "physical", "subject", "child"))
+  await writeFile(join(vault, "other", "deep", `${aNote().statement}.md`), renderNote(aNote()))
+  return vault
+}
+
+export function allowing(checks: number): RefreshContinuation {
+  let left = checks
+  return () => {
+    left -= 1
+    return left >= 0
+  }
 }

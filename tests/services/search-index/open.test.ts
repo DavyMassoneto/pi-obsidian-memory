@@ -1,4 +1,4 @@
-import { lstat, readFile, rm, stat, writeFile } from "node:fs/promises"
+import { lstat, readFile, stat } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
@@ -61,17 +61,6 @@ test("keeps the notes after the index is closed and opened again", async () => {
   expect(statementsOf(hits)).toEqual([anEntry().statement])
 })
 
-test("reports a corrupt database without replacing it or leaking its connection", async () => {
-  const path = join(await useTempFolder(), "vault.sqlite")
-  await writeFile(path, "not a SQLite database")
-
-  expect(openIndex(path)).toMatchObject({ succeeded: false, reason: "corrupted", problems: [expect.any(String)] })
-  expect(await readFile(path, "utf8")).toBe("not a SQLite database")
-  await rm(path)
-  const fresh = openedIndex(path)
-  expect(putNote(fresh, anEntry())).toEqual({ succeeded: true })
-})
-
 test("refuses FTS content divergence without replacing the database and releases its transaction", async () => {
   const path = join(await useTempFolder(), "vault.sqlite")
   const index = openedIndex(path)
@@ -90,22 +79,4 @@ test("refuses FTS content divergence without replacing the database and releases
   expect(statementsOf(searchText(repaired, "pnpm", { limit: 10, includeArchived: false }))).toEqual([
     anEntry().statement,
   ])
-})
-
-test("reports inaccessible index paths as unavailable", async () => {
-  const file = join(await useTempFolder(), "file")
-  await writeFile(file, "occupied")
-
-  expect(openIndex(join(file, "vault.sqlite"))).toMatchObject({ succeeded: false, reason: "unavailable" })
-  expect(await readFile(file, "utf8")).toBe("occupied")
-})
-
-test("closes a connection when the FTS table is missing", async () => {
-  const path = join(await useTempFolder(), "vault.sqlite")
-  openedIndex(path).close()
-  changeIndexFile(path, "DROP TABLE notes_fts")
-
-  expect(openIndex(path)).toMatchObject({ succeeded: false, reason: "corrupted" })
-  await rm(path)
-  expect(putNote(openedIndex(path), anEntry())).toEqual({ succeeded: true })
 })

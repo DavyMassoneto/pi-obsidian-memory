@@ -83,6 +83,15 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 - Update/archive/succeed exist but are not reachable by any tool; search and setup/init commands are not wired (ROADMAP Current state).
 - Every roadmap milestone ends with `npm test`, lint, typecheck and `test:pi` passing on Windows, and updates the README Status (ROADMAP intro).
 
+## Pitfalls — working in parallel
+
+- Other owners edit and test the same working tree at the same time. Mutation checks (temporarily breaking code to
+  see a test fail) must back up to a file named with your agent name inside the repo-ignored `tmp/`, never a shared
+  `/tmp/x.bak`, and restore immediately; confirm with `git diff -- <file>` afterwards. Never use git stash/checkout.
+- Test files hold only `describe`/`it`: any helper function or fixture builder goes to `tests/helpers/<topic>.ts`,
+  exported via `#test-helpers` (checked by grep `^function` in `*.test.ts`).
+- Lint/typecheck errors in files you don't own may be another owner's work in progress: report, don't fix.
+
 ## Definition of done (every item)
 
 1. Targeted tests written first (red), then passing (green); `npm run lint` and `npm run typecheck` clean.

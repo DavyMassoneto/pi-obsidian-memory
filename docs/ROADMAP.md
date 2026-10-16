@@ -46,9 +46,11 @@ Every milestone:
 - Guidance points to manual configuration/global scope and never offers unavailable setup/init/update operations.
 - Frontmatter, name/path, diagnostic, pi response, search-write and lifecycle regression tests now use source-named
   paths. Names live in `domain/names`, paths in `domain/vault-path` and pi paths in `pi/paths`.
-- Vault filesystem, publication and refusal internals are exercised through real-disk public operations, not exported
-  to tests. `services/vault/paths` is filename assembly; there is no longer a `services/vault/files` module or a
-  `services/search-index/errors` module. This does not claim a dedicated test file for every internal helper.
+- Every module with logic has a test file at its mirrored path. Modules not exported from a layer barrel are tested
+  there through real-disk public operations, not exported to tests. Confirmed wiring without a test: re-exports
+  (`vault/draft`, `config/registration`, `config/target`, `embeddings/configuration`, `search-index/inspection`),
+  prepared SQL lists (`search-index/*statements`) and the one-line `vault/filesystem/hash`.
+- A test proves no LLM-facing text names a command or tool that is not registered (`tests/pi/extension.test.ts`).
 - Shared temporary-folder and limits fixtures live by topic under `tests/helpers`; no filesystem mocks are used.
 
 ## Completed correction work
@@ -123,7 +125,7 @@ Every milestone:
 - **Goal:** nothing new for the user; the next milestones build on committed, tested, truthful code.
 - **Scope:**
   - [x] Commit the note/frontmatter correction work.
-  - Each module listed in Current state gets its test at the mirrored path (tests covering it under other names move
+  - [x] Each module listed in Current state gets its test at the mirrored path (tests covering it under other names move
     there), or is confirmed as wiring or constants (AGENTS.md, Tests).
   - [x] Texts the LLM or user sees name only commands and tools that exist, and offer what can be done instead:
     - an invalid config points to the config file described in config.md;
