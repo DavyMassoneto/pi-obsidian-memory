@@ -1,9 +1,13 @@
 import type { BeforeAgentStartEvent, ExtensionToolContext, ToolCallEvent } from "@earendil-works/pi-coding-agent"
 
 export function promptEvent(cwd: string): BeforeAgentStartEvent {
+  return promptEventFor(cwd, "hello")
+}
+
+export function promptEventFor(cwd: string, prompt: string): BeforeAgentStartEvent {
   return {
     type: "before_agent_start",
-    prompt: "hello",
+    prompt,
     systemPrompt: "",
     systemPromptOptions: {
       cwd,

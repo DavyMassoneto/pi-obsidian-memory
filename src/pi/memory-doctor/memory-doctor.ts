@@ -4,6 +4,7 @@ import {
   BLANK_NOTE_TYPES,
   type BlankFile,
   completeBlankMemory,
+  type DecisionProbe,
   type DiagnosedMemory,
   diagnoseMemory,
   type EmbeddingProbe,
@@ -46,7 +47,10 @@ async function runMemoryDoctor(
     find: (provider, id) => ctx.modelRegistry.find(provider, id),
     auth: (model) => ctx.modelRegistry.getApiKeyAndHeaders(model),
   }
-  const diagnosed = await diagnoseMemory({ port, embeddings: embeddingProbeOf(ctx, modelCachePath) }, context)
+  const diagnosed = await diagnoseMemory(
+    { port, embeddings: embeddingProbeOf(ctx, modelCachePath), decision: decisionProbeOf(ctx) },
+    context,
+  )
   if (!diagnosed.succeeded) {
     return ctx.ui.notify([...diagnosed.problems, DOCTOR_SETUP_HINT].join("\n"), "error")
   }
@@ -69,6 +73,7 @@ function levelOf(diagnosed: DiagnosedMemory): "info" | "warning" {
   }
   if (diagnosed.models.some((report) => report.check.status !== "ok")) return "warning"
   if (diagnosed.embeddings.status !== "ready") return "warning"
+  if ("problem" in diagnosed.decision) return "warning"
   return "info"
 }
 
@@ -110,6 +115,16 @@ function isNoteType(value: string | undefined): value is (typeof BLANK_NOTE_TYPE
 function embeddingProbeOf(ctx: MemoryPiContext, modelCachePath: string): EmbeddingProbe {
   return {
     modelCachePath,
+    async hasCredentials(provider) {
+      const key = await ctx.modelRegistry.getApiKeyForProvider(provider)
+      return typeof key === "string" && key !== ""
+    },
+  }
+}
+
+function decisionProbeOf(ctx: MemoryPiContext): DecisionProbe {
+  return {
+    hasClassifier: (provider, model) => typeof ctx.modelRegistry.findOfType("classifier", provider, model) === "object",
     async hasCredentials(provider) {
       const key = await ctx.modelRegistry.getApiKeyForProvider(provider)
       return typeof key === "string" && key !== ""

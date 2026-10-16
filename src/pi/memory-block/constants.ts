@@ -19,4 +19,6 @@ export const LOAD_FAILURE_SUFFIX = "vault:"
 
 export const LOAD_ERROR_PREFIX = "Could not load Don't forget notes:"
 
+export const RELEVANT_LOAD_ERROR_PREFIX = "Could not load relevant notes:"
+
 export const BLOCK_SEPARATOR = "\n\n"

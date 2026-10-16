@@ -190,3 +190,35 @@ test("a question nobody answers ends when the session is replaced: no cursor, no
   await eventually(() => expect(pi.cursors).toEqual([{ lastEntryId: "2" }]))
   expect(first.notifications).toEqual([])
 })
+
+test("an exception while saving the cursor is shown as a warning with a UI and never escapes", async () => {
+  const { pi, complete, workingFolder } = await capturePiFixture("after-each-turn", [{ action: "finish" }])
+  pi.failures.cursor = true
+  const { context, notifications } = fakePiContext(workingFolder, { hasUI: true, branch })
+  await pi.startSession(context, "startup")
+
+  await pi.endAgent(context)
+
+  await eventually(() => expect(complete).toHaveBeenCalledTimes(1))
+  await eventually(() =>
+    expect(notifications).toEqual([{ message: "Memory capture did not finish: cursor refused", type: "warning" }]),
+  )
+})
+
+test("an exception during a review without a UI is silent and the next review still runs", async () => {
+  const { pi, complete, workingFolder } = await capturePiFixture("after-each-turn", [
+    { action: "finish" },
+    { action: "finish" },
+  ])
+  pi.failures.cursor = true
+  const { context, notifications } = fakePiContext(workingFolder, { hasUI: false, branch })
+  await pi.startSession(context, "startup")
+
+  await pi.endAgent(context)
+  await eventually(() => expect(complete).toHaveBeenCalledTimes(1))
+  pi.failures.cursor = false
+  await pi.endAgent(context)
+
+  await eventually(() => expect(pi.cursors).toEqual([{ lastEntryId: "2" }]))
+  expect(notifications).toEqual([])
+})

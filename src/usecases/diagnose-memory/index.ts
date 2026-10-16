@@ -1,3 +1,4 @@
+export * from "./decision.ts"
 export * from "./diagnose-memory.ts"
 export * from "./embeddings.ts"
 export * from "./types.ts"

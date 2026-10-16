@@ -1,4 +1,4 @@
-import type { CaptureObservation, ReadObservation } from "#src/services"
+import type { MemoryObservation, ReadObservation } from "#src/services"
 import { BLANK_NOTE_TYPES } from "#src/usecases/complete-blank-memory"
 import { getMemory } from "#src/usecases/get-memory"
 import { listMemory } from "#src/usecases/list-memory"
@@ -31,7 +31,7 @@ export async function observeRead(
   }
 }
 
-export async function observeGet(save: ExplicitSave, context: MemoryOperationContext): Promise<CaptureObservation> {
+export async function observeGet(save: ExplicitSave, context: MemoryOperationContext): Promise<MemoryObservation> {
   const read = await observeRead(save, context)
   if (typeof read === "string") return { kind: "unavailable", operation: "get", detail: read }
   return read
@@ -42,7 +42,7 @@ export async function observeSearch(
   query: string,
   limit: number,
   context: MemoryOperationContext,
-): Promise<CaptureObservation> {
+): Promise<MemoryObservation> {
   const result = await searchMemory({ query, vault }, context)
   if (!result.succeeded) return { kind: "unavailable", operation: "search", detail: detailOf(result.problems) }
   const found = result.output.vaults.find((entry) => entry.vault === vault)
@@ -63,7 +63,7 @@ export async function observeList(
   vault: ExplicitSave["vault"],
   folder: string,
   context: MemoryOperationContext,
-): Promise<CaptureObservation> {
+): Promise<MemoryObservation> {
   const result = await listMemory({ vault, folder }, context)
   if (!result.succeeded) return { kind: "unavailable", operation: "list", detail: detailOf(result.problems) }
   const lines = result.output.text.split("\n")

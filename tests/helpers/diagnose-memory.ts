@@ -2,6 +2,7 @@ import { join } from "node:path"
 
 import type { ChatModelPort, VaultContext } from "#src/services"
 import {
+  type DecisionProbe,
   type DiagnosedMemory,
   diagnoseMemory,
   type EmbeddingProbe,
@@ -45,7 +46,7 @@ export async function blankMemoryFixture(text: string) {
   await putCatalogFile(fixture.vault, "tools/Blank.md", text)
   await putCatalogFile(fixture.vault, "tools/Other.md", noteWithId(2, "Other.", []))
   const report = await diagnoseMemory(
-    { port: chatModelPort([], []), embeddings: await emptyEmbeddingProbe() },
+    { port: chatModelPort([], []), embeddings: await emptyEmbeddingProbe(), decision: NO_DECISION_PROBE },
     fixture.context,
   )
   if (!report.succeeded) throw new Error("diagnosis failed")
@@ -77,6 +78,7 @@ export function diagnosedMemory(overrides: Partial<DiagnosedMemory>): DiagnosedM
     projectMissing: false,
     maxNotesPerFolder: 20,
     embeddings: { provider: "local", model: "Xenova/multilingual-e5-small", status: "ready" },
+    decision: { provider: "typesafe", model: "jev-latest", status: "ready", detail: "model and API key found" },
     models: [
       { role: "capture", check: { model: { provider: "p", id: "m" }, status: "ok" } },
       { role: "memory agent", check: { model: { provider: "p", id: "m" }, status: "ok" } },
@@ -106,3 +108,12 @@ export function embeddingProbe(modelCachePath: string, credentials: string[]): E
 export async function emptyEmbeddingProbe(): Promise<EmbeddingProbe> {
   return embeddingProbe(join(await useTempFolder(), "models"), [])
 }
+
+export function decisionProbe(classifiers: string[], credentials: string[]): DecisionProbe {
+  return {
+    hasClassifier: (provider, model) => classifiers.includes(`${provider}/${model}`),
+    hasCredentials: async (provider) => credentials.includes(provider),
+  }
+}
+
+export const NO_DECISION_PROBE: DecisionProbe = decisionProbe([], [])

@@ -72,7 +72,16 @@ export function getResponses(): GetMemoryResult[] {
 }
 
 export function blockTexts(): string[] {
-  const note: LoadedDontForgetNote = { vault: "global", path: "Keep.md", type: "rule", body: "Body.", problems }
+  const note: LoadedDontForgetNote = {
+    vault: "global",
+    path: "Keep.md",
+    type: "rule",
+    id: "01JABCDE7XKQ2M9V3RTN8WPZ01",
+    hash: "a".repeat(64),
+    statement: "Keep",
+    body: "Body.",
+    problems,
+  }
   const withNote: DontForgetVault[] = [{ vault: "global", notes: [note], problems }]
   const empty: DontForgetVault[] = [{ vault: "global", notes: [], problems: [] }]
   return [withNote, empty].map((vaults) => {

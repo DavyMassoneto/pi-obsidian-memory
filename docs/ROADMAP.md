@@ -34,8 +34,8 @@ Every milestone:
   repoint) drive them, and both refuse overlapping vaults. Setup-only defaults require an explicitly supplied chat
   model; old incomplete files are invalid at runtime, never silently migrated.
 - Setup shows the disclosures for chat models, Jev and remote embeddings. For embeddings, the disclosure is also
-  confirmed once per runtime before a remote provider is used, including hand-edited settings; Jev's startup
-  disclosure comes with milestone 6.
+  confirmed once per runtime before a remote provider is used, including hand-edited settings. Jev has the same
+  startup disclosure, once per runtime (milestone 6).
 - Semantic search (milestone 5): the sync refreshes vectors only for changed content (moves and date-only changes
   cost nothing; a provider change re-embeds everything; partial progress is kept). `memory_search` fuses word and
   vector ranks (reciprocal rank fusion, k=60). The local E5 model has a minimum similarity of 0.80, measured on a
@@ -52,8 +52,17 @@ Every milestone:
   tools (receipts, conflicts); explicit `memory_add` saves are not duplicated. When unsure it asks through the UI, or
   skips without one. It adds nothing to the main prompt, and runs are serialized. Judgement quality is untested
   against a real model.
-- Decision-model and bounded capture/retrieval model resources exist, but that setting does not connect them to
-  product operations or prove live-provider availability. Later milestones are not complete.
+- Relevant memory per message (milestone 6): on each user message the decision model (Laya locally, or Jev) decides
+  whether memory is needed. If so, the memory agent (`memoryAgent.model`) searches and reads (at most 8 rounds), the
+  notes are scored and ranked, and one hidden message is added after the user's message; nothing earlier is rewritten.
+  It says it is only part of the memory and names `memory_search` and `memory_get`. A loaded note (Don't forget
+  included) that changed is added again, marked as replacing the earlier copy; a deleted or archived one is marked no
+  longer valid. Session start loads relevant notes within `context.budgetChars` (12,000 by default) into the system
+  section once, with Don't forget notes outside the budget. The whole step ends within the decision timeout plus the
+  retrieval duration (30 s + 30 s). With Laya or Jev unavailable nothing is added and the user is told once per
+  session; no other model takes over. Jev's disclosure is confirmed once per runtime; with no UI or a declined
+  confirmation, per-message memory is off. Judgement quality is untested against a real model. Later milestones are
+  not complete.
 - `memory_search` (text; global, project or both; 10 results per vault; archived and invalid-frontmatter notes
   excluded) shows vault, path, type, Don't forget and needs fixing. `memory_get` (vault and path) returns a note in
   full with its problems, a folder's index (`""` is the root), and reads `archive/`. The catalog is synchronized
@@ -88,7 +97,8 @@ Every milestone:
 - `/memory-doctor` (UI only) reports per vault: invalid notes with problems, blank notes, duplicate ids, leftover
   temporaries and folders over the notes-per-folder limit; then config problems and the chat model (registry and
   credentials, no network call). Embeddings are checked without network (configuration, API key, local model files);
-  the decision model shows "not used yet". It offers to complete each
+  the decision model gets one real local call to Laya (the endpoint must answer and say which model answered), and
+  Jev is checked by pi's registry and its API key, without a live call. It offers to complete each
   blank note (type, and a body when empty; existing text is kept as the body), applied only after confirmation.
 - `/memory-export` (UI only) asks for a folder (default: the working folder) and writes
   `memory-export-YYYY-MM-DD-HHmmss.zip` with `global/` and `project/`, holding every non-hidden, non-temporary file,
@@ -150,8 +160,8 @@ Every milestone:
   without the new key is invalid: session start lists the missing key with the fix "run /memory-setup". Re-running
   `/memory-setup` rewrites `config.json`: it keeps every valid value, adds every missing key with its default, and
   names each value it could not keep.
-- **Session start until the memory agent exists** (milestone 6) loads only Don't forget notes. Nothing is loaded for a
-  part that is not built.
+- **Session start** loads Don't forget notes in full, plus the relevant notes within `context.budgetChars` (milestone
+  6).
 - **Background capture.** Its model (`capture.model`) and when it runs (`capture.when`) are settings. The default model
   is the pi model in use when `/memory-setup` runs. The default moment is `after-each-turn`; the other values are
   `on-compaction` and `at-session-end`.
@@ -215,7 +225,7 @@ Every milestone:
       decision).
 - **Out of scope:** settings of later milestones (each adds its own); copying or moving notes between vaults; repeating
   the remote-provider disclosure at startup for hand-edited settings (config.md, Disclosure); done for embeddings
-  in milestone 5, still pending for Jev (6).
+  in milestone 5 and for Jev in 6.
 - **Depends on:** 0.
 - **Done when:**
   - in pi with no config, session start offers `/memory-setup` (smoke test, extending the registered-tool check);
@@ -384,25 +394,27 @@ Every milestone:
 
 - **Goal:** each user message brings only the memories it needs, and the prompt cache holds.
 - **Scope:** the rest of VISION 4.
-  - It starts by identifying Laya and Jev: the exact models, how each one is called, and what Laya needs locally. It
-    uses their published docs and asks the user only what the docs leave open.
-  - At session start, the memory agent also loads memories relevant to the project and folder, within
+  - [x] It starts by identifying Laya and Jev: the exact models, how each one is called, and what Laya needs locally.
+    It uses their published docs and asks the user only what the docs leave open.
+  - [x] At session start, the memory agent also loads memories relevant to the project and folder, within
     `context.budgetChars` (12,000 by default). Don't forget notes do not count against it.
-  - On each message, the decision model (`decisionModel`: Laya locally by default, or Jev by API) decides whether
+  - [x] On each message, the decision model (`decisionModel`: Laya locally by default, or Jev by API) decides whether
     memory is needed. The memory agent (`memoryAgent.model`, by default the pi model in use at setup) searches and
     reads, and the decision model re-ranks what it found.
-  - What is found is added at that point. Earlier messages are never rewritten. A loaded note that changed (Don't
+  - [x] What is found is added at that point. Earlier messages are never rewritten. A loaded note that changed (Don't
     forget included) is added again, marked as replacing the earlier one.
-  - `/memory-setup` warns that Jev sends user messages and candidate notes to TypeSafe.
+  - [x] `/memory-setup` warns that Jev sends user messages and candidate notes to TypeSafe, and the warning is
+    confirmed once per runtime before Jev is used.
+  - [x] Unavailable Laya or Jev adds nothing, tells the user once per session and never uses another model.
 - **Out of scope:** saving, updating or archiving (that is capture, 4).
 - **Depends on:** 5.
 - **Done when:**
-  - a message that needs no memory adds nothing;
-  - a related message adds only the re-ranked notes;
-  - earlier messages stay byte-identical;
-  - a loaded note edited in Obsidian comes back marked as replacing the earlier one;
-  - relevant memory at session start stays within the budget, and Don't forget notes do not count against it;
-  - choosing Jev shows the warning.
+  - [x] a message that needs no memory adds nothing;
+  - [x] a related message adds only the re-ranked notes;
+  - [x] earlier messages stay byte-identical;
+  - [x] a loaded note edited in Obsidian comes back marked as replacing the earlier one;
+  - [x] relevant memory at session start stays within the budget, and Don't forget notes do not count against it;
+  - [x] choosing Jev shows the warning.
 
 ### 7. `/memory-doctor`
 
@@ -414,8 +426,8 @@ Every milestone:
     - leftover temporary files;
     - folders above `limits.maxNotesPerFolder` notes (20 by default), suggesting a split.
   - [x] It shows the config's problems and checks the chat model (registry and credentials, no network call).
-  - [ ] Provider checks for embeddings (done, no network) and the decision model (shown as "not used yet" until
-    milestone 6).
+  - [x] Provider checks for embeddings (no network) and the decision model (one real local call to Laya; Jev by
+    registry and key).
   - [x] It offers to complete a blank note (new `id`, asks the type) and applies it only after the user confirms.
 - **Out of scope:** any other change. The doctor reports and suggests; it never rewrites, merges, moves or deletes.
 - **Depends on:** 2; its provider checks grow with 4–6. It can move earlier when needed.

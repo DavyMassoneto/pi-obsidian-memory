@@ -8,6 +8,7 @@ import {
   emptyEmbeddingProbe,
   expectRegistrationLeaseReleased,
   memoryReadTree,
+  NO_DECISION_PROBE,
   noteWithId,
   putBrokenVault,
   putCatalogFile,
@@ -26,7 +27,10 @@ test("the doctor changes nothing on disk, in either vault", async () => {
   await putCatalogFile(project, "Deploy.md", noteWithId(40, "Deploy.", []))
   const before = [await memoryReadTree(vault.path), await memoryReadTree(project.path)]
 
-  await diagnoseMemory({ port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe() }, context)
+  await diagnoseMemory(
+    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe(), decision: NO_DECISION_PROBE },
+    context,
+  )
 
   expect([await memoryReadTree(vault.path), await memoryReadTree(project.path)]).toEqual(before)
 })
@@ -37,7 +41,7 @@ test("both vaults are reported, a missing project vault is a problem for that va
   await rm(project.path, { recursive: true })
 
   const result = await diagnoseMemory(
-    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe() },
+    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe(), decision: NO_DECISION_PROBE },
     context,
   )
 
@@ -57,7 +61,7 @@ test("a folder with no registered project reports projectMissing and only the gl
   const { context, root } = await searchFixture()
 
   const result = await diagnoseMemory(
-    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe() },
+    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe(), decision: NO_DECISION_PROBE },
     { ...context, workingFolder: root },
   )
 
@@ -70,13 +74,14 @@ test("each configured chat model is checked against pi's registry and credential
   await writeRegistrationSnapshot(context, JSON.stringify({ ...config, memoryAgent }))
 
   const allGood = await diagnoseMemory(
-    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe() },
+    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe(), decision: NO_DECISION_PROBE },
     context,
   )
   const broken = await diagnoseMemory(
     {
       port: chatModelPort([{ provider: "test-chat", id: "selected-chat" }], ["test-chat/selected-chat"]),
       embeddings: await emptyEmbeddingProbe(),
+      decision: NO_DECISION_PROBE,
     },
     context,
   )
@@ -104,7 +109,7 @@ test("with no config the doctor reports the config problem", async () => {
   await rm(context.configPath)
 
   const result = await diagnoseMemory(
-    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe() },
+    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe(), decision: NO_DECISION_PROBE },
     context,
   )
 
@@ -116,7 +121,7 @@ test("the embeddings provider is checked and reported with the models", async ()
   const { context } = await searchFixture()
 
   const result = await diagnoseMemory(
-    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe() },
+    { port: chatModelPort(models, []), embeddings: await emptyEmbeddingProbe(), decision: NO_DECISION_PROBE },
     context,
   )
 

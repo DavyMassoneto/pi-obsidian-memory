@@ -3,6 +3,7 @@ import { vi } from "vitest"
 
 import type { AddedDetails, RegistryMessage } from "#src/pi"
 import { fakePiContext } from "./pi-context.ts"
+import type { TurnMessage } from "./types.ts"
 
 const STAMP = "2026-10-20T10:00:00.000Z"
 
@@ -63,4 +64,17 @@ export function contextReplying(reply: RegistryMessage | null) {
     return reply
   })
   return { context: { ...context, modelRegistry: { ...context.modelRegistry, complete } }, complete }
+}
+
+export function relevantEntry(id: string, message: TurnMessage): SessionEntry {
+  return {
+    type: "custom_message",
+    id,
+    parentId: null,
+    timestamp: STAMP,
+    customType: message.customType,
+    content: message.content,
+    display: message.display,
+    details: message.details,
+  }
 }

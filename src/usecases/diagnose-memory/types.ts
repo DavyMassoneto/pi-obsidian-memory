@@ -5,6 +5,7 @@ import type { MemoryResolutionRefusal } from "#src/usecases/resolve-memory"
 export interface DiagnoseMemoryRequest<TModel> {
   port: ChatModelPort<TModel>
   embeddings: EmbeddingProbe
+  decision: DecisionProbe
 }
 
 export interface BlankFile {
@@ -36,6 +37,7 @@ export interface DiagnosedMemory {
   maxNotesPerFolder: number
   models: ModelReport[]
   embeddings: EmbeddingReport
+  decision: DecisionReport
 }
 
 export type DiagnoseMemoryResult = Succeeded<DiagnosedMemory> | MemoryResolutionRefusal
@@ -59,3 +61,24 @@ export interface EmbeddingProblem {
 }
 
 export type EmbeddingReport = EmbeddingReady | EmbeddingProblem
+
+export interface DecisionProbe {
+  hasClassifier(provider: string, model: string): boolean
+  hasCredentials(provider: string): Promise<boolean>
+}
+
+export interface DecisionReady {
+  provider: string
+  model: string
+  status: "ready"
+  detail: string
+}
+
+export interface DecisionProblem {
+  provider: string
+  model: string
+  status: "model-missing" | "no-credentials" | "not-answering"
+  problem: string
+}
+
+export type DecisionReport = DecisionReady | DecisionProblem

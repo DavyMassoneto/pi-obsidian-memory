@@ -25,6 +25,14 @@ export type RegistryOptions = Parameters<ModelRegistry["complete"]>[2]
 
 export type RegistryMessage = Awaited<ReturnType<ModelRegistry["complete"]>>
 
+export type ClassifierModelRef = Parameters<ModelRegistry["classify"]>[0]
+
+export type ClassifierPrompt = Parameters<ModelRegistry["classify"]>[1]
+
+export type ClassifierOptions = Parameters<ModelRegistry["classify"]>[2]
+
+export type ClassifierOutcome = Awaited<ReturnType<ModelRegistry["classify"]>>
+
 export interface ModelAuthResolved {
   ok: true
 }
@@ -41,6 +49,8 @@ export interface AvailableModels {
   find(provider: string, modelId: string): ChatModelSource | undefined
   getApiKeyAndHeaders(model: ChatModelSource): Promise<ModelAuthResult>
   getApiKeyForProvider(provider: string): Promise<string | undefined>
+  findOfType(type: "classifier", provider: string, modelId: string): ClassifierModelRef | undefined
+  classify(model: ClassifierModelRef, prompt: ClassifierPrompt, options: ClassifierOptions): Promise<ClassifierOutcome>
   complete(model: ChatModelSource, context: RegistryContext, options: RegistryOptions): Promise<RegistryMessage>
 }
 

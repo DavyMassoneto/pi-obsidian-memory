@@ -12,10 +12,6 @@ export const COULD_NOT_CHECK = "could not be checked."
 
 export const DOCTOR_NO_PROJECT_VAULT = "No project vault is registered for this folder."
 
-export const NOT_USED_YET = "not used yet"
-
-export const UNUSED_PROVIDERS = ["decision model"]
-
 export const DOCTOR_INVALID_HEADING = "Invalid notes:"
 
 export const DUPLICATES_HEADING = "Copied ids:"

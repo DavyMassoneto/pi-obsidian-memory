@@ -6,6 +6,9 @@ export interface LoadedDontForgetNote {
   vault: MemoryScope
   path: string
   type: CatalogHit["type"]
+  id: string
+  hash: string
+  statement: string
   body: string
   problems: string[]
 }

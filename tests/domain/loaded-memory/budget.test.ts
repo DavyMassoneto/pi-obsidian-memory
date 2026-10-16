@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest"
 
 import { fitBudget, type LoadedNote, loadedNoteBlock } from "#src/domain"
 
-const alpha: LoadedNote = { path: "tools/Alpha.md", statement: "Alpha", body: "alpha body" }
-const beta: LoadedNote = { path: "tools/Beta.md", statement: "Beta", body: "beta body" }
-const gamma: LoadedNote = { path: "tools/Gamma.md", statement: "Gamma", body: "g" }
+const alpha: LoadedNote = { vault: "global", path: "tools/Alpha.md", type: "rule", body: "alpha body" }
+const beta: LoadedNote = { vault: "global", path: "tools/Beta.md", type: "rule", body: "beta body" }
+const gamma: LoadedNote = { vault: "global", path: "tools/Gamma.md", type: "rule", body: "g" }
 
 describe("fitBudget", () => {
   const alphaSize = loadedNoteBlock(alpha).length

@@ -39,7 +39,16 @@ export class CaptureRuntime {
     return pending
   }
 
-  async #run({ ctx, trigger }: PendingCapture): Promise<void> {
+  async #run(request: PendingCapture): Promise<void> {
+    try {
+      await this.#review(request)
+    } catch (error) {
+      if (!(error instanceof Error)) throw error
+      notifyFailure(request.ctx, "unexpected", [error.message])
+    }
+  }
+
+  async #review({ ctx, trigger }: PendingCapture): Promise<void> {
     const operation = this.#deps.sessions.captureOperation(ctx.cwd, this.#deps.paths)
     if (!operation) return
     const transcript = reviewableSince(ctx.sessionManager.getBranch())

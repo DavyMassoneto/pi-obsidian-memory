@@ -11,6 +11,7 @@ import {
   mentionsIn,
   piMemoryFixture,
   registerWithFakePi,
+  relevantTexts,
   searchResponses,
   semanticTexts,
   shippedSkillText,
@@ -67,6 +68,7 @@ test("registers the six tools, the four commands and the session events", () => 
   ])
   expect(events).toEqual([
     "session_start",
+    "before_agent_start",
     "before_agent_start",
     "tool_call",
     "agent_end",
@@ -126,7 +128,11 @@ test("no LLM-facing text names a command or tool that is not registered", async 
     { succeeded: false, reason: "not-found", problems },
   ]
   const constantTexts = Object.values(pi).filter(
-    (value) => typeof value === "string" && value !== pi.MEMORY_BLOCK_SECTION && value !== pi.CURSOR_TYPE,
+    (value) =>
+      typeof value === "string" &&
+      value !== pi.MEMORY_BLOCK_SECTION &&
+      value !== pi.CURSOR_TYPE &&
+      value !== pi.RELEVANT_MESSAGE_TYPE,
   )
   const texts = [
     ...[...tools, ...searchTools, ...getTools, ...updateTools, ...archiveTools, ...succeedTools].map((tool) =>
@@ -137,6 +143,7 @@ test("no LLM-facing text names a command or tool that is not registered", async 
     ...searchResponses().map((result) => textOf(respondToSearch(result))),
     ...getResponses().map((result) => textOf(respondToGet({ vault: "global", path: "p" }, result))),
     ...blockTexts(),
+    ...relevantTexts(),
     shippedSkillText(),
     await vaultRefusalText(),
     ...responses.map((r) => textOf(respondTo(r))),

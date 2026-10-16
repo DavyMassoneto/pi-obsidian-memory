@@ -13,7 +13,10 @@ import {
 } from "./constants.ts"
 
 export function renderMemoryBlock(result: LoadDontForgetResult): string | null {
-  if (!result.succeeded) return null
+  if (!result.succeeded) {
+    if (result.reason === "not-configured") return null
+    return renderLoadFailure(result.problems.join("; "))
+  }
   const notes = result.output.vaults.flatMap((vault) => vault.notes)
   const parts = [BLOCK_INTRO]
   if (notes.length === 0) parts.push(NO_DONT_FORGET)
@@ -34,6 +37,18 @@ function renderFailure(vault: DontForgetVault): string[] {
   return vault.problems.map((problem) => `${LOAD_FAILURE_PREFIX} ${vault.vault} ${LOAD_FAILURE_SUFFIX} ${problem}`)
 }
 
+export function loadNotices(result: LoadDontForgetResult): string[] {
+  if (!result.succeeded) {
+    if (result.reason === "not-configured") return []
+    return [renderLoadNotice(result.problems.join("; "))]
+  }
+  return result.output.vaults.flatMap(renderFailure)
+}
+
+export function renderLoadNotice(message: string): string {
+  return `${LOAD_ERROR_PREFIX} ${message}`
+}
+
 export function renderLoadFailure(message: string): string {
-  return [BLOCK_INTRO, `${LOAD_ERROR_PREFIX} ${message}`].join(BLOCK_SEPARATOR)
+  return [BLOCK_INTRO, renderLoadNotice(message)].join(BLOCK_SEPARATOR)
 }

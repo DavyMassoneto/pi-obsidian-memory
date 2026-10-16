@@ -47,6 +47,10 @@ function requestedCheckpoint(model: string): string | null {
   return name
 }
 
+function explicitlyRouted(reason: string, requested: string, checkpoint: string): boolean {
+  return reason === `explicit model='${requested}'` || reason === `explicit model='${checkpoint}'`
+}
+
 function interpretResponse(parsed: LayaResponse, request: LayaReadRequest): DecisionResult {
   const { question } = request
   const usage = parsed.usage
@@ -56,10 +60,11 @@ function interpretResponse(parsed: LayaResponse, request: LayaReadRequest): Deci
     reportedModel: null,
     usage: { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens },
   }
-  if (routing) diagnostics.reportedModel = routing.model
+  if (!routing) return { succeeded: false, code: "routing-missing", diagnostics }
+  diagnostics.reportedModel = routing.model
 
   const checkpoint = requestedCheckpoint(diagnostics.requestedModel)
-  if (!routing || routing.model !== checkpoint || routing.reason !== `explicit model='${checkpoint}'`) {
+  if (routing.model !== checkpoint || !explicitlyRouted(routing.reason, diagnostics.requestedModel, checkpoint)) {
     return { succeeded: false, code: "invalid-response", diagnostics }
   }
   if (usage.truncated || usage.state_tokens_dropped > 0 || usage.truncated_questions.length > 0) {

@@ -14,7 +14,7 @@ test("a clean vault says no problems were found, and the providers not in use ye
       "- capture p/m: ok",
       "- memory agent p/m: ok",
       "- embeddings local/Xenova/multilingual-e5-small: ready",
-      "- decision model: not used yet",
+      "- decision model typesafe/jev-latest: ready (model and API key found)",
     ].join("\n"),
   )
 })
@@ -98,4 +98,30 @@ test("an embeddings provider that is not ready shows its problem", () => {
   )
 
   expect(report).toContain("- embeddings openai/text-embedding-3-small: No API key for openai")
+})
+
+test("a decision model that answered says where, and a problem is named", () => {
+  const answered = renderDoctorReport(
+    diagnosedMemory({
+      decision: {
+        provider: "laya",
+        model: "multilingual",
+        status: "ready",
+        detail: "answered at http://127.0.0.1:8000",
+      },
+    }),
+  )
+  const problem = renderDoctorReport(
+    diagnosedMemory({
+      decision: {
+        provider: "typesafe",
+        model: "jev-latest",
+        status: "no-credentials",
+        problem: "No API key for typesafe",
+      },
+    }),
+  )
+
+  expect(answered).toContain("- decision model laya/multilingual: ready (answered at http://127.0.0.1:8000)")
+  expect(problem).toContain("- decision model typesafe/jev-latest: No API key for typesafe")
 })

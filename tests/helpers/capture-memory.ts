@@ -43,6 +43,17 @@ export async function captureFixture() {
   return changeFixture()
 }
 
+const RETRIEVAL_MARK = "Find memory relevant to query"
+
+function withoutRetrieval(capture: CompletionPort): CompletionPort {
+  return async (request) => {
+    if (request.system.includes(RETRIEVAL_MARK)) {
+      return { status: "completed", text: JSON.stringify({ action: "finish", notes: [] }) }
+    }
+    return capture(request)
+  }
+}
+
 export async function capturePiFixture(
   when: "after-each-turn" | "on-compaction" | "at-session-end",
   steps: ScriptStep[],
@@ -51,7 +62,7 @@ export async function capturePiFixture(
   const capture = { ...fixture.config.capture, when }
   await writeAgentConfig(fixture.configPath, JSON.stringify({ ...fixture.config, capture }))
   const complete = scriptedCompletion(steps)
-  const pi = registerFakePiAt(fixture.agentDir, {}, { completionOf: () => complete })
+  const pi = registerFakePiAt(fixture.agentDir, {}, { completionOf: () => withoutRetrieval(complete) })
   return { ...fixture, pi, complete }
 }
 
