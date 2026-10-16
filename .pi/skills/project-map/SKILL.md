@@ -12,8 +12,8 @@ description: Map of pi-obsidian-memory — areas and owners, interfaces between 
 | nucleo | `src/domain`, `src/shared`, `tests/domain` | Pure rules (note, config incl. `disclosures.ts`, `vault-access/`, names, vault-path, capture, lifecycle, catalogs, `*/dont-forget.ts`, `vault-diagnosis`, `vault-assets`); generic result types |
 | cofre | `src/services/vault`, `tests/services/vault` | Notes on disk: read/write/archive/relocate/list, bootstrap, catalog, folder indexes, `inspect-folder.ts`; seams `domain-rules.ts`, `folder-listing.ts`, `catalog/dont-forget.ts` |
 | indice | `src/services/{search-index,embeddings}` + tests | SQLite search index, reconcile/recovery, embedding providers; seams `search-index/{inspection,dont-forget,ranking}.ts` |
-| ponte | `src/services/{config,llm,decision-model,clock,id}`, `src/services/index.ts` + tests | Config I/O (`config/vault-access.ts` seam), LLM (`llm/domain-rules.ts` seam), decision model, clock, ids |
-| maestro | `src/usecases` (incl. `registration/`, `check-vault-access/`, `load-dont-forget/`, `memory-change/`, `semantic*/`, `diagnose-memory/`, `export-memory/`, `search-memory/`, `archive-memory/`, `succeed-memory/`, `update-memory/`, `complete-blank-memory/`), `src/pi` (incl. `registrar.ts`, `vault-guard/`, `memory-{setup,init,search,get,update,archive,succeed,doctor,export}`, `memory-block`, `semantic`, `change-report`, `registration-report`, `memory-session`, `session-start`, `context`), `tests/usecases`, `tests/pi` | Operation flows; pi tools/events/commands, vault guard, extension entry (`src/pi/extension.ts`) |
+| ponte | `src/services/{config,llm,decision-model,clock,id}`, `src/services/index.ts` + tests | Config I/O (`config/vault-access.ts` seam), LLM (`llm/domain-rules.ts` seam, `llm/limits.ts`), decision model (`laya.ts`, `jev.ts`), clock, ids |
+| maestro | `src/usecases` (incl. `registration/`, `check-vault-access/`, `load-dont-forget/`, `memory-change/`, `semantic*/`, `capture-memory/`, `relevant-memory/`, `operation-context/` (`limitOperation`), `diagnose-memory/`, `export-memory/`, `search-memory/`, `archive-memory/`, `succeed-memory/`, `update-memory/`, `complete-blank-memory/`), `src/pi` (incl. `registrar.ts`, `vault-guard/`, `memory-{setup,init,search,get,update,archive,succeed,doctor,export}`, `memory-block`, `semantic`, `change-report`, `registration-report`, `memory-session`, `session-start`, `context`, `capture`, `relevant-memory`), `tests/usecases`, `tests/pi` | Operation flows; pi tools/events/commands, vault guard, extension entry (`src/pi/extension.ts`) |
 | cartografo | `.pi/skills/project-map/SKILL.md` | Keeps this map |
 
 Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`, `tsconfig.json`, `vitest.config.ts`,
@@ -24,8 +24,8 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 - nucleo: `config.ts`, `settings.ts`, `types.ts` (only `LimitsInput`, used by config.ts), `registration.ts` (used by tests/services/config)
 - cofre: `vault.ts` (`keepGoing`, `nestedAliasVault`, `allowing`), `vault-catalog.ts`, `vault-exact.ts`, `vault-diagnosis.ts`, `folder-listing.ts`, `locked-file-contents.ts`, `windows-file-handle.ts`, `note.ts`, `limits.ts`, `temp-folder.ts`
 - indice: `search-index.ts`, `search-catalog.ts`, `search-vectors.ts`, `embeddings.ts`, `embedding-benchmark.ts`
-- ponte: `llm.ts`, `decision-model.ts`
-- maestro: `check-vault-access.ts`, `diagnose-memory.ts`, `export-memory.ts`, `memory.ts`, `memory-change.ts`, `memory-read.ts`, `operation-context.ts`, `registration-usecases.ts`, `search-memory.ts`, `semantic-memory.ts`, `session.ts`, `synchronize-memory.ts`, `pi.ts`, `pi-context.ts`, `pi-memory.ts`, `pi-prompt.ts`, `pi-registration.ts`, `pi-responses.ts`, `pi-smoke.ts`, `index.ts` (barrel)
+- ponte: `llm.ts`, `decision-model.ts`, `laya-script.ts`
+- maestro: `check-vault-access.ts`, `diagnose-memory.ts`, `export-memory.ts`, `memory.ts`, `memory-change.ts`, `memory-read.ts`, `operation-context.ts`, `registration-usecases.ts`, `search-memory.ts`, `semantic-memory.ts`, `session.ts`, `synchronize-memory.ts`, `pi.ts`, `pi-context.ts`, `pi-memory.ts`, `pi-prompt.ts`, `pi-registration.ts`, `pi-responses.ts`, `pi-smoke.ts`, `capture-memory.ts`, `capture-search.ts`, `relevant-fixtures.ts`, `relevant-memory.ts`, `relevant-pi.ts`, `relevant-texts.ts`, `session-entries.ts`, `pi-text.ts`, `index.ts` (barrel)
 - Owners are by topic (verify the first lines of a helper before editing it). `tests/helpers/memory.test.ts` is a test file in helpers, not exported by the barrel.
 - Test projects (`vitest.config.ts`, `maxWorkers: 8`): `unit` (`tests/**/*.test.ts` minus `*.smoke.test.ts`, `*.model.test.ts`); `pi` (`*.smoke.test.ts`, 30 s); `model` (`*.model.test.ts`, 600 s, `npm run test:model`, real models, only when asked).
 - Shared helpers (`note`, `temp-folder`, `settings`, `config`, `index`) are used across areas: others request additions via the orchestrator.
@@ -50,7 +50,7 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
   - resolve-memory: config snapshot + canonicalization, `targetVault`.
   - synchronize-memory: vault (`inspectVaultFile`, `observeVaultPath`, `refreshFolders`) + search-index (`reconcileCatalog`, `applyIndexChanges`, `readIndexInventory`).
   - session, operation-context: shared flow pieces used by the above.
-- Services consume domain types (note, catalog entry, config snapshot, `MemoryDraftSchema`, `MemoryScopeSchema`);
+- Services consume domain types (note, catalog entry, config snapshot, `MemoryDraftSchema`, `MemoryScopeSchema`, `ListedNoteSchema` (`domain/memory-agent`));
   results use `#src/shared` result types (`{ succeeded, output | problems }`).
 - pi: `src/pi/{memory-add,claude-code,paths,memory-setup,memory-init,session-start,registration-report,memory-session,context}` and `src/pi/registrar.ts` call usecases only; `src/pi/claude-code` sets `CLAUDE_CODE_DISABLE_AUTO_MEMORY`.
 
@@ -104,6 +104,10 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 - pi supports Node >= 22.19 and loads the extension through jiti; the real `pi` here runs on Node 22 (first `node`
   on PATH). Subpath aliases must be valid there: use `#src/<layer>`, never `#/`. `npm run test:pi` must pass on the
   default PATH node.
+- pi 1.3.0: `before_agent_start` is a union on `messageType`; `"user"` has `prompt`, `"custom"` starts have no prompt. Guard on `messageType` (`src/pi/relevant-memory/runtime.ts`).
+- TypeBox error texts must be built from error data, not from `messages`.
+- Lockfile was regenerated with Node 24 npm (after pi 1.3.0 bump).
+- Bound background recall/capture with `limitOperation` (`src/usecases/operation-context/deadline.ts`).
 
 ## Definition of done (every item)
 
