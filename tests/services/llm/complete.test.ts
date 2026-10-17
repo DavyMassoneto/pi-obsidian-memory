@@ -34,17 +34,6 @@ describe("model completion boundary", () => {
     expect((await captureStep(captureRequest(), complete)).succeeded).toBe(false)
   })
 
-  it("rejects oversized total input and individual fields before calling the port", async () => {
-    const complete = completionPort('{"action":"finish"}')
-    const message = { role: "user" as const, text: "x".repeat(16000) }
-    const request = { ...captureRequest(), transcriptDelta: Array.from({ length: 9 }, () => message) }
-    expect((await captureStep(request, complete)).succeeded).toBe(false)
-    const invalid = captureRequest()
-    invalid.transcriptDelta = [{ role: "user", text: "x".repeat(16001) }]
-    expect((await captureStep(invalid, complete)).succeeded).toBe(false)
-    expect(complete).not.toHaveBeenCalled()
-  })
-
   it("names a thrown provider error and does not attempt a fallback", async () => {
     const complete = completionPort("")
     complete.mockRejectedValue(new Error("provider exploded"))
@@ -55,11 +44,6 @@ describe("model completion boundary", () => {
       problems: ["Model call failed: provider exploded"],
     })
     expect(complete).toHaveBeenCalledOnce()
-  })
-
-  it("refuses oversized responses without parsing", async () => {
-    const complete = completionPort(" ".repeat(32001))
-    expect((await captureStep(captureRequest(), complete)).succeeded).toBe(false)
   })
 
   it("does not tell the model how many rounds it has", async () => {

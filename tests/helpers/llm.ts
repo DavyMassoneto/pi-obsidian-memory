@@ -27,6 +27,16 @@ export function retrievalRequest(): RetrievalRequest {
   return { model, signal, context, observations: [], query: "What is my token?" }
 }
 
+export function captureInputOf(overrides: Partial<CaptureRequest>) {
+  const { context, transcriptDelta, observations, explicitSaves, limits } = { ...captureRequest(), ...overrides }
+  return { context, transcriptDelta, observations, explicitSaves, limits }
+}
+
+export function retrievalInputOf(overrides: Partial<RetrievalRequest>) {
+  const { context, query, observations } = { ...retrievalRequest(), ...overrides }
+  return { context, query, observations }
+}
+
 export function completionPort(text: string) {
   return vi.fn<CompletionPort>().mockResolvedValue({ status: "completed", text })
 }

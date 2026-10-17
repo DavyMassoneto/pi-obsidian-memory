@@ -71,6 +71,6 @@ test("a window that keeps searching for many rounds is not cut off and ends when
     complete,
   )
 
-  expect(result).toMatchObject({ succeeded: true, output: { windows: 1, applied: [] } })
+  expect(result).toMatchObject({ succeeded: true, output: { reviewed: true, applied: [] } })
   expect(complete).toHaveBeenCalledTimes(13)
 })
