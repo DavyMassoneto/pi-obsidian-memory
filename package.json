@@ -38,6 +38,7 @@
     "test": "vitest run --project unit",
     "test:pi": "vitest run --project pi",
     "test:model": "vitest run --project model",
+    "test:e2e": "vitest run --project e2e",
     "typecheck": "tsc --noEmit"
   },
   "pi": {
