@@ -73,6 +73,10 @@ export function endOf(turn: RpcTurn, toolName: string): ToolEnd {
   return last
 }
 
+export function callsOf(turn: RpcTurn, toolName: string): number {
+  return turn.toolStarts.filter((start) => start.toolName === toolName).length
+}
+
 export function notifiedWith(turn: RpcTurn, prefix: string): string[] {
   return turn.notifications.filter((notice) => notice.message.startsWith(prefix)).map((notice) => notice.message)
 }

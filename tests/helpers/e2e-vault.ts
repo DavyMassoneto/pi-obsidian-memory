@@ -8,6 +8,12 @@ export interface VaultNote {
   text: string
 }
 
+export function idOf(noteText: string): string {
+  const line = noteText.match(ULID_LINE)
+  if (!line) throw new Error(`no id line in:\n${noteText}`)
+  return line[0]
+}
+
 export function localToday(): string {
   return new Date().toLocaleDateString("sv-SE")
 }
