@@ -98,14 +98,14 @@ export const REFUSED_SHELL_COMMANDS: LabelledShellCommand[] = [
   { shell: "bash", command: "cp src.txt copy.txt", expected: "copy_download", creates: ["copy.txt"], removes: [] },
   {
     shell: "bash",
-    command: "curl -o page.html https://example.com",
+    command: "curl -o page.html http://127.0.0.1:0/page.html",
     expected: "copy_download",
     creates: ["page.html"],
     removes: [],
   },
   {
     shell: "powershell",
-    command: "Invoke-WebRequest https://example.com -OutFile page.html",
+    command: "Invoke-WebRequest http://127.0.0.1:0/page.html -OutFile page.html",
     expected: "copy_download",
     creates: ["page.html"],
     removes: [],

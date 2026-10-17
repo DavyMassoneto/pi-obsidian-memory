@@ -104,6 +104,9 @@ export function registerFakePiAt(agentDir: string, overrides?: ExtensionOverride
       events.push("tool_call")
       toolCallHandlers.push(handler)
     },
+    onShellToolCall() {
+      events.push("tool_call")
+    },
     onSessionShutdown(handler) {
       events.push("session_shutdown")
       shutdownHandlers.push(handler)

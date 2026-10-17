@@ -40,6 +40,8 @@ export interface WorldOptions {
   credentials?: "pi-login" | "none"
   startIn?: "project" | "subfolder"
   session?: "in-memory" | "saved"
+  withoutTypesafeKey?: true
+  offlineNpm?: true
 }
 
 export interface WorldFolders {
@@ -123,7 +125,14 @@ async function startPi(folders: WorldFolders, options: WorldOptions): Promise<Rp
     agentDir: folders.agentDir,
     args: piArgs(options, authExtensions),
     credentials,
+    omitTypesafeKey: "withoutTypesafeKey" in options,
+    offlineNpmCache: offlineNpmCacheOf(folders, options),
   })
+}
+
+function offlineNpmCacheOf(folders: WorldFolders, options: WorldOptions): string | null {
+  if (options.offlineNpm) return join(folders.root, "npm-cache")
+  return null
 }
 
 function startFolderOf(folders: WorldFolders, options: WorldOptions): string {
