@@ -27,7 +27,7 @@ test.each([
   ["global", "Global memory", false],
 ] as const)("the registered execute maps %s scope and every draft field", async (scope, vaultName, dontForget) => {
   const { agentDir, configPath, projectFolder } = await setupRegisteredMemoryAdd()
-  const { tools, startSession } = registerFakePiAt(agentDir, {})
+  const { tools, startSession } = registerFakePiAt(agentDir)
   const tool = tools[0]
   if (!tool) {
     throw new Error("memory tool was not registered")
@@ -66,7 +66,7 @@ test.each([
 
 test("the registered execute translates refusals without hiding their cause", async () => {
   const { agentDir, unregisteredFolder } = await setupRegisteredMemoryAdd()
-  const { tools, startSession } = registerFakePiAt(agentDir, {})
+  const { tools, startSession } = registerFakePiAt(agentDir)
   const tool = tools[0]
   if (!tool) {
     throw new Error("memory tool was not registered")
@@ -83,7 +83,7 @@ test("the registered execute translates refusals without hiding their cause", as
 
 test("the tool says memory is not ready before a session started", async () => {
   const { agentDir, unregisteredFolder } = await setupRegisteredMemoryAdd()
-  const tool = registerFakePiAt(agentDir, {}).tools[0]
+  const tool = registerFakePiAt(agentDir).tools[0]
   if (!tool) throw new Error("memory tool was not registered")
 
   const response = await tool.execute("call-3", params, undefined, undefined, fakeToolContext(unregisteredFolder))

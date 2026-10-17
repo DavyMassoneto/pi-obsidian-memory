@@ -1,5 +1,6 @@
-import { expect, onTestFinished, test } from "vitest"
+import { expect, onTestFinished, test, vi } from "vitest"
 
+import type { CompletionPort } from "#src/services"
 import {
   decisionServer,
   eventually,
@@ -11,6 +12,7 @@ import {
   putCatalogFile,
   putDontForget,
   putNote,
+  registerFakePiAt,
   relevanceScript,
   relevantEntry,
   relevantPiFixture,
@@ -20,7 +22,7 @@ import {
 const PNPM = "tools/Use pnpm.md"
 
 const RANKED = relevanceScript(0.9, new Map())
-const BAD_STEP = getNote("tools/notes.txt")
+const failingCompletion = vi.fn<CompletionPort>(async () => ({ status: "error", error: "provider down" }))
 
 test("a Don't forget note in the section is watched: an edit later replaces it in the message, not in the section", async () => {
   const fixture = await relevantPiFixture({ laya: RANKED, session: [], turns: [] })
@@ -52,13 +54,14 @@ test("a Don't forget note that is archived in Obsidian is marked no longer valid
 })
 
 test("relevant notes that could not be loaded at session start are told once, and the section says so", async () => {
-  const fixture = await relevantPiFixture({ laya: RANKED, session: [BAD_STEP, BAD_STEP], turns: [] })
+  const fixture = await relevantPiFixture({ laya: RANKED, session: [], turns: [] })
+  const pi = registerFakePiAt(fixture.agentDir, { completionOf: () => failingCompletion })
   const { context, notifications } = fakePiContext(fixture.workingFolder, { hasUI: true })
 
-  await fixture.pi.startSession(context, "startup")
-  const first = await fixture.pi.runTurn(context, "hello")
-  await fixture.pi.startSession(context, "resume")
-  await fixture.pi.runTurn(context, "again")
+  await pi.startSession(context, "startup")
+  const first = await pi.runTurn(context, "hello")
+  await pi.startSession(context, "resume")
+  await pi.runTurn(context, "again")
 
   const section = String(first.sections.obsidian_memory)
   expect(section).toContain("could not be loaded")
@@ -68,12 +71,13 @@ test("relevant notes that could not be loaded at session start are told once, an
 })
 
 test("without a UI a failed session-start load is silent but the section still says so", async () => {
-  const fixture = await relevantPiFixture({ laya: RANKED, session: [BAD_STEP], turns: [] })
+  const fixture = await relevantPiFixture({ laya: RANKED, session: [], turns: [] })
+  const pi = registerFakePiAt(fixture.agentDir, { completionOf: () => failingCompletion })
   await putNote(fixture.vaults.global, "Use pnpm", 1, "Always pnpm.")
   const { context, notifications } = fakePiContext(fixture.workingFolder, { hasUI: false })
 
-  await fixture.pi.startSession(context, "startup")
-  const { sections } = await fixture.pi.runTurn(context, "hello")
+  await pi.startSession(context, "startup")
+  const { sections } = await pi.runTurn(context, "hello")
 
   expect(String(sections.obsidian_memory)).toContain("could not be loaded")
   expect(notifications).toEqual([])

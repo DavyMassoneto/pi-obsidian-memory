@@ -30,12 +30,6 @@ export interface CaptureRun {
   explicitSaves: ExplicitSave[]
 }
 
-export interface ClarifyLimits {
-  signal: AbortSignal
-}
-
-export type ClarifyPort = (question: string, limits: ClarifyLimits) => Promise<string | null>
-
 export interface AppliedWrite {
   operation: "add" | "update" | "archive" | "succeed"
   status: "applied" | "conflict" | "refused"
@@ -47,7 +41,6 @@ export interface AppliedWrite {
 export interface CaptureReport {
   windows: number
   applied: AppliedWrite[]
-  skipped: string[]
 }
 
 export interface CaptureFailure extends Failed {
@@ -58,7 +51,7 @@ export interface CaptureFailure extends Failed {
 export type CaptureMemoryResult = Succeeded<CaptureReport> | MemoryResolutionRefusal | CaptureFailure
 
 export interface NonWriteActions {
-  action: "search" | "get" | "list" | "clarify" | "finish"
+  action: "search" | "get" | "list" | "finish"
 }
 
 export type WriteAction = Exclude<CaptureAction, NonWriteActions>
@@ -76,7 +69,6 @@ export interface CaptureBase {
 export interface ReviewTools {
   context: MemoryOperationContext
   complete: CompletionPort
-  ask: ClarifyPort
   report: CaptureReport
 }
 

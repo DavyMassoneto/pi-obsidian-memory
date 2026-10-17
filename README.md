@@ -100,24 +100,21 @@ as it is on disk.
   session tells you. Setup steps are in [Running the decision model](docs/config.md#running-the-decision-model). If the decision model is unavailable nothing is added and you are told once per session;
   no other model takes over.
 - **Automatic capture.** A background review of the conversation saves, updates, archives and succeeds notes, at the
-  moment set by `capture.when`: `after-each-turn` (the default), `on-compaction` or `at-session-end`. It never asks whether to
-  save, nor about type, vault or folder; it asks you only when what you said is ambiguous and a wrong reading would
-  store something false, and without a UI it skips that item. Its
-  judgement quality is not yet proven against a real model.
+  moment set by `capture.when`: `after-each-turn` (the default), `on-compaction` or `at-session-end`. It never asks you anything:
+  what it is unsure of is not saved. Its judgement quality is not yet proven against a real model.
 - **Semantic search.** `memory_search` fuses words and meaning. The default is a local multilingual model (about
   135 MB), downloaded when needed, without asking; OpenAI and Google are the alternatives. The index lives outside the vaults and is rebuilt from the notes whenever needed.
 
 ### Vault guard
 
 The LLM reaches vault files only through the memory tools. The extension refuses `read`, `write`, `edit`, `grep`, `find`
-and `ls` on a vault, `bash`/`powershell` commands that write a vault path out, junctions and symlinks into a vault, and
-Claude Code sessions whose tools run through pi.
+and `ls` on a vault, `bash`/`powershell` commands that write a vault path out, and junctions and symlinks into a vault.
 You, and Obsidian, are not the LLM and stay free.
 
-Some routes cannot be closed from an extension and stay open pending a decision: hardlinks to a vault file, shell
-commands that reach a vault indirectly (variables, globs, scripts), the fail-soft path of pi-claude-bridge, tools of
-other extensions, and subagent sessions. The details and options are in
-[docs/ROADMAP.md](docs/ROADMAP.md#2-memory-the-agent-can-read).
+Accepted as they are (your decision, 2026-10-17): reading a vault through a path the shell builds indirectly
+(variables, globs, scripts), tools of other extensions, and foreground subagents, which load no extensions. Creating
+hardlinks through the shell will be refused by the shell-edit guard, still in progress. Details in
+[docs/ROADMAP.md](docs/ROADMAP.md#2-memory-the-agent-can-read-vault-access-only).
 
 ### Dashboard
 
@@ -133,8 +130,6 @@ Archive (file name, folder, type, Don't forget, updated). Your edits to it are k
   runtime, and no other provider ever takes the place of the one you chose.
 - Secrets are saved as written: the vault is yours, with no masking or blocking.
 - Credentials come from pi or the environment; `config.json` never holds a key.
-- While the extension is active, pi sets `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` for its own process, so Claude Code
-  sessions started by pi (pi-claude-bridge) do not keep a second memory.
 
 ## Development
 

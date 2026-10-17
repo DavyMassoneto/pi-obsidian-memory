@@ -1,4 +1,4 @@
-import { expect, test } from "vitest"
+import { expect, test, vi } from "vitest"
 
 import { loadSessionMemory } from "#src/usecases"
 import {
@@ -54,7 +54,7 @@ test("the memory agent is asked for the project and the folder", async () => {
 
 test("a memory agent that fails gives a text that says the notes could not be loaded, and one notice", async () => {
   const fixture = await relevantFixture({ laya: null })
-  const complete = retrievalCompletion([{ action: "get", vault: "global", path: "tools/notes.txt" }])
+  const complete = vi.fn(async () => ({ status: "error" as const, error: "provider down" }))
 
   const result = await loadSessionMemory(fixture.context, { complete, loaded: fixture.loaded })
 

@@ -61,7 +61,6 @@ export async function loadWithRegistrar(register: RegistrarSetup) {
 
 export async function loadIsolatedPi() {
   const isolatedAgentDir = await mkdtemp(join(tmpdir(), "pi-smoke-"))
-  const previousAutoMemory = process.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY
   const previousAgentDir = process.env.PI_CODING_AGENT_DIR
   process.env.PI_CODING_AGENT_DIR = isolatedAgentDir
   const loader = new DefaultResourceLoader({
@@ -93,7 +92,6 @@ export async function loadIsolatedPi() {
       startNotifications: notifications,
     }
   } finally {
-    restoreEnv("CLAUDE_CODE_DISABLE_AUTO_MEMORY", previousAutoMemory)
     restoreEnv("PI_CODING_AGENT_DIR", previousAgentDir)
     await rm(isolatedAgentDir, { recursive: true, force: true })
   }

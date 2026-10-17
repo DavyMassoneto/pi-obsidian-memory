@@ -61,7 +61,7 @@ test("a message still waiting for the memory agent keeps the status until the se
     }
     return new Promise<never>(() => undefined)
   })
-  const pi = registerFakePiAt(fixture.agentDir, {}, { completionOf: () => hangingTurns })
+  const pi = registerFakePiAt(fixture.agentDir, { completionOf: () => hangingTurns })
   const { context, statuses } = fakePiContext(fixture.workingFolder, { hasUI: true })
   await pi.startSession(context, "startup")
   await eventually(() => expect(statuses).toHaveLength(2))

@@ -1,13 +1,4 @@
-import type { Static } from "typebox"
-
-import type {
-  CaptureInput,
-  CaptureResult,
-  ChatModelReference,
-  ClarificationObservationSchema,
-  RetrievalInput,
-  RetrievalResult,
-} from "#src/domain"
+import type { CaptureInput, CaptureResult, ChatModelReference, RetrievalInput, RetrievalResult } from "#src/domain"
 import type { Failed, Succeeded } from "#src/shared"
 
 export interface ModelStepContext {
@@ -68,6 +59,7 @@ export type {
   ReadObservation,
   RetrievalAction,
   RetrievalInput,
+  RetrievalObservation,
   RetrievalResult,
 } from "#src/domain"
 
@@ -100,5 +92,3 @@ export interface ChatModelUnavailable {
 }
 
 export type ChatModelCheck = ChatModelAvailable | ChatModelUnavailable
-
-export type ClarificationObservation = Static<typeof ClarificationObservationSchema>

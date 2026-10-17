@@ -5,7 +5,6 @@ import { afterEach, expect, test, vi } from "vitest"
 
 import { captureMemory } from "#src/usecases"
 import {
-  answering,
   captureFixture,
   expectRegistrationLeaseReleased,
   memoryReadTree,
@@ -47,7 +46,6 @@ test("a stated preference becomes a global note on disk", async () => {
     { messages: userSays("I always use pnpm"), trigger: "after-each-turn", explicitSaves: [] },
     context,
     complete,
-    answering(null),
   )
 
   expect(result).toMatchObject({
@@ -88,7 +86,6 @@ test("an update keeps the note's id and sets updated to today", async () => {
     { messages: userSays("pnpm in CI too"), trigger: "after-each-turn", explicitSaves: [] },
     context,
     complete,
-    answering(null),
   )
 
   expect(result).toMatchObject({ succeeded: true, output: { applied: [{ operation: "update", status: "applied" }] } })
@@ -128,7 +125,6 @@ test("a succession archives the old note and links both ways", async () => {
     { messages: userSays("we moved to bun"), trigger: "after-each-turn", explicitSaves: [] },
     context,
     complete,
-    answering(null),
   )
 
   expect(result).toMatchObject({ succeeded: true, output: { applied: [{ operation: "succeed", status: "applied" }] } })
@@ -162,7 +158,6 @@ test("an add that repeats an explicit save is refused, the model is told why and
     },
     context,
     complete,
-    answering(null),
   )
 
   expect(result).toMatchObject({ succeeded: true, output: { applied: [] } })
@@ -195,7 +190,6 @@ test("a note edited in Obsidian while capture runs is a conflict and the user's 
     { messages: userSays("pnpm"), trigger: "after-each-turn", explicitSaves: [] },
     context,
     complete,
-    answering(null),
   )
 
   expect(result).toMatchObject({ succeeded: true, output: { applied: [{ operation: "update", status: "conflict" }] } })

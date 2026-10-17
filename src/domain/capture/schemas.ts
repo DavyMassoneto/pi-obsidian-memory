@@ -3,6 +3,7 @@ import Type from "typebox"
 import {
   AgentContextSchema,
   HashSchema,
+  MAX_REFUSAL_PROBLEMS,
   ObservationSchema,
   PathSchema,
   ReadActionSchema,
@@ -45,7 +46,6 @@ export const CaptureActionSchema = Type.Union([
     },
     { additionalProperties: false },
   ),
-  Type.Object({ action: Type.Literal("clarify"), question: TextSchema }, { additionalProperties: false }),
   Type.Object({ action: Type.Literal("finish") }, { additionalProperties: false }),
 ])
 
@@ -61,27 +61,11 @@ export const WriteObservationSchema = Type.Object(
   { additionalProperties: false },
 )
 
-export const ClarificationObservationSchema = Type.Object(
-  { kind: Type.Literal("clarification"), question: TextSchema, answer: Type.Union([TextSchema, Type.Null()]) },
-  { additionalProperties: false },
-)
-
 export const RefusedObservationSchema = Type.Object(
   {
     kind: Type.Literal("refused"),
-    action: Type.Enum([
-      "search",
-      "get",
-      "list",
-      "add",
-      "update",
-      "archive",
-      "succeed",
-      "clarify",
-      "finish",
-      "unparseable",
-    ]),
-    problems: Type.Array(TextSchema, { maxItems: 20 }),
+    action: Type.Enum(["search", "get", "list", "add", "update", "archive", "succeed", "finish", "unparseable"]),
+    problems: Type.Array(TextSchema, { maxItems: MAX_REFUSAL_PROBLEMS }),
   },
   { additionalProperties: false },
 )
@@ -89,7 +73,6 @@ export const RefusedObservationSchema = Type.Object(
 export const CaptureObservationSchema = Type.Union([
   ObservationSchema,
   WriteObservationSchema,
-  ClarificationObservationSchema,
   RefusedObservationSchema,
 ])
 
@@ -100,7 +83,7 @@ export const CaptureInputSchema = Type.Object(
       Type.Object({ role: Type.Enum(["user", "assistant"]), text: TextSchema }, { additionalProperties: false }),
       { minItems: 1, maxItems: maxTranscriptItems },
     ),
-    observations: Type.Array(CaptureObservationSchema, { maxItems: 20 }),
+    observations: Type.Array(CaptureObservationSchema),
     explicitSaves: Type.Array(ReadObservationSchema, { maxItems: 20 }),
     limits: Type.Object(
       { maxBodyChars: Type.Integer({ minimum: 1 }), maxStatementChars: Type.Integer({ minimum: 1 }) },

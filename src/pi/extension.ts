@@ -9,7 +9,6 @@ import {
   type CompletionFactory,
   registryCompletion,
 } from "#src/pi/capture"
-import { disableClaudeCodeAutoMemory } from "#src/pi/claude-code"
 import type { MemoryPaths } from "#src/pi/context"
 import { memoryAddTool } from "#src/pi/memory-add"
 import { memoryArchiveTool } from "#src/pi/memory-archive"
@@ -33,16 +32,14 @@ import { registrarFor } from "./registrar.ts"
 import type { ExtensionOverrides, ExtensionRegistrar } from "./types.ts"
 
 export default function extension(pi: ExtensionAPI): void {
-  registerExtension(registrarFor(pi), getAgentDir(), process.env)
+  registerExtension(registrarFor(pi), getAgentDir())
 }
 
 export function registerExtension(
   registrar: ExtensionRegistrar,
   agentDir: string,
-  env: NodeJS.ProcessEnv,
   overrides?: ExtensionOverrides,
 ): void {
-  disableClaudeCodeAutoMemory(env)
   const paths = { configPath: memoryConfigPath(agentDir), indexPath: memoryIndexPath(agentDir) }
   const semantic = new SemanticRuntime(memoryModelCachePath(agentDir), overrides?.localModel)
   const sessions = new MemorySessionKeeper(semantic)

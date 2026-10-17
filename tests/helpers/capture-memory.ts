@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { vi } from "vitest"
 
 import type { CaptureAction, CaptureInput, CompletionPort, CompletionRequest } from "#src/services"
-import type { CaptureRun, ClarifyPort } from "#src/usecases"
+import type { CaptureRun } from "#src/usecases"
 import { changeFixture } from "./memory-change.ts"
 import { registerFakePiAt } from "./pi.ts"
 import { piMemoryFixture } from "./pi-memory.ts"
@@ -25,14 +25,11 @@ export function scriptedCompletion(steps: ScriptStep[]) {
   return vi.fn<CompletionPort>(async (request) => {
     const step = remaining.shift()
     if (!step) return { status: "completed", text: JSON.stringify({ action: "finish" }) }
+    if (typeof step === "string") return { status: "completed", text: step }
     if (typeof step === "function")
       return { status: "completed", text: JSON.stringify(await step(capturedInput(request))) }
     return { status: "completed", text: JSON.stringify(step) }
   })
-}
-
-export function answering(answer: string | null) {
-  return vi.fn<ClarifyPort>(async () => answer)
 }
 
 export function userSays(text: string) {
@@ -62,9 +59,11 @@ export async function capturePiFixture(
   const capture = { ...fixture.config.capture, when }
   await writeAgentConfig(fixture.configPath, JSON.stringify({ ...fixture.config, capture }))
   const complete = scriptedCompletion(steps)
-  const pi = registerFakePiAt(fixture.agentDir, {}, { completionOf: () => withoutRetrieval(complete) })
+  const pi = registerFakePiAt(fixture.agentDir, { completionOf: () => withoutRetrieval(complete) })
   return { ...fixture, pi, complete }
 }
+
+export const CLARIFY_REPLY = JSON.stringify({ action: "clarify", question: "Global or project?" })
 
 export const PNPM_ADD: CaptureAction = {
   action: "add",

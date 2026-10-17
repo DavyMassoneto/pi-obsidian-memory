@@ -1,7 +1,7 @@
 import Type from "typebox"
 
 import { NoteIdSchema, NoteTypeSchema } from "#src/domain/note"
-import { maxTextChars } from "./constants.ts"
+import { MAX_REFUSAL_PROBLEMS, maxTextChars } from "./constants.ts"
 
 export const VaultSchema = Type.Enum(["global", "project"])
 export const PathSchema = Type.String({ maxLength: 1024 })
@@ -67,6 +67,17 @@ export const ObservationSchema = Type.Union([
   ),
 ])
 
+export const RetrievalRefusedSchema = Type.Object(
+  {
+    kind: Type.Literal("refused"),
+    action: Type.Literal("unparseable"),
+    problems: Type.Array(TextSchema, { maxItems: MAX_REFUSAL_PROBLEMS }),
+  },
+  { additionalProperties: false },
+)
+
+export const RetrievalObservationSchema = Type.Union([ObservationSchema, RetrievalRefusedSchema])
+
 export const ReadActionSchema = Type.Union([
   Type.Object(
     {
@@ -98,6 +109,10 @@ export const AgentContextSchema = Type.Object(
 )
 
 export const RetrievalInputSchema = Type.Object(
-  { context: AgentContextSchema, query: TextSchema, observations: Type.Array(ObservationSchema, { maxItems: 20 }) },
+  {
+    context: AgentContextSchema,
+    query: TextSchema,
+    observations: Type.Array(RetrievalObservationSchema),
+  },
   { additionalProperties: false },
 )

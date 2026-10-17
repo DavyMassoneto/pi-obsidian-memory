@@ -12,7 +12,7 @@ export async function piRegistrationFixture() {
   const configPath = memoryConfigPath(agentDir)
   const workingFolder = join(root, "work", "loja")
   await mkdir(workingFolder, { recursive: true })
-  const pi = registerFakePiAt(agentDir, {})
+  const pi = registerFakePiAt(agentDir)
   const globalVault = join(root, "Global memory")
   const config = { global: { vault: globalVault }, projects: [], ...productSettings() }
   return { root, agentDir, configPath, workingFolder, globalVault, config, pi }

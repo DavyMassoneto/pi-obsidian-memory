@@ -208,7 +208,7 @@ test("a run started by a custom message adds nothing and never starts retrieval"
 test("a failing provider adds nothing, costs one call per message, and is told once per session naming its error", async () => {
   const fixture = await relevantPiFixture({ laya: RANKED, session: [], turns: [] })
   const failing = vi.fn<CompletionPort>(async () => ({ status: "error", error: "provider down" }))
-  const pi = registerFakePiAt(fixture.agentDir, {}, { completionOf: () => failing })
+  const pi = registerFakePiAt(fixture.agentDir, { completionOf: () => failing })
   const { context, notifications } = fakePiContext(fixture.workingFolder, { hasUI: true })
   await pi.startSession(context, "startup")
   await eventually(() => expect(failing).toHaveBeenCalledTimes(1))

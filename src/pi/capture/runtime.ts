@@ -1,6 +1,6 @@
 import { type MemoryPiContext, STATUS_CAPTURING, withMemoryStatus } from "#src/pi/context"
-import { type ClarifyLimits, captureMemory } from "#src/usecases"
-import { ASK_PLACEHOLDER, CAPTURE_FAILED, CAPTURE_SAVED } from "./constants.ts"
+import { captureMemory } from "#src/usecases"
+import { CAPTURE_FAILED, CAPTURE_SAVED } from "./constants.ts"
 import { reviewableSince } from "./transcript.ts"
 import type { CaptureDeps, PendingCapture } from "./types.ts"
 
@@ -55,7 +55,7 @@ export class CaptureRuntime {
     if (transcript.messages.length === 0) return
     const run = { trigger, messages: transcript.messages, explicitSaves: transcript.explicitSaves }
     const result = await withMemoryStatus(ctx, STATUS_CAPTURING, () =>
-      captureMemory(run, operation, this.#deps.completionOf(ctx), (question, limits) => askUser(ctx, question, limits)),
+      captureMemory(run, operation, this.#deps.completionOf(ctx)),
     )
     if (!result.succeeded) return notifyFailure(ctx, result.reason, result.problems)
     if (result.output.windows > 0 && transcript.lastEntryId)
@@ -64,13 +64,6 @@ export class CaptureRuntime {
       ctx.ui.notify(`${CAPTURE_SAVED} ${result.output.applied.length} change(s).`, "info")
     }
   }
-}
-
-async function askUser(ctx: MemoryPiContext, question: string, limits: ClarifyLimits): Promise<string | null> {
-  if (!ctx.hasUI) return null
-  const answer = await ctx.ui.input(question, ASK_PLACEHOLDER, { signal: limits.signal })
-  if (typeof answer !== "string") return null
-  return answer
 }
 
 function notifyFailure(ctx: MemoryPiContext, reason: string, problems: string[]): void {

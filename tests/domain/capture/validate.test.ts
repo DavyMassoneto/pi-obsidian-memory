@@ -136,6 +136,11 @@ describe("parseCaptureAction", () => {
     expect(parseCaptureAction(JSON.stringify(action), captureRequest())).toEqual({ succeeded: true, output: action })
   })
 
+  it("refuses a clarify action as an unknown action: capture never asks the user", () => {
+    const action = { action: "clarify", question: "Global or project?" }
+    expect(parseCaptureAction(JSON.stringify(action), captureRequest()).succeeded).toBe(false)
+  })
+
   it("reports all configured text limits without truncation", () => {
     const input = { ...captureRequest(), limits: { maxBodyChars: 1, maxStatementChars: 1 } }
     const action = { action: "add", vault: "global", note: memoryDraft() }

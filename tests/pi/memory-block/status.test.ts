@@ -53,7 +53,7 @@ test("without a UI no status is set", async () => {
 test("a session-start load still waiting for the memory agent keeps the status until the session shuts down", async () => {
   const fixture = await piMemoryFixture()
   const hanging = vi.fn<CompletionPort>(() => new Promise<never>(() => undefined))
-  const pi = registerFakePiAt(fixture.agentDir, {}, { completionOf: () => hanging })
+  const pi = registerFakePiAt(fixture.agentDir, { completionOf: () => hanging })
   const { context, statuses } = fakePiContext(fixture.workingFolder, { hasUI: true })
 
   await pi.startSession(context, "startup")

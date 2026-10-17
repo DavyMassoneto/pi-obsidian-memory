@@ -14,6 +14,4 @@ export const CHANGED_SINCE_READ = "The note changed since it was read; read it a
 
 export const DIFFERENT_NOTE = "The note is not the one that was read (its id differs); read it again"
 
-export const MAX_REFUSAL_PROBLEMS = 20
-
 export const INTERRUPTED = "Capture was interrupted before it finished"

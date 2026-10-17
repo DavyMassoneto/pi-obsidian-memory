@@ -43,7 +43,6 @@ export interface FakePiContextOptions {
   available: ChatModelSource[]
   noCredentials: string[]
   apiKeys: string[]
-  hangingInputs: boolean
   classify: ClassifyFake | null
   branch: SessionEntry[]
   emptyApiKeys: string[]
@@ -75,7 +74,6 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
     available: [],
     noCredentials: [],
     apiKeys: [],
-    hangingInputs: false,
     classify: null,
     branch: [],
     emptyApiKeys: [],
@@ -137,7 +135,6 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
         let recorded: DialogOptions | null = null
         if (dialog) recorded = dialog
         prompts.push({ kind: "input", title, message, options: [], dialog: recorded })
-        if (inputs.length === 0 && options.hangingInputs) return unanswered(dialog)
         if (inputs.length === 0) throw new Error(`unexpected input: ${title}`)
         return inputs.shift()
       },
@@ -150,13 +147,6 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
     },
   }
   return { context, prompts, notifications, statuses }
-}
-
-export function unanswered(dialog: DialogOptions | undefined): Promise<string | undefined> {
-  return new Promise((resolve) => {
-    if (dialog?.signal?.aborted) return resolve(undefined)
-    dialog?.signal?.addEventListener("abort", () => resolve(undefined), { once: true })
-  })
 }
 
 export function jevClassifier(): ClassifyFake {

@@ -18,7 +18,9 @@ export type RegistrarSetup = (registrar: ExtensionRegistrar) => void
 
 export type StepFunction = (input: CaptureInput) => CaptureAction | Promise<CaptureAction>
 
-export type ScriptStep = CaptureAction | StepFunction
+export type RawReply = string
+
+export type ScriptStep = CaptureAction | StepFunction | RawReply
 export type Check = () => void | Promise<void>
 
 export interface LayaAsk {
