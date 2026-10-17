@@ -73,14 +73,10 @@ describe("embedGoogle", () => {
     }
   })
 
-  it("returns a typed deadline and abort; cancellation sends no request", async () => {
+  it("returns a typed abort; cancellation sends no request", async () => {
     const server = await embeddingServer([googleResponse()], 200, 100)
     try {
       const request = { purpose: "query", inputs: [{ key: "a", text: "one" }] } as const
-      expect(await embedGoogle({ ...remoteEmbeddingContext(server.endpoint), timeoutMs: 10 }, request)).toEqual({
-        succeeded: false,
-        status: "deadline",
-      })
       const controller = new AbortController()
       controller.abort()
       expect(

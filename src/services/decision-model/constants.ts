@@ -7,7 +7,6 @@ export const defaultLayaSettings = {
 } as const
 
 export const defaultJevModel = "jev-latest"
-export const decisionTimeoutMs = 30_000
 export const maxDecisionResponseBytes = 65_536
 
 export const modelVersionPattern = /^\d+(?:\.\d+)*$/

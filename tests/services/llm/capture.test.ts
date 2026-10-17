@@ -25,11 +25,27 @@ describe("captureStep", () => {
     expect(system).toContain(
       "Do not store tasks, TODOs, session logs, transcripts or facts already recorded by code or git history.",
     )
-    expect(system).toContain("When uncertain about whether it is memory,")
-    expect(system).toContain(
-      "the vault, folder or type, return clarify with a concrete question, never a guessed write.",
-    )
+    expect(system).toContain("never ask the user\nwhether to save, or about type, vault or folder.")
+    expect(system).toContain("Use clarify only for a hard question:")
+    expect(system).toContain("The question names the exact statement.")
+    expect(system).toContain("or a point belongs to a project with no registered vault, return finish without asking.")
     expect(system).toContain("without translating or masking secret strings.")
+  })
+
+  it("keeps notes to useful detail and reserves dontForget for what shapes every session", async () => {
+    const complete = completionPort('{"action":"finish"}')
+    await captureStep(captureRequest(), complete)
+    const system = complete.mock.calls[0]?.[0].system
+    expect(system).toContain("Keep the useful detail (exact values, commands, names, scope) and nothing else.")
+    expect(system).toContain("The body adds only what the note's name does not say; never repeat the name in the body.")
+    expect(system).toContain(
+      "A global note states the user's rule or fact in general terms: never a project's name, paths,\nfiles, commits or examples.",
+    )
+    expect(system).toContain("No incident stories, quotes, dates or task status: those are session logs.")
+    expect(system).toContain(
+      "Mark dontForget only for a rule or fact that must shape every session whatever the topic.",
+    )
+    expect(system).toContain("Everything else is found by search.")
   })
 
   it.each([

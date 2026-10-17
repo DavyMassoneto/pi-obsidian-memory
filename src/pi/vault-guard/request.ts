@@ -2,13 +2,13 @@ import { join } from "node:path"
 
 import { isToolCallEventType, type ToolCallEvent } from "@earendil-works/pi-coding-agent"
 
-import type { GuardRequest } from "#src/usecases"
+import type { VaultAccessRequest } from "#src/usecases"
 import { GLOB_METACHARACTERS } from "./constants.ts"
 
-export function accessRequestsOf(event: ToolCallEvent, cwd: string): GuardRequest[] {
+export function accessRequestsOf(event: ToolCallEvent, cwd: string): VaultAccessRequest[] {
   if (isToolCallEventType("read", event)) return [{ kind: "file", path: event.input.path }]
-  if (isToolCallEventType("write", event)) return writeRequests(event.input.path)
-  if (isToolCallEventType("edit", event)) return writeRequests(event.input.path)
+  if (isToolCallEventType("write", event)) return [{ kind: "file", path: event.input.path }]
+  if (isToolCallEventType("edit", event)) return [{ kind: "file", path: event.input.path }]
   if (isToolCallEventType("grep", event)) return searchRequests(event.input.path, event.input.glob, cwd)
   if (isToolCallEventType("find", event)) return searchRequests(event.input.path, event.input.pattern, cwd)
   if (isToolCallEventType("ls", event)) return [{ kind: "listing", path: pathOrFolder(event.input.path, cwd) }]
@@ -17,16 +17,9 @@ export function accessRequestsOf(event: ToolCallEvent, cwd: string): GuardReques
   return []
 }
 
-function writeRequests(path: string): GuardRequest[] {
-  return [
-    { kind: "file", path },
-    { kind: "config-write", path },
-  ]
-}
-
-function searchRequests(path: string | undefined, glob: string | undefined, cwd: string): GuardRequest[] {
+function searchRequests(path: string | undefined, glob: string | undefined, cwd: string): VaultAccessRequest[] {
   const root = pathOrFolder(path, cwd)
-  const requests: GuardRequest[] = [{ kind: "tree", path: root }]
+  const requests: VaultAccessRequest[] = [{ kind: "tree", path: root }]
   if (typeof glob !== "string") return requests
   const prefix = literalPrefix(glob)
   if (prefix === "") return requests

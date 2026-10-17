@@ -28,7 +28,7 @@ export const CUTOFF_SOURCES = new Map<string, string>([
   ["missing", "missing"],
 ])
 
-export const CUTOFFS_HINT = "set decisionModel.gateThreshold and relevanceThreshold, see docs/decision-thresholds.md"
+export const CUTOFFS_HINT = "set both cutoffs in /memory-setup, see docs/decision-thresholds.md"
 
 export const MODELS_HEADING = "Models:"
 

@@ -74,14 +74,14 @@ test("a decision that failed becomes a notice with its code", async () => {
   const fixture = await relevantFixture({ laya: relevanceScript(0.9, new Map()) })
   const context = await decisionContextOf(
     fixture.config.decisionModel,
-    { deadlineMs: Date.now() - 1, signal: fixture.context.signal },
+    { signal: AbortSignal.abort() },
     fixture.unavailable,
   )
   if (typeof context === "string") throw new Error(context)
 
   const result = await needsMemory(context, "message", null, "folder")
 
-  expect(decisionNotice(result)).toContain("deadline")
+  expect(decisionNotice(result)).toContain("aborted")
 })
 
 const SCORES = new Map([

@@ -3,23 +3,15 @@ export type { VaultAccessRequest } from "#src/services"
 import type { PathIdentity, VaultAccessRequest } from "#src/services"
 import type { Done, Failed } from "#src/shared"
 
-export interface ConfigWriteRequest {
-  kind: "config-write"
-  path: string
-}
-
-export type GuardRequest = VaultAccessRequest | ConfigWriteRequest
-
 export interface CheckVaultAccessInput {
   configPath: string
-  dataFolder: string
   cwd: string
   home: string
-  request: GuardRequest
+  request: VaultAccessRequest
 }
 
 export interface VaultAccessRefusal extends Failed {
-  reason: "vault-access" | "config-protected"
+  reason: "vault-access"
 }
 
 export type CheckVaultAccessResult = Done | VaultAccessRefusal

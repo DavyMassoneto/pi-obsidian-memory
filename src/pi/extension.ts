@@ -23,7 +23,7 @@ import { MemorySessionKeeper } from "#src/pi/memory-session"
 import { MEMORY_SETUP_COMMAND, memorySetupCommand } from "#src/pi/memory-setup"
 import { memorySucceedTool } from "#src/pi/memory-succeed"
 import { memoryUpdateTool } from "#src/pi/memory-update"
-import { memoryConfigPath, memoryDataFolder, memoryIndexPath, memoryModelCachePath } from "#src/pi/paths"
+import { memoryConfigPath, memoryIndexPath, memoryModelCachePath } from "#src/pi/paths"
 import { RelevantMemoryRuntime } from "#src/pi/relevant-memory"
 import { SemanticRuntime } from "#src/pi/semantic"
 import { sessionStartHandler } from "#src/pi/session-start"
@@ -55,7 +55,7 @@ export function registerExtension(
   registrar.onSessionStart(sessionStartHandler(paths, sessions, block, relevant))
   registrar.onBeforeAgentStart(block.beforeAgentStart())
   registrar.onBeforeAgentStart(relevant.beforeAgentStart())
-  registrar.onToolCall(vaultGuardHandler(paths.configPath, memoryDataFolder(agentDir), homedir()))
+  registrar.onToolCall(vaultGuardHandler(paths.configPath, homedir()))
   const capture = new CaptureRuntime({
     paths,
     sessions,

@@ -1,16 +1,18 @@
 import type { Static } from "typebox"
 
-import type { CaptureInput, ChatModelReference, ClarificationObservationSchema, RetrievalInput } from "#src/domain"
+import type {
+  CaptureInput,
+  CaptureResult,
+  ChatModelReference,
+  ClarificationObservationSchema,
+  RetrievalInput,
+  RetrievalResult,
+} from "#src/domain"
 import type { Failed, Succeeded } from "#src/shared"
 
-export interface CompletionTiming {
+export interface ModelStepContext {
   signal: AbortSignal
-  deadline: number
-}
-
-export interface ModelStepContext extends CompletionTiming {
   model: ChatModelReference
-  round: number
 }
 
 export interface CaptureRequest extends ModelStepContext, CaptureInput {}
@@ -21,10 +23,9 @@ export interface PromptContent {
   data: string
 }
 
-export interface CompletionRequest extends CompletionTiming, PromptContent {
+export interface CompletionRequest extends PromptContent {
+  signal: AbortSignal
   model: ChatModelReference
-  round: number
-  maxRounds: number
   maxTokens: number
 }
 
@@ -35,13 +36,21 @@ export interface CompletedResponse {
 
 export interface FailedResponse {
   status: "error" | "aborted" | "empty" | "unsupported"
+  error?: string
 }
 
 export type CompletionPort = (request: CompletionRequest) => Promise<CompletedResponse | FailedResponse>
-export type CompletionResult = Succeeded<string> | Failed
+export interface ModelCallFailure extends Failed {
+  modelCall: true
+}
+
+export type CompletionResult = Succeeded<string> | Failed | ModelCallFailure
+export type CaptureStepResult = CaptureResult | ModelCallFailure
+export type RetrievalStepResult = RetrievalResult | ModelCallFailure
 export type DisposeCompletion = () => void
 
-export interface CompletionLifetime extends CompletionTiming {
+export interface CompletionLifetime {
+  signal: AbortSignal
   stopped: Promise<FailedResponse>
   dispose: DisposeCompletion
 }

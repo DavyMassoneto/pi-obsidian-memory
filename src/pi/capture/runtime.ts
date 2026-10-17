@@ -1,4 +1,4 @@
-import type { MemoryPiContext } from "#src/pi/context"
+import { type MemoryPiContext, STATUS_CAPTURING, withMemoryStatus } from "#src/pi/context"
 import { type ClarifyLimits, captureMemory } from "#src/usecases"
 import { ASK_PLACEHOLDER, CAPTURE_FAILED, CAPTURE_SAVED } from "./constants.ts"
 import { reviewableSince } from "./transcript.ts"
@@ -54,8 +54,8 @@ export class CaptureRuntime {
     const transcript = reviewableSince(ctx.sessionManager.getBranch())
     if (transcript.messages.length === 0) return
     const run = { trigger, messages: transcript.messages, explicitSaves: transcript.explicitSaves }
-    const result = await captureMemory(run, operation, this.#deps.completionOf(ctx), (question, limits) =>
-      askUser(ctx, question, limits),
+    const result = await withMemoryStatus(ctx, STATUS_CAPTURING, () =>
+      captureMemory(run, operation, this.#deps.completionOf(ctx), (question, limits) => askUser(ctx, question, limits)),
     )
     if (!result.succeeded) return notifyFailure(ctx, result.reason, result.problems)
     if (result.output.windows > 0 && transcript.lastEntryId)
@@ -68,7 +68,7 @@ export class CaptureRuntime {
 
 async function askUser(ctx: MemoryPiContext, question: string, limits: ClarifyLimits): Promise<string | null> {
   if (!ctx.hasUI) return null
-  const answer = await ctx.ui.input(question, ASK_PLACEHOLDER, { timeout: limits.timeoutMs, signal: limits.signal })
+  const answer = await ctx.ui.input(question, ASK_PLACEHOLDER, { signal: limits.signal })
   if (typeof answer !== "string") return null
   return answer
 }

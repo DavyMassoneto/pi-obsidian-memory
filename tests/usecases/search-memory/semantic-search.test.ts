@@ -73,7 +73,7 @@ test("a query that cannot be embedded falls back to words and says so", async ()
     ...fixture.context,
     semantic: async () => ({
       available: true as const,
-      embed: async () => ({ succeeded: false as const, status: "deadline" as const }),
+      embed: async () => ({ succeeded: false as const, status: "unavailable" as const }),
     }),
   }
 

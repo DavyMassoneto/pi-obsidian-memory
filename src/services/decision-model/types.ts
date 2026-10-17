@@ -28,7 +28,6 @@ export type {
 } from "#src/domain"
 
 export interface DecisionLimits {
-  deadlineMs: number
   signal: AbortSignal
 }
 
@@ -95,7 +94,6 @@ export interface JevModelReference {
 
 export interface JevClassifyOptions {
   signal: AbortSignal
-  timeoutMs: number
   maxRetries: 0
 }
 
@@ -151,7 +149,6 @@ export interface ProviderCall {
   prompt: DecisionPrompt
   question: "needed" | "relevant"
   signal: AbortSignal
-  timeoutMs: number
   diagnostics: DecisionDiagnostics
 }
 
@@ -180,6 +177,6 @@ export interface LayaBatchCall {
 
 export type DecisionInterruption<Outcome> = (code: DecisionFailureCode) => Outcome
 
-export interface DeadlineOperation<Outcome> {
+export interface InterruptibleOperation<Outcome> {
   run(signal: AbortSignal): Promise<Outcome>
 }

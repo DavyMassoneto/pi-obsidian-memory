@@ -50,7 +50,7 @@ test("a query that cannot be embedded says results use words only", async () => 
   const { context } = await resolvedFixture()
   const failing = {
     available: true as const,
-    embed: async () => ({ succeeded: false as const, status: "deadline" as const }),
+    embed: async () => ({ succeeded: false as const, status: "unavailable" as const }),
   }
 
   const prepared = await prepareSemanticSearch(failing, "car", context)

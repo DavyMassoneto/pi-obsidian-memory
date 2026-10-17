@@ -39,15 +39,17 @@ only after project trust is granted). You can also add the source yourself:
 
 ## Quick start
 
-1. `/memory-setup` chooses where the global vault lives (create a new one or attach an existing folder), picks the chat
-   model (pi's current model by default), shows the warnings that apply and writes the config.
+1. `/memory-setup` chooses where the global vault lives (create a new one or attach an existing folder), asks which
+   chat model to use for capture (the model in use is the default) and for the memory agent (a small, cheap one is
+   enough; the list is sorted by price, cheapest first), shows the
+   warnings that apply and writes the config. Run again, it is the settings screen: every setting, and the projects,
+   one select at a time.
 2. In a project folder, `/memory-init` registers it with its own vault (created when missing). An unregistered folder
    gets the global vault only.
 
 Both commands need pi's UI. Until `/memory-setup` is done there is no memory, and session start says so. The config is
 `pi-obsidian-memory/config.json` in the pi agent directory, outside the vaults; every key is described in
-[docs/config.md](docs/config.md). Re-running a command points the config to another vault and leaves the old one as it
-was.
+[docs/config.md](docs/config.md). Nothing needs editing by hand. Changing a vault leaves the old one as it was.
 
 ## What works
 
@@ -73,7 +75,7 @@ refuse a note that changed on disk since (an edit you made in Obsidian is never 
 
 | Command | Does |
 |---|---|
-| `/memory-setup` | Chooses or attaches the global vault and writes the config |
+| `/memory-setup` | First setup (vault and models); afterwards the settings screen for every setting and the projects |
 | `/memory-init` | Registers the working folder as a project with its own vault |
 | `/memory-doctor` | Reports problems in the vaults and the config; offers to complete blank notes after you confirm |
 | `/memory-export` | Writes both vaults to a new `.zip` (never overwrites; refuses a folder inside a vault) |
@@ -98,8 +100,9 @@ as it is on disk.
   session tells you. Setup steps are in [Running the decision model](docs/config.md#running-the-decision-model). If the decision model is unavailable nothing is added and you are told once per session;
   no other model takes over.
 - **Automatic capture.** A background review of the conversation saves, updates, archives and succeeds notes, at the
-  moment set by `capture.when`: `after-each-turn` (the default), `on-compaction` or `at-session-end`. When it is unsure
-  of the vault, the folder, the type or whether something is memory, it asks you; without a UI it saves nothing. Its
+  moment set by `capture.when`: `after-each-turn` (the default), `on-compaction` or `at-session-end`. It never asks whether to
+  save, nor about type, vault or folder; it asks you only when what you said is ambiguous and a wrong reading would
+  store something false, and without a UI it skips that item. Its
   judgement quality is not yet proven against a real model.
 - **Semantic search.** `memory_search` fuses words and meaning. The default is a local multilingual model (about
   135 MB), downloaded when needed, without asking; OpenAI and Google are the alternatives. The index lives outside the vaults and is rebuilt from the notes whenever needed.
@@ -108,7 +111,7 @@ as it is on disk.
 
 The LLM reaches vault files only through the memory tools. The extension refuses `read`, `write`, `edit`, `grep`, `find`
 and `ls` on a vault, `bash`/`powershell` commands that write a vault path out, junctions and symlinks into a vault, and
-Claude Code sessions whose tools run through pi. It also refuses writes to the memory data folder (config and index).
+Claude Code sessions whose tools run through pi.
 You, and Obsidian, are not the LLM and stay free.
 
 Some routes cannot be closed from an extension and stay open pending a decision: hardlinks to a vault file, shell

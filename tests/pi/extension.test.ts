@@ -9,6 +9,7 @@ import {
   changeTexts,
   getResponses,
   mentionsIn,
+  PI_BUILTIN_COMMANDS,
   piMemoryFixture,
   registerWithFakePi,
   relevantTexts,
@@ -149,7 +150,7 @@ test("no LLM-facing text names a command or tool that is not registered", async 
     ...responses.map((r) => textOf(respondTo(r))),
     ...constantTexts,
   ]
-  const names = [...registered, ...commands, ...commands.map((name) => `/${name}`)]
+  const names = [...registered, ...commands, ...commands.map((name) => `/${name}`), ...PI_BUILTIN_COMMANDS]
 
   expect(mentionsIn(texts).length).toBeGreaterThan(0)
   expect(unregisteredMentions(texts, names)).toEqual([])

@@ -9,15 +9,16 @@ import {
   fakePiContext,
   fakeToolContext,
   piRegistrationFixture,
+  repairContext,
+  SCREEN,
+  setupContext,
   textOf,
   writeAgentConfig,
 } from "#test-helpers"
 
-test("setup writes every key, creates the vault with templates and memory_add then saves into it", async () => {
+test("first setup writes every key, creates the vault with templates and memory_add then saves into it", async () => {
   const { pi, configPath, config, workingFolder, globalVault } = await piRegistrationFixture()
-  const { context, notifications } = fakePiContext(workingFolder, {
-    answers: { selects: [SETUP_CREATE_OPTION], inputs: [globalVault] },
-  })
+  const { context, notifications } = setupContext(workingFolder, [SETUP_CREATE_OPTION], { inputs: [globalVault] })
 
   await pi.runCommand("memory-setup", context)
 
@@ -30,6 +31,7 @@ test("setup writes every key, creates the vault with templates and memory_add th
     { message: expect.stringContaining("chat model"), type: "warning" },
     { message: expect.stringContaining(globalVault), type: "info" },
   ])
+  expect(notifications[1]?.message).toContain("/reload")
   const saved = await pi.tools[0]?.execute(
     "call-1",
     { scope: "global", folder: "tools", statement: "Use pnpm", type: "lesson", body: "Always.", dontForget: false },
@@ -41,38 +43,27 @@ test("setup writes every key, creates the vault with templates and memory_add th
   expect(await readdir(join(globalVault, "tools"))).toContain("Use pnpm.md")
 })
 
-test("the disclosure is a plain warning that names chat models and Jev (the default), and also remote embeddings when chosen", async () => {
-  const plain = await piRegistrationFixture()
-  const plainContext = fakePiContext(plain.workingFolder, {
-    answers: { selects: [SETUP_CREATE_OPTION], inputs: [plain.globalVault] },
+test("the first-setup disclosure is a plain warning that names chat models and Jev, with no question", async () => {
+  const { pi, workingFolder, globalVault } = await piRegistrationFixture()
+  const { context, notifications, prompts } = setupContext(workingFolder, [SETUP_CREATE_OPTION], {
+    inputs: [globalVault],
   })
-  await plain.pi.runCommand("memory-setup", plainContext.context)
-  const plainWarning = plainContext.notifications.find((item) => item.type === "warning")
-  expect(plainWarning?.message).toContain("chat model")
-  expect(plainWarning?.message).toContain("TypeSafe")
-  expect(plainWarning?.message).not.toContain("secrets")
-  expect(plainContext.prompts.filter((prompt) => prompt.kind === "confirm")).toEqual([])
 
-  const remote = await piRegistrationFixture()
-  await mkdir(remote.globalVault)
-  await writeAgentConfig(remote.configPath, JSON.stringify({ ...remote.config, ...customizedSettings() }))
-  const remoteContext = fakePiContext(remote.workingFolder, {
-    answers: { selects: [SETUP_ATTACH_OPTION], inputs: [""] },
-  })
-  await remote.pi.runCommand("memory-setup", remoteContext.context)
-  const remoteWarning = remoteContext.notifications.find((item) => item.type === "warning")
-  expect(remoteWarning?.message).toContain("chat model")
-  expect(remoteWarning?.message).toContain("TypeSafe")
-  expect(remoteWarning?.message).toContain("secrets")
-  expect(remoteContext.prompts.filter((prompt) => prompt.kind === "confirm")).toEqual([])
+  await pi.runCommand("memory-setup", context)
+
+  const warning = notifications.find((item) => item.type === "warning")
+  expect(warning?.message).toContain("chat model")
+  expect(warning?.message).toContain("TypeSafe")
+  expect(warning?.message).not.toContain("secrets")
+  expect(prompts.filter((prompt) => prompt.kind === "confirm")).toEqual([])
 })
 
 test.each([
-  ["the mode question", () => ({ selects: [undefined], inputs: [], confirms: [] })],
-  ["the vault question", () => ({ selects: [SETUP_CREATE_OPTION], inputs: [undefined], confirms: [] })],
-])("cancelling at %s writes nothing", async (_question, answersFor) => {
+  ["the mode question", [undefined], []],
+  ["the vault question", [SETUP_CREATE_OPTION], [undefined]],
+])("cancelling at %s writes nothing", async (_question, selects, inputs) => {
   const { pi, configPath, workingFolder, root } = await piRegistrationFixture()
-  const { context, notifications } = fakePiContext(workingFolder, { answers: answersFor() })
+  const { context, notifications } = setupContext(workingFolder, selects, { inputs })
 
   await pi.runCommand("memory-setup", context)
 
@@ -93,36 +84,36 @@ test("without a UI nothing is asked, written or notified", async () => {
   expect(await readdir(root)).toEqual(["work"])
 })
 
-test("a re-run attaches the current vault by default, keeps valid settings, and adds a missing key", async () => {
+test("a config missing a key is repaired: valid settings stay, the missing key is added after confirmation", async () => {
   const { pi, configPath, config, globalVault, workingFolder } = await piRegistrationFixture()
   await mkdir(globalVault)
   await writeFile(join(globalVault, "keep.md"), "old note")
   const { context: omitted, ...withoutContext } = { ...config, ...customizedSettings() }
   await writeAgentConfig(configPath, JSON.stringify(withoutContext))
-  const { context, prompts } = fakePiContext(workingFolder, {
-    model: { provider: "other", id: "other-model" },
-    answers: { selects: [SETUP_ATTACH_OPTION], inputs: [""], confirms: [true, true] },
+  const { context, prompts } = repairContext(workingFolder, [SETUP_ATTACH_OPTION], {
+    inputs: [""],
+    confirms: [true],
   })
 
   await pi.runCommand("memory-setup", context)
 
   expect(omitted).toBeDefined()
   expect(JSON.parse(await readFile(configPath, "utf8"))).toEqual({ ...withoutContext, context: { budgetChars: 12000 } })
-  expect(prompts.find((prompt) => prompt.kind === "select")?.options[0]).toBe(SETUP_ATTACH_OPTION)
+  expect(prompts.filter((prompt) => prompt.kind === "select")[2]?.options[0]).toBe(SETUP_ATTACH_OPTION)
   expect(prompts.find((prompt) => prompt.kind === "input")?.message).toBe(globalVault)
   expect(prompts.find((prompt) => prompt.kind === "confirm")?.message).toContain("context")
   expect(await readFile(join(globalVault, "keep.md"), "utf8")).toBe("old note")
 })
 
-test("a re-run can point to a new vault and leaves the old one untouched", async () => {
+test("the settings screen can point the global vault to a new one and leaves the old one untouched", async () => {
   const { pi, configPath, config, globalVault, workingFolder, root } = await piRegistrationFixture()
   await mkdir(globalVault)
   const oldBytes = Buffer.from([0, 255, 13, 10])
   await writeFile(join(globalVault, "keep.md"), oldBytes)
   await writeAgentConfig(configPath, JSON.stringify(config))
   const newVault = join(root, "New vault")
-  const { context } = fakePiContext(workingFolder, {
-    answers: { selects: [SETUP_CREATE_OPTION], inputs: [newVault], confirms: [true] },
+  const { context, notifications } = fakePiContext(workingFolder, {
+    answers: { selects: [`Global vault: ${globalVault}`, SETUP_CREATE_OPTION, SCREEN.done], inputs: [newVault] },
   })
 
   await pi.runCommand("memory-setup", context)
@@ -130,27 +121,12 @@ test("a re-run can point to a new vault and leaves the old one untouched", async
   expect(JSON.parse(await readFile(configPath, "utf8"))).toEqual({ ...config, global: { vault: newVault } })
   expect(await readdir(globalVault)).toEqual(["keep.md"])
   expect(await readFile(join(globalVault, "keep.md"))).toEqual(oldBytes)
-  expect(await readdir(newVault)).toContain("_templates")
+  expect((await readdir(newVault)).sort()).toEqual(["Memory.base", "_templates"])
+  expect(await readdir(join(newVault, "_templates"))).toHaveLength(12)
+  expect(notifications.at(-1)?.message).toContain("/reload")
 })
 
-test("without a current model the user picks one of the available models", async () => {
-  const chosen = { provider: "picked", id: "picked-model" }
-  const { pi, configPath, globalVault, workingFolder } = await piRegistrationFixture()
-  const { context, prompts } = fakePiContext(workingFolder, {
-    model: undefined,
-    available: [{ provider: "x", id: "y" }, chosen],
-    answers: { selects: ["picked/picked-model", SETUP_CREATE_OPTION], inputs: [globalVault], confirms: [true] },
-  })
-
-  await pi.runCommand("memory-setup", context)
-
-  const written = JSON.parse(await readFile(configPath, "utf8"))
-  expect(written.capture.model).toEqual(chosen)
-  expect(written.memoryAgent.model).toEqual(chosen)
-  expect(prompts[0]?.options).toEqual(["x/y", "picked/picked-model"])
-})
-
-test("without a current model and none available, setup is refused", async () => {
+test("on a first run with no model available and none configured, setup is refused", async () => {
   const { pi, configPath, workingFolder } = await piRegistrationFixture()
   const { context, notifications } = fakePiContext(workingFolder, { model: undefined, available: [] })
 
@@ -170,9 +146,7 @@ test("a config that is not JSON is replaced only after confirmation", async () =
   expect(await readFile(configPath, "utf8")).toBe("{malformed")
   expect(declined.prompts[0]?.message).toContain("replaced")
 
-  const accepted = fakePiContext(workingFolder, {
-    answers: { selects: [SETUP_CREATE_OPTION], inputs: [globalVault], confirms: [true, true] },
-  })
+  const accepted = setupContext(workingFolder, [SETUP_CREATE_OPTION], { inputs: [globalVault], confirms: [true] })
   await pi.runCommand("memory-setup", accepted.context)
   expect(JSON.parse(await readFile(configPath, "utf8")).global).toEqual({ vault: globalVault })
 })
@@ -181,9 +155,7 @@ test("creating over a folder with files is refused and nothing changes", async (
   const { pi, configPath, globalVault, workingFolder } = await piRegistrationFixture()
   await mkdir(globalVault)
   await writeFile(join(globalVault, "mine.md"), "x")
-  const { context, notifications } = fakePiContext(workingFolder, {
-    answers: { selects: [SETUP_CREATE_OPTION], inputs: [globalVault] },
-  })
+  const { context, notifications } = setupContext(workingFolder, [SETUP_CREATE_OPTION], { inputs: [globalVault] })
 
   await pi.runCommand("memory-setup", context)
 
@@ -192,7 +164,7 @@ test("creating over a folder with files is refused and nothing changes", async (
   expect(notifications).toEqual([{ message: expect.stringContaining("attach"), type: "error" }])
 })
 
-test("a vault inside a registered project vault is refused and the config stays as it was", async () => {
+test("a vault inside a registered project vault is refused from the screen and the config stays as it was", async () => {
   const { pi, configPath, config, globalVault, workingFolder, root } = await piRegistrationFixture()
   const projectVault = join(root, "loja-vault")
   const registered = { ...config, projects: [{ name: "loja", folder: workingFolder, vault: projectVault }] }
@@ -201,7 +173,10 @@ test("a vault inside a registered project vault is refused and the config stays 
   await writeAgentConfig(configPath, JSON.stringify(registered))
   const before = await readFile(configPath, "utf8")
   const { context, notifications } = fakePiContext(workingFolder, {
-    answers: { selects: [SETUP_CREATE_OPTION], inputs: [join(projectVault, "inner")], confirms: [true] },
+    answers: {
+      selects: [`Global vault: ${globalVault}`, SETUP_CREATE_OPTION, SCREEN.done],
+      inputs: [join(projectVault, "inner")],
+    },
   })
 
   await pi.runCommand("memory-setup", context)
@@ -215,9 +190,7 @@ test("a vault inside a registered project vault is refused and the config stays 
 test("shutting the session down while a question is open stops the setup before it writes", async () => {
   const { pi, configPath, globalVault, workingFolder, root } = await piRegistrationFixture()
   const answer = Promise.withResolvers<string | undefined>()
-  const { context, prompts } = fakePiContext(workingFolder, {
-    answers: { selects: [SETUP_CREATE_OPTION], inputs: [answer.promise], confirms: [] },
-  })
+  const { context, prompts } = setupContext(workingFolder, [SETUP_CREATE_OPTION], { inputs: [answer.promise] })
   await pi.startSession(context, "startup")
 
   const running = pi.runCommand("memory-setup", context)
@@ -228,4 +201,17 @@ test("shutting the session down while a question is open stops the setup before 
 
   await expect(readFile(configPath)).rejects.toMatchObject({ code: "ENOENT" })
   expect(await readdir(root)).not.toContain("Global memory")
+})
+
+test("the attach option is still offered first when a vault is already configured", async () => {
+  const { pi, configPath, config, globalVault, workingFolder } = await piRegistrationFixture()
+  await mkdir(globalVault)
+  await writeAgentConfig(configPath, JSON.stringify(config))
+  const { context, prompts } = fakePiContext(workingFolder, {
+    answers: { selects: [`Global vault: ${globalVault}`, undefined, SCREEN.done], inputs: [] },
+  })
+
+  await pi.runCommand("memory-setup", context)
+
+  expect(prompts.filter((prompt) => prompt.kind === "select")[1]?.options[0]).toBe(SETUP_ATTACH_OPTION)
 })

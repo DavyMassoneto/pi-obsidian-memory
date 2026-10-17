@@ -1,34 +1,36 @@
-import type { ChatModelSource, MemoryCommand, MemoryPaths, MemoryPiContext } from "#src/pi/context"
+import type { MemoryCommand, MemoryPaths, MemoryPiContext } from "#src/pi/context"
 import type { MemorySessionKeeper } from "#src/pi/memory-session"
+import { type CurrentModel, chooseModel, RELOAD_NOTE, runSettingsScreen } from "#src/pi/memory-settings"
 import { describeRegistered, describeRegistrationFailure } from "#src/pi/registration-report"
 import {
-  type ChatModelReference,
   type ConfigRepairDraft,
+  prepareMemorySettings,
   prepareMemorySetup,
   proposeMemorySetup,
   type RegistrationContext,
   type SetupPreparation,
   type SetupVaultMode,
   setupMemory,
-  setupNeedsModel,
 } from "#src/usecases"
 import {
   MEMORY_SETUP_DESCRIPTION,
   REPAIR_CONFIRM_LINE,
   REPAIR_TITLE,
   REPLACE_LINE,
+  SETUP_AGENT_MODEL_TITLE,
   SETUP_ATTACH_OPTION,
   SETUP_CANCELLED,
+  SETUP_CAPTURE_MODEL_TITLE,
   SETUP_CREATE_OPTION,
   SETUP_DONE,
   SETUP_KEEP_VAULT_TITLE,
   SETUP_MODE_TITLE,
-  SETUP_MODEL_TITLE,
   SETUP_NO_MODEL,
   SETUP_VAULT_PLACEHOLDER,
   SETUP_VAULT_TITLE,
 } from "./constants.ts"
 import { disclosureText } from "./disclosure.ts"
+import type { VaultStep } from "./types.ts"
 
 export function memorySetupCommand(paths: MemoryPaths, sessions: MemorySessionKeeper): MemoryCommand {
   return {
@@ -42,10 +44,36 @@ export function memorySetupCommand(paths: MemoryPaths, sessions: MemorySessionKe
 }
 
 async function runMemorySetup(ctx: MemoryPiContext, registration: RegistrationContext): Promise<void> {
-  const preparation = await prepareWithModel(ctx, registration)
+  const settings = await prepareMemorySettings(registration)
+  if (settings.succeeded) {
+    await runSettingsScreen(ctx, { registration, changeGlobalVault: (context) => changeVault(ctx, context) })
+    return
+  }
+  await runFirstSetup(ctx, registration)
+}
+
+async function runFirstSetup(ctx: MemoryPiContext, registration: RegistrationContext): Promise<void> {
+  const preparation = await prepareSetup(ctx, registration)
   if (!preparation) return
+  if (!(await confirmRepair(ctx, preparation.draft))) return cancelled(ctx)
+  if (noModelToChoose(ctx, preparation.draft)) return
+  const draft = await chooseModels(ctx, preparation.draft)
+  if (!draft) return cancelled(ctx)
+  await commitVault(ctx, registration, { snapshot: preparation.snapshot, draft })
+}
+
+async function changeVault(ctx: MemoryPiContext, registration: RegistrationContext): Promise<void> {
+  const preparation = await prepareSetup(ctx, registration)
+  if (!preparation) return
+  await commitVault(ctx, registration, preparation)
+}
+
+async function commitVault(
+  ctx: MemoryPiContext,
+  registration: RegistrationContext,
+  preparation: VaultStep,
+): Promise<void> {
   const { snapshot, draft } = preparation
-  if (!(await confirmRepair(ctx, draft))) return cancelled(ctx)
   const mode = await askMode(ctx, draft)
   if (!mode) return cancelled(ctx)
   const vault = await askVault(ctx, draft)
@@ -62,23 +90,16 @@ async function runMemorySetup(ctx: MemoryPiContext, registration: RegistrationCo
     registration,
   )
   if (!result.succeeded) return ctx.ui.notify(describeRegistrationFailure(result), "error")
-  ctx.ui.notify(describeRegistered(`${SETUP_DONE} ${proposal.output.config.global.vault}`, result.output), "info")
+  const saved = describeRegistered(`${SETUP_DONE} ${proposal.output.config.global.vault}`, result.output)
+  ctx.ui.notify(`${saved}\n${RELOAD_NOTE}`, "info")
 }
 
 function cancelled(ctx: MemoryPiContext): void {
   ctx.ui.notify(SETUP_CANCELLED, "info")
 }
 
-async function prepareWithModel(
-  ctx: MemoryPiContext,
-  registration: RegistrationContext,
-): Promise<SetupPreparation | null> {
-  let preparation = await prepareMemorySetup({ selectedModel: referenceOf(ctx.model) }, registration)
-  if (preparation.succeeded && setupNeedsModel(preparation.output.draft)) {
-    const chosen = await chooseModel(ctx)
-    if (!chosen) return null
-    preparation = await prepareMemorySetup({ selectedModel: chosen }, registration)
-  }
+async function prepareSetup(ctx: MemoryPiContext, registration: RegistrationContext): Promise<SetupPreparation | null> {
+  const preparation = await prepareMemorySetup({ selectedModel: null }, registration)
   if (!preparation.succeeded) {
     ctx.ui.notify(preparation.problems.join("\n"), "error")
     return null
@@ -86,29 +107,28 @@ async function prepareWithModel(
   return preparation.output
 }
 
-function referenceOf(model: ChatModelSource | undefined): ChatModelReference | null {
-  if (!model) return null
-  return { provider: model.provider, id: model.id }
+function modelResolved(model: ConfigRepairDraft["capture"]["model"]): boolean {
+  return typeof model.provider === "string" && typeof model.id === "string"
 }
 
-async function chooseModel(ctx: MemoryPiContext): Promise<ChatModelReference | null> {
-  const available = ctx.modelRegistry.getAvailable()
-  if (available.length === 0) {
-    ctx.ui.notify(SETUP_NO_MODEL, "error")
-    return null
-  }
-  const labels = available.map(modelLabel)
-  const answer = await ctx.ui.select(SETUP_MODEL_TITLE, labels)
-  const chosen = available.find((model) => modelLabel(model) === answer)
-  if (!chosen) {
-    cancelled(ctx)
-    return null
-  }
-  return referenceOf(chosen)
+function noModelToChoose(ctx: MemoryPiContext, draft: ConfigRepairDraft): boolean {
+  if (ctx.modelRegistry.getAvailable().length > 0) return false
+  if (modelResolved(draft.capture.model) && modelResolved(draft.memoryAgent.model)) return false
+  ctx.ui.notify(SETUP_NO_MODEL, "error")
+  return true
 }
 
-function modelLabel(model: ChatModelSource): string {
-  return `${model.provider}/${model.id}`
+function inUseOf(ctx: MemoryPiContext): CurrentModel {
+  if (!ctx.model) return {}
+  return { provider: ctx.model.provider, id: ctx.model.id }
+}
+
+async function chooseModels(ctx: MemoryPiContext, draft: ConfigRepairDraft): Promise<ConfigRepairDraft | null> {
+  const capture = await chooseModel(ctx, SETUP_CAPTURE_MODEL_TITLE, draft.capture.model, inUseOf(ctx))
+  if (!capture) return null
+  const agent = await chooseModel(ctx, SETUP_AGENT_MODEL_TITLE, draft.memoryAgent.model, {})
+  if (!agent) return null
+  return { ...draft, capture: { ...draft.capture, model: capture }, memoryAgent: { model: agent } }
 }
 
 async function confirmRepair(ctx: MemoryPiContext, draft: ConfigRepairDraft): Promise<boolean> {

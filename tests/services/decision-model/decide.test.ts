@@ -23,15 +23,6 @@ describe("decide entry points", () => {
     })
   })
 
-  it("passes the time left before the deadline to the classifier when it is under the default timeout", async () => {
-    const context = jevContext(jevReply(0.8))
-    context.deadlineMs = Date.now() + 1234
-    await decideMemory({ context, request: memoryDecisionRequest })
-    expect(context.classifier.classify).toHaveBeenCalledWith(
-      expect.objectContaining({ options: expect.objectContaining({ timeoutMs: 1234 }) }),
-    )
-  })
-
   it("routes laya contexts to the laya endpoint and labels the diagnostics with provider laya", async () => {
     vi.useRealTimers()
     const server = await decisionServer({ body: layaReply(0.8), status: 200, delayMs: 0 })

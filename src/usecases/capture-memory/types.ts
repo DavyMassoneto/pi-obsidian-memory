@@ -31,7 +31,6 @@ export interface CaptureRun {
 }
 
 export interface ClarifyLimits {
-  timeoutMs: number
   signal: AbortSignal
 }
 
@@ -52,7 +51,7 @@ export interface CaptureReport {
 }
 
 export interface CaptureFailure extends Failed {
-  reason: "model-failed" | "out-of-time" | "interrupted"
+  reason: "model-failed" | "interrupted"
   report: CaptureReport
 }
 
@@ -72,7 +71,6 @@ export interface CaptureBase {
   limits: CaptureInput["limits"]
   model: ChatModelReference
   signal: AbortSignal
-  deadline: number
 }
 
 export interface ReviewTools {

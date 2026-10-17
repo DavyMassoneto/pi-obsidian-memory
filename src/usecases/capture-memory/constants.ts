@@ -1,7 +1,5 @@
 export const NO_DETAIL = "No further detail"
 
-export const OUT_OF_TIME = "Capture ran out of time"
-
 export const SOURCE_CALL = "capture"
 
 export const MAX_LISTED = 20

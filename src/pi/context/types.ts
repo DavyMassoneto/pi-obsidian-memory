@@ -12,11 +12,25 @@ export interface MemoryUi {
   confirm(title: string, message: string): Promise<boolean>
   input(title: string, placeholder?: string, options?: DialogOptions): Promise<string | undefined>
   notify(message: string, type?: NotifyLevel): void
+  setStatus(key: string, text: string | undefined): void
+}
+
+export type StatusWork<Result> = () => Promise<Result>
+
+export interface MemoryStatus {
+  key: string
+  text: string
+}
+
+export interface ModelPrice {
+  input: number
+  output: number
 }
 
 export interface ChatModelSource {
   provider: string
   id: string
+  cost?: ModelPrice
 }
 
 export type RegistryContext = Parameters<ModelRegistry["complete"]>[1]

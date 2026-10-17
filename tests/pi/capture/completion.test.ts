@@ -6,9 +6,6 @@ import { assistantMessage, contextReplying } from "#test-helpers"
 const request = {
   model: { provider: "test-chat", id: "selected-chat" },
   signal: new AbortController().signal,
-  deadline: Date.now() + 1000,
-  round: 1,
-  maxRounds: 8,
   maxTokens: 4096,
   system: "system text",
   data: "data text",
@@ -36,13 +33,25 @@ test("a model that pi does not know is unsupported and no completion is attempte
   expect(complete).not.toHaveBeenCalled()
 })
 
-test.each([
-  ["aborted", "aborted"],
-  ["error", "error"],
-] as const)("a %s completion is reported as %s", async (stopReason, status) => {
-  const { context } = contextReplying(assistantMessage([{ type: "text", text: "partial" }], stopReason))
+test("an aborted completion is reported as aborted", async () => {
+  const { context } = contextReplying(assistantMessage([{ type: "text", text: "partial" }], "aborted"))
 
-  expect(await registryCompletion(context)(request)).toEqual({ status })
+  expect(await registryCompletion(context)(request)).toEqual({ status: "aborted" })
+})
+
+test("a failed completion is reported as an error carrying the provider's message", async () => {
+  const { context } = contextReplying({
+    ...assistantMessage([{ type: "text", text: "partial" }], "error"),
+    errorMessage: "provider down",
+  })
+
+  expect(await registryCompletion(context)(request)).toEqual({ status: "error", error: "provider down" })
+})
+
+test("a failed completion without a message is reported as an error alone", async () => {
+  const { context } = contextReplying(assistantMessage([{ type: "text", text: "partial" }], "error"))
+
+  expect(await registryCompletion(context)(request)).toEqual({ status: "error" })
 })
 
 test("a reply with no text is empty", async () => {

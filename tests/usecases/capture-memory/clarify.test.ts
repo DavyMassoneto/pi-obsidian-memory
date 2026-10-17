@@ -39,10 +39,7 @@ test("a question the user cannot answer writes nothing and ends that review", as
     ask,
   )
 
-  expect(ask).toHaveBeenCalledWith(
-    "Is this about you or about this project?",
-    expect.objectContaining({ timeoutMs: expect.any(Number) }),
-  )
+  expect(ask).toHaveBeenCalledWith("Is this about you or about this project?", { signal: expect.any(AbortSignal) })
   expect(complete).toHaveBeenCalledTimes(1)
   expect(result).toMatchObject({
     succeeded: true,
@@ -90,10 +87,10 @@ test("a long transcript is reviewed in windows of at most a hundred items", asyn
   expect(complete).toHaveBeenCalledTimes(2)
 })
 
-test("a model that returns nothing usable fails the run and nothing is written", async () => {
+test("a failed model call ends the run at once, names the provider's error, and nothing is written", async () => {
   const { context, vault } = await captureFixture()
   const before = await memoryReadTree(vault.path)
-  const complete = vi.fn(async () => ({ status: "error" as const }))
+  const complete = vi.fn(async () => ({ status: "error" as const, error: "provider down" }))
 
   const result = await captureMemory(
     { messages: userSays("remember pnpm"), trigger: "after-each-turn", explicitSaves: [] },
@@ -102,8 +99,32 @@ test("a model that returns nothing usable fails the run and nothing is written",
     answering(null),
   )
 
-  expect(result).toMatchObject({ succeeded: false, reason: "model-failed" })
+  expect(result).toMatchObject({
+    succeeded: false,
+    reason: "model-failed",
+    problems: [expect.stringContaining("provider down")],
+  })
+  expect(complete).toHaveBeenCalledTimes(1)
   expect(await memoryReadTree(vault.path)).toEqual(before)
+})
+
+test("a model call that fails because the signal aborted is an interruption, not a model failure", async () => {
+  const { context } = await captureFixture()
+  const controller = new AbortController()
+  const complete = vi.fn(async () => {
+    controller.abort()
+    return { status: "aborted" as const }
+  })
+
+  const result = await captureMemory(
+    { messages: userSays("remember pnpm"), trigger: "after-each-turn", explicitSaves: [] },
+    { ...context, signal: controller.signal },
+    complete,
+    answering(null),
+  )
+
+  expect(result).toMatchObject({ succeeded: false, reason: "interrupted" })
+  expect(complete).toHaveBeenCalledTimes(1)
 })
 
 test("a run with no config is refused", async () => {

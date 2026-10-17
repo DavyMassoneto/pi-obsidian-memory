@@ -26,13 +26,7 @@ export interface EmbeddingBatch {
   items: readonly EmbeddedInput[]
 }
 
-export type EmbeddingFailureStatus =
-  | "unavailable"
-  | "input-too-long"
-  | "invalid-input"
-  | "invalid-response"
-  | "aborted"
-  | "deadline"
+export type EmbeddingFailureStatus = "unavailable" | "input-too-long" | "invalid-input" | "invalid-response" | "aborted"
 
 export interface EmbeddingFailure {
   succeeded: false

@@ -7,8 +7,24 @@ describe("model completion boundary", () => {
   it.each(["error", "aborted", "empty", "unsupported"] as const)("never parses %s as an action", async (status) => {
     const complete = completionPort('{"action":"finish"}')
     complete.mockResolvedValue({ status })
-    expect((await captureStep(captureRequest(), complete)).succeeded).toBe(false)
+    expect(await captureStep(captureRequest(), complete)).toMatchObject({ succeeded: false, modelCall: true })
     expect(complete).toHaveBeenCalledOnce()
+  })
+
+  it("names the error the provider reported", async () => {
+    const complete = completionPort("")
+    complete.mockResolvedValue({ status: "error", error: "rate limited" })
+    expect(await captureStep(captureRequest(), complete)).toEqual({
+      succeeded: false,
+      modelCall: true,
+      problems: ["Model call error: rate limited"],
+    })
+  })
+
+  it("gives output that is not an action back as an ordinary refusal, not a failed model call", async () => {
+    const result = await captureStep(captureRequest(), completionPort("not json at all"))
+    expect(result).toMatchObject({ succeeded: false })
+    expect(result).not.toHaveProperty("modelCall")
   })
 
   it("rejects thinking-only and unexpected channel payloads rather than recovering them", async () => {
@@ -29,11 +45,15 @@ describe("model completion boundary", () => {
     expect(complete).not.toHaveBeenCalled()
   })
 
-  it("does not expose thrown provider messages or attempt fallback", async () => {
+  it("names a thrown provider error and does not attempt a fallback", async () => {
     const complete = completionPort("")
-    complete.mockRejectedValue(new Error("secret-provider-payload"))
+    complete.mockRejectedValue(new Error("provider exploded"))
     const result = await captureStep(captureRequest(), complete)
-    expect(result).toEqual({ succeeded: false, problems: ["Model completion failed"] })
+    expect(result).toEqual({
+      succeeded: false,
+      modelCall: true,
+      problems: ["Model call failed: provider exploded"],
+    })
     expect(complete).toHaveBeenCalledOnce()
   })
 
@@ -42,10 +62,15 @@ describe("model completion boundary", () => {
     expect((await captureStep(captureRequest(), complete)).succeeded).toBe(false)
   })
 
-  it("refuses invalid round, expired and already aborted requests before inference", async () => {
+  it("does not tell the model how many rounds it has", async () => {
     const complete = completionPort('{"action":"finish"}')
-    expect((await captureStep({ ...captureRequest(), round: 9 }, complete)).succeeded).toBe(false)
-    expect((await captureStep({ ...captureRequest(), deadline: Date.now() - 1 }, complete)).succeeded).toBe(false)
+    await captureStep(captureRequest(), complete)
+    expect(complete.mock.calls[0]?.[0].system).not.toMatch(/Round d/)
+    expect(complete.mock.calls[0]?.[0]).not.toHaveProperty("maxRounds")
+  })
+
+  it("refuses already aborted requests before inference", async () => {
+    const complete = completionPort('{"action":"finish"}')
     const signal = AbortSignal.abort()
     expect((await captureStep({ ...captureRequest(), signal }, complete)).succeeded).toBe(false)
     expect(complete).not.toHaveBeenCalled()

@@ -15,9 +15,3 @@ export interface MemoryOperationContext {
 export interface MemoryOperationRefusal extends Failed {
   reason: "cancelled" | "stale-session" | "admission-refused"
 }
-
-export interface LimitedOperation {
-  context: MemoryOperationContext
-  expired(): boolean
-  release(): void
-}

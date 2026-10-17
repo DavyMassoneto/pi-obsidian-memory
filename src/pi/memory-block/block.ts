@@ -1,3 +1,4 @@
+import { STATUS_LOADING, withMemoryStatus } from "#src/pi/context"
 import { trackDontForget } from "#src/usecases"
 import { BLOCK_SEPARATOR, MEMORY_BLOCK_SECTION, RELEVANT_LOAD_ERROR_PREFIX } from "./constants.ts"
 import { loadNotices, renderLoadFailure, renderLoadNotice, renderMemoryBlock } from "./render.ts"
@@ -16,6 +17,10 @@ export class MemoryBlock {
       this.clear()
       return
     }
+    this.#text = withMemoryStatus(start.ctx, STATUS_LOADING, () => this.#loadBlock(start))
+  }
+
+  async #loadBlock(start: BlockStart): Promise<string | null> {
     const dontForget = this.#load(start.context).then(
       (result) => {
         trackDontForget(start.loaded, result)
@@ -27,9 +32,11 @@ export class MemoryBlock {
         return renderLoadFailure(errorMessage(error))
       },
     )
-    this.#text = Promise.all([dontForget, start.relevant().catch((error) => this.#relevantFailed(start, error))]).then(
-      ([block, extra]) => joined(block, extra),
-    )
+    const [block, extra] = await Promise.all([
+      dontForget,
+      start.relevant().catch((error) => this.#relevantFailed(start, error)),
+    ])
+    return joined(block, extra)
   }
 
   #relevantFailed(start: BlockStart, error: Error | string): null {

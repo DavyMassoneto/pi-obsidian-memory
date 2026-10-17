@@ -15,57 +15,44 @@ describe("completion lifetime", () => {
     expect(complete.mock.calls[0]?.[0].signal.aborted).toBe(true)
   })
 
-  it("caps retrieval at 30 seconds even with a later caller deadline", async () => {
+  it("lets a slow retrieval finish after far more than a minute", async () => {
     vi.useFakeTimers()
-    const complete = pendingCompletion()
-    const pending = retrieveStep({ ...retrievalRequest(), deadline: Date.now() + 120000 }, complete)
-    await vi.advanceTimersByTimeAsync(30000)
-    expect((await pending).succeeded).toBe(false)
+    const complete = completionPort("")
+    complete.mockImplementation(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ status: "completed", text: '{"action":"finish","notes":[]}' }), 300_000),
+        ),
+    )
+    const pending = retrieveStep(retrievalRequest(), complete)
+    await vi.advanceTimersByTimeAsync(300_000)
+    expect(await pending).toMatchObject({ succeeded: true })
+    expect(complete.mock.calls[0]?.[0].signal.aborted).toBe(false)
     expect(vi.getTimerCount()).toBe(0)
   })
 
-  it.each([
-    { callerDuration: 120000, elapsed: 30001 },
-    { callerDuration: 15, elapsed: 16 },
-  ])(
-    "rejects late retrieval without timer delivery: $callerDuration ms deadline",
-    async ({ callerDuration, elapsed }) => {
-      vi.useFakeTimers()
-      const start = Date.now()
-      const complete = completionPort("")
-      complete.mockImplementation(async () => {
-        vi.setSystemTime(start + elapsed)
-        return { status: "completed", text: '{"action":"finish","notes":[]}' }
-      })
-      const result = await retrieveStep({ ...retrievalRequest(), deadline: start + callerDuration }, complete)
-      expect(result).toEqual({ succeeded: false, problems: ["Model request aborted or expired"] })
-      expect(complete.mock.calls[0]?.[0].signal.aborted).toBe(false)
-      expect(vi.getTimerCount()).toBe(0)
-    },
-  )
-
-  it("caps capture at 120 seconds", async () => {
-    vi.useFakeTimers()
+  it("returns promptly when the retrieval is aborted even if the port ignores cancellation", async () => {
+    const controller = new AbortController()
     const complete = pendingCompletion()
-    const pending = captureStep({ ...captureRequest(), deadline: Date.now() + 180000 }, complete)
-    await vi.advanceTimersByTimeAsync(120000)
-    expect((await pending).succeeded).toBe(false)
-    expect(vi.getTimerCount()).toBe(0)
-  })
-
-  it("uses the caller's earlier deadline", async () => {
-    vi.useFakeTimers()
-    const complete = pendingCompletion()
-    const pending = captureStep({ ...captureRequest(), deadline: Date.now() + 15 }, complete)
-    await vi.advanceTimersByTimeAsync(15)
+    const pending = retrieveStep({ ...retrievalRequest(), signal: controller.signal }, complete)
+    controller.abort()
     expect((await pending).succeeded).toBe(false)
     expect(complete.mock.calls[0]?.[0].signal.aborted).toBe(true)
   })
 
-  it("cleans up its timer after successful completion", async () => {
+  it("lets a slow capture finish after far more than two minutes", async () => {
     vi.useFakeTimers()
-    const complete = completionPort('{"action":"finish"}')
-    expect((await captureStep(captureRequest(), complete)).succeeded).toBe(true)
+    const complete = completionPort("")
+    complete.mockImplementation(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ status: "completed", text: '{"action":"finish"}' }), 3_600_000),
+        ),
+    )
+    const pending = captureStep(captureRequest(), complete)
+    await vi.advanceTimersByTimeAsync(3_600_000)
+    expect((await pending).succeeded).toBe(true)
+    expect(complete.mock.calls[0]?.[0].signal.aborted).toBe(false)
     expect(vi.getTimerCount()).toBe(0)
   })
 

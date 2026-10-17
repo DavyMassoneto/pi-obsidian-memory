@@ -3,7 +3,6 @@ import { dirname, join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { CONFIG_PROTECTED_REFUSAL } from "#src/pi"
 import {
   fakePiContext,
   linkFolder,
@@ -166,53 +165,37 @@ test.each([
   },
 )
 
-test.each(["write", "edit"])(
-  "%s on the config file is blocked with the registration guidance, read is allowed",
-  async (tool) => {
-    const { pi, piContext, configPath } = await piMemoryFixture()
+test.each(["read", "write", "edit"])("%s on the config file is allowed", async (tool) => {
+  const { pi, piContext, configPath } = await piMemoryFixture()
 
-    const blocked = await pi.runToolCall(toolCallEvent(tool, { path: configPath }), piContext)
-    const read = await pi.runToolCall(toolCallEvent("read", { path: configPath }), piContext)
+  expect(await pi.runToolCall(toolCallEvent(tool, { path: configPath }), piContext)).toBeUndefined()
+})
 
-    expect(blocked).toEqual({ block: true, reason: CONFIG_PROTECTED_REFUSAL })
-    expect(read).toBeUndefined()
-  },
-)
+test.each(["bash", "powershell"])("%s that reads or writes the config file is allowed", async (tool) => {
+  const { pi, piContext, configPath } = await piMemoryFixture()
 
-test.each(["bash", "powershell"])(
-  "%s that mentions the config path is blocked with the registration guidance",
-  async (tool) => {
-    const { pi, piContext, configPath } = await piMemoryFixture()
+  for (const command of [`Get-Content "${configPath}"`, `cat "${configPath}"`, `echo {} > "${configPath}"`]) {
+    expect(await pi.runToolCall(toolCallEvent(tool, { command }), piContext)).toBeUndefined()
+  }
+})
 
-    const result = await pi.runToolCall(toolCallEvent(tool, { command: `echo {} > "${configPath}"` }), piContext)
-
-    expect(result).toEqual({ block: true, reason: CONFIG_PROTECTED_REFUSAL })
-  },
-)
-
-test("the config stays protected with no config, so a first write cannot register a vault", async () => {
+test("the config file is writable with no config registered, so setup by the LLM can start", async () => {
   const { pi, piContext, configPath } = await piUnconfiguredFixture()
 
-  const result = await pi.runToolCall(toolCallEvent("write", { path: configPath }), piContext)
-
-  expect(result).toEqual({ block: true, reason: CONFIG_PROTECTED_REFUSAL })
+  expect(await pi.runToolCall(toolCallEvent("write", { path: configPath }), piContext)).toBeUndefined()
 })
 
-test.each(["write", "edit"])("%s inside the memory data folder, the index included, is blocked", async (tool) => {
+test.each(["read", "write", "edit"])("%s inside the index or the model cache is allowed", async (tool) => {
   const { pi, piContext, configPath } = await piMemoryFixture()
 
-  const result = await pi.runToolCall(
-    toolCallEvent(tool, { path: join(dirname(configPath), "index", "a.sqlite") }),
-    piContext,
-  )
-
-  expect(result).toEqual({ block: true, reason: CONFIG_PROTECTED_REFUSAL })
+  for (const path of [join(dirname(configPath), "index", "a.sqlite"), join(dirname(configPath), "models", "m.bin")]) {
+    expect(await pi.runToolCall(toolCallEvent(tool, { path }), piContext)).toBeUndefined()
+  }
 })
 
-test.each(["bash", "powershell"])("%s that removes the memory data folder is blocked", async (tool) => {
+test.each(["bash", "powershell"])("%s that removes the index folder is allowed", async (tool) => {
   const { pi, piContext, configPath } = await piMemoryFixture()
+  const command = `rm -rf "${join(dirname(configPath), "index")}"`
 
-  const result = await pi.runToolCall(toolCallEvent(tool, { command: `rm -rf "${dirname(configPath)}"` }), piContext)
-
-  expect(result).toEqual({ block: true, reason: CONFIG_PROTECTED_REFUSAL })
+  expect(await pi.runToolCall(toolCallEvent(tool, { command }), piContext)).toBeUndefined()
 })

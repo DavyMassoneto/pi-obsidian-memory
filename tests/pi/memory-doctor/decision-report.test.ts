@@ -98,6 +98,6 @@ test("a Laya with no cutoffs set is a warning that points to the docs", async ()
   await pi.runCommand("memory-doctor", context)
 
   expect(notifications[0]?.message).toContain(
-    "- decision cutoffs: gate missing, relevance missing; set decisionModel.gateThreshold and relevanceThreshold, see docs/decision-thresholds.md",
+    "- decision cutoffs: gate missing, relevance missing; set both cutoffs in /memory-setup, see docs/decision-thresholds.md",
   )
 })

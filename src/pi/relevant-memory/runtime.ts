@@ -1,6 +1,6 @@
 import { Value } from "typebox/value"
 
-import type { MemoryPiContext } from "#src/pi/context"
+import { type MemoryPiContext, STATUS_SEARCHING, withMemoryStatus } from "#src/pi/context"
 import type { BeforeAgentStartHandler } from "#src/pi/memory-block"
 import { type JevSource, LoadedChangesSchema, loadSessionMemory, retrieveMemory } from "#src/usecases"
 import { JEV_MISSING, RELEVANT_MESSAGE_TYPE } from "./constants.ts"
@@ -44,11 +44,13 @@ export class RelevantMemoryRuntime {
       if (event.messageType !== "user") return undefined
       const operation = this.#deps.sessions.retrievalOperation(ctx.cwd, this.#deps.paths)
       if (!operation) return undefined
-      const result = await retrieveMemory({ message: event.prompt }, operation, {
-        complete: this.#deps.completionOf(ctx),
-        jev: this.#jevFor(ctx),
-        loaded: this.#deps.sessions.loaded(),
-      })
+      const result = await withMemoryStatus(ctx, STATUS_SEARCHING, () =>
+        retrieveMemory({ message: event.prompt }, operation, {
+          complete: this.#deps.completionOf(ctx),
+          jev: this.#jevFor(ctx),
+          loaded: this.#deps.sessions.loaded(),
+        }),
+      )
       if (!result.succeeded) return undefined
       this.tell(ctx, result.output.notices)
       if (typeof result.output.text !== "string") return undefined

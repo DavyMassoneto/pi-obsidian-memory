@@ -14,7 +14,6 @@ export type {
 
 export interface EmbeddingOperationContext {
   signal: AbortSignal
-  timeoutMs: number
 }
 
 export interface RemoteEmbeddingContext extends EmbeddingOperationContext {

@@ -1,5 +1,10 @@
+import {
+  CHAT_MODELS_DISCLOSURE,
+  DISCLOSURE_TITLE,
+  JEV_DISCLOSURE,
+  REMOTE_EMBEDDINGS_DISCLOSURE,
+} from "#src/pi/memory-settings"
 import type { SetupDisclosure } from "#src/usecases"
-import { CHAT_MODELS_DISCLOSURE, DISCLOSURE_TITLE, JEV_DISCLOSURE, REMOTE_EMBEDDINGS_DISCLOSURE } from "./constants.ts"
 
 export function disclosureText(disclosures: SetupDisclosure[]): string {
   return [DISCLOSURE_TITLE, ...disclosures.map(disclosureLine)].join("\n")

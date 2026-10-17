@@ -152,31 +152,3 @@ test("Jev decides and scores through its classifier", async () => {
   expect(retrievedText(result)).toContain("Always pnpm.")
   expect(classify).toHaveBeenCalledTimes(2)
 })
-
-test("the whole message shares one deadline: the agent stops when it has passed", async () => {
-  vi.useFakeTimers({ toFake: ["Date"] })
-  onTestFinished(() => {
-    vi.useRealTimers()
-  })
-  const fixture = await relevantFixture({ laya: RANKED })
-  const pnpm = await putNote(fixture.vault, "Use pnpm", 1, "Always pnpm.")
-  const complete = retrievalCompletion([
-    () => {
-      vi.setSystemTime(Date.now() + 61_000)
-      return getNote(pnpm)
-    },
-    FINISH_WITH_READS,
-  ])
-
-  const result = await retrieveMemory({ message: "pnpm?" }, fixture.context, {
-    complete,
-    jev: fixture.unavailable,
-    loaded: fixture.loaded,
-  })
-
-  expect(result).toMatchObject({
-    succeeded: true,
-    output: { text: null, notices: [expect.stringContaining("expired")] },
-  })
-  expect(complete).toHaveBeenCalledTimes(1)
-})

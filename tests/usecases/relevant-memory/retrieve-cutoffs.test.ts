@@ -46,9 +46,7 @@ test("Laya with no cutoffs adds nothing, asks no model, and tells the user to se
     succeeded: true,
     output: {
       text: null,
-      notices: [
-        expect.stringMatching(/cutoff for gateThreshold and relevanceThreshold;.*docs\/decision-thresholds\.md/),
-      ],
+      notices: [expect.stringMatching(/cutoff for gateThreshold and relevanceThreshold;.*\/memory-setup/)],
     },
   })
   expect(complete).not.toHaveBeenCalled()

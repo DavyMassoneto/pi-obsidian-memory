@@ -77,7 +77,7 @@ export async function embeddingServer(responses: readonly string[], status?: num
 }
 
 export function embeddingOperation(): EmbeddingOperationContext {
-  return { signal: new AbortController().signal, timeoutMs: 5000 }
+  return { signal: new AbortController().signal }
 }
 
 export function remoteEmbeddingContext(endpoint: string): RemoteEmbeddingContext {

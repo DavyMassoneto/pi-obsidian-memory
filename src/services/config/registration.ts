@@ -7,11 +7,16 @@ export type {
   ParseConfigResult,
   ProjectEntry,
   ResolveProjectResult,
+  SettingChange,
+  SettingNumberKind,
+  SettingNumberResult,
   SetupDisclosure,
   SetupProposal,
 } from "#src/domain"
 export {
+  changeSetting,
   inspectConfigForRepair,
+  parseSettingNumber,
   prepareSetupDefaults,
   proposeInit,
   proposeSetup,

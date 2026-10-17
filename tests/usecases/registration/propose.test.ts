@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { proposeMemorySetup, setupMemory, setupNeedsModel } from "#src/usecases"
+import { proposeMemorySetup, setupMemory } from "#src/usecases"
 import {
   customizedSettings,
   proposeVaultMode,
@@ -43,14 +43,6 @@ test("an unresolved chat model is refused", async () => {
   )
 
   expect(proposal.succeeded).toBe(false)
-  expect(setupNeedsModel(preparation.draft)).toBe(true)
-})
-
-test("a chosen model resolves the draft", async () => {
-  const { context } = await registrationUsecaseFixture()
-  const preparation = await setupPreparationOf(context, { provider: "chosen", id: "chat" })
-
-  expect(setupNeedsModel(preparation.draft)).toBe(false)
 })
 
 test("a blank vault keeps the current global vault and none is refused", async () => {

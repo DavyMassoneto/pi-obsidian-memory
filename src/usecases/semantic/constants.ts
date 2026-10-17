@@ -1,7 +1,5 @@
 export const EMBED_BATCH_SIZE = 32
 
-export const EMBED_TIMEOUT_MS = 120_000
-
 export const SEMANTIC_CANDIDATES = 50
 
 export const QUERY_KEY = "query"

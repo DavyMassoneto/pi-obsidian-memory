@@ -19,7 +19,6 @@ const RELEVANT_CONSTANTS = [
   usecases.SESSION_QUERY_PREFIX,
   usecases.NO_PROJECT,
   usecases.AGENT_FAILED,
-  usecases.AGENT_UNFINISHED,
   usecases.DECISION_UNAVAILABLE,
   usecases.SESSION_LOAD_FAILED,
 ]

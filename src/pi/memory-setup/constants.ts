@@ -14,7 +14,11 @@ export const SETUP_KEEP_VAULT_TITLE = "Vault folder (leave empty to keep the cur
 
 export const SETUP_VAULT_PLACEHOLDER = "Absolute folder path"
 
-export const SETUP_MODEL_TITLE = "Chat model for memory capture and the memory agent"
+export const SETUP_CAPTURE_MODEL_TITLE =
+  "Chat model for automatic capture (the model in use is the default and Escape keeps the one marked)"
+
+export const SETUP_AGENT_MODEL_TITLE =
+  "Chat model for the memory agent (a small model, it searches memory for each message; sorted by price; Escape keeps the current one)"
 
 export const SETUP_NO_MODEL = "No chat model is available. Connect a model in pi, then run /memory-setup again."
 
@@ -27,13 +31,3 @@ export const REPAIR_TITLE = "The memory config needs changes"
 export const REPAIR_CONFIRM_LINE = "Continue and rewrite it with every key?"
 
 export const REPLACE_LINE = "The file is not valid JSON and will be replaced."
-
-export const DISCLOSURE_TITLE = "Before setup: what leaves this machine"
-
-export const CHAT_MODELS_DISCLOSURE =
-  "Capture and the memory agent send conversation and note content to the chat model you chose."
-
-export const JEV_DISCLOSURE = "TypeSafe (Jev) receives your messages and candidate notes."
-
-export const REMOTE_EMBEDDINGS_DISCLOSURE =
-  "The remote embeddings provider receives note content, secrets included, and search queries."
