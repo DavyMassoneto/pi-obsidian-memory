@@ -40,7 +40,7 @@ describe("Jev pi classifier adapter", () => {
           },
         },
       },
-      options: { signal: expect.any(AbortSignal), timeoutMs: expect.any(Number), maxRetries: 0 },
+      options: { signal: expect.any(AbortSignal), maxRetries: 0 },
     })
   })
 

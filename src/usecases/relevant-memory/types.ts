@@ -92,7 +92,6 @@ export interface AgentRequest {
   agent: AgentContext
   query: string
   model: ChatModelReference
-  deadline: number
 }
 
 export interface FinishDiscriminant {

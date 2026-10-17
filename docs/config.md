@@ -1,7 +1,8 @@
 # Config
 
-One local JSON file on the machine, outside the vaults (`~/.pi/agent/pi-obsidian-memory/config.json`). The user can
-edit it by hand, or write it with `/memory-setup` and `/memory-init` (below). Strict reading, repair drafts,
+One local JSON file on the machine, outside the vaults (`~/.pi/agent/pi-obsidian-memory/config.json`). It is
+written by `/memory-setup` and `/memory-init` (below). The user changes a setting in the `/memory-setup` screen, or by
+asking pi; nobody has to edit the file by hand. Strict reading, repair drafts,
 registration proposals and guarded publication are implemented as resources; the two commands and the session-start
 notice use them. Preparing settings does not execute models, download anything or look up credentials.
 
@@ -40,9 +41,9 @@ explicitly chosen available chat model's provider and id. They are not built-in 
 | `limits.maxBodyChars` | Positive integer | 1000 |
 | `limits.maxStatementChars` | Positive integer | 100 |
 | `limits.maxNotesPerFolder` | Positive integer; doctor reporting threshold | 20 |
-| `capture.model` | Exactly `{provider, id}`, both nonblank strings | Explicit selected chat model supplied at setup |
+| `capture.model` | Exactly `{provider, id}`, both nonblank strings | The pi model in use when `/memory-setup` runs, or another chosen from the priced list; changed by re-running it |
 | `capture.when` | `after-each-turn` (`agent_end`), `on-compaction` (`session_before_compact`), `at-session-end` (`session_shutdown`) | `after-each-turn` |
-| `memoryAgent.model` | Exactly `{provider, id}`, both nonblank strings | Explicit selected chat model supplied at setup |
+| `memoryAgent.model` | Exactly `{provider, id}`, both nonblank strings | Chosen in `/memory-setup` from pi's models sorted by price, cheapest first; changed by re-running it |
 | `context.budgetChars` | Positive integer; relevant-memory character budget | 12000 |
 | `embeddings` | One exact alternative below | Local multilingual E5 |
 | `decisionModel` | One exact alternative below | Jev (`typesafe`, `jev-latest`) |
@@ -87,11 +88,9 @@ model in `memoryAgent.model`) does the searching and reading in between:
 A note that cannot be scored (a failed or invalid answer for that note) is dropped on its own, and the user is told
 once per session "could not score N of M notes"; the message fails as a whole only when every note fails. A truncated
 Laya answer is a valid score, taken on the start of the text. If the decision model is unavailable, nothing is added for
-that message, the user is told once per session, and no other model takes its place. The per-message step ends within
-30 s of decision time plus the retrieval duration (30 s); the first message of a session may also wait for the
-session-start load.
+that message, the user is told once per session, and no other model takes its place. The per-message step has no time limit.
 
-Cutoffs: a value in `config.json` overrides the default for its provider.
+Cutoffs: a value set in `/memory-setup` overrides the default for its provider.
 
 | | Gate | Relevance | Source |
 |---|---|---|---|
@@ -100,8 +99,8 @@ Cutoffs: a value in `config.json` overrides the default for its provider.
 
 **Jev is the default** and works from the TypeSafe starting values 0.5/0.5, with `TYPESAFE_API_KEY` set. **Laya is an
 optional local choice that needs explicit cutoffs**: with a Laya config and no cutoffs, per-message memory is off and
-each session says so, until you set both `decisionModel.gateThreshold` and `decisionModel.relevanceThreshold` in
-`config.json`: nothing is added, no model is asked, and the user is told once per session which cutoff is missing. No
+each session says so, until you set both cutoffs (`decisionModel.gateThreshold` and `decisionModel.relevanceThreshold`)
+in the `/memory-setup` screen: nothing is added, no model is asked, and the user is told once per session which cutoff is missing. No
 value is invented. `/memory-doctor` lists both cutoffs and where each comes from (config, TypeSafe
 starting value or missing).
 
@@ -140,14 +139,29 @@ reading, repairing, proposing or publishing configuration.
 
 Both commands work only with a UI: without one they ask nothing and write nothing. Vaults are never copied, moved or deleted.
 
-`/memory-setup` writes the config with every key:
+`/memory-setup` has two modes. With no config, or an invalid one, it runs the first setup and writes the config with
+every key. Once the config is valid, it opens the settings screen.
 
-- The chat model for `capture.model` and `memoryAgent.model` defaults to pi's current model. A valid model already in
-  the file is never overwritten. When a reference is missing and pi has no current model, the user picks from pi's
-  available models; with none available, setup is refused.
+**First setup and repair:**
+
+- It asks for the capture model and the memory-agent model, each from a list of pi's available chat models with their
+  price per million input and output tokens. For capture, the model in use in pi comes first, marked, and is the
+  default (an empty answer or Escape takes it), as the original roadmap says. For the memory agent, a small
+  configurable model, the list is sorted by price, cheapest first, and nothing is defaulted: with no answer nothing is
+  written. On a repair the model already in the file comes first, marked as current, and an empty answer or Escape
+  keeps it. With no model available and none in the file, setup is refused.
 - It asks to create a new vault or attach an existing folder, and for the vault path. Create refuses a non-empty
-  folder or a file; attach refuses a missing folder or a file. Re-run, it offers the current vault (an empty answer
-  keeps it) and attaches it by default.
+  folder or a file; attach refuses a missing folder or a file.
+
+**Settings screen (valid config):** one line per setting with its current value, opened with a select; Done or Escape
+leaves. Each choice is written at once and the screen shows the new value. The lines are: capture model, when capture
+runs, memory-agent model, decision model (Jev, or Laya with its endpoint), gate cutoff, relevance cutoff (a number from
+0 to 1, or `none`), embeddings provider, context budget, the three limits, the global vault, and the projects (change
+their vault to an existing folder, or remove them from the memory; nothing is deleted). Switching between Jev and Laya
+clears the cutoffs. Choosing Jev or a remote embeddings provider shows its warning. A value the schema refuses is
+not written, and the reason is shown. Changes apply on the next use: capture, relevant memory and search read the config
+each time. Only the Don't forget notes and session-start notes already loaded into the conversation's memory block wait
+for the next session or `/reload`, and the notice says so for the global vault and project changes.
 - An invalid config is repaired: every valid value is kept, and one list names each missing key and each value that
   could not be kept. A file that is not valid JSON is replaced only after the user confirms.
 - Before writing, it shows the warnings that apply (below): chat models always; Jev when selected; remote embeddings
@@ -163,7 +177,7 @@ Both commands work only with a UI: without one they ask nothing and write nothin
 - The vault is created, with `_templates/`, when missing. In an already registered folder the name stays and only the
   vault is repointed; the old vault is left as it was.
 
-Both refuse a vault equal to, inside or containing another registered vault, whatever layer. A hand-edited config with
+Both refuse a vault equal to, inside or containing another registered vault, whatever layer. A config with
 such an overlap, or the same vault twice, is invalid.
 
 At session start (startup, new, resume and fork, not reload; only with a UI): no config shows a notice offering
@@ -187,8 +201,8 @@ be read shows a warning naming the cause.
   Registration conflicts retain every involved entry for correction, rather than choosing a first winner.
 - `prepareSetupDefaults(model)` is setup-only. An explicitly supplied valid selected chat model supplies both initial
   chat references; no production provider/id is hardcoded. Passing `null` leaves both unresolved. Repair never
-  invents the current chat model. `/memory-setup` supplies pi's current model, asks for a selection or refuses if a
-  model is unresolved; it retains valid existing model siblings rather than overwriting them with the selected model.
+  invents the current chat model. `/memory-setup` offers pi's model in use as the capture default, asks for the memory-agent model, or
+  refuses if a model is unresolved.
 - Malformed JSON cannot be salvaged and is marked as requiring explicit replacement confirmation. Drafts carry
   problems and replacement metadata; these are not config keys. Setup proposals serialize only the complete settings
   and registrations and refuse unresolved values. Publication validates again and checks the expected snapshot hash.
@@ -208,7 +222,7 @@ be read shows a warning naming the cause.
 `/memory-setup` shows one warning before writing, with a line for each that applies: capture and the memory agent
 send conversation and note content to the chosen chat model (always); TypeSafe receives user messages and candidate
 notes when Jev is selected; remote embeddings providers receive note content, **secrets included**, and queries.
-The warning is plain: nothing is asked, and setup continues. A hand-edited remote configuration is explicit selection and is never replaced by a
+The warning is plain: nothing is asked, and setup continues. A remote provider already in the config is an explicit selection and is never replaced by a
 local provider; it is used without any question at runtime. The local model (~135 MB) is downloaded when needed,
 without asking, into `pi-obsidian-memory/models` beside `config.json`. If semantic search is off or unavailable,
 search uses words only (with a status line), never another provider. API keys come from pi's model registry;

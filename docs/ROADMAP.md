@@ -30,12 +30,19 @@ Every milestone:
 - The complete product config is read strictly, and a folder is matched to its project. Config resources provide
   snapshots, repair drafts, setting-preserving setup/init proposals and guarded publication. Registration usecases
   prepare settings without writes and bootstrap only the selected global/project target before guarded config-last
-  publication, retaining partial asset progress on failure. `/memory-setup` (interactive only; chat model from pi's
-  current model or a pick; create or attach; repair; warnings; templates) and `/memory-init` (name, vault,
-  repoint) drive them, and both refuse overlapping vaults. Setup-only defaults require an explicitly supplied chat
+  publication, retaining partial asset progress on failure. `/memory-setup` (interactive only; first setup asks the
+  capture model (default: the pi model in use) and memory-agent model (priced list, cheapest first, no default); create or attach; repair; warnings;
+  templates; and, once the config is valid, the settings screen) and `/memory-init` (name, vault,
+  repoint) drive them, and both refuse overlapping vaults. Setup-only defaults require an explicitly chosen chat
   model; old incomplete files are invalid at runtime, never silently migrated.
+- Settings screen (`/memory-setup` with a valid config): a loop of selects, one line per setting with its value
+  (models from a priced list, when capture runs, decision model, both cutoffs, embeddings, budget, limits, global
+  vault, projects: repoint to an existing folder or remove). Each change goes through `changeSetting` and the
+  guarded write, and is applied on the next use; only the Don't forget notes and session-start notes already in the
+  memory block wait for the next session or `/reload`, and the notice says so. Switching between Jev and Laya
+  clears the cutoffs. Nothing is asked beyond the setting being changed.
 - Setup warns about chat models, Jev and remote embeddings. At runtime a remote embeddings provider (including a
-  hand-edited one) and Jev are used without any question.
+  config that already names one) and Jev are used without any question.
 - Semantic search (milestone 5): the sync refreshes vectors only for changed content (moves and date-only changes
   cost nothing; a provider change re-embeds everything; partial progress is kept). `memory_search` fuses word and
   vector ranks (reciprocal rank fusion, k=60). The local E5 model has a minimum similarity of 0.80, measured on a
@@ -48,20 +55,20 @@ Every milestone:
   session custom entry, never sent to the LLM). `capture.when` picks the pi event: `after-each-turn` is `agent_end`
   (once per user prompt), `on-compaction` is `session_before_compact` (compaction is not held back), `at-session-end`
   is `session_shutdown` (pi awaits it on quit). The model may search, list, get, add, update, archive, succeed or
-  clarify, at most 8 rounds per window and within `MAX_CAPTURE_DURATION_MS`. Writes use the same usecases as the
-  tools (receipts, conflicts); explicit `memory_add` saves are not duplicated. When unsure it asks through the UI, or
-  skips without one. It adds nothing to the main prompt, and runs are serialized. Judgement quality is untested
+  clarify, with no round or time limit. Writes use the same usecases as the
+  tools (receipts, conflicts); explicit `memory_add` saves are not duplicated. It never asks whether to save, nor about
+  type, vault or folder; it asks through the UI only when what the user said is ambiguous and a wrong reading would
+  store something false, and skips that item without a UI. It adds nothing to the main prompt, and runs are serialized. Judgement quality is untested
   against a real model.
 - Relevant memory per message (milestone 6): on each user message the decision model (Jev by API, or Laya locally: classifiers
   that answer yes/no probabilities, never search or generate) gates whether memory is needed. If so, the memory agent
-  (`memoryAgent.model`) searches and reads (at most 8 rounds), the decision model scores each candidate note (one batch;
+  (`memoryAgent.model`) searches and reads (no round limit), the decision model scores each candidate note (one batch;
   a note that cannot be scored is dropped with a "could not score N of M" notice), notes at or above the relevance
   cutoff are ranked, and one hidden message is added after the user's message; nothing earlier is rewritten.
   It says it is only part of the memory and names `memory_search` and `memory_get`. A loaded note (Don't forget
   included) that changed is added again, marked as replacing the earlier copy; a deleted or archived one is marked no
   longer valid. Session start loads relevant notes within `context.budgetChars` (12,000 by default) into the system
-  section once, with Don't forget notes outside the budget. The whole step ends within the decision timeout plus the
-  retrieval duration (30 s + 30 s). With Laya or Jev unavailable nothing is added and the user is told once per
+  section once, with Don't forget notes outside the budget. There is no time limit on the step. With Laya or Jev unavailable nothing is added and the user is told once per
   session; no other model takes over. Jev is the default decision model (user decision), used without any runtime question, with
   `TYPESAFE_API_KEY` and TypeSafe's starting cutoffs (0.5/0.5); price $0.042 per million input tokens (docs.typesafe.ai,
   `.pi/research/laya-jev.md`). Laya is an optional local choice that needs explicit cutoffs: with Laya and no
@@ -101,7 +108,7 @@ Every milestone:
   (`vault/draft`, `vault/domain-rules`, `vault/folder-listing`, `vault/catalog/dont-forget`, `config/registration`,
   `config/target`, `config/vault-access`, `embeddings/configuration`, `llm/domain-rules`, `search-index/inspection`,
   `search-index/dont-forget`, `search-index/ranking`,
-  `decision-model/diagnostics`, `decision-model/failure-detail`), the constants re-export `llm/limits`, prepared SQL lists
+  `decision-model/diagnostics`, `decision-model/failure-detail`), prepared SQL lists
   (`search-index/*statements`) and the one-line `vault/filesystem/hash`.
 - A test proves no LLM-facing text names a command or tool that is not registered (`tests/pi/extension.test.ts`).
 - `/memory-doctor` (UI only) reports per vault: invalid notes with problems, blank notes, duplicate ids, leftover
@@ -172,12 +179,13 @@ Every milestone:
   names each value it could not keep.
 - **Session start** loads Don't forget notes in full, plus the relevant notes within `context.budgetChars` (milestone
   6).
-- **Background capture.** Its model (`capture.model`) and when it runs (`capture.when`) are settings. The default model
-  is the pi model in use when `/memory-setup` runs. The default moment is `after-each-turn`; the other values are
+- **Background capture.** Its model (`capture.model`) and when it runs (`capture.when`) are settings. Its model is
+  the pi model in use when `/memory-setup` runs, or another chosen there. The default moment is `after-each-turn`; the other values are
   `on-compaction` and `at-session-end`.
 - **`/memory-init`** creates the vault folder, with `_templates/`, when it is missing.
-- **Re-running `/memory-setup`** (and `/memory-init` in a registered folder) only points the config to the new vault.
-  The old vault is untouched; nothing is copied or moved.
+- **Re-running `/memory-setup`** once the config is valid opens the settings screen; changing the global vault there
+  (and `/memory-init` in a registered folder) only points the config to the new vault. The old vault is untouched;
+  nothing is copied or moved.
 - **Credentials** for remote models and embedding providers come from pi or the environment. `config.json` never
   holds a key.
 - **Tool names** follow `memory_add`: `memory_search`, `memory_get` (milestone 2); `memory_update`, `memory_archive`,
@@ -223,7 +231,7 @@ Every milestone:
     - the vault, created with `_templates/` when missing.
     In a registered folder it repoints that project. With no global vault it refuses and offers `/memory-setup`.
   - [x] The config rejects a vault used twice, or one vault inside another, so the global and project layers never mix
-    (VISION 2). Both commands refuse it, and a hand-edited file with it is invalid.
+    (VISION 2). Both commands refuse it, and a config with it is invalid.
   - [x] With no config, session start says there is no memory and offers `/memory-setup`. With an invalid config, it
     shows every problem at once and uses nothing from the file.
   - [x] Every vault created or attached gets each note template in `_templates/` (vault-format, Templates); existing
@@ -311,10 +319,10 @@ Every milestone:
   `grep`, `find`, `ls`), `bash`/`powershell` commands that write a vault path out (any case, separator, `~`, `$HOME`,
   `%USERPROFILE%`, Git Bash drive forms, relative to the working folder), junctions, symlinks, device paths and
   loopback shares into a vault (compared by file identity), and Claude Code sessions whose tools run through pi.
-  `grep`/`find` are refused from any folder above a vault. Writing to the memory data folder (config and index) is
-  refused, and so is any command naming it (registration changes go through `/memory-setup` and `/memory-init`).
+  `grep`/`find` are refused from any folder above a vault. The config file, the search index and the model cache are
+  not guarded, so the LLM can read and edit them.
   Raw device paths (`\\.\C:`) are refused for the file tools. In commands, shares named by host name or IPv6, volume
-  GUID paths, 8.3 short names, and commands acting on a parent folder of a vault or of the data folder (for example
+  GUID paths, 8.3 short names, and commands acting on a parent folder of a vault (for example
   deleting `~/.pi/agent`) are not recognised. With no valid config no vault is known, so nothing is refused. Tools the guard does not know pass. Routes that cannot be closed from an extension, with
   evidence in `.pi/research/vault-guard.md`:
   - hardlinks to a vault file placed outside the vault, on every route: a path check cannot see them;
@@ -358,7 +366,8 @@ Every milestone:
   - [x] A background process reviews the conversation since its last run. It captures, updates, archives and succeeds
     notes (VISION 5), placing each one by walking the subject tree and using search (vault-format, Layout).
   - [x] It picks the global or the project vault (VISION 2).
-  - [x] When unsure of the vault, the folder, the type or whether something is memory, it asks the user through pi's UI.
+  - [x] It never asks whether to save, nor about type, vault or folder. It asks through pi's UI only when what the user
+    said is ambiguous and a wrong reading would store something false.
     Without a UI it saves nothing it is unsure of.
   - [ ] It follows the types and the Not memory list, and writes notes in English (VISION 7). Secrets are saved like any
     note (VISION 11).
@@ -408,7 +417,7 @@ Every milestone:
   - [x] At session start, the memory agent also loads memories relevant to the project and folder, within
     `context.budgetChars` (12,000 by default). Don't forget notes do not count against it.
   - [x] On each message, the decision model (`decisionModel`: Jev by API by default, or Laya locally) decides whether
-    memory is needed. The memory agent (`memoryAgent.model`, by default the pi model in use at setup) searches and
+    memory is needed. The memory agent (`memoryAgent.model`, chosen in `/memory-setup` from a list sorted cheapest first, with no default; capture defaults to the model in use) searches and
     reads, and the decision model gates the message and scores each candidate note against the cutoffs
     (`gateThreshold`/`relevanceThreshold`; defaults in config.md and docs/decision-thresholds.md).
   - [x] What is found is added at that point. Earlier messages are never rewritten. A loaded note that changed (Don't

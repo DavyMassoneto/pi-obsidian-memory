@@ -28,7 +28,6 @@ export function liveLayaContextWithTokens(maxTokens: number, headMaxTokens: numb
     model: defaultLayaSettings.model,
     maxTokens,
     headMaxTokens,
-    deadlineMs: Date.now() + 30_000,
     signal: new AbortController().signal,
   }
 }

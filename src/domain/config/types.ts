@@ -142,3 +142,87 @@ export interface VaultRegistration {
 }
 
 export type SetupDisclosure = "chat-models" | "jev" | "remote-embeddings"
+
+export interface CaptureModelChange {
+  kind: "captureModel"
+  model: ChatModelReference
+}
+
+export interface AgentModelChange {
+  kind: "agentModel"
+  model: ChatModelReference
+}
+
+export interface CaptureWhenChange {
+  kind: "captureWhen"
+  when: MemoryConfig["capture"]["when"]
+}
+
+export interface EmbeddingsChange {
+  kind: "embeddings"
+  embeddings: MemoryConfig["embeddings"]
+}
+
+export interface JevDecisionChange {
+  kind: "decision"
+  provider: "typesafe"
+}
+
+export interface LayaDecisionChange {
+  kind: "decision"
+  provider: "laya"
+  endpoint: string
+}
+
+export interface ThresholdChange {
+  kind: "gateThreshold" | "relevanceThreshold"
+  value: number | null
+}
+
+export interface BudgetChange {
+  kind: "budgetChars"
+  value: number
+}
+
+export interface LimitChange {
+  kind: "limit"
+  name: keyof MemoryConfig["limits"]
+  value: number
+}
+
+export interface ProjectVaultChange {
+  kind: "projectVault"
+  name: string
+  vault: string
+}
+
+export interface RemoveProjectChange {
+  kind: "removeProject"
+  name: string
+}
+
+export type DecisionChange = JevDecisionChange | LayaDecisionChange
+
+export type SettingChange =
+  | CaptureModelChange
+  | AgentModelChange
+  | CaptureWhenChange
+  | EmbeddingsChange
+  | DecisionChange
+  | ThresholdChange
+  | BudgetChange
+  | LimitChange
+  | ProjectVaultChange
+  | RemoveProjectChange
+
+export type SettingNumberKind = "threshold" | "count"
+
+export interface ConfigCandidate extends Omit<MemoryConfig, "decisionModel"> {
+  decisionModel: DecisionFields
+}
+
+export type NextConfig = Succeeded<ConfigCandidate> | Failed
+
+export type SettingNumberResult = Succeeded<number> | Failed
+
+export type ProjectReplacement = (project: ProjectEntry) => ProjectEntry | null

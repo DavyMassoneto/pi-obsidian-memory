@@ -56,9 +56,7 @@ test("with no config, an invalid config or an unreadable config nothing is guard
   await writeRegistrationSnapshot(context, "")
   expect(await check(request)).toEqual({ succeeded: true })
   const folder = await useTempFolder()
-  expect(
-    await checkVaultAccess({ configPath: folder, dataFolder: folder, cwd: folder, home: homedir(), request }),
-  ).toEqual({
+  expect(await checkVaultAccess({ configPath: folder, cwd: folder, home: homedir(), request })).toEqual({
     succeeded: true,
   })
 })
@@ -78,51 +76,25 @@ test("the config is read on every call, so a vault registered later is guarded a
   expect(await check(request)).toEqual(refused)
 })
 
-const protectedConfig = {
-  succeeded: false,
-  reason: "config-protected",
-  problems: ["The memory config is changed only by the user"],
-}
+test("the config file and the index and model folders can be read, written and named in any command", async () => {
+  const { check, configPath, dataFolder } = await guardFixture()
+  const index = join(dataFolder, "index", "abc.sqlite")
 
-test("writing or editing the config file is refused, reading it stays allowed", async () => {
-  const { check, configPath, root } = await guardFixture()
-
-  expect(await check({ kind: "config-write", path: configPath })).toEqual(protectedConfig)
-  expect(await check({ kind: "file", path: configPath })).toEqual({ succeeded: true })
-  expect(await check({ kind: "config-write", path: join(root, "other.json") })).toEqual({ succeeded: true })
+  for (const path of [configPath, index, join(dataFolder, "models", "model.onnx")]) {
+    expect(await check({ kind: "file", path })).toEqual({ succeeded: true })
+    expect(await check({ kind: "command", command: `echo {} > "${path}"` })).toEqual({ succeeded: true })
+  }
+  expect(await check({ kind: "command", command: `Get-Content "${configPath}"` })).toEqual({ succeeded: true })
+  expect(await check({ kind: "command", command: `rm -rf "${dataFolder}"` })).toEqual({ succeeded: true })
 })
 
-test("a command that mentions the config path is refused and an unrelated one is allowed", async () => {
-  const { check, configPath } = await guardFixture()
-
-  expect(await check({ kind: "command", command: `echo {} > "${configPath}"` })).toEqual(protectedConfig)
-  expect(await check({ kind: "command", command: "git status" })).toEqual({ succeeded: true })
-})
-
-test("the config stays protected when it is missing or invalid, so one write cannot switch the guard off", async () => {
+test("the config file stays editable when it is missing or invalid, so a broken config can be repaired", async () => {
   const { check, configPath } = await guardFixture()
   await writeFile(configPath, "{ not json")
 
-  expect(await check({ kind: "config-write", path: configPath })).toEqual(protectedConfig)
+  expect(await check({ kind: "file", path: configPath })).toEqual({ succeeded: true })
   await rm(configPath)
-  expect(await check({ kind: "config-write", path: configPath })).toEqual(protectedConfig)
-})
-
-test("the whole memory data folder is protected, the index included, and reading a file there stays allowed", async () => {
-  const { check, dataFolder } = await guardFixture()
-  const index = join(dataFolder, "index", "abc.sqlite")
-
-  expect(await check({ kind: "config-write", path: index })).toEqual(protectedConfig)
-  expect(await check({ kind: "config-write", path: dataFolder })).toEqual(protectedConfig)
-  expect(await check({ kind: "file", path: index })).toEqual({ succeeded: true })
-  expect(await check({ kind: "command", command: `rm -rf "${dataFolder}"` })).toEqual(protectedConfig)
-  expect(await check({ kind: "command", command: `del "${index}"` })).toEqual(protectedConfig)
-})
-
-test("a sibling of the memory data folder is not protected", async () => {
-  const { check, dataFolder } = await guardFixture()
-
-  expect(await check({ kind: "config-write", path: `${dataFolder}-other/file.txt` })).toEqual({ succeeded: true })
+  expect(await check({ kind: "file", path: configPath })).toEqual({ succeeded: true })
 })
 
 test("with no config registered a raw device path is not guarded", async () => {

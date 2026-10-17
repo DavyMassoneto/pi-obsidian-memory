@@ -1,4 +1,4 @@
-import { decideMemory, decisionTimeoutMs, type MemoryConfig } from "#src/services"
+import { decideMemory, type MemoryConfig } from "#src/services"
 import { describeDecisionFailure } from "#src/usecases/relevant-memory"
 import { PROBE_FOLDER, PROBE_MESSAGE } from "./constants.ts"
 import type { DecisionProbe, DecisionReport } from "./types.ts"
@@ -18,7 +18,6 @@ export async function checkDecision(
         model: configuration.model,
         maxTokens,
         headMaxTokens,
-        deadlineMs: Date.now() + decisionTimeoutMs,
         signal,
       },
       request: { message: PROBE_MESSAGE, project: null, folder: PROBE_FOLDER },

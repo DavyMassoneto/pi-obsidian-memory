@@ -6,10 +6,6 @@ export function memoryConfigPath(agentDir: string): string {
   return join(agentDir, MEMORY_FOLDER_NAME, CONFIG_FILE_NAME)
 }
 
-export function memoryDataFolder(agentDir: string): string {
-  return join(agentDir, MEMORY_FOLDER_NAME)
-}
-
 export function memoryModelCachePath(agentDir: string): string {
   return join(agentDir, MEMORY_FOLDER_NAME, MODEL_FOLDER_NAME)
 }

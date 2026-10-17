@@ -1,8 +1,9 @@
 import { rm } from "node:fs/promises"
 import { join } from "node:path"
 
-import { expect, onTestFinished, test } from "vitest"
+import { expect, onTestFinished, test, vi } from "vitest"
 
+import type { CompletionPort } from "#src/services"
 import {
   decisionServer,
   eventually,
@@ -13,6 +14,7 @@ import {
   putCatalogFile,
   putDontForget,
   putNote,
+  registerFakePiAt,
   relevanceScript,
   relevantPiFixture,
   startedPiFixture,
@@ -201,4 +203,23 @@ test("a run started by a custom message adds nothing and never starts retrieval"
 
   expect(await pi.runCustomStart(context)).toBeNull()
   expect(complete.mock.calls.length).toBe(calls)
+})
+
+test("a failing provider adds nothing, costs one call per message, and is told once per session naming its error", async () => {
+  const fixture = await relevantPiFixture({ laya: RANKED, session: [], turns: [] })
+  const failing = vi.fn<CompletionPort>(async () => ({ status: "error", error: "provider down" }))
+  const pi = registerFakePiAt(fixture.agentDir, {}, { completionOf: () => failing })
+  const { context, notifications } = fakePiContext(fixture.workingFolder, { hasUI: true })
+  await pi.startSession(context, "startup")
+  await eventually(() => expect(failing).toHaveBeenCalledTimes(1))
+
+  const first = await pi.runTurn(context, "pnpm?")
+  const second = await pi.runTurn(context, "pnpm??")
+
+  expect(first.message).toBeNull()
+  expect(second.message).toBeNull()
+  expect(failing).toHaveBeenCalledTimes(3)
+  const told = notifications.filter((item) => item.message.startsWith("The memory agent could not find memory:"))
+  expect(told).toHaveLength(1)
+  expect(told[0]?.message).toContain("provider down")
 })

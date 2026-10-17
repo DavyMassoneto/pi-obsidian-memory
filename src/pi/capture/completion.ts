@@ -12,7 +12,10 @@ export function registryCompletion(ctx: MemoryPiContext): CompletionPort {
       { signal: request.signal, maxTokens: request.maxTokens },
     )
     if (message.stopReason === "aborted") return { status: "aborted" }
-    if (message.stopReason === "error") return { status: "error" }
+    if (message.stopReason === "error") {
+      if (message.errorMessage) return { status: "error", error: message.errorMessage }
+      return { status: "error" }
+    }
     const text = message.content.flatMap((part: TextPart) => {
       if (part.type === "text" && typeof part.text === "string") return [part.text]
       return []

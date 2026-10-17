@@ -89,6 +89,7 @@ test("a load that fails unexpectedly still gives a block that names the tools an
   const block = new MemoryBlock(() => Promise.reject(new Error("disk exploded")))
 
   block.begin({
+    ctx: context,
     context: operation,
     configured: true,
     loaded: new LoadedMemory(),
@@ -123,6 +124,7 @@ test("a load that is refused still gives a block that names the tools and says w
   }))
 
   block.begin({
+    ctx: context,
     context: operation,
     configured: true,
     loaded: new LoadedMemory(),
@@ -164,6 +166,7 @@ test("a relevant-notes load that rejects is told to the user and does not take t
   const block = new MemoryBlock(async () => ({ succeeded: true, output: { vaults: [] } }))
 
   block.begin({
+    ctx: context,
     context: operation,
     configured: true,
     loaded: new LoadedMemory(),

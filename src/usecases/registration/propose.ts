@@ -1,11 +1,7 @@
 import { inspectVaultFolder, proposeSetup, resolveRegistrationVault, setupDisclosures } from "#src/services"
 import type { Failed } from "#src/shared"
 import type { MemoryContext } from "#src/usecases/add-memory"
-import type { ConfigRepairDraft, SetupProposalRequest, SetupProposalResult, SetupVaultMode } from "./types.ts"
-
-export function setupNeedsModel(draft: ConfigRepairDraft): boolean {
-  return !modelResolved(draft.capture.model) || !modelResolved(draft.memoryAgent.model)
-}
+import type { SetupProposalRequest, SetupProposalResult, SetupVaultMode } from "./types.ts"
 
 export async function proposeMemorySetup(
   request: SetupProposalRequest,
@@ -35,8 +31,4 @@ async function vaultFolderRefusal(vault: string, mode: SetupVaultMode): Promise<
     return { succeeded: false, problems: [`${vault} does not exist; create it instead of attaching`] }
   }
   return null
-}
-
-function modelResolved(model: ConfigRepairDraft["capture"]["model"]): boolean {
-  return typeof model.provider === "string" && typeof model.id === "string"
 }

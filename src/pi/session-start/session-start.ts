@@ -18,6 +18,7 @@ export function sessionStartHandler(
     relevant.restore(ctx)
     const result = await checkMemoryConfig({ configPath: paths.configPath, workingFolder: ctx.cwd })
     block.begin({
+      ctx,
       context: sessions.operationContext(session, ctx.cwd, paths, undefined),
       configured: result.succeeded,
       loaded: sessions.loaded(),

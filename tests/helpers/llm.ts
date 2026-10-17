@@ -14,8 +14,6 @@ export function captureRequest(): CaptureRequest {
   return {
     model: { provider: "synthetic", id: "fixed-model" },
     signal: new AbortController().signal,
-    deadline: Date.now() + 10000,
-    round: 1,
     context: { project: null, folder: "workspace" },
     observations: [],
     transcriptDelta: [{ role: "user", text: "Remember my token: secret-123" }],
@@ -25,8 +23,8 @@ export function captureRequest(): CaptureRequest {
 }
 
 export function retrievalRequest(): RetrievalRequest {
-  const { model, signal, deadline, round, context } = captureRequest()
-  return { model, signal, deadline, round, context, observations: [], query: "What is my token?" }
+  const { model, signal, context } = captureRequest()
+  return { model, signal, context, observations: [], query: "What is my token?" }
 }
 
 export function completionPort(text: string) {

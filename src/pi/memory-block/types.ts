@@ -13,6 +13,7 @@ export type RelevantLoader = () => Promise<string | null>
 export type BlockNotifier = (messages: string[]) => void
 
 export interface BlockStart {
+  ctx: MemoryPiContext
   context: MemoryOperationContext
   configured: boolean
   loaded: LoadedMemory

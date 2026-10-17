@@ -3,12 +3,10 @@ import { join } from "node:path"
 
 import { expect, test, vi } from "vitest"
 
-import { MAX_CAPTURE_DURATION_MS, MAX_MODEL_ROUNDS } from "#src/services"
 import { captureMemory } from "#src/usecases"
 import {
   answering,
   captureFixture,
-  completionPort,
   noteWithId,
   PNPM_ADD,
   putCatalogFile,
@@ -53,17 +51,20 @@ test("text that is not an action is refused as unparseable and the model can try
   expect(complete).toHaveBeenCalledTimes(2)
 })
 
-test("a model that never produces a valid step fails the review after the maximum rounds, leaving nothing written", async () => {
+test("a model that keeps returning invalid steps is asked again until it finishes", async () => {
   const { context } = await captureFixture()
-  const complete = completionPort("not json at all")
+  const complete = vi.fn(async () => {
+    if (complete.mock.calls.length > 12) return { status: "completed" as const, text: '{"action":"finish"}' }
+    return { status: "completed" as const, text: "not json at all" }
+  })
 
   const result = await captureMemory(reviewRun("remember pnpm"), context, complete, answering(null))
 
-  expect(result).toMatchObject({ succeeded: false, reason: "model-failed" })
-  expect(complete).toHaveBeenCalledTimes(MAX_MODEL_ROUNDS)
+  expect(result).toMatchObject({ succeeded: true, output: { applied: [] } })
+  expect(complete).toHaveBeenCalledTimes(13)
 })
 
-test("a question is asked with the time left until the deadline and the operation's signal", async () => {
+test("a question is asked with only the operation's signal and no time limit", async () => {
   const { context } = await captureFixture()
   const ask = answering("global")
   const complete = scriptedCompletion([{ action: "clarify", question: "Global or project?" }, { action: "finish" }])
@@ -74,9 +75,7 @@ test("a question is asked with the time left until the deadline and the operatio
   if (!call) throw new Error("the question was not asked")
   const [question, limits] = call
   expect(question).toBe("Global or project?")
-  expect(limits.signal).toBe(context.signal)
-  expect(limits.timeoutMs).toBeGreaterThan(0)
-  expect(limits.timeoutMs).toBeLessThanOrEqual(MAX_CAPTURE_DURATION_MS)
+  expect(limits).toEqual({ signal: context.signal })
 })
 
 test("an Obsidian edit followed by the main model's own read does not let capture overwrite the edit", async () => {

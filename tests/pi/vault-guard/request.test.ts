@@ -7,11 +7,8 @@ import { toolCallEvent } from "#test-helpers"
 
 const cwd = join("work", "project")
 
-test.each(["write", "edit"])("%s is a vault file request and a config write request on the same path", (tool) => {
-  expect(accessRequestsOf(toolCallEvent(tool, { path: "a/b.md" }), cwd)).toEqual([
-    { kind: "file", path: "a/b.md" },
-    { kind: "config-write", path: "a/b.md" },
-  ])
+test.each(["write", "edit"])("%s is a vault file request", (tool) => {
+  expect(accessRequestsOf(toolCallEvent(tool, { path: "a/b.md" }), cwd)).toEqual([{ kind: "file", path: "a/b.md" }])
 })
 
 test("read is a file request, ls a listing and bash or powershell a command", () => {

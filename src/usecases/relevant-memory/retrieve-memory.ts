@@ -1,51 +1,14 @@
-import {
-  decisionTimeoutMs,
-  fitBudget,
-  loadedNoteBlock,
-  MAX_RETRIEVAL_DURATION_MS,
-  shouldRetrieveMemory,
-} from "#src/services"
-import {
-  captureMemoryOperationContext,
-  limitOperation,
-  type MemoryOperationContext,
-} from "#src/usecases/operation-context"
+import { fitBudget, loadedNoteBlock, shouldRetrieveMemory } from "#src/services"
+import type { MemoryOperationContext } from "#src/usecases/operation-context"
 import { type ResolvedMemory, resolveMemory } from "#src/usecases/resolve-memory"
 import { findNotes } from "./agent.ts"
-import {
-  BLOCK_SEPARATOR,
-  MAX_QUERY_CHARS,
-  MESSAGE_LIMIT_MS,
-  NO_CHANGES,
-  OUT_OF_TIME,
-  RELEVANT_INTRO,
-} from "./constants.ts"
+import { BLOCK_SEPARATOR, MAX_QUERY_CHARS, RELEVANT_INTRO } from "./constants.ts"
 import { cutoffsMissingNotice, decidingCutoffs, resolveCutoffs } from "./cutoffs.ts"
 import { decisionContextOf, decisionNotice, needsMemory, rankNotes } from "./decision.ts"
 import { refreshLoaded } from "./refresh.ts"
 import type { RankedNotes, RetrieveDeps, RetrieveMemoryResult, RetrieveRequest } from "./types.ts"
 
 export async function retrieveMemory(
-  request: RetrieveRequest,
-  callerContext: MemoryOperationContext,
-  deps: RetrieveDeps,
-): Promise<RetrieveMemoryResult> {
-  const limited = limitOperation(captureMemoryOperationContext(callerContext), MESSAGE_LIMIT_MS)
-  try {
-    const result = await retrieveWithin(request, limited.context, deps)
-    if (!limited.expired()) return result
-    return timedOut(result)
-  } finally {
-    limited.release()
-  }
-}
-
-function timedOut(result: RetrieveMemoryResult): RetrieveMemoryResult {
-  if (!result.succeeded) return { succeeded: true, output: { text: null, notices: [OUT_OF_TIME], changes: NO_CHANGES } }
-  return { succeeded: true, output: { ...result.output, notices: [OUT_OF_TIME] } }
-}
-
-async function retrieveWithin(
   request: RetrieveRequest,
   context: MemoryOperationContext,
   deps: RetrieveDeps,
@@ -76,8 +39,7 @@ async function relevantNotes(
   const report = resolveCutoffs(memory.config.decisionModel)
   const cutoffs = decidingCutoffs(report)
   if (!cutoffs) return { notes: [], notice: cutoffsMissingNotice(report) }
-  const limits = { deadlineMs: Date.now() + decisionTimeoutMs + MAX_RETRIEVAL_DURATION_MS, signal: context.signal }
-  const decision = await decisionContextOf(memory.config.decisionModel, limits, deps.jev)
+  const decision = await decisionContextOf(memory.config.decisionModel, { signal: context.signal }, deps.jev)
   if (typeof decision === "string") return { notes: [], notice: decision }
   let project: string | null = null
   if (memory.project) project = memory.project.vault.name
@@ -90,7 +52,6 @@ async function relevantNotes(
       agent: { project, folder },
       query: message.slice(0, MAX_QUERY_CHARS),
       model: memory.config.memoryAgent.model,
-      deadline: limits.deadlineMs,
     },
     context,
     deps.complete,

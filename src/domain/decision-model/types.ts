@@ -53,7 +53,6 @@ export type DecisionFailureCode =
   | "truncated"
   | "collapsed-options"
   | "aborted"
-  | "deadline"
 
 export interface DecisionFailure {
   succeeded: false

@@ -1,6 +1,5 @@
 import { expect, test } from "vitest"
 
-import { MAX_CAPTURE_DURATION_MS } from "#src/services"
 import {
   ADD_PNPM,
   assistantEntry,
@@ -78,20 +77,14 @@ test("without a UI a question means skip: nothing is written and the skipped ite
   await eventually(() => expect(pi.cursors).toEqual([{ lastEntryId: "2" }]))
 })
 
-test("a model failure is shown as a warning with a UI and stays silent without one", async () => {
+test("a failing provider ends the review with one call and one warning naming its error, and stays silent without a UI", async () => {
   const failing: StepFunction = () => {
     throw new Error("boom")
   }
-  const withUi = await capturePiFixture(
-    "after-each-turn",
-    Array.from({ length: 10 }, () => failing),
-  )
+  const withUi = await capturePiFixture("after-each-turn", [failing, failing])
   const ui = fakePiContext(withUi.workingFolder, { hasUI: true, branch })
   await withUi.pi.startSession(ui.context, "startup")
-  const withoutUi = await capturePiFixture(
-    "after-each-turn",
-    Array.from({ length: 10 }, () => failing),
-  )
+  const withoutUi = await capturePiFixture("after-each-turn", [failing, failing])
   const quiet = fakePiContext(withoutUi.workingFolder, { hasUI: false, branch })
   await withoutUi.pi.startSession(quiet.context, "startup")
 
@@ -100,10 +93,11 @@ test("a model failure is shown as a warning with a UI and stays silent without o
 
   await eventually(() =>
     expect(ui.notifications).toEqual([
-      { message: expect.stringContaining("Memory capture did not finish:"), type: "warning" },
+      { message: expect.stringContaining("Memory capture did not finish: Model call failed: boom"), type: "warning" },
     ]),
   )
-  await eventually(() => expect(withoutUi.complete).toHaveBeenCalledTimes(8))
+  await eventually(() => expect(withoutUi.complete).toHaveBeenCalledTimes(1))
+  expect(withUi.complete).toHaveBeenCalledTimes(1)
   expect(quiet.notifications).toEqual([])
   expect(withUi.pi.cursors).toEqual([])
 })
@@ -155,7 +149,7 @@ test("a session with nothing new to review never calls the model", async () => {
   expect(complete).not.toHaveBeenCalled()
 })
 
-test("a question is asked with the time left until the capture deadline and a signal that stops it", async () => {
+test("a question is asked with no time limit and a signal that stops it", async () => {
   const { pi, workingFolder } = await capturePiFixture("after-each-turn", [
     { action: "clarify", question: "Global or project?" },
     { action: "finish" },
@@ -167,8 +161,7 @@ test("a question is asked with the time left until the capture deadline and a si
 
   await eventually(() => expect(prompts).toHaveLength(1))
   const dialog = prompts[0]?.dialog
-  expect(dialog?.timeout).toBeGreaterThan(0)
-  expect(dialog?.timeout).toBeLessThanOrEqual(MAX_CAPTURE_DURATION_MS)
+  expect(dialog).not.toHaveProperty("timeout")
   expect(dialog?.signal).toBeInstanceOf(AbortSignal)
 })
 

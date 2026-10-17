@@ -1,6 +1,5 @@
 import {
   type CompletionPort,
-  MAX_MODEL_ROUNDS,
   type MemoryIdentity,
   type MemoryObservation,
   type ReadObservation,
@@ -8,7 +7,7 @@ import {
 } from "#src/services"
 import { detailOf, observeGet, observeList, observeSearch } from "#src/usecases/capture-memory"
 import { type MemoryOperationContext, memoryOperationInterruption } from "#src/usecases/operation-context"
-import { AGENT_FAILED, AGENT_UNFINISHED } from "./constants.ts"
+import { AGENT_FAILED } from "./constants.ts"
 import type { AgentOutcome, AgentRequest, ReadStep } from "./types.ts"
 
 export async function findNotes(
@@ -17,18 +16,14 @@ export async function findNotes(
   complete: CompletionPort,
 ): Promise<AgentOutcome> {
   const observations: MemoryObservation[] = []
-  for (let round = 1; round <= MAX_MODEL_ROUNDS; round++) {
+  for (;;) {
     if (memoryOperationInterruption(context)) return { succeeded: false, notice: null }
-    const { agent, query, model, deadline } = request
-    const step = await retrieveStep(
-      { context: agent, query, observations, model, signal: context.signal, deadline, round },
-      complete,
-    )
+    const { agent, query, model } = request
+    const step = await retrieveStep({ context: agent, query, observations, model, signal: context.signal }, complete)
     if (!step.succeeded) return { succeeded: false, notice: `${AGENT_FAILED} ${detailOf(step.problems)}` }
     if (step.output.action === "finish") return { succeeded: true, output: chosen(step.output.notes, observations) }
     observations.push(await observe(step.output, context))
   }
-  return { succeeded: false, notice: AGENT_UNFINISHED }
 }
 
 function observe(action: ReadStep, context: MemoryOperationContext): Promise<MemoryObservation> {

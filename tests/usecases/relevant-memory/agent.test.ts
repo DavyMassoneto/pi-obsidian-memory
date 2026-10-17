@@ -1,4 +1,4 @@
-import { expect, test } from "vitest"
+import { expect, test, vi } from "vitest"
 
 import { findNotes } from "#src/usecases"
 import { agentFixture, FINISH_WITH_READS, getNote, retrievalCompletion } from "#test-helpers"
@@ -23,14 +23,27 @@ test("the notes it finishes with are the notes it read, as read observations", a
   expect(found).toMatchObject({ succeeded: true, output: [{ kind: "read", path: pnpm, body: "Always pnpm." }] })
 })
 
-test("a model that never finishes ends after the maximum rounds with a notice", async () => {
+test("a model that keeps reading for many rounds is not cut off and ends when it finishes", async () => {
   const { context, request, pnpm } = await agentFixture()
-  const complete = retrievalCompletion(Array.from({ length: 10 }, () => getNote(pnpm)))
+  const complete = retrievalCompletion([...Array.from({ length: 12 }, () => getNote(pnpm)), FINISH_WITH_READS])
 
   const found = await findNotes(request, context, complete)
 
-  expect(found).toEqual({ succeeded: false, notice: expect.stringContaining("did not finish") })
-  expect(complete).toHaveBeenCalledTimes(8)
+  expect(found.succeeded).toBe(true)
+  expect(complete).toHaveBeenCalledTimes(13)
+})
+
+test("a failed model call ends the search at once with a notice that names the provider's error", async () => {
+  const { context, request } = await agentFixture()
+  const complete = vi.fn(async () => ({ status: "error" as const, error: "provider down" }))
+
+  const found = await findNotes(request, context, complete)
+
+  expect(found).toEqual({
+    succeeded: false,
+    notice: expect.stringMatching(/could not find memory:.*provider down/),
+  })
+  expect(complete).toHaveBeenCalledTimes(1)
 })
 
 test("a step the schema refuses ends the search with the problems", async () => {

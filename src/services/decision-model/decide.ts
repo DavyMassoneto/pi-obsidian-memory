@@ -1,9 +1,9 @@
 import type { DecisionResult } from "#src/domain"
-import { withinDecisionDeadline } from "./deadline.ts"
 import { initialDiagnostics } from "./diagnostics.ts"
+import { interruptibleDecision } from "./interruption.ts"
 import { classifyJev } from "./jev.ts"
 import { classifyLaya } from "./laya.ts"
-import { decisionPreflight, remainingDecisionMs } from "./preflight.ts"
+import { decisionPreflight } from "./preflight.ts"
 import { candidatePrompt, memoryPrompt } from "./prompts.ts"
 import type { CandidateDecisionCall, DecisionContext, DecisionPrompt, MemoryDecisionCall } from "./types.ts"
 
@@ -14,13 +14,12 @@ async function decide(context: DecisionContext, prompt: DecisionPrompt): Promise
   const diagnostics = initialDiagnostics(context)
   const refusal = decisionPreflight(context)
   if (refusal) return { succeeded: false, code: refusal, diagnostics }
-  return withinDecisionDeadline(context, diagnostics, {
+  return interruptibleDecision(context, diagnostics, {
     async run(signal) {
       const call = {
         prompt,
         diagnostics,
         signal,
-        timeoutMs: remainingDecisionMs(context),
         question: questionName(prompt),
       }
       if (context.provider === "laya") return classifyLaya(context, call)

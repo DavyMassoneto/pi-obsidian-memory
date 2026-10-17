@@ -24,13 +24,12 @@ export async function agentFixture() {
     agent: { project: "loja", folder: fixture.context.workingFolder },
     query: "package managers",
     model: fixture.config.memoryAgent.model,
-    deadline: Date.now() + 60_000,
   }
   return { ...fixture, pnpm, yarn, request }
 }
 
 export async function layaLimits(fixture: Awaited<ReturnType<typeof relevantFixture>>) {
-  return { deadlineMs: Date.now() + 5000, signal: fixture.context.signal }
+  return { signal: fixture.context.signal }
 }
 
 export function readNote(path: string, hash: string): ReadObservation {

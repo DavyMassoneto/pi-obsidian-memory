@@ -107,7 +107,7 @@ const BATCH_SIZE = 20
 
 export async function embedBenchmark() {
   const embedder = createLocalEmbedder({ cachePath: benchmarkCacheFolder() })
-  const context = { signal: new AbortController().signal, timeoutMs: 600_000 }
+  const context = { signal: new AbortController().signal }
   const embedAll = async (purpose: "query" | "document", texts: string[]) => {
     const vectors: (readonly number[])[] = []
     for (let start = 0; start < texts.length; start += BATCH_SIZE) {

@@ -15,7 +15,7 @@ import {
 import { type MemoryOperationContext, memoryOperationInterruption } from "#src/usecases/operation-context"
 import type { ResolvedMemory } from "#src/usecases/resolve-memory"
 import type { SemanticAvailable, SemanticPort } from "#src/usecases/semantic-port"
-import { EMBED_BATCH_SIZE, EMBED_TIMEOUT_MS, OTHER_PROVIDER } from "./constants.ts"
+import { EMBED_BATCH_SIZE, OTHER_PROVIDER } from "./constants.ts"
 
 export async function refreshSemantic(
   index: SearchIndex,
@@ -47,7 +47,7 @@ async function refreshVectors(
   for (let start = 0; start < inputs.length; start += EMBED_BATCH_SIZE) {
     if (memoryOperationInterruption(context)) return []
     const batch: EmbeddingBatchRequest = { purpose: "document", inputs: inputs.slice(start, start + EMBED_BATCH_SIZE) }
-    const embedded = await port.embed(batch, { signal: context.signal, timeoutMs: EMBED_TIMEOUT_MS })
+    const embedded = await port.embed(batch, { signal: context.signal })
     if (!embedded.succeeded) return [stoppedLine(embedded.status, start, inputs.length)]
     if (embedded.output.fingerprint !== fingerprint) return [OTHER_PROVIDER]
     const add: VectorChunk[] = embedded.output.items.map((item) => ({

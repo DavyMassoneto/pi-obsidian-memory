@@ -3,8 +3,6 @@ import {
   type CaptureObservation,
   type CompletionPort,
   captureStep,
-  MAX_CAPTURE_DURATION_MS,
-  MAX_MODEL_ROUNDS,
   type ReadObservation,
   type TranscriptWindow,
   transcriptWindows,
@@ -12,7 +10,7 @@ import {
 import { type MemoryOperationContext, memoryOperationInterruption } from "#src/usecases/operation-context"
 import { resolveMemory } from "#src/usecases/resolve-memory"
 import { applyWrite } from "./apply.ts"
-import { INTERRUPTED, MAX_REFUSAL_PROBLEMS, OUT_OF_TIME } from "./constants.ts"
+import { INTERRUPTED, MAX_REFUSAL_PROBLEMS } from "./constants.ts"
 import { observeGet, observeList, observeRead, observeSearch } from "./observe.ts"
 import type {
   CaptureBase,
@@ -49,7 +47,6 @@ export async function captureMemory(
     limits: { maxBodyChars: config.limits.maxBodyChars, maxStatementChars: config.limits.maxStatementChars },
     model: config.capture.model,
     signal: context.signal,
-    deadline: Date.now() + MAX_CAPTURE_DURATION_MS,
   }
   const report: CaptureReport = { windows: 0, applied: [], skipped: [] }
   const tools: ReviewTools = { context, complete, ask, report }
@@ -67,21 +64,19 @@ async function reviewWindow(
   tools: ReviewTools,
 ): Promise<CaptureFailure | null> {
   const observations: CaptureObservation[] = []
-  let lastRefusal: string[] | null = null
-  for (let round = 1; round <= MAX_MODEL_ROUNDS; round++) {
+  for (;;) {
     if (memoryOperationInterruption(tools.context)) return failureOf("interrupted", [INTERRUPTED], tools)
-    if (Date.now() >= base.deadline) return failureOf("out-of-time", [OUT_OF_TIME], tools)
-    const step = await captureStep({ ...base, transcriptDelta: window, observations, round }, tools.complete)
+    const step = await captureStep({ ...base, transcriptDelta: window, observations }, tools.complete)
+    if (!step.succeeded && "modelCall" in step) {
+      if (memoryOperationInterruption(tools.context)) return failureOf("interrupted", [INTERRUPTED], tools)
+      return failureOf("model-failed", step.problems, tools)
+    }
     if (!step.succeeded) {
-      lastRefusal = step.problems
       observations.push(refusedStep(step.problems))
       continue
     }
-    lastRefusal = null
     if ((await act(step.output, observations, base, tools)) === "stop") return endOfWindow(tools)
   }
-  if (lastRefusal) return failureOf("model-failed", lastRefusal, tools)
-  return endOfWindow(tools)
 }
 
 function endOfWindow(tools: ReviewTools): CaptureFailure | null {
@@ -121,7 +116,7 @@ async function clarify(
   base: CaptureBase,
   tools: ReviewTools,
 ): Promise<NextStep> {
-  const answer = await tools.ask(question, { timeoutMs: Math.max(1, base.deadline - Date.now()), signal: base.signal })
+  const answer = await tools.ask(question, { signal: base.signal })
   if (typeof answer !== "string" || answer.trim() === "") {
     tools.report.skipped.push(question)
     return "stop"

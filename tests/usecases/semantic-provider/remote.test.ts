@@ -9,7 +9,7 @@ test.each(["openai", "google"] as const)(
   async (provider) => {
     const port = createRemoteSemantic(provider, "key")
 
-    const result = await port.embed({ purpose: "document", inputs: [] }, { signal, timeoutMs: 1000 })
+    const result = await port.embed({ purpose: "document", inputs: [] }, { signal })
 
     expect(port.available).toBe(true)
     expect(result).toMatchObject({ succeeded: false, status: "invalid-input" })

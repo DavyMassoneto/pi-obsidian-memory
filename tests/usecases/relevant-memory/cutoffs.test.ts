@@ -38,13 +38,13 @@ test("Laya has no value of its own, so it has none until the config sets one", (
   expect(decidingCutoffs(report)).toBeNull()
 })
 
-test("Laya with only one cutoff set still cannot decide, and the notice names the missing one and the docs", () => {
+test("Laya with only one cutoff set still cannot decide, and the notice names the missing one and /memory-setup", () => {
   const report = resolveCutoffs({ ...bareLaya, gateThreshold: 0.3 })
 
   expect(decidingCutoffs(report)).toBeNull()
   expect(cutoffsMissingNotice(report)).toContain("relevanceThreshold")
   expect(cutoffsMissingNotice(report)).not.toContain("gateThreshold")
-  expect(cutoffsMissingNotice(report)).toContain("docs/decision-thresholds.md")
+  expect(cutoffsMissingNotice(report)).toContain("/memory-setup")
 })
 
 test("Laya with both cutoffs in the config decides with them", () => {

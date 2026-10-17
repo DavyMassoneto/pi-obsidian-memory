@@ -148,6 +148,6 @@ test("a Laya with no cutoffs is told once per session, adds nothing and asks no 
 
   expect(first.message).toBeNull()
   expect(fixture.complete).toHaveBeenCalledTimes(1)
-  const told = notifications.filter((item) => item.message.includes("docs/decision-thresholds.md"))
+  const told = notifications.filter((item) => item.message.includes("/memory-setup"))
   expect(told).toHaveLength(1)
 })

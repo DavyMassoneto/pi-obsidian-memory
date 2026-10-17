@@ -62,7 +62,6 @@ export function layaContext(endpoint: string): LayaContext {
     model: "multilingual",
     maxTokens: 8192,
     headMaxTokens: 192,
-    deadlineMs: Date.now() + 5000,
     signal: new AbortController().signal,
   }
 }
@@ -126,7 +125,6 @@ export function jevContext(result: JevClassifierResult): JevContext {
   return {
     provider: "typesafe",
     model: "jev-latest",
-    deadlineMs: Date.now() + 5000,
     signal: new AbortController().signal,
     classifier: { classify: vi.fn().mockResolvedValue(result) },
   }

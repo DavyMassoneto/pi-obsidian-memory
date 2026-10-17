@@ -130,6 +130,10 @@ export function slowCompletion(delayMs: number, steps: RetrievalStep[]) {
   })
 }
 
+export function after<Value>(ms: number, value: Value): Promise<Value> {
+  return new Promise((resolve) => setTimeout(() => resolve(value), ms))
+}
+
 const REAL_SET_TIMEOUT = globalThis.setTimeout
 const REAL_WAIT_MS = 1
 

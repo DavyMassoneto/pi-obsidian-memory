@@ -5,8 +5,6 @@ import { dirname, parse } from "node:path"
 import { checkVaultAccess, type GuardedTargets, hitsTargets, type VaultAccessRequest } from "#src/usecases"
 import { searchFixture } from "./search-memory.ts"
 
-type GuardRequest = Parameters<typeof checkVaultAccess>[0]["request"]
-
 const SEPARATOR = "\\"
 
 export async function guardFixture() {
@@ -14,7 +12,7 @@ export async function guardFixture() {
   const { configPath } = fixture.context
   const dataFolder = dirname(configPath)
   const cwd = fixture.context.workingFolder
-  const check = (request: GuardRequest) => checkVaultAccess({ configPath, dataFolder, cwd, home: homedir(), request })
+  const check = (request: VaultAccessRequest) => checkVaultAccess({ configPath, cwd, home: homedir(), request })
   return { ...fixture, check, cwd, configPath, dataFolder }
 }
 

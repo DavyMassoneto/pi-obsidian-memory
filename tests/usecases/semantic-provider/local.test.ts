@@ -32,10 +32,7 @@ test("a model file that is not the published one is an invalid model", async () 
 test("the local port embeds through the local embedder and is unavailable without a usable cache path", async () => {
   const local = createLocalSemantic({ cachePath: "" })
 
-  const result = await local.port.embed(
-    { purpose: "query", inputs: [{ key: "q", text: "car" }] },
-    { signal, timeoutMs: 1000 },
-  )
+  const result = await local.port.embed({ purpose: "query", inputs: [{ key: "q", text: "car" }] }, { signal })
   await local.dispose()
 
   expect(local.port.available).toBe(true)

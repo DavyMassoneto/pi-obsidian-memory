@@ -3,37 +3,20 @@ import {
   dontForgetCandidates,
   inspectVaultFile,
   isLoadedDontForget,
-  MAX_RETRIEVAL_DURATION_MS,
   type OpenedIndex,
   readIndexInventory,
   type VaultNoteAnalysis,
 } from "#src/services"
 import {
-  captureMemoryOperationContext,
-  limitOperation,
   type MemoryOperationContext,
   memoryAdmissionRefusal,
   memoryOperationInterruption,
 } from "#src/usecases/operation-context"
 import { type ResolvedMemory, type ResolvedVault, resolveLeasedMemory } from "#src/usecases/resolve-memory/leased"
 import { openVaultIndex, synchronizeOpenedMemory } from "#src/usecases/synchronize-memory/leased"
-import { DONT_FORGET_OUT_OF_TIME } from "./constants.ts"
 import type { DontForgetVault, LoadDontForgetResult, LoadedDontForgetNote } from "./types.ts"
 
-export async function loadDontForget(callerContext: MemoryOperationContext): Promise<LoadDontForgetResult> {
-  const limited = limitOperation(captureMemoryOperationContext(callerContext), MAX_RETRIEVAL_DURATION_MS)
-  try {
-    const result = await loadWithin(limited.context)
-    if (limited.expired() && !result.succeeded) {
-      return { succeeded: false, reason: "cancelled", problems: [DONT_FORGET_OUT_OF_TIME] }
-    }
-    return result
-  } finally {
-    limited.release()
-  }
-}
-
-async function loadWithin(context: MemoryOperationContext): Promise<LoadDontForgetResult> {
+export async function loadDontForget(context: MemoryOperationContext): Promise<LoadDontForgetResult> {
   const lease = await context.session.acquire(context.stamp, context.signal)
   if (!lease) return memoryAdmissionRefusal(context)
   try {

@@ -30,6 +30,11 @@ export interface RecordedNotification {
   type: string | undefined
 }
 
+export interface RecordedStatus {
+  key: string
+  text: string | undefined
+}
+
 export interface FakePiContextOptions {
   cwd: string
   hasUI: boolean
@@ -83,6 +88,7 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
   const confirms = [...script.confirms]
   const prompts: AskedPrompt[] = []
   const notifications: RecordedNotification[] = []
+  const statuses: RecordedStatus[] = []
   const context: MemoryPiContext = {
     cwd: options.cwd,
     hasUI: options.hasUI,
@@ -138,16 +144,18 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
       notify(message, type) {
         notifications.push({ message, type })
       },
+      setStatus(key, text) {
+        statuses.push({ key, text })
+      },
     },
   }
-  return { context, prompts, notifications }
+  return { context, prompts, notifications, statuses }
 }
 
 export function unanswered(dialog: DialogOptions | undefined): Promise<string | undefined> {
   return new Promise((resolve) => {
     if (dialog?.signal?.aborted) return resolve(undefined)
     dialog?.signal?.addEventListener("abort", () => resolve(undefined), { once: true })
-    if (typeof dialog?.timeout === "number") setTimeout(() => resolve(undefined), dialog.timeout)
   })
 }
 

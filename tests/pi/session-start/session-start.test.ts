@@ -3,7 +3,7 @@ import { mkdir, readdir, readFile } from "node:fs/promises"
 import { expect, test, vi } from "vitest"
 
 import { SETUP_CREATE_OPTION } from "#src/pi"
-import { fakePiContext, piRegistrationFixture, relevantPiFixture, writeAgentConfig } from "#test-helpers"
+import { fakePiContext, piRegistrationFixture, relevantPiFixture, setupContext, writeAgentConfig } from "#test-helpers"
 
 test("with no config the session offers /memory-setup", async () => {
   const { pi, workingFolder } = await piRegistrationFixture()
@@ -74,9 +74,7 @@ test.each([
 test("a new session_start stops a command still waiting for an answer before it writes", async () => {
   const { pi, configPath, globalVault, workingFolder, root } = await piRegistrationFixture()
   const answer = Promise.withResolvers<string | undefined>()
-  const { context, prompts } = fakePiContext(workingFolder, {
-    answers: { selects: [SETUP_CREATE_OPTION], inputs: [answer.promise], confirms: [] },
-  })
+  const { context, prompts } = setupContext(workingFolder, [SETUP_CREATE_OPTION], { inputs: [answer.promise] })
   await pi.startSession(context, "startup")
 
   const running = pi.runCommand("memory-setup", context)
