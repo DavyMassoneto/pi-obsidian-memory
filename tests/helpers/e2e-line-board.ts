@@ -6,12 +6,16 @@ export class LineBoard {
   #waiters: Waiter[] = []
   #failure: Error | null = null
 
-  waitFor(test: RecordTest, from: number): Promise<string> {
-    const found = this.lines.slice(from).find(test)
+  get pending(): string[] {
+    return this.#waiters.map((waiter) => waiter.waitingFor)
+  }
+
+  waitFor(test: RecordTest, from: number, waitingFor: string): Promise<string> {
+    const found = this.lines.slice(from).find(test.matches)
     if (typeof found === "string") return Promise.resolve(found)
     if (this.#failure) return Promise.reject(this.#failure)
     const waiting = Promise.withResolvers<string>()
-    this.#waiters.push({ test, resolve: waiting.resolve, reject: waiting.reject })
+    this.#waiters.push({ test, waitingFor, resolve: waiting.resolve, reject: waiting.reject })
     return waiting.promise
   }
 
@@ -20,7 +24,7 @@ export class LineBoard {
   }
 
   settle(line: string): void {
-    const matched = this.#waiters.filter((waiter) => waiter.test(line))
+    const matched = this.#waiters.filter((waiter) => waiter.test.matches(line))
     this.#waiters = this.#waiters.filter((waiter) => !matched.includes(waiter))
     for (const waiter of matched) waiter.resolve(line)
   }

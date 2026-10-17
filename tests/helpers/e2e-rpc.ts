@@ -28,6 +28,9 @@ import {
 import { RpcCommands } from "./e2e-rpc-commands.ts"
 import type { BegunCommand, IdentifiedCommand, OutgoingCommand, RpcStart } from "./e2e-rpc-types.ts"
 
+const DIAGNOSTIC_LINES = 40
+const DIAGNOSTIC_STDERR_CHARS = 4000
+
 export class RpcPi extends RpcCommands {
   #child: ChildProcessWithoutNullStreams
   #desk = new DialogDesk((reply) => this.#write(reply))
@@ -65,15 +68,31 @@ export class RpcPi extends RpcCommands {
     return this.#stderr
   }
 
+  get diagnostics(): string {
+    return [
+      "pending waiters:",
+      ...this.#board.pending.map((waitingFor) => `- ${waitingFor.replaceAll(/\s+/g, " ")}`),
+      `last ${DIAGNOSTIC_LINES} RPC lines:`,
+      ...this.lines.slice(-DIAGNOSTIC_LINES),
+      "stderr tail:",
+      this.#stderr.slice(-DIAGNOSTIC_STDERR_CHARS),
+    ].join("\n")
+  }
+
   waitFor(test: RecordTest, from: number): Promise<string> {
-    return this.#board.waitFor(test, from)
+    return this.#board.waitFor(test, from, `${test.description} from line ${from}`)
   }
 
   async prompt(message: string, steps: UiStep[]): Promise<RpcTurn> {
     const from = this.lines.length
     this.#desk.plan(steps)
     const disposition = dispositionOf(await this.send({ type: "prompt", message }))
-    if (disposition !== "handled") await this.waitFor((line) => isRecord(SettledSchema, line), from)
+    if (disposition !== "handled")
+      await this.#board.waitFor(
+        { description: "the turn to settle", matches: (line) => isRecord(SettledSchema, line) },
+        from,
+        `prompt ${JSON.stringify(message)}: the turn to settle, from line ${from}`,
+      )
     return this.#endTurn(from, disposition)
   }
 
@@ -81,7 +100,7 @@ export class RpcPi extends RpcCommands {
     const from = this.lines.length
     this.#desk.plan(steps)
     const disposition = dispositionOf(await this.send({ type: "prompt", message: text }))
-    await this.waitFor(done, from)
+    await this.#board.waitFor(done, from, `command ${JSON.stringify(text)}: ${done.description} from line ${from}`)
     return this.#endTurn(from, disposition)
   }
 
@@ -91,7 +110,7 @@ export class RpcPi extends RpcCommands {
     const response = this.send({ type: "prompt", message: text })
     response.catch(() => undefined)
     this.#begun = { from, response }
-    await this.waitFor(open, from)
+    await this.#board.waitFor(open, from, `command ${JSON.stringify(text)}: ${open.description} from line ${from}`)
   }
 
   answerOpen(answer: UiAnswer): void {
@@ -113,7 +132,7 @@ export class RpcPi extends RpcCommands {
   protected async send(command: OutgoingCommand): Promise<string> {
     this.#nextId += 1
     const id = `e2e-${this.#nextId}`
-    const answered = this.waitFor(isResponseTo(id), this.lines.length)
+    const answered = this.#board.waitFor(isResponseTo(id), this.lines.length, `the response to ${command.type} ${id}`)
     this.#write({ ...command, id })
     const line = await answered
     const response = recordOf(RpcResponseSchema, line)

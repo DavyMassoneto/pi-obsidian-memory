@@ -45,6 +45,9 @@ export async function expectZipHoldsBothVaults(world: E2eWorld, zipPath: string)
     ...(await vaultFiles(world.folders.projectVault, "project")),
   ]
   expect([...entries.keys()].sort()).toEqual(files.map((file) => file.entry).sort())
+  const pnpmNote = entries.get("global/tools/Use pnpm.md")
+  if (!pnpmNote) throw new Error("global/tools/Use pnpm.md is not in the zip")
+  expect(Buffer.from(pnpmNote).toString("utf8")).toBe(GLOBAL_NOTE)
   for (const file of files) {
     const zipped = entries.get(file.entry)
     if (!zipped) throw new Error(`${file.entry} is not in the zip`)

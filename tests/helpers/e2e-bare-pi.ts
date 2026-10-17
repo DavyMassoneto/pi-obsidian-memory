@@ -8,9 +8,12 @@ export async function piWithoutCredentials(world: E2eWorld): Promise<Pick<E2eWor
   const pi = new RpcPi({
     cwd: world.folders.cwd,
     agentDir: world.folders.agentDir,
-    args: piArgs({ memory: "configured", tools: [], modelCache: "shared", capture: "at-session-end" }, []),
+    args: piArgs(world.options, []),
     credentials: null,
   })
-  onTestFinished(() => pi.stop())
+  onTestFinished(({ task }) => {
+    if (task.result?.state === "fail") console.error(pi.diagnostics)
+    return pi.stop()
+  })
   return { pi }
 }

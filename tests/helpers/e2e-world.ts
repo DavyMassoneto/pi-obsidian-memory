@@ -67,6 +67,10 @@ export class E2eWorld {
     return this.#pi
   }
 
+  get options(): WorldOptions {
+    return this.#options
+  }
+
   async restart(): Promise<void> {
     await this.#pi.stop()
     this.#pi = await startPi(this.folders, this.#options)
@@ -80,8 +84,9 @@ export class E2eWorld {
 export async function e2eWorld(options: WorldOptions): Promise<E2eWorld> {
   const folders = await worldFolders()
   let world: E2eWorld | null = null
-  onTestFinished(async () => {
+  onTestFinished(async ({ task }) => {
     try {
+      if (task.result?.state === "fail" && world) console.error(world.pi.diagnostics)
       await world?.stop()
     } finally {
       await rm(folders.root, { recursive: true, force: true })
