@@ -6,6 +6,7 @@ import { onTestFinished } from "vitest"
 import { executedFiles, firedQuestions, type ShellEditQuestionName, type ShellEditScores } from "#src/domain"
 import { shellEditClassifierPrompt } from "#src/pi"
 import { askShellEdit, defaultJevModel, readExecutedScripts, type ShellEditClassifierPort } from "#src/services"
+import type { ShellEditJev } from "#src/usecases"
 import { typesafeApiKey } from "./e2e-credentials.ts"
 import { resetShellEditProject } from "./shell-edit.ts"
 import type { LabelledShellCommand } from "./shell-edit-label.ts"
@@ -54,9 +55,9 @@ export function withCheckGroup(items: LabelledShellCommand[]): CheckMarked[] {
   })
 }
 
-export async function liveShellEditClassifier(): Promise<ShellEditClassifierPort> {
+async function shellEditClassifierWithKey(apiKey: string): Promise<ShellEditClassifierPort> {
   const previous = process.env.TYPESAFE_API_KEY
-  process.env.TYPESAFE_API_KEY = await typesafeApiKey()
+  process.env.TYPESAFE_API_KEY = apiKey
   onTestFinished(() => {
     if (typeof previous === "string") process.env.TYPESAFE_API_KEY = previous
     else delete process.env.TYPESAFE_API_KEY
@@ -66,6 +67,18 @@ export async function liveShellEditClassifier(): Promise<ShellEditClassifierPort
   const model = runtime.getModelOfType("classifier", "typesafe", defaultJevModel)
   if (!model) throw new Error(`pi has no typesafe ${defaultJevModel} classifier`)
   return { classify: (request) => runtime.classify(model, shellEditClassifierPrompt(request.context), request.options) }
+}
+
+export async function liveShellEditClassifier(): Promise<ShellEditClassifierPort> {
+  return shellEditClassifierWithKey(await typesafeApiKey())
+}
+
+export async function liveShellEditJev(): Promise<ShellEditJev> {
+  return { available: true, classifier: await liveShellEditClassifier() }
+}
+
+export async function invalidKeyShellEditJev(): Promise<ShellEditJev> {
+  return { available: true, classifier: await shellEditClassifierWithKey("invalid-key") }
 }
 
 export async function scoreLabelledCommands(): Promise<ScoredShellCommand[]> {
