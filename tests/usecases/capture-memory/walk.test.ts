@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { expect, test } from "vitest"
 
 import { captureMemory, synchronizeMemory } from "#src/usecases"
-import { answering, captureFixture, noteWithId, putCatalogFile, scriptedCompletion, userSays } from "#test-helpers"
+import { captureFixture, noteWithId, putCatalogFile, scriptedCompletion, userSays } from "#test-helpers"
 
 const existingDraft = {
   folder: "tools",
@@ -52,7 +52,6 @@ test("a review can walk the tree with list, read the note with get and update it
     { trigger: "after-each-turn", messages: userSays("pnpm in CI too"), explicitSaves: [] },
     context,
     complete,
-    answering(null),
   )
 
   expect(seen).toEqual(["tools", "tools/Use pnpm.md"])

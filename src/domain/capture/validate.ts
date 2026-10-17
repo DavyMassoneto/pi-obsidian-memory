@@ -22,10 +22,6 @@ export function parseCaptureAction(text: string, input: CaptureInput): CaptureRe
 
 function checkCaptureAction(action: CaptureAction, input: CaptureInput): string[] {
   if (action.action === "finish") return []
-  if (action.action === "clarify") {
-    if (action.question.trim().length === 0) return ["Clarification question is empty"]
-    return []
-  }
   if (action.action === "search" || action.action === "get" || action.action === "list") {
     return checkReadAction(action, input.context)
   }
@@ -54,9 +50,7 @@ function checkMutation(identity: MemoryIdentity, input: CaptureInput): string[] 
     (item) =>
       (item.kind === "read" || item.kind === "write") && item.vault === identity.vault && item.path === identity.path,
   )
-  const reads = input.observations.filter(
-    (item) => item.kind !== "write" && item.kind !== "clarification" && item.kind !== "refused",
-  )
+  const reads = input.observations.filter((item) => item.kind !== "write" && item.kind !== "refused")
   if (latest?.kind !== "read" || !hasReadIdentity(identity, reads)) {
     return ["Mutation requires a fresh matching read identity and hash"]
   }

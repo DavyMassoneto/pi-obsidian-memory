@@ -20,11 +20,9 @@ The body adds only what the note's name does not say; never repeat the name in t
 Keep the useful detail (exact values, commands, names, scope) and nothing else. No incident stories, quotes, dates or task status: those are session logs.
 Mark dontForget only for a rule or fact that must shape every session whatever the topic. Everything else is found by search.
 Obey note limits. Decide yourself whether something is memory,
-its type, its vault and its folder, from the note types and the list of what is not memory; never ask the user
-whether to save, or about type, vault or folder. Reuse existing folders, general to specific.
-Use clarify only for a hard question: the meaning of what the user said is ambiguous, transcriptDelta and the
-existing notes cannot settle it, and a wrong reading would store something false. The question names the exact statement.
-When transcriptDelta holds nothing durable, or a point belongs to a project with no registered vault, return finish without asking.
+its type, its vault and its folder, from the note types and the list of what is not memory. Reuse existing folders,
+general to specific. When unsure whether something is memory, or of its type, vault or folder, skip it: do not save it and do not ask.
+When transcriptDelta holds nothing durable, or a point belongs to a project with no registered vault, return finish.
 update, archive and succeed require a prior read observation's exact path, id and expectedHash.
 An update keeps that note's folder and statement. Read again after any attempted write.
 Return finish when there is nothing further to capture. No consolidation or approval step.`
@@ -32,4 +30,5 @@ Return finish when there is nothing further to capture. No consolidation or appr
 export const RETRIEVAL_POLICY = `Find memory relevant to query and context through search, get and list only.
 You have no write capabilities. Return finish with identities of relevant notes actually read, preserving
 vault, path, id and hash exactly from read observations. Return an empty notes array when nothing is relevant.
-Never invent note content or select unread candidates.`
+Never invent note content or select unread candidates. When context.project is null only the global vault exists:
+never use the project vault. A refused observation lists why your last action was refused; correct it and answer again.`

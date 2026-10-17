@@ -3,6 +3,8 @@ import {
   type MemoryIdentity,
   type MemoryObservation,
   type ReadObservation,
+  type RetrievalObservation,
+  refusalObservation,
   retrieveStep,
 } from "#src/services"
 import { detailOf, observeGet, observeList, observeSearch } from "#src/usecases/capture-memory"
@@ -15,12 +17,18 @@ export async function findNotes(
   context: MemoryOperationContext,
   complete: CompletionPort,
 ): Promise<AgentOutcome> {
-  const observations: MemoryObservation[] = []
+  const observations: RetrievalObservation[] = []
   for (;;) {
     if (memoryOperationInterruption(context)) return { succeeded: false, notice: null }
     const { agent, query, model } = request
     const step = await retrieveStep({ context: agent, query, observations, model, signal: context.signal }, complete)
-    if (!step.succeeded) return { succeeded: false, notice: `${AGENT_FAILED} ${detailOf(step.problems)}` }
+    if (!step.succeeded && "modelCall" in step) {
+      return { succeeded: false, notice: `${AGENT_FAILED} ${detailOf(step.problems)}` }
+    }
+    if (!step.succeeded) {
+      observations.push(refusalObservation(step.problems))
+      continue
+    }
     if (step.output.action === "finish") return { succeeded: true, output: chosen(step.output.notes, observations) }
     observations.push(await observe(step.output, context))
   }
@@ -32,7 +40,7 @@ function observe(action: ReadStep, context: MemoryOperationContext): Promise<Mem
   return observeList(action.vault, action.folder, context)
 }
 
-function chosen(identities: MemoryIdentity[], observations: MemoryObservation[]): ReadObservation[] {
+function chosen(identities: MemoryIdentity[], observations: RetrievalObservation[]): ReadObservation[] {
   const reads = observations.filter((observation) => observation.kind === "read")
   return identities.flatMap((identity) =>
     reads.filter(

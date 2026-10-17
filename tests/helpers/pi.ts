@@ -27,11 +27,11 @@ import { fakePiContext } from "./pi-context.ts"
 import { customStartEvent, promptEventFor } from "./pi-prompt.ts"
 import type { TurnOutcome } from "./types.ts"
 
-export function registerWithFakePi(env: NodeJS.ProcessEnv) {
-  return registerFakePiAt(join("C:", "agent"), env)
+export function registerWithFakePi() {
+  return registerFakePiAt(join("C:", "agent"))
 }
 
-export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv, overrides?: ExtensionOverrides) {
+export function registerFakePiAt(agentDir: string, overrides?: ExtensionOverrides) {
   const tools: MemoryAddTool[] = []
   const searchTools: MemorySearchTool[] = []
   const getTools: MemoryGetTool[] = []
@@ -109,7 +109,7 @@ export function registerFakePiAt(agentDir: string, env: NodeJS.ProcessEnv, overr
       shutdownHandlers.push(handler)
     },
   }
-  registerExtension(registrar, agentDir, env, { localModel: offlineLocalAccess(), ...overrides })
+  registerExtension(registrar, agentDir, { localModel: offlineLocalAccess(), ...overrides })
 
   return {
     tools,

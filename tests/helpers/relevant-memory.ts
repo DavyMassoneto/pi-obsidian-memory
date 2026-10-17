@@ -109,6 +109,12 @@ export function retrievedText(result: RetrieveMemoryResult): string {
   return result.output.text
 }
 
+export function secondInput(complete: ReturnType<typeof retrievalCompletion>): RetrievalInput {
+  const call = complete.mock.calls[1]
+  if (!call) throw new Error("the memory agent was asked only once")
+  return retrievedInput(call[0])
+}
+
 export function firstRetrievalInput(complete: ReturnType<typeof retrievalCompletion>): RetrievalInput {
   const call = complete.mock.calls[0]
   if (!call) throw new Error("the memory agent was never asked")

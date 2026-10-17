@@ -1,87 +1,21 @@
-import { readdir } from "node:fs/promises"
-import { join } from "node:path"
-
 import { expect, test, vi } from "vitest"
 
 import { captureMemory } from "#src/usecases"
 import {
-  answering,
   captureFixture,
   completionPort,
   expectRegistrationLeaseReleased,
   memoryReadTree,
-  scriptedCompletion,
   userSays,
   writeRegistrationSnapshot,
 } from "#test-helpers"
-
-const noteDraft = {
-  folder: "preferences",
-  statement: "Use pnpm",
-  body: "The user always uses pnpm, never npm.",
-  type: "rule",
-  dontForget: false,
-} as const
-
-test("a question the user cannot answer writes nothing and ends that review", async () => {
-  const { context, vault } = await captureFixture()
-  const before = await memoryReadTree(vault.path)
-  const ask = answering(null)
-  const complete = scriptedCompletion([
-    { action: "clarify", question: "Is this about you or about this project?" },
-    { action: "add", vault: "global", note: noteDraft },
-  ])
-
-  const result = await captureMemory(
-    { messages: userSays("remember pnpm"), trigger: "after-each-turn", explicitSaves: [] },
-    context,
-    complete,
-    ask,
-  )
-
-  expect(ask).toHaveBeenCalledWith("Is this about you or about this project?", { signal: expect.any(AbortSignal) })
-  expect(complete).toHaveBeenCalledTimes(1)
-  expect(result).toMatchObject({
-    succeeded: true,
-    output: { applied: [], skipped: ["Is this about you or about this project?"] },
-  })
-  expect(await memoryReadTree(vault.path)).toEqual(before)
-})
-
-test("an answered question is given back to the model and the note is saved", async () => {
-  const { context, vault } = await captureFixture()
-  const complete = scriptedCompletion([
-    { action: "clarify", question: "Global or project?" },
-    (input) => {
-      const answer = input.observations.findLast((item) => item.kind === "clarification")
-      if (answer?.kind !== "clarification" || answer.answer !== "global") throw new Error("answer was not passed on")
-      return { action: "add", vault: "global", note: noteDraft }
-    },
-    { action: "finish" },
-  ])
-
-  const result = await captureMemory(
-    { messages: userSays("remember pnpm"), trigger: "after-each-turn", explicitSaves: [] },
-    context,
-    complete,
-    answering("global"),
-  )
-
-  expect(result).toMatchObject({ succeeded: true, output: { applied: [{ operation: "add", status: "applied" }] } })
-  expect(await readdir(join(vault.path, "preferences"))).toContain("Use pnpm.md")
-})
 
 test("a long transcript is reviewed in windows of at most a hundred items", async () => {
   const { context } = await captureFixture()
   const messages = Array.from({ length: 101 }, (_, number) => ({ role: "user" as const, text: `message ${number}` }))
   const complete = completionPort(JSON.stringify({ action: "finish" }))
 
-  const result = await captureMemory(
-    { messages, trigger: "after-each-turn", explicitSaves: [] },
-    context,
-    complete,
-    answering(null),
-  )
+  const result = await captureMemory({ messages, trigger: "after-each-turn", explicitSaves: [] }, context, complete)
 
   expect(result).toMatchObject({ succeeded: true, output: { windows: 2 } })
   expect(complete).toHaveBeenCalledTimes(2)
@@ -96,7 +30,6 @@ test("a failed model call ends the run at once, names the provider's error, and 
     { messages: userSays("remember pnpm"), trigger: "after-each-turn", explicitSaves: [] },
     context,
     complete,
-    answering(null),
   )
 
   expect(result).toMatchObject({
@@ -120,7 +53,6 @@ test("a model call that fails because the signal aborted is an interruption, not
     { messages: userSays("remember pnpm"), trigger: "after-each-turn", explicitSaves: [] },
     { ...context, signal: controller.signal },
     complete,
-    answering(null),
   )
 
   expect(result).toMatchObject({ succeeded: false, reason: "interrupted" })
@@ -135,7 +67,6 @@ test("a run with no config is refused", async () => {
     { messages: userSays("x"), trigger: "after-each-turn", explicitSaves: [] },
     context,
     completionPort("{}"),
-    answering(null),
   )
 
   expect(result.succeeded).toBe(false)
@@ -152,9 +83,8 @@ test("a trigger that is not the configured one reviews nothing and never calls t
       { trigger, messages: userSays("remember pnpm"), explicitSaves: [] },
       context,
       complete,
-      answering(null),
     )
-    expect(result).toEqual({ succeeded: true, output: { windows: 0, applied: [], skipped: [] } })
+    expect(result).toEqual({ succeeded: true, output: { windows: 0, applied: [] } })
   }
 
   expect(complete).not.toHaveBeenCalled()

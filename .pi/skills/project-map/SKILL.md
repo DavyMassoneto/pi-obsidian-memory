@@ -78,14 +78,12 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 - Windows `rename` replaces the destination; check/use windows remain in update, removal and link checks, and are documented
   limits (docs/REVISAO-DE-CODIGO.md: item on `writeAtomically`; closing "Limites já documentados": size/mtime reuse,
   check/use windows, lease without cross-process coordination).
-- Persistence can succeed with warnings when index/cleanup maintenance fails; warnings do not mean "save again"
-  (docs/ROADMAP.md, Current state).
+- Persistence can succeed with warnings when index/cleanup maintenance fails; warnings do not mean "save again".
 - Index file path: use `indexFileFor` (`services/search-index/.../location.ts`), the only convention; the index is
   rebuildable from notes (REVISAO-DE-CODIGO.md, 2026-10-12 round, finding 3).
 - Folder maintenance must re-check every fully enumerated physical folder on each sync (REVISAO-DE-CODIGO.md, findings 1-2).
 - `src/domain/config/problems.ts` was removed; do not import it.
-- Old incomplete configs are invalid at runtime, never silently migrated; setup-only defaults need an explicit chat model (ROADMAP Current state).
-- Update/archive/succeed exist but are not reachable by any tool; search is not wired (ROADMAP Current state).
+- Old incomplete configs are invalid at runtime, never silently migrated; /memory-setup repairs them.
 - Every roadmap milestone ends with `npm test`, lint, typecheck and `test:pi` passing on Windows, and updates the README Status (ROADMAP intro).
 
 ## Pitfalls — working in parallel
@@ -117,6 +115,6 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 
 ## Docs
 
-- `docs/VISION.md`: product and numbered decisions. `docs/ROADMAP.md`: current state, milestones 0-8, done criteria; mark completed items.
+- `docs/VISION.md`: product and numbered decisions. `docs/ROADMAP.md`: only what is still open (implemented items are removed; history is in git).
 - `docs/config.md`: config file, every key and default. `docs/vault-format.md`: note, folder, template and lifecycle format.
 - `docs/REVISAO-DE-CODIGO.md`: code review rounds, findings, documented limits.

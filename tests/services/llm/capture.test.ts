@@ -18,17 +18,18 @@ describe("captureStep", () => {
     expect(sent?.system).toContain("explicitSaves")
   })
 
-  it("instructs semantic classification, task exclusion and clarification rather than prefix filtering", async () => {
+  it("instructs semantic classification, task exclusion and skipping when unsure rather than prefix filtering", async () => {
     const complete = completionPort('{"action":"finish"}')
     await captureStep(captureRequest(), complete)
     const system = complete.mock.calls[0]?.[0].system
     expect(system).toContain(
       "Do not store tasks, TODOs, session logs, transcripts or facts already recorded by code or git history.",
     )
-    expect(system).toContain("never ask the user\nwhether to save, or about type, vault or folder.")
-    expect(system).toContain("Use clarify only for a hard question:")
-    expect(system).toContain("The question names the exact statement.")
-    expect(system).toContain("or a point belongs to a project with no registered vault, return finish without asking.")
+    expect(system).toContain(
+      "When unsure whether something is memory, or of its type, vault or folder, skip it: do not save it and do not ask.",
+    )
+    expect(system).toContain("or a point belongs to a project with no registered vault, return finish.")
+    expect(system).not.toContain("clarify")
     expect(system).toContain("without translating or masking secret strings.")
   })
 
@@ -59,13 +60,15 @@ describe("captureStep", () => {
     expect((await captureStep(captureRequest(), completionPort(text))).succeeded).toBe(false)
   })
 
-  it("returns clarification alone, never combines uncertain writes", async () => {
+  it("refuses a clarify action as an unknown action", async () => {
     const action = { action: "clarify", question: "Global or project vault?" }
-    expect(await captureStep(captureRequest(), completionPort(JSON.stringify(action)))).toEqual({
-      succeeded: true,
-      output: action,
+    expect(await captureStep(captureRequest(), completionPort(JSON.stringify(action)))).toMatchObject({
+      succeeded: false,
     })
-    const text = JSON.stringify([action, { action: "add", vault: "global", note: memoryDraft() }])
+  })
+
+  it("never combines several actions", async () => {
+    const text = JSON.stringify([{ action: "finish" }, { action: "add", vault: "global", note: memoryDraft() }])
     expect((await captureStep(captureRequest(), completionPort(text))).succeeded).toBe(false)
   })
 

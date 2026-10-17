@@ -45,21 +45,3 @@ test("a review without a UI sets no status", async () => {
   await eventually(() => expect(complete).toHaveBeenCalledTimes(1))
   expect(statuses).toEqual([])
 })
-
-test("a question waiting for the user keeps the status until the session is replaced", async () => {
-  const { pi, workingFolder } = await capturePiFixture("after-each-turn", [
-    { action: "clarify", question: "Global or project?" },
-    { action: "finish" },
-  ])
-  const { context, statuses, prompts } = fakePiContext(workingFolder, { hasUI: true, hangingInputs: true, branch })
-  await pi.startSession(context, "startup")
-  await pi.runPrompt(workingFolder)
-  statuses.length = 0
-
-  await pi.endAgent(context)
-  await eventually(() => expect(prompts).toHaveLength(1))
-
-  expect(statuses).toEqual([SHOWN])
-  await pi.startSession(fakePiContext(workingFolder, { hasUI: false, branch }).context, "new")
-  await eventually(() => expect(statuses).toEqual([SHOWN, CLEARED]))
-})

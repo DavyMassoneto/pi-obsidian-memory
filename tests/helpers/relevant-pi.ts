@@ -44,6 +44,6 @@ export async function relevantPiFixture(options: RelevantPiOptions) {
   const config = { ...fixture.config, decisionModel, context: { budgetChars } }
   await writeAgentConfig(fixture.configPath, JSON.stringify(config))
   const complete = routedCompletion(options.session, options.turns)
-  const pi = registerFakePiAt(fixture.agentDir, {}, { completionOf: () => complete })
+  const pi = registerFakePiAt(fixture.agentDir, { completionOf: () => complete })
   return { ...fixture, pi, complete, asked }
 }

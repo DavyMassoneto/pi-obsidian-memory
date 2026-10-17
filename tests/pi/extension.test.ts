@@ -23,7 +23,7 @@ import {
 
 test("registers the six tools, the four commands and the session events", () => {
   const { tools, searchTools, getTools, updateTools, archiveTools, succeedTools, registered, events, commands } =
-    registerWithFakePi({})
+    registerWithFakePi()
 
   expect(tools).toEqual([
     expect.objectContaining({
@@ -89,17 +89,9 @@ test("shutting the session down drops the memory block", async () => {
   expect(await pi.runPrompt(workingFolder)).toEqual({})
 })
 
-test("turns off Claude Code's own memory in pi's environment", () => {
-  const env: NodeJS.ProcessEnv = {}
-
-  registerWithFakePi(env)
-
-  expect(env.CLAUDE_CODE_DISABLE_AUTO_MEMORY).toBe("1")
-})
-
 test("no LLM-facing text names a command or tool that is not registered", async () => {
   const { tools, searchTools, getTools, updateTools, archiveTools, succeedTools, registered, commands } =
-    registerWithFakePi({})
+    registerWithFakePi()
   const problems = ["a problem"]
   const existing = { note: aNote(), hash: "hash" }
   const responses: AddMemoryResult[] = [

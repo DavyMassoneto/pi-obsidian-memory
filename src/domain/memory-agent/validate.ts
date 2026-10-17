@@ -59,6 +59,9 @@ function canSelectNote(identity: MemoryIdentity, input: RetrievalInput): boolean
   return (
     checkAgentVault(identity.vault, input.context).length === 0 &&
     checkVaultPath(identity.path).length === 0 &&
-    hasReadIdentity(identity, input.observations)
+    hasReadIdentity(
+      identity,
+      input.observations.filter((observation) => observation.kind !== "refused"),
+    )
   )
 }

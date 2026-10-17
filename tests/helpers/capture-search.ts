@@ -1,5 +1,5 @@
 import { captureMemory, type MemoryOperationContext } from "#src/usecases"
-import { answering, scriptedCompletion, userSays } from "./capture-memory.ts"
+import { scriptedCompletion, userSays } from "./capture-memory.ts"
 
 export async function capturedSearchPaths(context: MemoryOperationContext): Promise<string[]> {
   let paths: string[] = []
@@ -16,7 +16,6 @@ export async function capturedSearchPaths(context: MemoryOperationContext): Prom
     { trigger: "after-each-turn", messages: userSays("I drive an automobile"), explicitSaves: [] },
     context,
     complete,
-    answering(null),
   )
   return paths
 }

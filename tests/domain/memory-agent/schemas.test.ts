@@ -1,7 +1,13 @@
 import { Value } from "typebox/value"
 import { describe, expect, it } from "vitest"
 
-import { CaptureInputSchema, type MemoryObservation, ObservationSchema, parseCaptureAction } from "#src/domain"
+import {
+  CaptureInputSchema,
+  type MemoryObservation,
+  ObservationSchema,
+  parseCaptureAction,
+  RetrievalInputSchema,
+} from "#src/domain"
 import { captureRequest, memoryDraft, readObservation } from "#test-helpers"
 
 const listedNote = { vault: "global", path: "profile/Access token.md", type: "fact", statement: "Access token" }
@@ -60,6 +66,16 @@ describe("search observation", () => {
     const { id: _id, ...withoutId } = candidate
     expect(Value.Check(ObservationSchema, search)).toBe(true)
     expect(Value.Check(ObservationSchema, { ...search, candidates: [withoutId] })).toBe(false)
+  })
+})
+
+describe("retrieval input", () => {
+  const refused = { kind: "refused", action: "unparseable", problems: ["no"] }
+  const input = { context: { project: null, folder: "work" }, query: "pnpm" }
+
+  it("puts no cap on how many observations it carries", () => {
+    const observations = Array.from({ length: 50 }, () => refused)
+    expect(Value.Check(RetrievalInputSchema, { ...input, observations })).toBe(true)
   })
 })
 

@@ -11,7 +11,7 @@ const refused = {
 }
 
 describe("refused observation", () => {
-  it.each(["search", "get", "list", "add", "update", "archive", "succeed", "clarify", "finish", "unparseable"])(
+  it.each(["search", "get", "list", "add", "update", "archive", "succeed", "finish", "unparseable"])(
     "accepts a refused %s action",
     (action) => {
       expect(Value.Check(CaptureObservationSchema, { ...refused, action })).toBe(true)
@@ -33,6 +33,20 @@ describe("refused observation", () => {
     const twenty = Array.from({ length: 20 }, () => "p")
     expect(Value.Check(CaptureObservationSchema, { ...refused, problems: twenty })).toBe(true)
     expect(Value.Check(CaptureObservationSchema, { ...refused, problems: [] })).toBe(true)
+  })
+
+  it("does not know a clarification observation or a refused clarify", () => {
+    const clarification = { kind: "clarification", question: "Global or project?", answer: null }
+    expect(Value.Check(CaptureObservationSchema, clarification)).toBe(false)
+    expect(Value.Check(CaptureObservationSchema, { ...refused, action: "clarify" })).toBe(false)
+  })
+
+  it("puts no cap on how many observations a capture input carries", () => {
+    const { context, transcriptDelta, explicitSaves, limits } = captureRequest()
+    const observations = Array.from({ length: 50 }, () => refused)
+    expect(Value.Check(CaptureInputSchema, { context, transcriptDelta, observations, explicitSaves, limits })).toBe(
+      true,
+    )
   })
 
   it("is accepted inside a capture input", () => {
