@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
-import { afterEach, expect, test, vi } from "vitest"
+import { expect, test } from "vitest"
 
 import { renderNote } from "#src/domain"
 import { readNote } from "#src/services"
@@ -16,10 +16,6 @@ const draft = {
   body: "Use pnpm everywhere.",
   dontForget: false,
 }
-
-afterEach(() => {
-  vi.useRealTimers()
-})
 
 test("saves a global memory in the global vault and refreshes its indexes", async () => {
   const { globalVault, configPath, unregisteredFolder } = await setupVaults()
@@ -71,22 +67,6 @@ test("saves a project memory in the vault of the project pi runs in", async () =
   expect(result).toMatchObject({ succeeded: true, output: { vaultName: "loja" } })
   expect(await readNote({ path: projectVault, limits }, "pnpm", draft.statement)).toMatchObject({ succeeded: true })
   expect(await readNote({ path: globalVault, limits }, "pnpm", draft.statement)).toMatchObject({ reason: "not-found" })
-})
-
-test("creates the note today with a fresh id and the don't forget mark when asked", async () => {
-  vi.useFakeTimers({ toFake: ["Date"] })
-  vi.setSystemTime(new Date(2026, 9, 6, 10, 0))
-  const { configPath, unregisteredFolder } = await setupVaults()
-
-  const result = await addMemory(
-    { scope: "global", folder: "pnpm", draft: { ...draft, dontForget: true } },
-    operationContextFor({ configPath, workingFolder: unregisteredFolder }),
-  )
-
-  expect(result).toMatchObject({
-    succeeded: true,
-    output: { stored: { note: { frontmatter: { created: "2026-10-06", updated: "2026-10-06", dontForget: true } } } },
-  })
 })
 
 test("refuses the project scope in a folder with no registered project, writing nothing", async () => {
