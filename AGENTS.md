@@ -31,25 +31,39 @@ pi → usecases → services → domain. Each layer imports only the one right b
   When unsure whether something needs a test, ask the user.
 - TDD is mandatory: red (write the test, see it fail), green (write the code that makes it pass), refactor (clean up
   with all tests passing). For a bug fix, the failing test reproduces the bug.
-- Files and vaults: real disk in a temp folder, never a mocked filesystem. Tests never touch the user's real vaults or
-  config.
-- Mock only: pi, the LLM, the clock. To mock anything else, ask the user.
-- vitest. `tests/` mirrors `src/` (`src/services/vault/save.ts` → `tests/services/vault/save.test.ts`).
+- No simulated tests: nothing fakes pi, the LLM, Jev, Laya, embeddings or the clock (no fake contexts, no `vi.fn`,
+  `vi.mock` or `vi.spyOn`, no fake timers or system time). The simulated tests that still exist are deleted area by
+  area, each only after that area's end-to-end scenario passes, and only the tests that simulate. Waiting for the
+  user's decision: the remote embeddings tests (`openai`, `google`, `http`) keep their local HTTP server until a real
+  key exists.
+- `npm test` is offline: pure domain tests, and services and usecases tests on a real temporary disk that simulate
+  nothing, with no model and no network.
+- `npm run test:e2e` is real and required before every commit: the real pi in RPC mode in a temporary agent folder,
+  logged in with pi's own login (`pi auth print-*` passes the credentials as environment variables; nothing is copied
+  to disk), temporary vaults, `claude-haiku-5-5` for the conversation, the real Jev, a real laya-serve on 127.0.0.1
+  where Laya is tested, and the real local embeddings model. The test acts as the user and answers the dialogs; every
+  result is checked on disk. One scenario loads the package the way the user installs it, which proves pi loads the
+  extension; run it after updating pi.
+- `npm run test:model` runs the live model tests: the shell-edit cutoff measurement and the `checkShellEdit` checks
+  against `jev-latest`, Laya, the local embeddings model and the real model download. Run it when asked or when a
+  model changes; measured numbers go to `docs/`.
+- Files and vaults: real disk in a temp folder. Tests never touch the user's real vaults, config or agent folder.
+- vitest. `tests/` mirrors `src/` (`src/services/vault/save.ts` → `tests/services/vault/save.test.ts`); live model
+  tests mirror it too and end in `.model.test.ts`. The one exception: end-to-end scenarios live in
+  `tests/e2e/<area>.e2e.test.ts`.
 - Shared test helpers live in `tests/helpers/` (one file per topic), imported from `#test-helpers`; test files hold
   only tests.
 
-What each layer's tests prove, and how:
+What each kind of test proves, and how:
 
-- domain: the rule gives the exact output for each input, edge and error cases included. Plain calls, no disk, no
-  mocks. Needing a mock means the function is not pure and belongs in another layer.
+- domain: the rule gives the exact output for each input, edge and error cases included. Plain calls, no disk.
 - services: the resource is used correctly. Assert the final state of the resource (files, content), not only the
-  return value. Clock with `vi.setSystemTime`, LLM with `vi.mock`.
-- usecases: the flow is right: which services, in which order, and what happens when a step fails. Real services on a
-  temp vault; failures come from real conditions (note changed on disk, missing vault, read-only file). Don't re-test
-  service details.
-- pi: a fake pi proves each tool, event and command reaches the right usecase and translates its input and output.
-  One smoke test in the real pi (`npm run test:pi`, outside `npm test`) proves pi loads the extension; run it before
-  each release and after updating pi.
+  return value, on a real temporary disk. Services that only speak to a model are proven by `test:model` or `test:e2e`.
+- usecases: the flow is right, on real services: a real temporary disk in `npm test`, or the live model in
+  `test:model`. Failures come from real conditions (no Jev key, unreadable script, invalid config, a note changed on
+  disk).
+- pi (`tests/e2e`): one scenario per area drives the real pi as the user would and checks what the user and the LLM
+  see and what is on disk.
 
 ## Roadmap
 
