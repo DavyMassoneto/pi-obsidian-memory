@@ -22,8 +22,6 @@ describe("refused observation", () => {
     ["an unknown action", { ...refused, action: "delete" }],
     ["no problems field", { kind: "refused", action: "add" }],
     ["an empty problem", { ...refused, problems: [""] }],
-    ["a problem over 16000 characters", { ...refused, problems: ["x".repeat(16001)] }],
-    ["more than 20 problems", { ...refused, problems: Array.from({ length: 21 }, () => "p") }],
     ["an extra field", { ...refused, extra: 1 }],
   ])("refuses %s", (_case, observation) => {
     expect(Value.Check(CaptureObservationSchema, observation)).toBe(false)

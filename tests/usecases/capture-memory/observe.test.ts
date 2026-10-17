@@ -1,5 +1,7 @@
+import { Value } from "typebox/value"
 import { expect, test } from "vitest"
 
+import { ObservationSchema } from "#src/domain"
 import { observeGet, observeList, observeRead, observeSearch, synchronizeMemory } from "#src/usecases"
 import { captureFixture, noteWithId, putCatalogFile } from "#test-helpers"
 
@@ -80,13 +82,11 @@ test("a folder listing gives its subfolders, and its notes with path, type, stat
     folder: "",
     folders: ["tools"],
     notes: [],
-    truncated: false,
   })
   expect(tools).toEqual({
     kind: "listing",
     vault: "global",
     folder: "tools",
-    truncated: false,
     folders: ["tools/deep"],
     notes: [
       { vault: "global", path: "tools/Prefer tabs.md", type: "rule", statement: "Prefer tabs" },
@@ -105,7 +105,7 @@ test("a folder with no index or a missing vault is an unavailable listing", asyn
   })
 })
 
-test("a folder with more than twenty subfolders is listed up to twenty and marked truncated, still valid input", async () => {
+test("a folder with more than twenty subfolders is listed whole, still valid input", async () => {
   const { context, vault } = await captureFixture()
   for (let number = 1; number <= 25; number++) {
     await putCatalogFile(vault, `area ${String(number).padStart(2, "0")}/Note.md`, noteWithId(number, "Body.", []))
@@ -115,6 +115,16 @@ test("a folder with more than twenty subfolders is listed up to twenty and marke
   const listing = await observeList("global", "", context)
 
   if (listing.kind !== "listing") throw new Error("not a listing")
-  expect(listing.truncated).toBe(true)
-  expect(listing.folders).toHaveLength(20)
+  expect(listing.folders).toHaveLength(25)
+  expect(Value.Check(ObservationSchema, listing)).toBe(true)
+})
+
+test("a note with a body of more than 16000 characters is read whole, still valid input", async () => {
+  const { context, vault } = await captureFixture()
+  await putCatalogFile(vault, "tools/Long.md", noteWithId(1, "x".repeat(16001), []))
+
+  const read = await observeGet({ vault: "global", path: "tools/Long.md" }, context)
+
+  expect(read).toMatchObject({ kind: "read", body: "x".repeat(16001) })
+  expect(Value.Check(ObservationSchema, read)).toBe(true)
 })

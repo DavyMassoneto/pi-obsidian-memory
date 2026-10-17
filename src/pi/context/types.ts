@@ -33,6 +33,10 @@ export interface ChatModelSource {
   cost?: ModelPrice
 }
 
+export interface RegisteredModel extends ChatModelSource {
+  maxTokens: number
+}
+
 export type RegistryContext = Parameters<ModelRegistry["complete"]>[1]
 
 export type RegistryOptions = Parameters<ModelRegistry["complete"]>[2]
@@ -60,7 +64,7 @@ export type ModelAuthResult = ModelAuthResolved | ModelAuthRefused
 
 export interface AvailableModels {
   getAvailable(): ChatModelSource[]
-  find(provider: string, modelId: string): ChatModelSource | undefined
+  find(provider: string, modelId: string): RegisteredModel | undefined
   hasConfiguredAuth(model: ChatModelSource): boolean
   getApiKeyAndHeaders(model: ChatModelSource): Promise<ModelAuthResult>
   getApiKeyForProvider(provider: string): Promise<string | undefined>

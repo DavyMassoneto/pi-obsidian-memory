@@ -1,11 +1,10 @@
 import Type from "typebox"
 
 import { NoteIdSchema, NoteTypeSchema } from "#src/domain/note"
-import { MAX_REFUSAL_PROBLEMS, maxTextChars } from "./constants.ts"
 
 export const VaultSchema = Type.Enum(["global", "project"])
-export const PathSchema = Type.String({ maxLength: 1024 })
-export const TextSchema = Type.String({ minLength: 1, maxLength: maxTextChars })
+export const PathSchema = Type.String()
+export const TextSchema = Type.String({ minLength: 1 })
 export const HashSchema = Type.String({ pattern: "^[a-f0-9]{64}$" })
 
 export const IdentitySchema = Type.Object(
@@ -47,7 +46,7 @@ export const ReadObservationSchema = Type.Object(
 export const ObservationSchema = Type.Union([
   ReadObservationSchema,
   Type.Object(
-    { kind: Type.Literal("search"), query: TextSchema, candidates: Type.Array(CandidateSchema, { maxItems: 20 }) },
+    { kind: Type.Literal("search"), query: TextSchema, candidates: Type.Array(CandidateSchema) },
     { additionalProperties: false },
   ),
   Type.Object(
@@ -55,9 +54,8 @@ export const ObservationSchema = Type.Union([
       kind: Type.Literal("listing"),
       vault: VaultSchema,
       folder: PathSchema,
-      folders: Type.Array(PathSchema, { maxItems: 20 }),
-      notes: Type.Array(ListedNoteSchema, { maxItems: 20 }),
-      truncated: Type.Boolean(),
+      folders: Type.Array(PathSchema),
+      notes: Type.Array(ListedNoteSchema),
     },
     { additionalProperties: false },
   ),
@@ -71,7 +69,7 @@ export const RetrievalRefusedSchema = Type.Object(
   {
     kind: Type.Literal("refused"),
     action: Type.Literal("unparseable"),
-    problems: Type.Array(TextSchema, { maxItems: MAX_REFUSAL_PROBLEMS }),
+    problems: Type.Array(TextSchema),
   },
   { additionalProperties: false },
 )
@@ -84,7 +82,7 @@ export const ReadActionSchema = Type.Union([
       action: Type.Literal("search"),
       vault: VaultSchema,
       query: TextSchema,
-      limit: Type.Integer({ minimum: 1, maximum: 20 }),
+      limit: Type.Integer({ minimum: 1 }),
     },
     { additionalProperties: false },
   ),
@@ -97,10 +95,7 @@ export const ReadActionSchema = Type.Union([
 
 export const RetrievalActionSchema = Type.Union([
   ReadActionSchema,
-  Type.Object(
-    { action: Type.Literal("finish"), notes: Type.Array(IdentitySchema, { maxItems: 20 }) },
-    { additionalProperties: false },
-  ),
+  Type.Object({ action: Type.Literal("finish"), notes: Type.Array(IdentitySchema) }, { additionalProperties: false }),
 ])
 
 export const AgentContextSchema = Type.Object(

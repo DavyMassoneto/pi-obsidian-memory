@@ -1,3 +1,4 @@
+import { withoutEmbeddingProviderKeys } from "./e2e-provider-env.ts"
 import type { RpcStart } from "./e2e-rpc-types.ts"
 
 const CREDENTIAL_VARIABLE = /API_KEY|AUTH_TOKEN|OAUTH_TOKEN/
@@ -12,6 +13,7 @@ export function childEnv(start: RpcStart): NodeJS.ProcessEnv {
   }
   delete env.ANTHROPIC_AUTH_TOKEN
   delete env.ANTHROPIC_API_KEY
+  withoutEmbeddingProviderKeys(env)
   if (start.omitTypesafeKey) delete env.TYPESAFE_API_KEY
   if (start.offlineNpmCache) {
     for (const name of Object.keys(env)) if (/^npm_config_(cache|offline)$/i.test(name)) delete env[name]

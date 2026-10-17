@@ -12,8 +12,6 @@ export const SESSION_QUERY_PREFIX = "Memory relevant to starting work on"
 
 export const NO_PROJECT = "no registered project"
 
-export const MAX_QUERY_CHARS = 16000
-
 export const ROUTING_MISSING_HELP =
   "the Laya server did not say which model answered (it runs with LAYA_JEV_STRICT); run laya-serve without LAYA_JEV_STRICT and bound to 127.0.0.1 with LAYA_HOST"
 

@@ -51,7 +51,7 @@ test("a stated preference becomes a global note on disk", async () => {
   expect(result).toMatchObject({
     succeeded: true,
     output: {
-      windows: 1,
+      reviewed: true,
       applied: [{ operation: "add", status: "applied", vault: "global", path: "preferences/Use pnpm.md" }],
     },
   })

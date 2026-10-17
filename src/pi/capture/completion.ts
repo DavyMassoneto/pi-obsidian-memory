@@ -9,7 +9,7 @@ export function registryCompletion(ctx: MemoryPiContext): CompletionPort {
     const message = await ctx.modelRegistry.complete(
       model,
       { systemPrompt: request.system, messages: [{ role: "user", content: request.data, timestamp: Date.now() }] },
-      { signal: request.signal, maxTokens: request.maxTokens },
+      { signal: request.signal, maxTokens: model.maxTokens },
     )
     if (message.stopReason === "aborted") return { status: "aborted" }
     if (message.stopReason === "error") {

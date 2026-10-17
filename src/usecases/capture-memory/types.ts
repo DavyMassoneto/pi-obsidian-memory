@@ -39,7 +39,7 @@ export interface AppliedWrite {
 }
 
 export interface CaptureReport {
-  windows: number
+  reviewed: boolean
   applied: AppliedWrite[]
 }
 

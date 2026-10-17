@@ -2,7 +2,7 @@ import { fitBudget, loadedNoteBlock, shouldRetrieveMemory } from "#src/services"
 import type { MemoryOperationContext } from "#src/usecases/operation-context"
 import { type ResolvedMemory, resolveMemory } from "#src/usecases/resolve-memory"
 import { findNotes } from "./agent.ts"
-import { BLOCK_SEPARATOR, MAX_QUERY_CHARS, RELEVANT_INTRO } from "./constants.ts"
+import { BLOCK_SEPARATOR, RELEVANT_INTRO } from "./constants.ts"
 import { cutoffsMissingNotice, decidingCutoffs, resolveCutoffs } from "./cutoffs.ts"
 import { decisionContextOf, decisionNotice, needsMemory, rankNotes } from "./decision.ts"
 import { refreshLoaded } from "./refresh.ts"
@@ -50,7 +50,7 @@ async function relevantNotes(
   const agent = await findNotes(
     {
       agent: { project, folder },
-      query: message.slice(0, MAX_QUERY_CHARS),
+      query: message,
       model: memory.config.memoryAgent.model,
     },
     context,

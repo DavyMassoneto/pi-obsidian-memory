@@ -4,7 +4,7 @@ import { getMemory } from "#src/usecases/get-memory"
 import { listMemory } from "#src/usecases/list-memory"
 import type { MemoryOperationContext } from "#src/usecases/operation-context"
 import { searchMemory } from "#src/usecases/search-memory"
-import { DONT_FORGET_MARK, MAX_LISTED, NO_DETAIL, NOTE_LINE, SOURCE_CALL, SUBFOLDER_LINE } from "./constants.ts"
+import { DONT_FORGET_MARK, NO_DETAIL, NOTE_LINE, SOURCE_CALL, SUBFOLDER_LINE } from "./constants.ts"
 import type { ExplicitSave, ListedNote } from "./types.ts"
 
 export async function observeRead(
@@ -69,15 +69,7 @@ export async function observeList(
   const lines = result.output.text.split("\n")
   const folders = lines.flatMap(subfolderOf)
   const notes = lines.flatMap((line) => noteOf(vault, line))
-  const truncated = folders.length > MAX_LISTED || notes.length > MAX_LISTED
-  return {
-    kind: "listing",
-    vault,
-    folder,
-    folders: folders.slice(0, MAX_LISTED),
-    notes: notes.slice(0, MAX_LISTED),
-    truncated,
-  }
+  return { kind: "listing", vault, folder, folders, notes }
 }
 
 function subfolderOf(line: string): string[] {

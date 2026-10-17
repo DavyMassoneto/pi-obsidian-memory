@@ -3,11 +3,13 @@ import { Value } from "typebox/value"
 
 import {
   DialogRequestSchema,
+  isRecord,
   type RecordTest,
   type RpcTurn,
   recordOf,
   StatusSchema,
   type ToolEnd,
+  ToolStartSchema,
 } from "./e2e-records.ts"
 
 const TextPartSchema = Type.Object({ type: Type.String(), text: Type.Optional(Type.String()) })
@@ -60,6 +62,13 @@ export function statusCleared(key: string): RecordTest {
       if (!status) return false
       return status.statusKey === key && typeof status.statusText !== "string"
     },
+  }
+}
+
+export function toolStarted(): RecordTest {
+  return {
+    description: "any tool execution start",
+    matches: (line) => isRecord(ToolStartSchema, line),
   }
 }
 

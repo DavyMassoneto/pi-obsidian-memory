@@ -58,7 +58,7 @@ export class CaptureRuntime {
       captureMemory(run, operation, this.#deps.completionOf(ctx)),
     )
     if (!result.succeeded) return notifyFailure(ctx, result.reason, result.problems)
-    if (result.output.windows > 0 && transcript.lastEntryId)
+    if (result.output.reviewed && transcript.lastEntryId)
       this.#deps.writeCursor({ lastEntryId: transcript.lastEntryId })
     if (ctx.hasUI && result.output.applied.length > 0) {
       ctx.ui.notify(`${CAPTURE_SAVED} ${result.output.applied.length} change(s).`, "info")

@@ -8,14 +8,7 @@ export default defineConfig({
         test: {
           name: "unit",
           include: ["tests/**/*.test.ts"],
-          exclude: ["tests/**/*.smoke.test.ts", "tests/**/*.model.test.ts", "tests/e2e/**"],
-        },
-      },
-      {
-        test: {
-          name: "pi",
-          include: ["tests/**/*.smoke.test.ts"],
-          testTimeout: 30_000,
+          exclude: ["tests/**/*.model.test.ts", "tests/e2e/**"],
         },
       },
       {

@@ -17,7 +17,6 @@ export interface PromptContent {
 export interface CompletionRequest extends PromptContent {
   signal: AbortSignal
   model: ChatModelReference
-  maxTokens: number
 }
 
 export interface CompletedResponse {
