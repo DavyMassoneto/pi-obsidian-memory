@@ -1,14 +1,8 @@
-import { join } from "node:path"
-
-import { ModelRuntime } from "@earendil-works/pi-coding-agent"
-import { onTestFinished } from "vitest"
-
 import { executedFiles, firedQuestions, type ShellEditQuestionName, type ShellEditScores } from "#src/domain"
-import { shellEditClassifierPrompt } from "#src/pi"
-import { askShellEdit, defaultJevModel, readExecutedScripts, type ShellEditClassifierPort } from "#src/services"
-import type { ShellEditJev } from "#src/usecases"
-import { typesafeApiKey } from "./e2e-credentials.ts"
+import { askShellEdit, readExecutedScripts } from "#src/services"
+import { startDownloadSource, withDownloadSource } from "./download-source.ts"
 import { resetShellEditProject } from "./shell-edit.ts"
+import { liveShellEditClassifier } from "./shell-edit-classifier.ts"
 import type { LabelledShellCommand } from "./shell-edit-label.ts"
 import { LABELLED_SHELL_COMMANDS } from "./shell-edit-labels.ts"
 import { useTempFolder } from "./temp-folder.ts"
@@ -55,41 +49,17 @@ export function withCheckGroup(items: LabelledShellCommand[]): CheckMarked[] {
   })
 }
 
-async function shellEditClassifierWithKey(apiKey: string): Promise<ShellEditClassifierPort> {
-  const previous = process.env.TYPESAFE_API_KEY
-  process.env.TYPESAFE_API_KEY = apiKey
-  onTestFinished(() => {
-    if (typeof previous === "string") process.env.TYPESAFE_API_KEY = previous
-    else delete process.env.TYPESAFE_API_KEY
-  })
-  const folder = await useTempFolder()
-  const runtime = await ModelRuntime.create({ authPath: join(folder, "auth.json"), modelsPath: null })
-  const model = runtime.getModelOfType("classifier", "typesafe", defaultJevModel)
-  if (!model) throw new Error(`pi has no typesafe ${defaultJevModel} classifier`)
-  return { classify: (request) => runtime.classify(model, shellEditClassifierPrompt(request.context), request.options) }
-}
-
-export async function liveShellEditClassifier(): Promise<ShellEditClassifierPort> {
-  return shellEditClassifierWithKey(await typesafeApiKey())
-}
-
-export async function liveShellEditJev(): Promise<ShellEditJev> {
-  return { available: true, classifier: await liveShellEditClassifier() }
-}
-
-export async function invalidKeyShellEditJev(): Promise<ShellEditJev> {
-  return { available: true, classifier: await shellEditClassifierWithKey("invalid-key") }
-}
-
 export async function scoreLabelledCommands(): Promise<ScoredShellCommand[]> {
   const cwd = await useTempFolder()
   await resetShellEditProject(cwd)
   const classifier = await liveShellEditClassifier()
+  const sourceUrl = await startDownloadSource()
   const scored: ScoredShellCommand[] = []
   for (const item of withCheckGroup(LABELLED_SHELL_COMMANDS)) {
-    const read = await readExecutedScripts(cwd, executedFiles(item.command))
+    const command = withDownloadSource(item.command, sourceUrl)
+    const read = await readExecutedScripts(cwd, executedFiles(command))
     if (!read.succeeded) throw new Error(read.problems.join("\n"))
-    const state = { command: item.command, cwd, scripts: read.output.scripts, missing: read.output.missing }
+    const state = { command, cwd, scripts: read.output.scripts, missing: read.output.missing }
     const asked = await askShellEdit({ classifier, state, signal: new AbortController().signal })
     if (!asked.succeeded) throw new Error(`${item.command}: ${asked.problems.join("; ")}`)
     scored.push({ ...item, scores: asked.output.scores, reportedModel: asked.output.reportedModel })

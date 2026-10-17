@@ -15,6 +15,7 @@ export function registrarFor(pi: ExtensionAPI): ExtensionRegistrar {
     onSessionStart: (handler) => pi.on("session_start", handler),
     onBeforeAgentStart: (handler) => pi.on("before_agent_start", handler),
     onToolCall: (handler) => pi.on("tool_call", handler),
+    onShellToolCall: (handler) => pi.on("tool_call", handler),
     onAgentEnd: (handler) => pi.on("agent_end", handler),
     onBeforeCompact: (handler) => pi.on("session_before_compact", handler),
     appendCursor: (data) => pi.appendEntry(CURSOR_TYPE, data),

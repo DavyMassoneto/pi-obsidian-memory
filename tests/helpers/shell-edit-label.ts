@@ -6,4 +6,5 @@ export interface LabelledShellCommand {
   expected: ShellEditQuestionName | "allow"
   creates: string[]
   removes: string[]
+  output?: string
 }

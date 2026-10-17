@@ -162,6 +162,13 @@ export function toolText(end: ToolEnd): string {
     .join("\n")
 }
 
+export function toolStartCommands(turn: RpcTurn): string[][] {
+  return turn.toolStarts.map((start) => {
+    if (typeof start.args.command === "string") return [start.toolName, start.args.command]
+    return [start.toolName]
+  })
+}
+
 export function notifySettles(texts: string[]): RecordTest {
   return (line) => {
     const notify = recordOf(NotifySchema, line)
