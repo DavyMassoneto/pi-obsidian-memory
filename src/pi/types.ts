@@ -9,6 +9,7 @@ import type { SessionShutdownHandler } from "#src/pi/memory-session"
 import type { MemorySucceedTool } from "#src/pi/memory-succeed"
 import type { MemoryUpdateTool } from "#src/pi/memory-update"
 import type { SessionStartHandler } from "#src/pi/session-start"
+import type { ShellEditHandler } from "#src/pi/shell-edit-guard"
 import type { ToolCallHandler } from "#src/pi/vault-guard"
 import type { LocalModelAccess } from "#src/usecases"
 
@@ -23,6 +24,7 @@ export interface ExtensionRegistrar {
   onSessionStart(handler: SessionStartHandler): void
   onBeforeAgentStart(handler: BeforeAgentStartHandler): void
   onToolCall(handler: ToolCallHandler): void
+  onShellToolCall(handler: ShellEditHandler): void
   onAgentEnd(handler: AgentEndHandler): void
   onBeforeCompact(handler: BeforeCompactHandler): void
   appendCursor(data: CursorData): void

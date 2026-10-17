@@ -10,6 +10,8 @@ export async function piWithoutCredentials(world: E2eWorld): Promise<Pick<E2eWor
     agentDir: world.folders.agentDir,
     args: piArgs(world.options, []),
     credentials: null,
+    omitTypesafeKey: false,
+    offlineNpmCache: null,
   })
   onTestFinished(({ task }) => {
     if (task.result?.state === "fail") console.error(pi.diagnostics)

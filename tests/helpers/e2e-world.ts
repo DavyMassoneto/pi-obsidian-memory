@@ -30,27 +30,8 @@ import { E2E_MODEL, E2E_PROJECT_NAME, E2E_PROVIDER, extensionPath, skillsPath } 
 import { notifySettles, type RpcTurn } from "./e2e-records.ts"
 import { RpcPi } from "./e2e-rpc.ts"
 import { dialogTitled, nth } from "./e2e-turns.ts"
+import type { WorldFolders, WorldOptions } from "./e2e-world-types.ts"
 import { benchmarkCacheFolder } from "./embedding-benchmark.ts"
-
-export interface WorldOptions {
-  memory: "none" | "configured"
-  tools: string[]
-  modelCache: "fresh" | "shared"
-  capture: "after-each-turn" | "at-session-end"
-  credentials?: "pi-login" | "none"
-  startIn?: "project" | "subfolder"
-  session?: "in-memory" | "saved"
-}
-
-export interface WorldFolders {
-  root: string
-  agentDir: string
-  cwd: string
-  startFolder: string
-  globalVault: string
-  projectVault: string
-  configPath: string
-}
 
 export class E2eWorld {
   readonly folders: WorldFolders
@@ -128,7 +109,14 @@ async function startPi(folders: WorldFolders, options: WorldOptions): Promise<Rp
     agentDir: folders.agentDir,
     args: piArgs(options, authExtensions),
     credentials,
+    omitTypesafeKey: "withoutTypesafeKey" in options,
+    offlineNpmCache: offlineNpmCacheOf(folders, options),
   })
+}
+
+function offlineNpmCacheOf(folders: WorldFolders, options: WorldOptions): string | null {
+  if (options.offlineNpm) return join(folders.root, "npm-cache")
+  return null
 }
 
 function startFolderOf(folders: WorldFolders, options: WorldOptions): string {

@@ -14,7 +14,8 @@ import {
 } from "./e2e-records.ts"
 import { E2E_MODEL_LABEL } from "./e2e-setup-steps.ts"
 import { dialogTitled, statusCleared } from "./e2e-turns.ts"
-import { type E2eWorld, e2eWorld, type WorldOptions } from "./e2e-world.ts"
+import { type E2eWorld, e2eWorld } from "./e2e-world.ts"
+import type { WorldOptions } from "./e2e-world-types.ts"
 
 export async function storedConfig(world: E2eWorld): Promise<MemoryConfig> {
   const config = await readConfig(world.folders.configPath)

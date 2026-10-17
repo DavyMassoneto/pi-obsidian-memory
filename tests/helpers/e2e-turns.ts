@@ -82,6 +82,19 @@ export function endOf(turn: RpcTurn, toolName: string): ToolEnd {
   return last
 }
 
+export function lastEndOf(turn: RpcTurn, toolName: string): ToolEnd | null {
+  const last = turn.toolEnds.filter((end) => end.toolName === toolName).at(-1)
+  if (last) return last
+  return null
+}
+
+export function toolStartCommands(turn: RpcTurn): string[][] {
+  return turn.toolStarts.map((start) => {
+    if (typeof start.args.command === "string") return [start.toolName, start.args.command]
+    return [start.toolName]
+  })
+}
+
 export function callsOf(turn: RpcTurn, toolName: string): number {
   return turn.toolStarts.filter((start) => start.toolName === toolName).length
 }
