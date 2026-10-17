@@ -62,7 +62,7 @@ export const SHELL_EDIT_QUESTIONS: ShellEditQuestions = {
   in_place: {
     type: "bool",
     instructions:
-      "Does `command` change an existing file in place, for example with `sed -i`, `perl -pi`, or text read from a file, changed with `-replace` and written back to it?",
+      "Does `command` change an existing file in place, for example with `sed -i`, `perl -pi`, or text read from a file, changed with `-replace` and written back to it, rather than through a linter, formatter, test runner, build, git or a package manager?",
     criteria: {
       true: "`command` rewrites an existing file in place",
       false: "`command` leaves existing files' contents as they are",

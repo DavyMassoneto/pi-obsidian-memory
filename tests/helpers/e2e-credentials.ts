@@ -16,6 +16,10 @@ export async function piCredentialsEnv(): Promise<PiCredentialsEnv> {
   return { ANTHROPIC_OAUTH_TOKEN: anthropic, TYPESAFE_API_KEY: typesafe }
 }
 
+export async function typesafeApiKey(): Promise<string> {
+  return printedByPi(["auth", "print-api-key", "--provider", "typesafe"])
+}
+
 async function printedByPi(args: string[]): Promise<string> {
   const env = { ...process.env }
   delete env.PI_CODING_AGENT_DIR
