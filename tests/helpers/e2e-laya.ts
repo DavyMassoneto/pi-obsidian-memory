@@ -11,6 +11,13 @@ export interface LayaServer {
   endpoint: string
 }
 
+export interface LayaSettings {
+  jevStrict: boolean
+  maxTokenBudget: number | null
+}
+
+export const LAYA_DEFAULTS: LayaSettings = { jevStrict: false, maxTokenBudget: null }
+
 interface LayaLog {
   text: string
 }
@@ -21,11 +28,14 @@ export function layaServePath(): string {
   return join(dirname(common), "tmp", "laya-venv", "Scripts", "laya-serve.exe")
 }
 
-export async function startLaya(): Promise<LayaServer> {
+export async function startLaya(settings: LayaSettings): Promise<LayaServer> {
   const port = await freePort()
   const env: NodeJS.ProcessEnv = { ...process.env, LAYA_HOST: "127.0.0.1", LAYA_PORT: String(port) }
   delete env.LAYA_JEV_STRICT
+  delete env.LAYA_MAX_TOKEN_BUDGET
   delete env.LAYA_API_KEY
+  if (settings.jevStrict) env.LAYA_JEV_STRICT = "1"
+  if (typeof settings.maxTokenBudget === "number") env.LAYA_MAX_TOKEN_BUDGET = String(settings.maxTokenBudget)
   const child = spawn(layaServePath(), [], { env, stdio: ["ignore", "ignore", "pipe"] })
   const log: LayaLog = { text: "" }
   child.stderr.setEncoding("utf8")
@@ -38,7 +48,7 @@ export async function startLaya(): Promise<LayaServer> {
   return { endpoint: `${base}/v1/systemone` }
 }
 
-async function freePort(): Promise<number> {
+export async function freePort(): Promise<number> {
   const server = createServer()
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", () => resolve()))
   const address = server.address()

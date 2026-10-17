@@ -77,6 +77,7 @@ export type ChatModelAuthLookup<TModel> = (model: TModel) => Promise<ChatModelAu
 
 export interface ChatModelPort<TModel> {
   find(provider: string, id: string): TModel | undefined
+  configured(model: TModel): boolean
   auth: ChatModelAuthLookup<TModel>
 }
 
