@@ -1,13 +1,18 @@
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process"
 
-import type { PiCredentialsEnv } from "./e2e-credentials.ts"
+import { childEnv } from "./e2e-child-env.ts"
+import { DialogDesk } from "./e2e-dialog-desk.ts"
+import { LineBoard } from "./e2e-line-board.ts"
 import { piCliPath } from "./e2e-paths.ts"
-import { cancelReply, problemWith, readLines, replyFor, type UiStep, type UnexpectedDialog } from "./e2e-protocol.ts"
 import {
-  AssistantTextResponseSchema,
-  type CommandEntry,
-  CommandsResponseSchema,
-  type DialogRequest,
+  type DialogReply,
+  problemWith,
+  readLines,
+  type UiAnswer,
+  type UiStep,
+  type UnexpectedDialog,
+} from "./e2e-protocol.ts"
+import {
   DialogRequestSchema,
   type Disposition,
   dispositionOf,
@@ -18,42 +23,22 @@ import {
   type RpcTurn,
   recordOf,
   SettledSchema,
-  StatsResponseSchema,
   turnOf,
 } from "./e2e-records.ts"
+import { RpcCommands } from "./e2e-rpc-commands.ts"
+import type { BegunCommand, IdentifiedCommand, OutgoingCommand, RpcStart } from "./e2e-rpc-types.ts"
 
-export interface RpcStart {
-  cwd: string
-  agentDir: string
-  args: string[]
-  credentials: PiCredentialsEnv
-}
-export interface SessionCost {
-  cost: number
-  totalTokens: number
-}
-interface OutgoingCommand {
-  type: string
-  message?: string
-}
-interface Waiter {
-  test: RecordTest
-  resolve(line: string): void
-  reject(error: Error): void
-}
-
-export class RpcPi {
-  readonly lines: string[] = []
-  readonly unexpected: UnexpectedDialog[] = []
+export class RpcPi extends RpcCommands {
   #child: ChildProcessWithoutNullStreams
-  #steps: UiStep[] = []
-  #waiters: Waiter[] = []
+  #desk = new DialogDesk((reply) => this.#write(reply))
+  #begun: BegunCommand | null = null
+  #board = new LineBoard()
   #nextId = 0
   #stderr = ""
-  #failure: Error | null = null
   #exited = Promise.withResolvers<void>()
 
   constructor(start: RpcStart) {
+    super()
     this.#child = spawn(process.execPath, [piCliPath(), "--mode", "rpc", ...start.args], {
       cwd: start.cwd,
       env: childEnv(start),
@@ -68,51 +53,56 @@ export class RpcPi {
     readLines(this.#child, (line) => this.#receive(line))
   }
 
+  get unexpected(): UnexpectedDialog[] {
+    return this.#desk.unexpected
+  }
+
+  get lines(): string[] {
+    return this.#board.lines
+  }
+
   get stderr(): string {
     return this.#stderr
   }
 
   waitFor(test: RecordTest, from: number): Promise<string> {
-    const found = this.lines.slice(from).find(test)
-    if (typeof found === "string") return Promise.resolve(found)
-    if (this.#failure) return Promise.reject(this.#failure)
-    const waiting = Promise.withResolvers<string>()
-    this.#waiters.push({ test, resolve: waiting.resolve, reject: waiting.reject })
-    return waiting.promise
+    return this.#board.waitFor(test, from)
   }
 
   async prompt(message: string, steps: UiStep[]): Promise<RpcTurn> {
     const from = this.lines.length
-    this.#steps.push(...steps)
-    const disposition = dispositionOf(await this.#send({ type: "prompt", message }))
+    this.#desk.plan(steps)
+    const disposition = dispositionOf(await this.send({ type: "prompt", message }))
     if (disposition !== "handled") await this.waitFor((line) => isRecord(SettledSchema, line), from)
     return this.#endTurn(from, disposition)
   }
 
   async command(text: string, steps: UiStep[], done: RecordTest): Promise<RpcTurn> {
     const from = this.lines.length
-    this.#steps.push(...steps)
-    const disposition = dispositionOf(await this.#send({ type: "prompt", message: text }))
+    this.#desk.plan(steps)
+    const disposition = dispositionOf(await this.send({ type: "prompt", message: text }))
     await this.waitFor(done, from)
     return this.#endTurn(from, disposition)
   }
 
-  async commands(): Promise<CommandEntry[]> {
-    const response = recordOf(CommandsResponseSchema, await this.#send({ type: "get_commands" }))
-    if (!response) throw new Error("get_commands returned another shape")
-    return response.data.commands
+  async beginCommand(text: string, steps: UiStep[], open: RecordTest): Promise<void> {
+    const from = this.lines.length
+    this.#desk.plan(steps)
+    const response = this.send({ type: "prompt", message: text })
+    response.catch(() => undefined)
+    this.#begun = { from, response }
+    await this.waitFor(open, from)
   }
 
-  async lastAssistantText(): Promise<string | null> {
-    const response = recordOf(AssistantTextResponseSchema, await this.#send({ type: "get_last_assistant_text" }))
-    if (!response) throw new Error("get_last_assistant_text returned another shape")
-    return response.data.text
+  answerOpen(answer: UiAnswer): void {
+    this.#desk.answerOpen(answer)
   }
 
-  async cost(): Promise<SessionCost> {
-    const response = recordOf(StatsResponseSchema, await this.#send({ type: "get_session_stats" }))
-    if (!response) throw new Error("get_session_stats returned another shape")
-    return { cost: response.data.cost, totalTokens: response.data.tokens.total }
+  async endCommand(): Promise<RpcTurn> {
+    const begun = this.#begun
+    if (!begun) throw new Error("no command was begun")
+    this.#begun = null
+    return this.#endTurn(begun.from, dispositionOf(await begun.response))
   }
 
   async stop(): Promise<void> {
@@ -120,15 +110,19 @@ export class RpcPi {
     await this.#exited.promise
   }
 
-  async #send(command: OutgoingCommand): Promise<string> {
+  protected async send(command: OutgoingCommand): Promise<string> {
     this.#nextId += 1
     const id = `e2e-${this.#nextId}`
     const answered = this.waitFor(isResponseTo(id), this.lines.length)
-    this.#child.stdin.write(`${JSON.stringify({ ...command, id })}\n`)
+    this.#write({ ...command, id })
     const line = await answered
     const response = recordOf(RpcResponseSchema, line)
     if (!response?.success) throw new Error(`${command.type} failed: ${line}`)
     return line
+  }
+
+  #write(message: DialogReply | IdentifiedCommand): void {
+    this.#child.stdin.write(`${JSON.stringify(message)}\n`)
   }
 
   #receive(line: string): void {
@@ -137,28 +131,14 @@ export class RpcPi {
       this.#fail(new Error(`${problem}: ${line}`))
       return
     }
-    this.lines.push(line)
+    this.#board.add(line)
     const dialog = recordOf(DialogRequestSchema, line)
-    if (dialog) this.#answer(dialog)
-    const waiting = this.#waiters
-    this.#waiters = waiting.filter((waiter) => !waiter.test(line))
-    for (const waiter of waiting) if (waiter.test(line)) waiter.resolve(line)
-  }
-
-  #answer(request: DialogRequest): void {
-    const reply = replyFor(request, this.#steps.shift())
-    if (reply) {
-      this.#child.stdin.write(`${JSON.stringify(reply)}\n`)
-      return
-    }
-    this.unexpected.push({ method: request.method, title: request.title })
-    this.#child.stdin.write(`${JSON.stringify(cancelReply(request))}\n`)
+    if (dialog) this.#desk.answer(dialog)
+    this.#board.settle(line)
   }
 
   #endTurn(from: number, disposition: Disposition): RpcTurn {
-    const unused = this.#steps.splice(0)
-    if (unused.length > 0)
-      throw new Error(`unused steps: ${unused.map((step) => `${step.method} "${step.title}"`).join(", ")}`)
+    this.#desk.refuseUnusedSteps()
     return turnOf(this.lines.slice(from), disposition)
   }
 
@@ -173,21 +153,6 @@ export class RpcPi {
   }
 
   #fail(error: Error): void {
-    this.#failure ??= error
-    for (const waiter of this.#waiters) waiter.reject(this.#failure)
-    this.#waiters = []
+    this.#board.fail(error)
   }
-}
-
-function childEnv(start: RpcStart): NodeJS.ProcessEnv {
-  const env: NodeJS.ProcessEnv = {
-    ...process.env,
-    ...start.credentials,
-    PI_CODING_AGENT_DIR: start.agentDir,
-    PI_SKIP_VERSION_CHECK: "1",
-    PI_TELEMETRY: "0",
-  }
-  delete env.ANTHROPIC_AUTH_TOKEN
-  delete env.ANTHROPIC_API_KEY
-  return env
 }

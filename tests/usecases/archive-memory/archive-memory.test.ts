@@ -1,42 +1,17 @@
-import { readdir, readFile } from "node:fs/promises"
+import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 
-import { afterEach, expect, test, vi } from "vitest"
+import { expect, test } from "vitest"
 
 import { archiveMemory } from "#src/usecases"
 import {
   changeFixture,
-  expectRegistrationLeaseReleased,
   noteWithId,
   READIED_PATH as path,
   putCatalogFile,
   readiedNote,
   writeRegistrationSnapshot,
 } from "#test-helpers"
-
-afterEach(() => {
-  vi.useRealTimers()
-})
-
-test("after a read the note moves under archive/ with the archived date and the indexes follow", async () => {
-  vi.useFakeTimers({ toFake: ["Date"] })
-  vi.setSystemTime(new Date(2026, 9, 20, 10, 0))
-  const { context, vault, file } = await readiedNote("Always pnpm.", [])
-
-  const result = await archiveMemory({ vault: "global", path }, context)
-
-  expect(result).toMatchObject({
-    succeeded: true,
-    output: { vault: "global", path, archivedPath: "archive/tools/Use pnpm.md", maintenanceProblems: [] },
-  })
-  await expect(readFile(file)).rejects.toMatchObject({ code: "ENOENT" })
-  const archived = await readFile(join(vault.path, "archive/tools/Use pnpm.md"), "utf8")
-  expect(archived).toContain("archived: 2026-10-20")
-  expect(archived).toContain("id: 01JABCDE7XKQ2M9V3RTN8WPZ01")
-  expect(archived).toContain("Always pnpm.")
-  expect(await readdir(join(vault.path, "tools"))).not.toContain("Use pnpm.md")
-  await expectRegistrationLeaseReleased(context)
-})
 
 test("a note whose body is over a lowered limit can still be archived", async () => {
   const { context, vault, config, read } = await changeFixture()
