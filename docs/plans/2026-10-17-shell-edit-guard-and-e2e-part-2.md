@@ -218,7 +218,14 @@ async function stopLaya(child: ChildProcess): Promise<void> {
 
 **Step 4: `tests/helpers/e2e-rpc.ts`**
 
-Replace `#receive` so each waiter's test runs once per line. `nth` keeps a count, so a second call per line would double it.
+Change `#receive` so each waiter's test runs once per line. `nth` keeps a count, so a second call per line would double it.
+
+The code below predates the A7 review fixes. Keep them when applying it:
+- the `problemWith` check;
+- the buffer advance, in `tests/helpers/e2e-protocol.ts`;
+- the `#failure` rejection.
+
+Only the once-per-line waiter loop is new.
 ```ts
   #receive(line: string): void {
     this.lines.push(line)
@@ -837,11 +844,69 @@ git add -A tests/e2e/capture.e2e.test.ts tests/pi tests/usecases tests/services
 git commit -m "test(e2e): capture after a turn and at session end; remove its simulated tests"
 ```
 
-### Task B12: Scenario 6 — vault guard, and the shipped skill
+### Task B12: Scenario 6 — vault guard, the shipped skill, and the package as installed
 
-**Files:** Create `tests/e2e/vault-guard.e2e.test.ts`.
+**Files:**
+- Create `tests/e2e/vault-guard.e2e.test.ts` and `tests/e2e/package.e2e.test.ts`.
+- Modify `tests/helpers/e2e-world.ts`: `WorldOptions`, `e2eWorld`, `startPi`, `piArgs`.
+- Modify `tests/helpers/e2e-records.ts`: `CommandEntrySchema`.
 
-**Step 1: Write the test**
+**Step 1: The world can load the package the way a user installs it**
+
+pi reads `packages` from `<agentDir>/settings.json` (`pi-coding-agent/docs/packages.md:19`). A local path loads without copying (`packages.md:36`), and a directory follows the package manifest (`packages.md:40`), which is `package.json:44-50`. Today only `tests/helpers/pi-smoke.ts:69` proves this path, with `SettingsManager.inMemory({ packages: [repoRoot] })`.
+
+In `tests/helpers/e2e-world.ts`:
+- `WorldOptions` gets `installed?: true`.
+- In `e2eWorld`, right after `const folders = await worldFolders()`, add:
+```ts
+  if ("installed" in options) {
+    await writeFile(join(folders.agentDir, "settings.json"), JSON.stringify({ packages: [repoRoot] }))
+  }
+```
+- `startPi` passes `args: piArgs(options.tools, "installed" in options)`.
+- Replace `piArgs` with:
+```ts
+function piArgs(tools: string[], installed: boolean): string[] {
+  const args = ["--no-session", "--provider", E2E_PROVIDER, "--model", E2E_MODEL, "-np", "--no-themes", "-nc", "--no-mcp", "-na"]
+  if (!installed) args.push("-ne", "-e", extensionPath(), "-ns", "--skill", skillsPath())
+  if (tools.length > 0) args.push("--tools", tools.map((tool) => `+${tool}`).join(","))
+  return args
+}
+```
+- Add `writeFile` to the `node:fs/promises` import and `repoRoot` to the `./e2e-paths.ts` import.
+
+In `tests/helpers/e2e-records.ts`, `CommandEntrySchema` becomes:
+```ts
+const CommandEntrySchema = Type.Object({
+  name: Type.String(),
+  source: Type.String(),
+  sourceInfo: Type.Optional(Type.Object({ origin: Type.String() })),
+})
+```
+`sourceInfo.origin` is `"package"` for a package resource (`pi-coding-agent/docs/rpc-commands.md`, `get_commands`, sourceInfo fields).
+
+**Step 2: `tests/e2e/package.e2e.test.ts`**
+```ts
+import { expect, test } from "vitest"
+
+import { MEMORY_DOCTOR_COMMAND, MEMORY_EXPORT_COMMAND, MEMORY_INIT_COMMAND, MEMORY_SETUP_COMMAND } from "#src/pi"
+import { e2eWorld } from "#test-helpers"
+
+test("installed through settings.json packages, pi lists the four memory commands and the obsidian-memory skill from the package", async () => {
+  const world = await e2eWorld({ memory: "none", tools: [], modelCache: "fresh", capture: "after-each-turn", installed: true })
+  const commands = await world.pi.commands()
+  const fromPackage = expect.objectContaining({ origin: "package" })
+  for (const name of [MEMORY_SETUP_COMMAND, MEMORY_INIT_COMMAND, MEMORY_EXPORT_COMMAND, MEMORY_DOCTOR_COMMAND]) {
+    expect(commands).toContainEqual(expect.objectContaining({ name, source: "extension", sourceInfo: fromPackage }))
+  }
+  expect(commands).toContainEqual(
+    expect.objectContaining({ name: "skill:obsidian-memory", source: "skill", sourceInfo: fromPackage }),
+  )
+})
+```
+**Unverified:** that a skill loaded through a package also reports `origin: "package"`. If only the skill assertion fails, report the `sourceInfo` pi printed; do not drop the assertion.
+
+**Step 3: `tests/e2e/vault-guard.e2e.test.ts`**
 ```ts
 import { readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
@@ -882,25 +947,33 @@ test("outside the vaults the read tool works, and pi lists the shipped obsidian-
 })
 ```
 - Skills are listed as `skill:<name>` with `source: "skill"` (`pi-coding-agent/docs/rpc-commands.md:822-826`).
-- Blocked calls carry the reason as the result text (`pi-agent-core/dist/agent-loop.js:507-516`).
+- A blocked call carries its reason as the result text (`pi-agent-core/dist/agent-loop.js:507-516`).
 
-**Step 2: Run**
+**Step 4: Run**
 
-Run `npx vitest run --project e2e tests/e2e/vault-guard.e2e.test.ts`. Expected: 2 passed.
+Run `npx vitest run --project e2e tests/e2e/package.e2e.test.ts tests/e2e/vault-guard.e2e.test.ts` and `npm run test:e2e`. Expected: 3 passed in the two new files; every other e2e test still passes.
 
 ### Task B13: Delete the simulated tests scenario 6 replaces, and the `pi` project
+
+**Step 1: Gate**
+
+Run `npx vitest run --project e2e tests/e2e/package.e2e.test.ts`. Expected: 1 passed. If it fails, stop: `test:pi` stays until the package test passes.
+
+**Step 2: Delete**
 ```bash
 rm tests/pi/extension.smoke.test.ts tests/pi/vault-guard/vault-guard.test.ts
 ```
 - In `vitest.config.ts`, remove the `pi` project object.
 - In `package.json`, remove the `"test:pi"` script. Part 3 updates the AGENTS/README mentions.
 
+**Step 3: Check**
+
 Run `npm test`, `npm run typecheck` and `npm run lint`. Expected: pass.
 
-**Commit (orchestrator):**
+**Step 4: Commit (orchestrator)**
 ```bash
-git add -A tests/e2e/vault-guard.e2e.test.ts tests/pi vitest.config.ts package.json
-git commit -m "test(e2e): vault guard and shipped skill in the real pi; remove the fake-context smoke test"
+git add -A tests/e2e/vault-guard.e2e.test.ts tests/e2e/package.e2e.test.ts tests/helpers/e2e-world.ts tests/helpers/e2e-records.ts tests/pi vitest.config.ts package.json
+git commit -m "test(e2e): vault guard, shipped skill and the package as installed, in the real pi; remove the fake-context smoke test"
 ```
 
 ### Task B14: Scenario 8 — semantic search, and the real model download
@@ -968,15 +1041,43 @@ test("downloads the local model from Hugging Face into an empty cache, every ass
 
 Run `npx vitest run --project e2e tests/e2e/semantic.e2e.test.ts` and `npx vitest run --project model tests/services/embeddings/model-cache.model.test.ts`. Expected: 1 passed each. The model test downloads about 135 MB twice.
 
-### Task B15: Delete the simulated tests scenario 8 and the download test replace
+### Task B15: Delete the simulated tests scenario 8 and the download test replace (per test)
+
+**Rule:** a test stays when it runs on real disk with no fake. A hand-written embedder, port or inference callback with its own behavior counts as a fake. A plain result value the real code also returns does not.
+
+**Step 1: Gate**
+
+Run `npx vitest run --project model tests/services/embeddings/model-cache.model.test.ts` and `npx vitest run --project e2e tests/e2e/semantic.e2e.test.ts`. Expected: 1 passed each. Stop here if either fails.
+
+**Step 2: Delete the files where every test is simulated**
 ```bash
-rm tests/pi/semantic/runtime.test.ts tests/usecases/semantic/prepare.test.ts tests/usecases/semantic/rank.test.ts tests/usecases/semantic/refresh-vectors.test.ts tests/usecases/search-memory/semantic-search.test.ts tests/services/embeddings/inference.test.ts tests/services/embeddings/local.test.ts tests/services/embeddings/local.load.test.ts tests/services/embeddings/operation.test.ts tests/services/embeddings/asset-download.test.ts tests/services/embeddings/model-asset.test.ts tests/services/embeddings/asset-inspection.test.ts
+rm tests/usecases/semantic/refresh-vectors.test.ts tests/usecases/search-memory/semantic-search.test.ts tests/services/embeddings/inference.test.ts tests/services/embeddings/local.load.test.ts tests/services/embeddings/operation.test.ts tests/services/embeddings/asset-download.test.ts tests/services/embeddings/model-asset.test.ts tests/services/embeddings/asset-inspection.test.ts
 ```
+- `inference.test.ts` mocks transformers.
+- `local.load.test.ts` uses a controlled loader.
+- `operation.test.ts` uses fake timers and stub inference callbacks.
+- The three `asset-*`/`model-asset` tests use a local HTTP server or synthetic assets.
+
+**Step 3: Remove only the simulated tests (edit tool), keeping the real ones**
+- `tests/pi/semantic/runtime.test.ts`: keep `the local model is used before any session is attached`, which uses a real `SemanticRuntime` on a temp folder. Remove every other test.
+- `tests/usecases/semantic/prepare.test.ts`:
+  - **Keep:** `without a semantic source there is no port`, `no port means no query vector and nothing to say`, `an unavailable port says why semantic search is off`.
+  - **Remove:** `the source is asked for the configured embeddings`, `the query is embedded as a query and keeps the provider fingerprint`, `a query that cannot be embedded says results use words only`.
+- `tests/usecases/semantic/rank.test.ts`:
+  - **Keep:** `fusion puts a note found by both rankings first, then the rest by reciprocal rank` and `fusion keeps only as many as the limit` (pure).
+  - **Remove:** the other four tests (fake embedder).
+- `tests/services/embeddings/local.test.ts`:
+  - **Keep:** `returns unavailable for a corrupt cache without overwriting it` (real disk, real embedder).
+  - **Remove:** `loads lazily once and prefixes both purposes`, `chunks with bounded overlap and includes the entire tail without splitting Unicode`, `reports unavailable without exposing loader errors and never falls back`.
+- Remove the imports that become unused; `npm run lint` lists them.
+
 **Kept, waiting for the user's decision:** `tests/services/embeddings/openai.test.ts`, `google.test.ts` and `http.test.ts`.
+
+**Step 4: Check**
 
 Run `npm test`, `npm run typecheck` and `npm run lint`. Expected: pass.
 
-**Commit (orchestrator):**
+**Step 5: Commit (orchestrator)**
 ```bash
 git add -A tests/e2e/semantic.e2e.test.ts tests/services/embeddings/model-cache.model.test.ts tests/pi tests/usecases tests/services
 git commit -m "test(e2e): semantic search with the real local model and the real download; remove their simulated tests"
@@ -1033,9 +1134,38 @@ git commit -m "test: remove helpers left unused by the simulated tests"
 
 ## Lost coverage: real servers can't reproduce these (record in Part 3 docs)
 - **Laya:** malformed or truncated responses and HTTP error details (`laya-response-tolerance`, parts of `laya-response` and `laya-batch`).
-- **Model download:** network failure, an aborted download and a hash mismatch mid-transfer (`asset-download`, `model-asset`).
 - **Jev:** abort and interruption timing (`interruption`).
 - **Doctor:** the decision report for an unavailable Jev.
+- **Model download** (`asset-download`, `model-asset`):
+  - the manifest byte limit on HTTP 200 and 401;
+  - a short download, or one of the right size with wrong bytes, being refused;
+  - a cancelled pending download never publishing a partial asset;
+  - exclusive publication when two runtimes race.
+  - `model-cache.model.test.ts` still covers missing, wrong-size, same-size-wrong-hash and the refusal of an invalid cached asset. Not covered: an asset path that is a folder.
+- **Local embedder** (`local.load`, `local`, `inference`, `operation`):
+  - retry after a failed first load;
+  - a cancelled load not replayed for a fresh signal;
+  - disposal waiting for a late load;
+  - loader errors never shown;
+  - chunk overlap and the Unicode tail;
+  - an unexpected tensor shape;
+  - CPU q8 and local-only options;
+  - abort before and during inference;
+  - an operation running longer than two minutes.
+- **Semantic usecases** (`refresh-vectors`, `semantic-search`, `rank`):
+  - batches of at most 32;
+  - re-embedding only changed notes;
+  - dropping vectors of deleted notes;
+  - resume after an interrupted embedding;
+  - re-embedding after a provider switch;
+  - refusing vectors from another provider;
+  - falling back to words when semantic search is off, a query cannot be embedded, or notes are only partly embedded;
+  - the minimum-similarity and archived-note exclusion.
+- **Semantic runtime** (`pi/semantic/runtime`):
+  - the remote key from pi's registry;
+  - an empty key treated as no key;
+  - a damaged model not downloaded again;
+  - a shutdown failure reported to the user.
 
 ## Risks
 - **Real-model judgement:** the Jev gate, the memory agent, capture and the paraphrase similarity are measured as they are. Any failure is reported, never tuned.

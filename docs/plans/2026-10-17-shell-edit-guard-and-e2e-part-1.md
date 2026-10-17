@@ -611,7 +611,7 @@ function readLines(child: ChildProcessWithoutNullStreams, onLine: LineHandler): 
 
 ### Task A8: The world (temporary folders, setup through dialogs, cleanup)
 
-**Files:** Create `tests/helpers/e2e-world.ts`. Modify `tests/helpers/index.ts`: add five export lines after `./diagnose-memory.ts`, in alphabetical order: `./e2e-credentials.ts`, `./e2e-paths.ts`, `./e2e-records.ts`, `./e2e-rpc.ts`, `./e2e-world.ts`.
+**Files:** Create `tests/helpers/e2e-world.ts`. Modify `tests/helpers/index.ts`: add six export lines after `./diagnose-memory.ts`, in alphabetical order: `./e2e-credentials.ts`, `./e2e-paths.ts`, `./e2e-protocol.ts` (split out of `e2e-rpc.ts` in A7), `./e2e-records.ts`, `./e2e-rpc.ts`, `./e2e-world.ts`.
 
 **Step 1: Write the file**
 ```ts
