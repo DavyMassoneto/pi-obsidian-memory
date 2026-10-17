@@ -2,6 +2,8 @@
 
 A pi extension that stores the agent's long-term memory in Obsidian vaults. Product and decisions: [docs/VISION.md](docs/VISION.md).
 
+Git worktrees always go in `.worktrees/` (ignored by git).
+
 ## Layers
 
 pi → usecases → services → domain. Each layer imports only the one right below it (enforced by Biome).
