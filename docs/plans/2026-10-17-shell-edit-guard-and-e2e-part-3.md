@@ -256,9 +256,13 @@ Run `npx vitest run --project e2e tests/e2e/shell-edit-guard.e2e.test.ts`. Expec
 - chaining with `&&`, `;` and `|`;
 - package scripts: `npm|pnpm|yarn run X|test|start`.
 
-**Dropped from the stash:** `zsh`, `python3`, `npm run-script`, PowerShell `-f`, `--require`, `--loader`/`--experimental-loader`, and the `.js/.mjs/.cjs/.ts/.py/.bat/.cmd` direct-run extensions.
+**Dropped from the stash:** `zsh`, `--loader`/`--experimental-loader`, and the `.js/.mjs/.cjs/.ts/.py/.bat/.cmd` direct-run extensions.
 
-**Kept from the stash because they spell the same forms:**
+**Kept from the stash because they spell the same forms** (orchestrator decision; listed for the user in the final report):
+- `--require`: the long spelling of `-r`;
+- PowerShell `-f`: pwsh's short form of `-File`;
+- `npm run-script`: npm's own name for `npm run` (`run` is its alias);
+- `python3`: the versioned name of the `python` interpreter;
 - a program path or `.exe` suffix (`C:\tools\node.exe`);
 - leading `VAR=value` assignments;
 - the segment splitter, which also splits on `||`, `&` and newlines because they use the same characters;
