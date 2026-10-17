@@ -12,7 +12,7 @@ import {
 import { e2eWorld, extensionPath } from "#test-helpers"
 
 test("our extension's commands are exactly the four memory commands", async () => {
-  const world = await e2eWorld({ memory: "none", tools: [], modelCache: "fresh" })
+  const world = await e2eWorld({ memory: "none", tools: [], modelCache: "fresh", capture: "after-each-turn" })
   const commands = await world.pi.commands()
   const fromOurExtension = commands
     .filter((command) => command.source === "extension" && command.sourceInfo.path === extensionPath())
@@ -23,7 +23,7 @@ test("our extension's commands are exactly the four memory commands", async () =
 })
 
 test("Haiku answers through pi's own login", async () => {
-  const world = await e2eWorld({ memory: "none", tools: [], modelCache: "fresh" })
+  const world = await e2eWorld({ memory: "none", tools: [], modelCache: "fresh", capture: "after-each-turn" })
   const turn = await world.pi.prompt("Reply with the single word READY and nothing else.", [])
   expect(turn.disposition).toBe("started")
   expect(turn.aborted).toBe(false)
@@ -32,7 +32,7 @@ test("Haiku answers through pi's own login", async () => {
 })
 
 test("setup and init write both vaults to the config, and a message then starts the memory search and ends with no notice, no error and no unexpected dialog", async () => {
-  const world = await e2eWorld({ memory: "configured", tools: [], modelCache: "shared" })
+  const world = await e2eWorld({ memory: "configured", tools: [], modelCache: "shared", capture: "after-each-turn" })
   const config = await readFile(world.folders.configPath, "utf8")
   expect(config).toContain(JSON.stringify(world.folders.globalVault))
   expect(config).toContain(JSON.stringify(world.folders.projectVault))
