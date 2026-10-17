@@ -12,6 +12,12 @@ export function childEnv(start: RpcStart): NodeJS.ProcessEnv {
   }
   delete env.ANTHROPIC_AUTH_TOKEN
   delete env.ANTHROPIC_API_KEY
+  if (start.omitTypesafeKey) delete env.TYPESAFE_API_KEY
+  if (start.offlineNpmCache) {
+    for (const name of Object.keys(env)) if (/^npm_config_(cache|offline)$/i.test(name)) delete env[name]
+    env.npm_config_offline = "true"
+    env.npm_config_cache = start.offlineNpmCache
+  }
   if (start.credentials) return env
   for (const name of Object.keys(env)) if (CREDENTIAL_VARIABLE.test(name)) delete env[name]
   return env

@@ -6,6 +6,8 @@ export interface RpcStart {
   agentDir: string
   args: string[]
   credentials: PiCredentialsEnv | null
+  omitTypesafeKey: boolean
+  offlineNpmCache: string | null
 }
 export interface SessionCost {
   cost: number

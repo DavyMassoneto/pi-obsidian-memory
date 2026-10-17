@@ -26,6 +26,7 @@ import { memoryConfigPath, memoryIndexPath, memoryModelCachePath } from "#src/pi
 import { RelevantMemoryRuntime } from "#src/pi/relevant-memory"
 import { SemanticRuntime } from "#src/pi/semantic"
 import { sessionStartHandler } from "#src/pi/session-start"
+import { shellEditGuardHandler } from "#src/pi/shell-edit-guard"
 import { vaultGuardHandler } from "#src/pi/vault-guard"
 import { loadDontForget } from "#src/usecases"
 import { registrarFor } from "./registrar.ts"
@@ -53,6 +54,7 @@ export function registerExtension(
   registrar.onBeforeAgentStart(block.beforeAgentStart())
   registrar.onBeforeAgentStart(relevant.beforeAgentStart())
   registrar.onToolCall(vaultGuardHandler(paths.configPath, homedir()))
+  registrar.onShellToolCall(shellEditGuardHandler())
   const capture = new CaptureRuntime({
     paths,
     sessions,

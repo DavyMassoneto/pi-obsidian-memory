@@ -13,7 +13,7 @@ function modelTail(id: string): string {
   return id.slice(id.lastIndexOf("-") + 1)
 }
 
-function answeredByRequestedModel(requested: string, reported: string): boolean {
+export function answeredByRequestedModel(requested: string, reported: string): boolean {
   if (reported === requested) return true
   if (!requested.includes("-") || !reported.includes("-")) return false
   return (
