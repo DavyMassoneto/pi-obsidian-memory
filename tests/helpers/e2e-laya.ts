@@ -14,9 +14,10 @@ export interface LayaServer {
 export interface LayaSettings {
   jevStrict: boolean
   maxTokenBudget: number | null
+  apiKey: string | null
 }
 
-export const LAYA_DEFAULTS: LayaSettings = { jevStrict: false, maxTokenBudget: null }
+export const LAYA_DEFAULTS: LayaSettings = { jevStrict: false, maxTokenBudget: null, apiKey: null }
 
 interface LayaLog {
   text: string
@@ -35,6 +36,7 @@ export async function startLaya(settings: LayaSettings): Promise<LayaServer> {
   delete env.LAYA_MAX_TOKEN_BUDGET
   delete env.LAYA_API_KEY
   if (settings.jevStrict) env.LAYA_JEV_STRICT = "1"
+  if (typeof settings.apiKey === "string") env.LAYA_API_KEY = settings.apiKey
   if (typeof settings.maxTokenBudget === "number") env.LAYA_MAX_TOKEN_BUDGET = String(settings.maxTokenBudget)
   const child = spawn(layaServePath(), [], { env, stdio: ["ignore", "ignore", "pipe"] })
   const log: LayaLog = { text: "" }
