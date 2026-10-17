@@ -1,8 +1,4 @@
-import { vi } from "vitest"
-
 import { defaultLayaSettings, type LayaContext } from "#src/services"
-
-const realFetch = globalThis.fetch
 
 export function liveLayaEndpoint(): string {
   const configured = process.env.LAYA_ENDPOINT
@@ -34,19 +30,4 @@ export function liveLayaContextWithTokens(maxTokens: number, headMaxTokens: numb
 
 export function liveLayaContext(): LayaContext {
   return liveLayaContextWithTokens(defaultLayaSettings.maxTokens, defaultLayaSettings.headMaxTokens)
-}
-
-const wireLabels = ',"labels":{"true":"A","false":"B"}'
-const relevanceCriteriaEnd = '"false":"Candidate would not help"}'
-
-export function alternateLabelsOnRequests() {
-  return vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
-    if (init && typeof init.body === "string") {
-      const body = init.body
-        .replaceAll(wireLabels, "")
-        .replaceAll(relevanceCriteriaEnd, `${relevanceCriteriaEnd}${wireLabels}`)
-      return realFetch(input, { ...init, body })
-    }
-    return realFetch(input, init)
-  })
 }
