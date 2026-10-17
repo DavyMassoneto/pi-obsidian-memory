@@ -23,6 +23,7 @@ export async function findNotes(
     const { agent, query, model } = request
     const step = await retrieveStep({ context: agent, query, observations, model, signal: context.signal }, complete)
     if (!step.succeeded && "modelCall" in step) {
+      if (memoryOperationInterruption(context)) return { succeeded: false, notice: null }
       return { succeeded: false, notice: `${AGENT_FAILED} ${detailOf(step.problems)}` }
     }
     if (!step.succeeded) {

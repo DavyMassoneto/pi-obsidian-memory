@@ -29,7 +29,10 @@ export interface UiConfirm {
 export interface UiCancel {
   cancelled: true
 }
-export type UiAnswer = UiValue | UiOption | UiConfirm | UiCancel
+export interface UiLeaveOpen {
+  open: true
+}
+export type UiAnswer = UiValue | UiOption | UiConfirm | UiCancel | UiLeaveOpen
 export interface UiStep {
   method: "select" | "confirm" | "input"
   title: string
@@ -69,8 +72,9 @@ const READ_RECORDS: ReadRecord[] = [
   { type: "extension_error", schema: ExtensionErrorSchema },
 ]
 
-export function replyFor(request: DialogRequest, step: UiStep | undefined): DialogReply | null {
+export function replyFor(request: DialogRequest, step: UiStep | undefined): DialogReply | "open" | null {
   if (!step || step.method !== request.method || !request.title.includes(step.title)) return null
+  if ("open" in step.answer) return "open"
   return replyTo(request, step.answer)
 }
 
@@ -107,8 +111,9 @@ function problemOfRecord(header: LineHeader | null, line: string): string | null
   return null
 }
 
-function replyTo(request: DialogRequest, answer: UiAnswer): DialogReply | null {
+export function replyTo(request: DialogRequest, answer: UiAnswer): DialogReply | null {
   const reply: DialogReply = { type: "extension_ui_response", id: request.id }
+  if ("open" in answer) return null
   if ("value" in answer) return { ...reply, value: answer.value }
   if ("confirmed" in answer) return { ...reply, confirmed: answer.confirmed }
   if ("cancelled" in answer) return { ...reply, cancelled: true }

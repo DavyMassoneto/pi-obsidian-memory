@@ -35,12 +35,37 @@ export const StatsResponseSchema = Type.Object({
   command: Type.Literal("get_session_stats"),
   data: Type.Object({ cost: Type.Number(), tokens: Type.Object({ total: Type.Number() }) }),
 })
+export const StateResponseSchema = Type.Object({
+  type: Type.Literal("response"),
+  command: Type.Literal("get_state"),
+  data: Type.Object({ sessionFile: Type.Optional(Type.String()) }),
+})
+export const ForkMessagesResponseSchema = Type.Object({
+  type: Type.Literal("response"),
+  command: Type.Literal("get_fork_messages"),
+  data: Type.Object({ messages: Type.Array(Type.Object({ entryId: Type.String() })) }),
+})
+export const ModelsResponseSchema = Type.Object({
+  type: Type.Literal("response"),
+  command: Type.Literal("get_available_models"),
+  data: Type.Object({
+    models: Type.Array(
+      Type.Object({
+        provider: Type.String(),
+        id: Type.String(),
+        cost: Type.Object({ input: Type.Number(), output: Type.Number() }),
+      }),
+    ),
+  }),
+})
 export const DialogRequestSchema = Type.Object({
   type: Type.Literal("extension_ui_request"),
   id: Type.String(),
   method: Type.Union([Type.Literal("select"), Type.Literal("confirm"), Type.Literal("input"), Type.Literal("editor")]),
   title: Type.String(),
   options: Type.Optional(Type.Array(Type.String())),
+  message: Type.Optional(Type.String()),
+  placeholder: Type.Optional(Type.String()),
 })
 export const NotifySchema = Type.Object({
   type: Type.Literal("extension_ui_request"),
@@ -76,6 +101,7 @@ export const ExtensionErrorSchema = Type.Object({
   error: Type.String(),
 })
 
+export type AvailableModel = Static<typeof ModelsResponseSchema>["data"]["models"][number]
 export type Disposition = Static<typeof DispositionSchema>
 export type CommandEntry = Static<typeof CommandEntrySchema>
 export type DialogRequest = Static<typeof DialogRequestSchema>
