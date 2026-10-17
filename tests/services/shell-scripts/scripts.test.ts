@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { expect, test } from "vitest"
 
 import { readExecutedScripts } from "#src/services"
-import { runsPackageScript, runsScript, useTempFolder } from "#test-helpers"
+import { runsPackageScript, runsPackageScriptIn, runsScript, useTempFolder } from "#test-helpers"
 
 test("collects script files and package script lines, listing what is missing", async () => {
   const folder = await useTempFolder()
@@ -19,6 +19,24 @@ test("collects script files and package script lines, listing what is missing", 
         { path: "package.json#scripts.gen", text: "node a.js" },
       ],
       missing: ["none.js", "package.json#scripts.other"],
+    },
+  })
+})
+
+test("package scripts under different prefixes are read from their own package.json", async () => {
+  const folder = await useTempFolder()
+  await writeFile(join(folder, "package.json"), JSON.stringify({ scripts: { build: "root build" } }))
+  await mkdir(join(folder, "app"))
+  await writeFile(join(folder, "app", "package.json"), JSON.stringify({ scripts: { build: "node app.js" } }))
+  const files = [runsPackageScript("build"), runsPackageScriptIn("app", "build"), runsPackageScriptIn("lib", "build")]
+  expect(await readExecutedScripts(folder, files)).toEqual({
+    succeeded: true,
+    output: {
+      scripts: [
+        { path: "package.json#scripts.build", text: "root build" },
+        { path: "app/package.json#scripts.build", text: "node app.js" },
+      ],
+      missing: ["lib/package.json#scripts.build"],
     },
   })
 })
