@@ -1,35 +1,15 @@
-import { mkdir, mkdtemp, rm, symlink } from "node:fs/promises"
+import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 
 import { onTestFinished } from "vitest"
 
-import {
-  DONE_LABEL,
-  INIT_CANCELLED,
-  INIT_DONE,
-  INIT_NAME_TITLE,
-  INIT_VAULT_TITLE,
-  MEMORY_INIT_COMMAND,
-  MEMORY_SETUP_COMMAND,
-  memoryConfigPath,
-  memoryModelCachePath,
-  SETTINGS_TITLE,
-  SETUP_AGENT_MODEL_TITLE,
-  SETUP_ATTACH_OPTION,
-  SETUP_CANCELLED,
-  SETUP_CAPTURE_MODEL_TITLE,
-  SETUP_DONE,
-  SETUP_MODE_TITLE,
-  SETUP_VAULT_TITLE,
-  WHEN_TITLE,
-} from "#src/pi"
-import { anthropicAuthExtensionPaths } from "./e2e-anthropic-auth.ts"
+import { memoryConfigPath, memoryModelCachePath } from "#src/pi"
+import { anthropicAuthExtensionPaths, anthropicAuthPackageFolder } from "./e2e-anthropic-auth.ts"
 import { type PiCredentialsEnv, piCredentialsEnv } from "./e2e-credentials.ts"
-import { E2E_MODEL, E2E_PROJECT_NAME, E2E_PROVIDER, extensionPath, skillsPath } from "./e2e-paths.ts"
-import { notifySettles, type RpcTurn } from "./e2e-records.ts"
+import { E2E_MODEL, E2E_PROVIDER, extensionPath, repoRoot, skillsPath } from "./e2e-paths.ts"
 import { RpcPi } from "./e2e-rpc.ts"
-import { dialogTitled, nth } from "./e2e-turns.ts"
+import { configureMemory } from "./e2e-world-setup.ts"
 import type { WorldFolders, WorldOptions } from "./e2e-world-types.ts"
 import { benchmarkCacheFolder } from "./embedding-benchmark.ts"
 
@@ -52,6 +32,10 @@ export class E2eWorld {
     return this.#options
   }
 
+  get memory(): WorldOptions["memory"] {
+    return this.#options.memory
+  }
+
   async restart(): Promise<void> {
     await this.#pi.stop()
     this.#pi = await startPi(this.folders, this.#options)
@@ -64,6 +48,12 @@ export class E2eWorld {
 
 export async function e2eWorld(options: WorldOptions): Promise<E2eWorld> {
   const folders = await worldFolders()
+  if ("installed" in options) {
+    await writeFile(
+      join(folders.agentDir, "settings.json"),
+      JSON.stringify({ packages: [repoRoot, await anthropicAuthPackageFolder()] }),
+    )
+  }
   let world: E2eWorld | null = null
   onTestFinished(async ({ task }) => {
     try {
@@ -103,7 +93,8 @@ async function shareModelCache(agentDir: string): Promise<void> {
 async function startPi(folders: WorldFolders, options: WorldOptions): Promise<RpcPi> {
   let credentials: PiCredentialsEnv | null = null
   if (options.credentials !== "none") credentials = await piCredentialsEnv()
-  const authExtensions = await anthropicAuthExtensionPaths()
+  let authExtensions: string[] = []
+  if (!("installed" in options)) authExtensions = await anthropicAuthExtensionPaths()
   return new RpcPi({
     cwd: startFolderOf(folders, options),
     agentDir: folders.agentDir,
@@ -125,56 +116,12 @@ function startFolderOf(folders: WorldFolders, options: WorldOptions): string {
 }
 
 export function piArgs(options: WorldOptions, authExtensions: string[]): string[] {
-  const args = ["--provider", E2E_PROVIDER, "--model", E2E_MODEL, "-ne", "-e", extensionPath()]
+  const args = ["--provider", E2E_PROVIDER, "--model", E2E_MODEL]
   if (options.session !== "saved") args.unshift("--no-session")
+  if (!("installed" in options)) args.push("-ne", "-e", extensionPath())
   for (const authExtension of authExtensions) args.push("-e", authExtension)
-  args.push("-ns", "--skill", skillsPath(), "-np", "--no-themes", "-nc", "--no-mcp", "-na")
+  if (!("installed" in options)) args.push("-ns", "--skill", skillsPath())
+  args.push("-np", "--no-themes", "-nc", "--no-mcp", "-na")
   if (options.tools.length > 0) args.push("--tools", options.tools.map((tool) => `+${tool}`).join(","))
   return args
-}
-
-async function configureMemory(world: E2eWorld, capture: WorldOptions["capture"]): Promise<void> {
-  const model = `${E2E_PROVIDER}/${E2E_MODEL}`
-  const { globalVault, projectVault } = world.folders
-  const setup = await world.pi.command(
-    `/${MEMORY_SETUP_COMMAND}`,
-    [
-      { method: "select", title: SETUP_CAPTURE_MODEL_TITLE, answer: { option: model } },
-      { method: "select", title: SETUP_AGENT_MODEL_TITLE, answer: { option: model } },
-      { method: "select", title: SETUP_MODE_TITLE, answer: { option: SETUP_ATTACH_OPTION } },
-      { method: "input", title: SETUP_VAULT_TITLE, answer: { value: globalVault } },
-    ],
-    notifySettles([SETUP_DONE, SETUP_CANCELLED]),
-  )
-  refuseFailures("setup", world, setup)
-  const init = await world.pi.command(
-    `/${MEMORY_INIT_COMMAND}`,
-    [
-      { method: "input", title: INIT_NAME_TITLE, answer: { value: E2E_PROJECT_NAME } },
-      { method: "input", title: INIT_VAULT_TITLE, answer: { value: projectVault } },
-    ],
-    notifySettles([INIT_DONE, INIT_CANCELLED]),
-  )
-  refuseFailures("init", world, init)
-  if (capture === "at-session-end") {
-    const settings = await world.pi.command(
-      `/${MEMORY_SETUP_COMMAND}`,
-      [
-        { method: "select", title: SETTINGS_TITLE, answer: { option: "Capture runs:" } },
-        { method: "select", title: WHEN_TITLE, answer: { option: "at session end" } },
-        { method: "select", title: SETTINGS_TITLE, answer: { value: DONE_LABEL } },
-      ],
-      nth(dialogTitled(SETTINGS_TITLE), 2),
-    )
-    refuseFailures("capture setting", world, settings)
-  }
-  await world.restart()
-}
-
-function refuseFailures(step: string, world: E2eWorld, turn: RpcTurn): void {
-  const errors = turn.notifications.filter((notice) => notice.notifyType === "error").map((notice) => notice.message)
-  if (world.pi.unexpected.length === 0 && errors.length === 0) return
-  throw new Error(
-    `${step}: unexpected dialogs ${JSON.stringify(world.pi.unexpected)}; errors ${JSON.stringify(errors)}`,
-  )
 }

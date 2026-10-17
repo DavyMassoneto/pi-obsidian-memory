@@ -1,17 +1,13 @@
 import { readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
-import { expect } from "vitest"
-
 import { localEmbeddingConfiguration, localEmbeddingPolicy } from "#src/domain"
 import { DOCTOR_TITLE, memoryModelCachePath } from "#src/pi"
 import type { MemoryConfig } from "#src/services"
-import { checkLocalModel } from "#src/usecases"
 import { configuredWorld, onlyNotice, rewriteConfig } from "./e2e-config.ts"
 import { runDoctor } from "./e2e-doctor-steps.ts"
 import { E2E_MODEL, E2E_PROVIDER } from "./e2e-paths.ts"
 import type { Notify } from "./e2e-records.ts"
-import { callsOf, endOf, toolCallPrompt } from "./e2e-turns.ts"
 import { writeVaultFile } from "./e2e-vault.ts"
 import type { E2eWorld } from "./e2e-world.ts"
 import { noteWithId } from "./search-memory.ts"
@@ -43,15 +39,6 @@ export async function worldOnEmbeddings(embeddings: MemoryConfig["embeddings"]):
   const world = await configuredWorld({ capture: "at-session-end" })
   await rewriteConfig(world, { embeddings })
   return world
-}
-
-export async function downloadLocalModel(world: E2eWorld): Promise<void> {
-  const search = { query: "pnpm", vault: "global" }
-  const turn = await world.pi.prompt(toolCallPrompt("memory_search", JSON.stringify(search)), [])
-  expect(callsOf(turn, "memory_search")).toBe(1)
-  expect(endOf(turn, "memory_search").isError).toBe(false)
-  const cachePath = memoryModelCachePath(world.folders.agentDir)
-  expect(await checkLocalModel(cachePath, new AbortController().signal)).toBe("cached")
 }
 
 export async function damageLocalModel(world: E2eWorld): Promise<void> {

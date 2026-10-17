@@ -14,7 +14,6 @@ export type CaptureInput = Static<typeof CaptureInputSchema>
 export type CaptureObservation = Static<typeof CaptureObservationSchema>
 export type CaptureResult = Succeeded<CaptureAction> | Failed
 export type TranscriptMessage = CaptureInput["transcriptDelta"][number]
-export type TranscriptWindow = TranscriptMessage[]
 
 export interface AddDiscriminant {
   action: "add"

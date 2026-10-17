@@ -6,7 +6,7 @@ const NotifyLevelSchema = Type.Union([Type.Literal("info"), Type.Literal("warnin
 const CommandEntrySchema = Type.Object({
   name: Type.String(),
   source: Type.String(),
-  sourceInfo: Type.Object({ path: Type.String() }),
+  sourceInfo: Type.Object({ path: Type.String(), origin: Type.String() }),
 })
 
 export const RpcResponseSchema = Type.Object({

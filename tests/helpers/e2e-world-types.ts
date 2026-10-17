@@ -8,6 +8,7 @@ export interface WorldOptions {
   session?: "in-memory" | "saved"
   withoutTypesafeKey?: true
   offlineNpm?: true
+  installed?: true
 }
 
 export interface WorldFolders {

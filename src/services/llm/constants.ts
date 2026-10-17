@@ -1,6 +1,3 @@
-export const MAX_MODEL_INPUT_CHARS = 128000
-export const MAX_MODEL_RESPONSE_CHARS = 32000
-export const MAX_MODEL_OUTPUT_TOKENS = 8192
 export const NO_API_KEY = "No API key found for"
 
 export const DATA_POLICY = `Return exactly one JSON action matching the schema, with no markdown or extra keys.

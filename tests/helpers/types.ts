@@ -70,4 +70,6 @@ export interface RelevantPiOptions {
 
 export type Done = () => boolean
 
+export type DayWork = () => Promise<void>
+
 export type TurnMessage = NonNullable<TurnOutcome["message"]>

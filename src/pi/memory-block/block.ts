@@ -44,6 +44,10 @@ export class MemoryBlock {
     return null
   }
 
+  async settled(): Promise<void> {
+    await this.#text.then(noop, noop)
+  }
+
   clear(): void {
     this.#text = Promise.resolve(null)
   }
@@ -56,6 +60,8 @@ export class MemoryBlock {
     }
   }
 }
+
+function noop(): void {}
 
 function joined(block: string | null, extra: string | null): string | null {
   if (typeof block !== "string") return null

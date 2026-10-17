@@ -1,6 +1,5 @@
 import { Value } from "typebox/value"
 
-import { MAX_MODEL_INPUT_CHARS, MAX_MODEL_OUTPUT_TOKENS, MAX_MODEL_RESPONSE_CHARS } from "./constants.ts"
 import { completionLifetime } from "./lifetime.ts"
 import { CompletionResponseSchema } from "./schemas.ts"
 import type {
@@ -22,9 +21,6 @@ export async function completeStep(request: CompletionRequest, complete: Complet
       return modelCallFailure("Model call returned an unreadable reply")
     if (response.status !== "completed") return modelCallFailure(failedCallText(response))
     if (response.text.trim().length === 0) return modelCallFailure("Model call returned no text")
-    if (response.text.length > MAX_MODEL_RESPONSE_CHARS) {
-      return { succeeded: false, problems: ["Model response exceeds the response bound"] }
-    }
     return { succeeded: true, output: response.text }
   } catch (error) {
     if (error instanceof Error) return modelCallFailure(`Model call failed: ${error.message}`)
@@ -34,12 +30,11 @@ export async function completeStep(request: CompletionRequest, complete: Complet
   }
 }
 
-export function checkStep(context: ModelStepContext, data: string): ModelCallFailure | null {
+export function checkStep(context: ModelStepContext): ModelCallFailure | null {
   if (context.signal.aborted) return modelCallFailure("Model request aborted")
   if (!context.model.provider.trim() || !context.model.id.trim()) {
     return modelCallFailure("An explicit model is required")
   }
-  if (data.length > MAX_MODEL_INPUT_CHARS) return modelCallFailure("Model input exceeds the input bound")
   return null
 }
 
@@ -56,7 +51,6 @@ export function completionRequest(context: ModelStepContext, prompt: PromptConte
   return {
     model: { ...context.model },
     signal: context.signal,
-    maxTokens: MAX_MODEL_OUTPUT_TOKENS,
     system: prompt.system,
     data: `<MEMORY_DATA>\n${prompt.data.replaceAll("<", "\\u003c").replaceAll(">", "\\u003e")}\n</MEMORY_DATA>`,
   }

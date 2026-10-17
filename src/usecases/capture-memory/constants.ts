@@ -2,8 +2,6 @@ export const NO_DETAIL = "No further detail"
 
 export const SOURCE_CALL = "capture"
 
-export const MAX_LISTED = 20
-
 export const DONT_FORGET_MARK = "don't forget"
 
 export const SUBFOLDER_LINE = /^- \[\[(.+)\/index\|[^\]]*\]\]$/

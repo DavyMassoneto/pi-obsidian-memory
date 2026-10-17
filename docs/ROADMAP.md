@@ -85,6 +85,12 @@ Every milestone:
 | 12 Vault access | Shell-edit guard (Jev) |
 | 14 Platform | every milestone (Windows smoke test) |
 
+## To do
+
+- [ ] Decide where the API key of a remote embedding provider comes from, then test the remote embeddings
+  (openai, google, http) for real. Their simulated tests were deleted; only the no-key and invalid-key paths are tested
+  on the real pi.
+
 ## Later / not planned
 
 - Session transcripts or "in progress" notes in the vault: VISION, Not in scope.
