@@ -45,6 +45,7 @@ async function runMemoryDoctor(
 ): Promise<void> {
   const port: DoctorModelPort = {
     find: (provider, id) => ctx.modelRegistry.find(provider, id),
+    configured: (model) => ctx.modelRegistry.hasConfiguredAuth(model),
     auth: (model) => ctx.modelRegistry.getApiKeyAndHeaders(model),
   }
   const diagnosed = await diagnoseMemory(
