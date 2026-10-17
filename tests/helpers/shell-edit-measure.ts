@@ -4,7 +4,7 @@ import { startDownloadSource, withDownloadSource } from "./download-source.ts"
 import { resetShellEditProject } from "./shell-edit.ts"
 import { liveShellEditClassifier } from "./shell-edit-classifier.ts"
 import type { LabelledShellCommand } from "./shell-edit-label.ts"
-import { LABELLED_SHELL_COMMANDS } from "./shell-edit-labels.ts"
+import { MEASURED_SHELL_COMMANDS } from "./shell-edit-labels.ts"
 import { useTempFolder } from "./temp-folder.ts"
 import { CUTOFFS, type CutoffRow, cutoffRow, type ScoredExample } from "./threshold-report.ts"
 
@@ -55,7 +55,7 @@ export async function scoreLabelledCommands(): Promise<ScoredShellCommand[]> {
   const classifier = await liveShellEditClassifier()
   const sourceUrl = await startDownloadSource()
   const scored: ScoredShellCommand[] = []
-  for (const item of withCheckGroup(LABELLED_SHELL_COMMANDS)) {
+  for (const item of withCheckGroup(MEASURED_SHELL_COMMANDS)) {
     const command = withDownloadSource(item.command, sourceUrl)
     const read = await readExecutedScripts(cwd, executedFiles(command))
     if (!read.succeeded) throw new Error(read.problems.join("\n"))
