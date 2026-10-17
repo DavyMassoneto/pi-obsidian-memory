@@ -12,7 +12,7 @@ export interface PiCredentialsEnv {
 
 export async function piCredentialsEnv(): Promise<PiCredentialsEnv> {
   const anthropic = await printedByPi(["auth", "print-bearer-token", "--provider", "anthropic"])
-  const typesafe = await printedByPi(["auth", "print-api-key", "--provider", "typesafe"])
+  const typesafe = await typesafeApiKey()
   return { ANTHROPIC_OAUTH_TOKEN: anthropic, TYPESAFE_API_KEY: typesafe }
 }
 

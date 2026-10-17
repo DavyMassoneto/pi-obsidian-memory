@@ -1,4 +1,4 @@
-import type { ShellEditQuestionName, ShellEditQuestions } from "./types.ts"
+import type { ShellEditQuestionName, ShellEditQuestions, ShellEditScores } from "./types.ts"
 
 export const SCRIPT_EXTENSION = /\.(?:sh|ps1)$/i
 
@@ -101,6 +101,15 @@ export const SHELL_EDIT_QUESTIONS: ShellEditQuestions = {
       "Does `command` create a hardlink (`ln` without `-s`, `New-Item -ItemType HardLink`, `mklink /H`, `fsutil hardlink create`)?",
     criteria: { true: "`command` creates a hardlink", false: "`command` creates no hardlink" },
   },
+}
+
+export const SHELL_EDIT_CUTOFFS: ShellEditScores = {
+  redirection: 0.5,
+  in_place: 0.5,
+  inline_code: 0.5,
+  script_writes: 0.5,
+  copy_download: 0.5,
+  hardlink: 0.5,
 }
 
 export const SHELL_EDIT_REFUSED = "Refused by the shell-edit guard"
