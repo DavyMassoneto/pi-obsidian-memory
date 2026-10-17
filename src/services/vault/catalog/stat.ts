@@ -17,7 +17,6 @@ export function sameCatalogStat(left: VaultFileStat, right: VaultFileStat): bool
   return (
     left.size === right.size &&
     left.mtimeMs === right.mtimeMs &&
-    left.ctimeMs === right.ctimeMs &&
     left.device === right.device &&
     left.inode === right.inode
   )
