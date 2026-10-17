@@ -21,6 +21,7 @@ import {
   StatsResponseSchema,
   turnOf,
 } from "./e2e-records.ts"
+import { customTexts, MessagesResponseSchema } from "./e2e-turns.ts"
 
 export interface RpcStart {
   cwd: string
@@ -109,6 +110,12 @@ export class RpcPi {
     return response.data.text
   }
 
+  async customMessages(customType: string): Promise<string[]> {
+    const response = recordOf(MessagesResponseSchema, await this.#send({ type: "get_messages" }))
+    if (!response) throw new Error("get_messages returned another shape")
+    return customTexts(response.data.messages, customType)
+  }
+
   async cost(): Promise<SessionCost> {
     const response = recordOf(StatsResponseSchema, await this.#send({ type: "get_session_stats" }))
     if (!response) throw new Error("get_session_stats returned another shape")
@@ -140,9 +147,9 @@ export class RpcPi {
     this.lines.push(line)
     const dialog = recordOf(DialogRequestSchema, line)
     if (dialog) this.#answer(dialog)
-    const waiting = this.#waiters
-    this.#waiters = waiting.filter((waiter) => !waiter.test(line))
-    for (const waiter of waiting) if (waiter.test(line)) waiter.resolve(line)
+    const matched = this.#waiters.filter((waiter) => waiter.test(line))
+    this.#waiters = this.#waiters.filter((waiter) => !matched.includes(waiter))
+    for (const waiter of matched) waiter.resolve(line)
   }
 
   #answer(request: DialogRequest): void {

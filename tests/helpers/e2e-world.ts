@@ -5,6 +5,7 @@ import { dirname, join } from "node:path"
 import { onTestFinished } from "vitest"
 
 import {
+  DONE_LABEL,
   INIT_CANCELLED,
   INIT_DONE,
   INIT_NAME_TITLE,
@@ -13,6 +14,7 @@ import {
   MEMORY_SETUP_COMMAND,
   memoryConfigPath,
   memoryModelCachePath,
+  SETTINGS_TITLE,
   SETUP_AGENT_MODEL_TITLE,
   SETUP_ATTACH_OPTION,
   SETUP_CANCELLED,
@@ -20,18 +22,21 @@ import {
   SETUP_DONE,
   SETUP_MODE_TITLE,
   SETUP_VAULT_TITLE,
+  WHEN_TITLE,
 } from "#src/pi"
 import { anthropicAuthExtensionPaths } from "./e2e-anthropic-auth.ts"
 import { piCredentialsEnv } from "./e2e-credentials.ts"
 import { E2E_MODEL, E2E_PROJECT_NAME, E2E_PROVIDER, extensionPath, skillsPath } from "./e2e-paths.ts"
 import { notifySettles, type RpcTurn } from "./e2e-records.ts"
 import { RpcPi } from "./e2e-rpc.ts"
+import { dialogTitled, nth } from "./e2e-turns.ts"
 import { benchmarkCacheFolder } from "./embedding-benchmark.ts"
 
 export interface WorldOptions {
   memory: "none" | "configured"
   tools: string[]
   modelCache: "fresh" | "shared"
+  capture: "after-each-turn" | "at-session-end"
 }
 
 export interface WorldFolders {
@@ -80,7 +85,7 @@ export async function e2eWorld(options: WorldOptions): Promise<E2eWorld> {
   })
   if (options.modelCache === "shared") await shareModelCache(folders.agentDir)
   world = new E2eWorld(folders, options, await startPi(folders, options))
-  if (options.memory === "configured") await configureMemory(world)
+  if (options.memory === "configured") await configureMemory(world, options.capture)
   return world
 }
 
@@ -123,7 +128,7 @@ function piArgs(tools: string[], authExtensions: string[]): string[] {
   return args
 }
 
-async function configureMemory(world: E2eWorld): Promise<void> {
+async function configureMemory(world: E2eWorld, capture: WorldOptions["capture"]): Promise<void> {
   const model = `${E2E_PROVIDER}/${E2E_MODEL}`
   const { globalVault, projectVault } = world.folders
   const setup = await world.pi.command(
@@ -146,6 +151,18 @@ async function configureMemory(world: E2eWorld): Promise<void> {
     notifySettles([INIT_DONE, INIT_CANCELLED]),
   )
   refuseFailures("init", world, init)
+  if (capture === "at-session-end") {
+    const settings = await world.pi.command(
+      `/${MEMORY_SETUP_COMMAND}`,
+      [
+        { method: "select", title: SETTINGS_TITLE, answer: { option: "Capture runs:" } },
+        { method: "select", title: WHEN_TITLE, answer: { option: "at session end" } },
+        { method: "select", title: SETTINGS_TITLE, answer: { value: DONE_LABEL } },
+      ],
+      nth(dialogTitled(SETTINGS_TITLE), 2),
+    )
+    refuseFailures("capture setting", world, settings)
+  }
   await world.restart()
 }
 
