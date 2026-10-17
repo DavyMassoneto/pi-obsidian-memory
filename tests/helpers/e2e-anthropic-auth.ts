@@ -17,13 +17,16 @@ const PackageManifestSchema = Type.Object({
 })
 
 export async function anthropicAuthExtensionPaths(): Promise<string[]> {
+  return anthropicAuthExtensionsIn(await anthropicAuthPackageFolder())
+}
+
+export async function anthropicAuthPackageFolder(): Promise<string> {
   const agentDir = join(homedir(), ".pi", "agent")
   const settings = JSON.parse(await readTextOrEmptyJson(join(agentDir, "settings.json")))
   if (!Value.Check(SettingsSchema, settings)) throw new Error(missingMessage("the pi settings list no packages"))
   for (const entry of settings.packages) {
     for (const folder of packageFolders(agentDir, sourceOf(entry))) {
-      const extensions = await anthropicAuthExtensionsIn(folder)
-      if (extensions.length > 0) return extensions
+      if ((await anthropicAuthExtensionsIn(folder)).length > 0) return folder
     }
   }
   throw new Error(missingMessage("no package in the pi settings has that name"))
