@@ -10,17 +10,6 @@ import {
   writeRegistrationSnapshot,
 } from "#test-helpers"
 
-test("a long transcript is reviewed in windows of at most a hundred items", async () => {
-  const { context } = await captureFixture()
-  const messages = Array.from({ length: 101 }, (_, number) => ({ role: "user" as const, text: `message ${number}` }))
-  const complete = completionPort(JSON.stringify({ action: "finish" }))
-
-  const result = await captureMemory({ messages, trigger: "after-each-turn", explicitSaves: [] }, context, complete)
-
-  expect(result).toMatchObject({ succeeded: true, output: { windows: 2 } })
-  expect(complete).toHaveBeenCalledTimes(2)
-})
-
 test("a failed model call ends the run at once, names the provider's error, and nothing is written", async () => {
   const { context, vault } = await captureFixture()
   const before = await memoryReadTree(vault.path)
@@ -84,7 +73,7 @@ test("a trigger that is not the configured one reviews nothing and never calls t
       context,
       complete,
     )
-    expect(result).toEqual({ succeeded: true, output: { windows: 0, applied: [] } })
+    expect(result).toEqual({ succeeded: true, output: { reviewed: false, applied: [] } })
   }
 
   expect(complete).not.toHaveBeenCalled()

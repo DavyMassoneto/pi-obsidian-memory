@@ -3,7 +3,6 @@ import Type from "typebox"
 import {
   AgentContextSchema,
   HashSchema,
-  MAX_REFUSAL_PROBLEMS,
   ObservationSchema,
   PathSchema,
   ReadActionSchema,
@@ -12,7 +11,6 @@ import {
   VaultSchema,
 } from "#src/domain/memory-agent"
 import { NoteIdSchema, NoteTypeSchema } from "#src/domain/note"
-import { maxTranscriptItems } from "./constants.ts"
 
 export const CaptureDraftSchema = Type.Object(
   { folder: PathSchema, statement: TextSchema, body: TextSchema, type: NoteTypeSchema, dontForget: Type.Boolean() },
@@ -65,7 +63,7 @@ export const RefusedObservationSchema = Type.Object(
   {
     kind: Type.Literal("refused"),
     action: Type.Enum(["search", "get", "list", "add", "update", "archive", "succeed", "finish", "unparseable"]),
-    problems: Type.Array(TextSchema, { maxItems: MAX_REFUSAL_PROBLEMS }),
+    problems: Type.Array(TextSchema),
   },
   { additionalProperties: false },
 )
@@ -81,10 +79,10 @@ export const CaptureInputSchema = Type.Object(
     context: AgentContextSchema,
     transcriptDelta: Type.Array(
       Type.Object({ role: Type.Enum(["user", "assistant"]), text: TextSchema }, { additionalProperties: false }),
-      { minItems: 1, maxItems: maxTranscriptItems },
+      { minItems: 1 },
     ),
     observations: Type.Array(CaptureObservationSchema),
-    explicitSaves: Type.Array(ReadObservationSchema, { maxItems: 20 }),
+    explicitSaves: Type.Array(ReadObservationSchema),
     limits: Type.Object(
       { maxBodyChars: Type.Integer({ minimum: 1 }), maxStatementChars: Type.Integer({ minimum: 1 }) },
       { additionalProperties: false },

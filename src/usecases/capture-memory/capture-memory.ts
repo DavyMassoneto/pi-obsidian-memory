@@ -5,8 +5,7 @@ import {
   captureStep,
   type ReadObservation,
   refusalObservation,
-  type TranscriptWindow,
-  transcriptWindows,
+  type TranscriptMessage,
 } from "#src/services"
 import { type MemoryOperationContext, memoryOperationInterruption } from "#src/usecases/operation-context"
 import { resolveMemory } from "#src/usecases/resolve-memory"
@@ -32,7 +31,7 @@ export async function captureMemory(
   const resolved = await resolveMemory(context)
   if (!resolved.succeeded) return resolved
   const { config, project } = resolved.output
-  if (config.capture.when !== run.trigger) return { succeeded: true, output: { windows: 0, applied: [] } }
+  if (config.capture.when !== run.trigger) return { succeeded: true, output: { reviewed: false, applied: [] } }
   const explicitSaves: ReadObservation[] = []
   for (const save of run.explicitSaves) {
     const read = await observeRead(save, context)
@@ -47,25 +46,25 @@ export async function captureMemory(
     model: config.capture.model,
     signal: context.signal,
   }
-  const report: CaptureReport = { windows: 0, applied: [] }
+  const report: CaptureReport = { reviewed: false, applied: [] }
   const tools: ReviewTools = { context, complete, report }
-  for (const window of transcriptWindows(run.messages)) {
-    report.windows += 1
-    const failure = await reviewWindow(window, base, tools)
+  if (run.messages.length > 0) {
+    report.reviewed = true
+    const failure = await reviewTranscript(run.messages, base, tools)
     if (failure) return failure
   }
   return { succeeded: true, output: report }
 }
 
-async function reviewWindow(
-  window: TranscriptWindow,
+async function reviewTranscript(
+  transcriptDelta: TranscriptMessage[],
   base: CaptureBase,
   tools: ReviewTools,
 ): Promise<CaptureFailure | null> {
   const observations: CaptureObservation[] = []
   for (;;) {
     if (memoryOperationInterruption(tools.context)) return failureOf("interrupted", [INTERRUPTED], tools)
-    const step = await captureStep({ ...base, transcriptDelta: window, observations }, tools.complete)
+    const step = await captureStep({ ...base, transcriptDelta, observations }, tools.complete)
     if (!step.succeeded && "modelCall" in step) {
       if (memoryOperationInterruption(tools.context)) return failureOf("interrupted", [INTERRUPTED], tools)
       return failureOf("model-failed", step.problems, tools)
@@ -74,11 +73,11 @@ async function reviewWindow(
       observations.push(refusalObservation(step.problems))
       continue
     }
-    if ((await act(step.output, observations, tools)) === "stop") return endOfWindow(tools)
+    if ((await act(step.output, observations, tools)) === "stop") return endOfReview(tools)
   }
 }
 
-function endOfWindow(tools: ReviewTools): CaptureFailure | null {
+function endOfReview(tools: ReviewTools): CaptureFailure | null {
   if (memoryOperationInterruption(tools.context)) return failureOf("interrupted", [INTERRUPTED], tools)
   return null
 }

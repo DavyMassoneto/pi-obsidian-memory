@@ -80,12 +80,19 @@ describe("parseRetrievalAction", () => {
 
   it.each([
     { action: "search", vault: "project", query: "token", limit: 1 },
-    { action: "search", vault: "global", query: "token", limit: 21 },
     { action: "search", vault: "global", query: " ", limit: 1 },
     { action: "get", vault: "global", path: "../secret.md" },
     { action: "get", vault: "global", path: "folder" },
     { action: "list", vault: "global", folder: "C:/secret" },
   ])("refuses out-of-scope/bounds action $action", (action) => {
     expect(parseRetrievalAction(JSON.stringify(action), retrievalRequest()).succeeded).toBe(false)
+  })
+
+  it("accepts a search for more than 20 results", () => {
+    const action = { action: "search", vault: "global", query: "token", limit: 21 }
+    expect(parseRetrievalAction(JSON.stringify(action), retrievalRequest())).toEqual({
+      succeeded: true,
+      output: action,
+    })
   })
 })

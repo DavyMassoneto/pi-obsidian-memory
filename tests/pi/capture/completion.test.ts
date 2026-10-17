@@ -6,19 +6,18 @@ import { assistantMessage, contextReplying } from "#test-helpers"
 const request = {
   model: { provider: "test-chat", id: "selected-chat" },
   signal: new AbortController().signal,
-  maxTokens: 4096,
   system: "system text",
   data: "data text",
 } as const
 
-test("the configured model completes the prompt with the system text, the data as the user message and the limits", async () => {
+test("the configured model completes the prompt with the system text, the data as the user message and the model's own output limit", async () => {
   const { context, complete } = contextReplying(assistantMessage([{ type: "text", text: "{}" }], "stop"))
 
   const result = await registryCompletion(context)(request)
 
   expect(result).toEqual({ status: "completed", text: "{}" })
   expect(complete).toHaveBeenCalledWith(
-    { provider: "test-chat", id: "selected-chat" },
+    { provider: "test-chat", id: "selected-chat", maxTokens: 4096 },
     { systemPrompt: "system text", messages: [{ role: "user", content: "data text", timestamp: expect.any(Number) }] },
     { signal: request.signal, maxTokens: 4096 },
   )

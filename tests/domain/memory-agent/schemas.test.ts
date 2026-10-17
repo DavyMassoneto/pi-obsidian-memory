@@ -24,7 +24,6 @@ const listing = {
   folder: "profile",
   folders: ["profile/sub"],
   notes: [listedNote],
-  truncated: false,
 }
 
 describe("listing observation", () => {
@@ -40,18 +39,6 @@ describe("listing observation", () => {
     ["with an empty statement", { ...listedNote, statement: "" }],
   ])("refuses a note %s", (_case, note) => {
     expect(Value.Check(ObservationSchema, { ...listing, notes: [note] })).toBe(false)
-  })
-
-  it.each([true, false])("accepts truncated %s", (truncated) => {
-    expect(Value.Check(ObservationSchema, { ...listing, truncated })).toBe(true)
-  })
-
-  it.each([
-    ["missing", undefined],
-    ["a string", "yes"],
-    ["null", null],
-  ])("refuses truncated that is %s", (_case, truncated) => {
-    expect(Value.Check(ObservationSchema, { ...listing, truncated })).toBe(false)
   })
 
   it("refuses a listing without subfolders", () => {
@@ -86,7 +73,6 @@ describe("mutations after a listing", () => {
     vault: "global",
     folder: "profile",
     folders: [],
-    truncated: false,
     notes: [{ vault: "global", path: read.path, type: "fact", statement: read.statement }],
   }
   const identity = { vault: read.vault, path: read.path, id: read.id, expectedHash: read.hash }
