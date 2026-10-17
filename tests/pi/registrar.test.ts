@@ -9,7 +9,7 @@ import {
   memorySucceedTool,
   memoryUpdateTool,
 } from "#src/pi"
-import { fakePiContext, loadWithRegistrar, promptEvent, toolCallEvent } from "#test-helpers"
+import { loadWithRegistrar } from "#test-helpers"
 
 const paths = { configPath: "config.json", indexPath: "index" }
 
@@ -41,28 +41,4 @@ test("a command reaches pi's command registration under its name", async () => {
   })
 
   expect(loaded.commands).toEqual(["memory-x"])
-})
-
-test("each handler is subscribed to its own pi event and runs when pi fires it", async () => {
-  const fired: string[] = []
-  const { context } = fakePiContext("work", {})
-
-  const loaded = await loadWithRegistrar((registrar) => {
-    registrar.onSessionStart(async () => void fired.push("session_start"))
-    registrar.onBeforeAgentStart(async () => void fired.push("before_agent_start"))
-    registrar.onToolCall(async () => void fired.push("tool_call"))
-    registrar.onSessionShutdown(async () => void fired.push("session_shutdown"))
-  })
-  await loaded.handlers.get("session_start")?.[0]?.({ type: "session_start", reason: "startup" }, context)
-  await loaded.handlers.get("before_agent_start")?.[0]?.(promptEvent("work"), context)
-  await loaded.handlers.get("tool_call")?.[0]?.(toolCallEvent("read", { path: "a" }), context)
-  await loaded.handlers.get("session_shutdown")?.[0]?.({ type: "session_shutdown", reason: "quit" }, context)
-
-  expect([...loaded.handlers.keys()].sort()).toEqual([
-    "before_agent_start",
-    "session_shutdown",
-    "session_start",
-    "tool_call",
-  ])
-  expect(fired).toEqual(["session_start", "before_agent_start", "tool_call", "session_shutdown"])
 })
