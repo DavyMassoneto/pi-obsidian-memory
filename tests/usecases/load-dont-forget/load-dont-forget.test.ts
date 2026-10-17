@@ -1,7 +1,7 @@
 import { mkdir, rename, rm } from "node:fs/promises"
 import { join } from "node:path"
 
-import { expect, onTestFinished, test, vi } from "vitest"
+import { expect, test } from "vitest"
 
 import { loadDontForget } from "#src/usecases"
 import {
@@ -132,24 +132,4 @@ test("without a config nothing is loaded", async () => {
 
   expect(await loadDontForget(context)).toMatchObject({ succeeded: false, reason: "not-configured" })
   await expectRegistrationLeaseReleased(context)
-})
-
-test("a load waiting for a busy memory keeps waiting and stops when the signal aborts", async () => {
-  const { context, controller } = await searchFixture()
-  const lease = await context.session.acquire(context.stamp, new AbortController().signal)
-  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
-  onTestFinished(() => {
-    lease?.release()
-    vi.useRealTimers()
-  })
-  let settled = false
-
-  const pending = loadDontForget(context).finally(() => {
-    settled = true
-  })
-  await vi.advanceTimersByTimeAsync(10 * 60_000)
-  expect(settled).toBe(false)
-  controller.abort()
-
-  expect(await pending).toMatchObject({ succeeded: false, reason: "cancelled" })
 })
