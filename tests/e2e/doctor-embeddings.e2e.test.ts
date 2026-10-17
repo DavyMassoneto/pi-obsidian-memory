@@ -4,6 +4,7 @@ import {
   configuredWorld,
   damageLocalModel,
   doctorReport,
+  downloadLocalModel,
   piWithoutCredentials,
   storedConfig,
   worldOnEmbeddings,
@@ -15,6 +16,7 @@ const OPENAI = { provider: "openai", model: "text-embedding-3-small" } as const
 test("a local model file that is not the real one is reported as damaged", async () => {
   const world = await configuredWorld({ capture: "at-session-end", modelCache: "fresh" })
   const { embeddings } = await storedConfig(world)
+  await downloadLocalModel(world)
   await damageLocalModel(world)
   const { message, notifyType } = await doctorReport(world)
   expect(message).toContain(
