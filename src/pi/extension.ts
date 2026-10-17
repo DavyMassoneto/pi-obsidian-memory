@@ -66,6 +66,7 @@ export function registerExtension(
   registrar.onSessionShutdown(async (_event, ctx) => {
     await capture.request({ ctx, trigger: "at-session-end" })
     sessions.shutdown()
+    await block.settled()
     block.clear()
     await semantic.shutdown()
   })

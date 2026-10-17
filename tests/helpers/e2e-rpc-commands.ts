@@ -21,6 +21,10 @@ export abstract class RpcCommands {
     await this.send({ type: "new_session" })
   }
 
+  async beginPrompt(message: string): Promise<void> {
+    await this.send({ type: "prompt", message })
+  }
+
   async switchSession(sessionPath: string): Promise<void> {
     await this.send({ type: "switch_session", sessionPath })
   }
