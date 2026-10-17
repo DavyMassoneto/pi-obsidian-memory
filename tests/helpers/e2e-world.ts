@@ -25,7 +25,7 @@ import {
   WHEN_TITLE,
 } from "#src/pi"
 import { anthropicAuthExtensionPaths } from "./e2e-anthropic-auth.ts"
-import { piCredentialsEnv } from "./e2e-credentials.ts"
+import { type PiCredentialsEnv, piCredentialsEnv } from "./e2e-credentials.ts"
 import { E2E_MODEL, E2E_PROJECT_NAME, E2E_PROVIDER, extensionPath, skillsPath } from "./e2e-paths.ts"
 import { notifySettles, type RpcTurn } from "./e2e-records.ts"
 import { RpcPi } from "./e2e-rpc.ts"
@@ -37,12 +37,16 @@ export interface WorldOptions {
   tools: string[]
   modelCache: "fresh" | "shared"
   capture: "after-each-turn" | "at-session-end"
+  credentials?: "pi-login" | "none"
+  startIn?: "project" | "subfolder"
+  session?: "in-memory" | "saved"
 }
 
 export interface WorldFolders {
   root: string
   agentDir: string
   cwd: string
+  startFolder: string
   globalVault: string
   projectVault: string
   configPath: string
@@ -84,6 +88,7 @@ export async function e2eWorld(options: WorldOptions): Promise<E2eWorld> {
     }
   })
   if (options.modelCache === "shared") await shareModelCache(folders.agentDir)
+  if (options.startIn === "subfolder") await mkdir(folders.startFolder)
   world = new E2eWorld(folders, options, await startPi(folders, options))
   if (options.memory === "configured") await configureMemory(world, options.capture)
   return world
@@ -99,7 +104,7 @@ async function worldFolders(): Promise<WorldFolders> {
     projectVault: join(root, "project-vault"),
   }
   for (const folder of [folders.agentDir, folders.cwd, folders.globalVault, folders.projectVault]) await mkdir(folder)
-  return { ...folders, configPath: memoryConfigPath(folders.agentDir) }
+  return { ...folders, startFolder: join(folders.cwd, "src"), configPath: memoryConfigPath(folders.agentDir) }
 }
 
 async function shareModelCache(agentDir: string): Promise<void> {
@@ -110,21 +115,28 @@ async function shareModelCache(agentDir: string): Promise<void> {
 }
 
 async function startPi(folders: WorldFolders, options: WorldOptions): Promise<RpcPi> {
-  const credentials = await piCredentialsEnv()
+  let credentials: PiCredentialsEnv | null = null
+  if (options.credentials !== "none") credentials = await piCredentialsEnv()
   const authExtensions = await anthropicAuthExtensionPaths()
   return new RpcPi({
-    cwd: folders.cwd,
+    cwd: startFolderOf(folders, options),
     agentDir: folders.agentDir,
-    args: piArgs(options.tools, authExtensions),
+    args: piArgs(options, authExtensions),
     credentials,
   })
 }
 
-function piArgs(tools: string[], authExtensions: string[]): string[] {
-  const args = ["--no-session", "--provider", E2E_PROVIDER, "--model", E2E_MODEL, "-ne", "-e", extensionPath()]
+function startFolderOf(folders: WorldFolders, options: WorldOptions): string {
+  if (options.startIn === "subfolder") return folders.startFolder
+  return folders.cwd
+}
+
+function piArgs(options: WorldOptions, authExtensions: string[]): string[] {
+  const args = ["--provider", E2E_PROVIDER, "--model", E2E_MODEL, "-ne", "-e", extensionPath()]
+  if (options.session !== "saved") args.unshift("--no-session")
   for (const authExtension of authExtensions) args.push("-e", authExtension)
   args.push("-ns", "--skill", skillsPath(), "-np", "--no-themes", "-nc", "--no-mcp", "-na")
-  if (tools.length > 0) args.push("--tools", tools.map((tool) => `+${tool}`).join(","))
+  if (options.tools.length > 0) args.push("--tools", options.tools.map((tool) => `+${tool}`).join(","))
   return args
 }
 
