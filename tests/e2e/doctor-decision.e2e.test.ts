@@ -1,0 +1,71 @@
+import { expect, test } from "vitest"
+
+import { CUTOFFS_HINT } from "#src/pi"
+import { ROUTING_MISSING_HELP } from "#src/usecases"
+import {
+  closedLayaEndpoint,
+  configuredWorld,
+  DECISION_CUTOFFS,
+  doctorReport,
+  LAYA_DEFAULTS,
+  LAYA_MODEL,
+  piWithoutCredentials,
+  rewriteConfig,
+  startLaya,
+  storedConfig,
+  worldOnLaya,
+} from "#test-helpers"
+
+test("a Laya that answers the probe is ready at its endpoint, with the cutoffs from the config", async () => {
+  const { endpoint } = await startLaya(LAYA_DEFAULTS)
+  const world = await worldOnLaya({ ...LAYA_MODEL, endpoint, ...DECISION_CUTOFFS })
+  const { message, notifyType } = await doctorReport(world)
+  expect(message).toContain(`- decision model laya/multilingual: ready (answered at ${endpoint})`)
+  expect(message).toContain("- decision cutoffs: gate 0.2 (config), relevance 0.5 (config)")
+  expect(notifyType).toBe("info")
+})
+
+test("a Laya that is not running is a warning with the endpoint and the cause", async () => {
+  const endpoint = await closedLayaEndpoint()
+  const world = await worldOnLaya({ ...LAYA_MODEL, endpoint, ...DECISION_CUTOFFS })
+  const { message, notifyType } = await doctorReport(world)
+  expect(message).toContain(`- decision model laya/multilingual: ${endpoint} is not answering: unavailable`)
+  expect(notifyType).toBe("warning")
+})
+
+test("a Laya that does not name the model that answered tells to run it without LAYA_JEV_STRICT", async () => {
+  const { endpoint } = await startLaya({ ...LAYA_DEFAULTS, jevStrict: true })
+  const world = await worldOnLaya({ ...LAYA_MODEL, endpoint, ...DECISION_CUTOFFS })
+  const { message, notifyType } = await doctorReport(world)
+  expect(message).toContain(`- decision model laya/multilingual: ${endpoint} is not answering: ${ROUTING_MISSING_HELP}`)
+  expect(notifyType).toBe("warning")
+})
+
+test("a Laya that rejects the probe with 422 is reported with the status and the server's own detail", async () => {
+  const budget = LAYA_MODEL.maxTokens / 2
+  const { endpoint } = await startLaya({ ...LAYA_DEFAULTS, maxTokenBudget: budget })
+  const world = await worldOnLaya({ ...LAYA_MODEL, endpoint, ...DECISION_CUTOFFS })
+  const { message, notifyType } = await doctorReport(world)
+  expect(message).toContain(
+    `- decision model laya/multilingual: ${endpoint} is not answering: http-error (HTTP 422): max_len exceeds server limit (${LAYA_MODEL.maxTokens} > ${budget})`,
+  )
+  expect(notifyType).toBe("warning")
+})
+
+test("a Laya with no cutoffs set is a warning that points to the docs", async () => {
+  const world = await worldOnLaya({ ...LAYA_MODEL, endpoint: await closedLayaEndpoint() })
+  const { message, notifyType } = await doctorReport(world)
+  expect(message).toContain(`- decision cutoffs: gate missing, relevance missing; ${CUTOFFS_HINT}`)
+  expect(notifyType).toBe("warning")
+})
+
+test("with no API key in pi, a remote embeddings provider and Jev are each reported", async () => {
+  const world = await configuredWorld({ capture: "at-session-end" })
+  await rewriteConfig(world, { embeddings: { provider: "google", model: "gemini-embedding-001" } })
+  const bare = await piWithoutCredentials(world)
+  expect((await storedConfig(world)).decisionModel).toEqual({ provider: "typesafe", model: "jev-latest" })
+  const { message, notifyType } = await doctorReport(bare)
+  expect(message).toContain("- embeddings google/gemini-embedding-001: No API key for google")
+  expect(message).toContain("- decision model typesafe/jev-latest: No API key for typesafe")
+  expect(notifyType).toBe("warning")
+})

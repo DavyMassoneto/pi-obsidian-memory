@@ -63,6 +63,7 @@ export function fakeChatModelPort(known: FakeChatModel[], auth: ChatModelAuthLoo
     find: vi.fn((provider: string, id: string) =>
       known.find((model) => model.provider === provider && model.id === id),
     ),
+    configured: () => true,
     auth: vi.fn(auth),
   }
   return port

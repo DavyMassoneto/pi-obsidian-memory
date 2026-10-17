@@ -22,6 +22,7 @@ export interface FakeModel {
 export function chatModelPort(registered: FakeModel[], refusing: string[]): ChatModelPort<FakeModel> {
   return {
     find: (provider, id) => registered.find((model) => model.provider === provider && model.id === id),
+    configured: () => true,
     async auth(model) {
       if (refusing.includes(`${model.provider}/${model.id}`)) return { ok: false, error: "No API key" }
       return { ok: true }

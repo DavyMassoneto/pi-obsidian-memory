@@ -131,7 +131,7 @@ function startFolderOf(folders: WorldFolders, options: WorldOptions): string {
   return folders.cwd
 }
 
-function piArgs(options: WorldOptions, authExtensions: string[]): string[] {
+export function piArgs(options: WorldOptions, authExtensions: string[]): string[] {
   const args = ["--provider", E2E_PROVIDER, "--model", E2E_MODEL, "-ne", "-e", extensionPath()]
   if (options.session !== "saved") args.unshift("--no-session")
   for (const authExtension of authExtensions) args.push("-e", authExtension)

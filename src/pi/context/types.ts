@@ -61,6 +61,7 @@ export type ModelAuthResult = ModelAuthResolved | ModelAuthRefused
 export interface AvailableModels {
   getAvailable(): ChatModelSource[]
   find(provider: string, modelId: string): ChatModelSource | undefined
+  hasConfiguredAuth(model: ChatModelSource): boolean
   getApiKeyAndHeaders(model: ChatModelSource): Promise<ModelAuthResult>
   getApiKeyForProvider(provider: string): Promise<string | undefined>
   findOfType(type: "classifier", provider: string, modelId: string): ClassifierModelRef | undefined

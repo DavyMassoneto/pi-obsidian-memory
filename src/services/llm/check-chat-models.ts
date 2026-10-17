@@ -1,3 +1,4 @@
+import { NO_API_KEY } from "./constants.ts"
 import type { ChatModelAuth, ChatModelCheck, ChatModelPort, ChatModelReference } from "./types.ts"
 
 export function checkChatModels<TModel>(
@@ -15,6 +16,10 @@ async function checkChatModel<TModel>(
   const model = port.find(reference.provider, reference.id)
   if (!model) {
     return { model: reference, status: "model-not-found", problem: `Model ${label} is not registered in pi` }
+  }
+
+  if (!port.configured(model)) {
+    return { model: reference, status: "no-credentials", problem: `${NO_API_KEY} "${reference.provider}"` }
   }
 
   const auth = await resolveAuth(port, model, label)
