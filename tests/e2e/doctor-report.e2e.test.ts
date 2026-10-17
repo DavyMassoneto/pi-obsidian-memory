@@ -128,7 +128,7 @@ test("a memory agent model pi does not know is reported with the model checks", 
 test("the local embeddings model that is not downloaded yet is reported", async () => {
   const world = await configuredWorld({ capture: "at-session-end", modelCache: "fresh" })
   const { embeddings } = await storedConfig(world)
-  await rm(memoryModelCachePath(world.folders.agentDir), { recursive: true })
+  await rm(memoryModelCachePath(world.folders.agentDir), { recursive: true, force: true })
   const { message, notifyType } = onlyNotice(await runDoctor(world, [], 0))
   expect(message).toMatch(
     new RegExp(
