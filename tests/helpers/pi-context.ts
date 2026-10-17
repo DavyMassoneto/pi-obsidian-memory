@@ -95,6 +95,7 @@ export function fakePiContext(cwd: string, overrides: Partial<FakePiContextOptio
       getAvailable: () => options.available,
       find: (provider, modelId) =>
         options.available.find((model) => model.provider === provider && model.id === modelId),
+      hasConfiguredAuth: (model) => !options.noCredentials.includes(`${model.provider}/${model.id}`),
       async getApiKeyAndHeaders(model) {
         if (options.noCredentials.includes(`${model.provider}/${model.id}`)) return { ok: false, error: "No API key" }
         return { ok: true }

@@ -8,5 +8,6 @@ export interface BlankTarget {
 
 export interface DoctorModelPort {
   find(provider: string, id: string): ChatModelSource | undefined
+  configured(model: ChatModelSource): boolean
   auth(model: ChatModelSource): Promise<ModelAuthResult>
 }
