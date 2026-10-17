@@ -26,6 +26,7 @@ export interface IdentifiedCommand extends OutgoingCommand {
 }
 export interface Waiter {
   test: RecordTest
+  waitingFor: string
   resolve(line: string): void
   reject(error: Error): void
 }

@@ -42,27 +42,36 @@ export function customTexts(messages: ListedMessage[], customType: string): stri
 }
 
 export function dialogTitled(title: string): RecordTest {
-  return (line) => {
-    const dialog = recordOf(DialogRequestSchema, line)
-    if (!dialog) return false
-    return dialog.title.includes(title)
+  return {
+    description: `a dialog whose title includes ${JSON.stringify(title)}`,
+    matches: (line) => {
+      const dialog = recordOf(DialogRequestSchema, line)
+      if (!dialog) return false
+      return dialog.title.includes(title)
+    },
   }
 }
 
 export function statusCleared(key: string): RecordTest {
-  return (line) => {
-    const status = recordOf(StatusSchema, line)
-    if (!status) return false
-    return status.statusKey === key && typeof status.statusText !== "string"
+  return {
+    description: `the status ${JSON.stringify(key)} cleared`,
+    matches: (line) => {
+      const status = recordOf(StatusSchema, line)
+      if (!status) return false
+      return status.statusKey === key && typeof status.statusText !== "string"
+    },
   }
 }
 
 export function nth(test: RecordTest, count: number): RecordTest {
   let seen = 0
-  return (line) => {
-    if (!test(line)) return false
-    seen += 1
-    return seen >= count
+  return {
+    description: `occurrence ${count} of ${test.description}`,
+    matches: (line) => {
+      if (!test.matches(line)) return false
+      seen += 1
+      return seen >= count
+    },
   }
 }
 

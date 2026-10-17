@@ -110,7 +110,10 @@ export type StatusUpdate = Static<typeof StatusSchema>
 export type ToolStart = Static<typeof ToolStartSchema>
 export type ToolEnd = Static<typeof ToolEndSchema>
 export type ExtensionError = Static<typeof ExtensionErrorSchema>
-export type RecordTest = (line: string) => boolean
+export interface RecordTest {
+  description: string
+  matches(line: string): boolean
+}
 
 export interface RpcTurn {
   disposition: Disposition
@@ -163,19 +166,25 @@ export function toolText(end: ToolEnd): string {
 }
 
 export function notifySettles(texts: string[]): RecordTest {
-  return (line) => {
-    const notify = recordOf(NotifySchema, line)
-    if (!notify) return false
-    if (notify.notifyType === "error") return true
-    return texts.some((text) => notify.message.startsWith(text))
+  return {
+    description: `an error notification or one starting with ${JSON.stringify(texts)}`,
+    matches: (line) => {
+      const notify = recordOf(NotifySchema, line)
+      if (!notify) return false
+      if (notify.notifyType === "error") return true
+      return texts.some((text) => notify.message.startsWith(text))
+    },
   }
 }
 
 export function isResponseTo(id: string): RecordTest {
-  return (line) => {
-    const response = recordOf(RpcResponseSchema, line)
-    if (!response) return false
-    return response.id === id
+  return {
+    description: `the response with id ${id}`,
+    matches: (line) => {
+      const response = recordOf(RpcResponseSchema, line)
+      if (!response) return false
+      return response.id === id
+    },
   }
 }
 
