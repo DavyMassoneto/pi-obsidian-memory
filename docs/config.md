@@ -20,7 +20,12 @@ explicitly chosen available chat model's provider and id. They are not built-in 
   "limits": { "maxBodyChars": 1000, "maxStatementChars": 100, "maxNotesPerFolder": 20 },
   "capture": {
     "model": { "provider": "selected-provider", "id": "selected-model" },
-    "when": "after-each-turn"
+    "nudgeInterval": 10,
+    "nudgeToolCalls": 15,
+    "flushMinTurns": 6,
+    "reviewEnabled": true,
+    "flushOnCompact": true,
+    "flushOnShutdown": true
   },
   "memoryAgent": { "model": { "provider": "selected-provider", "id": "selected-model" } },
   "context": { "budgetChars": 12000 },
@@ -42,7 +47,12 @@ explicitly chosen available chat model's provider and id. They are not built-in 
 | `limits.maxStatementChars` | Positive integer | 100 |
 | `limits.maxNotesPerFolder` | Positive integer; doctor reporting threshold | 20 |
 | `capture.model` | Exactly `{provider, id}`, both nonblank strings | The pi model in use when `/memory-setup` runs, or another chosen from the priced list; changed by re-running it |
-| `capture.when` | `after-each-turn` (`agent_end`), `on-compaction` (`session_before_compact`), `at-session-end` (`session_shutdown`) | `after-each-turn` |
+| `capture.nudgeInterval` | Positive integer: assistant turns between reviews | 10 |
+| `capture.nudgeToolCalls` | Positive integer: tool calls between reviews | 15 |
+| `capture.flushMinTurns` | Positive integer: user messages the session needs before a flush | 6 |
+| `capture.reviewEnabled` | Boolean: review during the session | true |
+| `capture.flushOnCompact` | Boolean: flush when the session compacts | true |
+| `capture.flushOnShutdown` | Boolean: flush when the session ends (not on `/reload`) | true |
 | `memoryAgent.model` | Exactly `{provider, id}`, both nonblank strings | Chosen in `/memory-setup` from pi's models sorted by price, cheapest first; changed by re-running it |
 | `context.budgetChars` | Positive integer; relevant-memory character budget | 12000 |
 | `embeddings` | One exact alternative below | Local multilingual E5 |
@@ -72,6 +82,31 @@ Decision settings allow only:
   accepted. Port may be chosen explicitly. URL normalization follows the existing resource policy.
 - Jev: `{"provider":"typesafe","model":"jev-latest"}` and optionally `gateThreshold` and `relevanceThreshold`. No
   endpoint or token-limit fields.
+
+### When capture runs
+
+The triggers and defaults follow [pi-hermes-memory](https://github.com/chandra447/pi-hermes-memory) (MIT), with the
+counters written again here.
+
+- **Review.** Each assistant turn (`turn_end`) counts one turn, and each tool call in it counts one tool call. A review
+  starts when the turns reach `nudgeInterval` or the tool calls reach `nudgeToolCalls`, and only once the session has
+  at least 3 user messages. Both counters then start again. While a review runs, further turns are counted but start
+  no review and their tool calls are not counted.
+- **Flush.** At `session_before_compact`, and at `session_shutdown` except for `/reload`, capture reviews what is left,
+  once the session has at least `flushMinTurns` user messages. Reviews do not reset that total.
+- A review or flush reads only the messages after the last capture cursor. Shutdown waits for a review that is
+  running.
+- The counters live as long as the extension instance; pi creates a new one for each session, so they start at zero.
+
+**Old configs.** A file that still has `capture.when` is read as if it had the new fields, with no action by the user
+and no repair notice, and the file is not rewritten; the settings screen writes the new shape the next time it saves.
+The numbers take the defaults above, and:
+
+| `capture.when` | `reviewEnabled` | `flushOnCompact` | `flushOnShutdown` |
+|---|---|---|---|
+| `after-each-turn` | true | true | true |
+| `at-session-end` | false | false | true |
+| `on-compaction` | false | true | false |
 
 ### Running the decision model
 
@@ -154,9 +189,10 @@ every key. Once the config is valid, it opens the settings screen.
   folder or a file; attach refuses a missing folder or a file.
 
 **Settings screen (valid config):** one line per setting with its current value, opened with a select; Done or Escape
-leaves. Each choice is written at once and the screen shows the new value. The lines are: capture model, when capture
-runs, memory-agent model, decision model (Jev, or Laya with its endpoint), gate cutoff, relevance cutoff (a number from
-0 to 1, or `none`), embeddings provider, context budget, the three limits, the global vault, and the projects (change
+leaves. Each choice is written at once and the screen shows the new value. The lines are: capture model, the review
+switch, the review turn and tool-call counts, the two flush switches, the flush minimum, memory-agent model, decision
+model (Jev, or Laya with its endpoint), gate cutoff, relevance cutoff (a number from 0 to 1, or `none`), embeddings
+provider, context budget, the three limits, the global vault, and the projects (change
 their vault to an existing folder, or remove them from the memory; nothing is deleted). Switching between Jev and Laya
 clears the cutoffs. Choosing Jev or a remote embeddings provider shows its warning. A value the schema refuses is
 not written, and the reason is shown. Changes apply on the next use: capture, relevant memory and search read the config

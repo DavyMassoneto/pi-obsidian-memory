@@ -22,6 +22,7 @@ export default defineConfig({
         test: {
           name: "e2e",
           include: ["tests/e2e/**/*.e2e.test.ts"],
+          maxWorkers: 3,
           testTimeout: 600_000,
           hookTimeout: 600_000,
         },

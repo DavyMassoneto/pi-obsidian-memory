@@ -1,6 +1,7 @@
 import { Value } from "typebox/value"
 
 import { configFieldName, configObjectProblems, configValueProblems } from "./diagnostics.ts"
+import { upgradeLegacyCapture } from "./legacy-capture.ts"
 import { configObservationRules, configRuleSelection } from "./observations.ts"
 import { configRules } from "./rules.ts"
 import { ConfigFieldObservationSchema, ConfigObjectSchema, MemoryConfigSchema } from "./schemas.ts"
@@ -16,7 +17,7 @@ export function inspectConfig(text: string): ConfigInspection {
 }
 
 export function readConfigInspection(text: string): ConfigDocumentInspection {
-  const document = JSON.parse(text)
+  const document = JSON.parse(upgradeLegacyCapture(text))
   const projects = Value.Pointer.Get(document, "/projects")
   let projectCount = 0
   if (Array.isArray(projects)) projectCount = projects.length

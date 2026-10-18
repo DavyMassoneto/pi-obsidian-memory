@@ -127,13 +127,11 @@ test("closed choices name the accepted values rather than an opaque union failur
   const result = parseConfig(
     JSON.stringify({
       ...aConfig(),
-      capture: { model: { provider: "chosen", id: "chosen" }, when: "never" },
       embeddings: { provider: "other", model: "other" },
       decisionModel: { provider: "typesafe", model: "other" },
     }),
   )
   if (result.succeeded) throw new Error("unsupported choices accepted")
-  expect(result.problems).toContain("capture.when: must be one of after-each-turn, on-compaction, at-session-end")
   expect(result.problems).toContain("embeddings.provider: must be one of local, openai, google")
   expect(result.problems).toContain(
     "embeddings.model: must be one of Xenova/multilingual-e5-small, text-embedding-3-small, gemini-embedding-001",

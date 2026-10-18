@@ -1,7 +1,9 @@
 import type { Static, TSchema } from "typebox"
 
+import type { CaptureCadenceSettings } from "#src/domain/capture"
 import type { Absent, Failed, Succeeded } from "#src/shared"
 import type {
+  CaptureWhenSchema,
   ChatModelReferenceSchema,
   ConfigFieldObservationSchema,
   MemoryConfigSchema,
@@ -11,6 +13,8 @@ import type {
 export type MemoryConfig = Static<typeof MemoryConfigSchema>
 
 export type ProjectEntry = Static<typeof ProjectEntrySchema>
+
+export type LegacyCaptureWhen = Static<typeof CaptureWhenSchema>
 
 export type ParseConfigResult = Succeeded<MemoryConfig> | Failed
 
@@ -76,9 +80,8 @@ export interface ConfigRegistrations {
   projects: Partial<ProjectEntry>[]
 }
 
-export interface CaptureFields {
+export interface CaptureFields extends Partial<CaptureCadenceSettings> {
   model: Partial<ChatModelReference>
-  when?: MemoryConfig["capture"]["when"]
 }
 
 export interface MemoryAgentFields {
@@ -153,9 +156,16 @@ export interface AgentModelChange {
   model: ChatModelReference
 }
 
-export interface CaptureWhenChange {
-  kind: "captureWhen"
-  when: MemoryConfig["capture"]["when"]
+export interface CaptureCountChange {
+  kind: "captureCount"
+  name: "nudgeInterval" | "nudgeToolCalls" | "flushMinTurns"
+  value: number
+}
+
+export interface CaptureSwitchChange {
+  kind: "captureSwitch"
+  name: "reviewEnabled" | "flushOnCompact" | "flushOnShutdown"
+  value: boolean
 }
 
 export interface EmbeddingsChange {
@@ -206,7 +216,8 @@ export type DecisionChange = JevDecisionChange | LayaDecisionChange
 export type SettingChange =
   | CaptureModelChange
   | AgentModelChange
-  | CaptureWhenChange
+  | CaptureCountChange
+  | CaptureSwitchChange
   | EmbeddingsChange
   | DecisionChange
   | ThresholdChange

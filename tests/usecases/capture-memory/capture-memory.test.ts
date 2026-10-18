@@ -42,11 +42,7 @@ test("a stated preference becomes a global note on disk", async () => {
     { action: "finish" },
   ])
 
-  const result = await captureMemory(
-    { messages: userSays("I always use pnpm"), trigger: "after-each-turn", explicitSaves: [] },
-    context,
-    complete,
-  )
+  const result = await captureMemory({ messages: userSays("I always use pnpm"), explicitSaves: [] }, context, complete)
 
   expect(result).toMatchObject({
     succeeded: true,
@@ -82,11 +78,7 @@ test("an update keeps the note's id and sets updated to today", async () => {
     { action: "finish" },
   ])
 
-  const result = await captureMemory(
-    { messages: userSays("pnpm in CI too"), trigger: "after-each-turn", explicitSaves: [] },
-    context,
-    complete,
-  )
+  const result = await captureMemory({ messages: userSays("pnpm in CI too"), explicitSaves: [] }, context, complete)
 
   expect(result).toMatchObject({ succeeded: true, output: { applied: [{ operation: "update", status: "applied" }] } })
   const text = await readFile(join(vault.path, "tools/Use pnpm.md"), "utf8")
@@ -121,11 +113,7 @@ test("a succession archives the old note and links both ways", async () => {
     { action: "finish" },
   ])
 
-  const result = await captureMemory(
-    { messages: userSays("we moved to bun"), trigger: "after-each-turn", explicitSaves: [] },
-    context,
-    complete,
-  )
+  const result = await captureMemory({ messages: userSays("we moved to bun"), explicitSaves: [] }, context, complete)
 
   expect(result).toMatchObject({ succeeded: true, output: { applied: [{ operation: "succeed", status: "applied" }] } })
   expect(await readFile(join(vault.path, "archive/tools/Use pnpm.md"), "utf8")).toContain(
@@ -152,7 +140,6 @@ test("an add that repeats an explicit save is refused, the model is told why and
 
   const result = await captureMemory(
     {
-      trigger: "after-each-turn",
       messages: userSays("remember pnpm"),
       explicitSaves: [{ vault: "global", path: "preferences/Use pnpm.md" }],
     },
@@ -186,11 +173,7 @@ test("a note edited in Obsidian while capture runs is a conflict and the user's 
     { action: "finish" },
   ])
 
-  const result = await captureMemory(
-    { messages: userSays("pnpm"), trigger: "after-each-turn", explicitSaves: [] },
-    context,
-    complete,
-  )
+  const result = await captureMemory({ messages: userSays("pnpm"), explicitSaves: [] }, context, complete)
 
   expect(result).toMatchObject({ succeeded: true, output: { applied: [{ operation: "update", status: "conflict" }] } })
   expect(await readFile(join(vault.path, "tools/Use pnpm.md"), "utf8")).toBe(noteWithId(1, "The user edited this.", []))

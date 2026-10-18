@@ -5,7 +5,6 @@ import { expect, test } from "vitest"
 
 import { renderVaultAssets } from "#src/domain"
 import {
-  DONE_LABEL,
   INIT_SETUP_HINT,
   INVALID_CONFIG_NOTICE,
   MEMORY_INIT_COMMAND,
@@ -13,7 +12,6 @@ import {
   NO_MEMORY_NOTICE,
   REPAIR_HINT,
   REPAIR_TITLE,
-  SAVED,
   SETTINGS_TITLE,
   SETUP_AGENT_MODEL_TITLE,
   SETUP_ATTACH_OPTION,
@@ -22,21 +20,27 @@ import {
   SETUP_DONE,
   SETUP_MODE_TITLE,
   SETUP_VAULT_TITLE,
-  WHEN_TITLE,
+  STATUS_LOADING,
 } from "#src/pi"
 import { readConfig } from "#src/services"
 import {
-  dialogTitled,
+  configText,
+  DEFAULT_CADENCE,
+  dialogsTitled,
   E2E_MODEL,
   E2E_PROJECT_NAME,
   E2E_PROVIDER,
   e2eWorld,
   fileExists,
+  leaveScreen,
   NotifySchema,
+  noticeTexts,
   notifiedWith,
   notifySettles,
-  nth,
   recordOf,
+  settingsScreen,
+  statusCleared,
+  storedConfig,
 } from "#test-helpers"
 
 const model = `${E2E_PROVIDER}/${E2E_MODEL}`
@@ -65,7 +69,7 @@ test("first /memory-setup and /memory-init write every key, the templates and th
   expect(project.name).toBe(E2E_PROJECT_NAME)
   expect(await realpath(project.folder)).toBe(await realpath(cwd))
   expect(await realpath(project.vault)).toBe(await realpath(projectVault))
-  expect(saved.capture).toEqual({ model: { provider: E2E_PROVIDER, id: E2E_MODEL }, when: "after-each-turn" })
+  expect(saved.capture).toEqual({ model: { provider: E2E_PROVIDER, id: E2E_MODEL }, ...DEFAULT_CADENCE })
   expect(saved.memoryAgent).toEqual({ model: { provider: E2E_PROVIDER, id: E2E_MODEL } })
   expect(saved.decisionModel).toEqual({ provider: "typesafe", model: "jev-latest" })
   expect(saved.embeddings).toEqual({ provider: "local", model: "Xenova/multilingual-e5-small" })
@@ -76,21 +80,21 @@ test("first /memory-setup and /memory-init write every key, the templates and th
   }
 })
 
-test("the settings screen changes when capture runs and saves it", async () => {
+test("a config file that still says capture.when starts with memory on, no repair notice, and is left as it was", async () => {
   const world = await e2eWorld({ memory: "configured", tools: [], modelCache: "shared", capture: "after-each-turn" })
-  const turn = await world.pi.command(
-    `/${MEMORY_SETUP_COMMAND}`,
-    [
-      { method: "select", title: SETTINGS_TITLE, answer: { option: "Capture runs:" } },
-      { method: "select", title: WHEN_TITLE, answer: { option: "on compaction" } },
-      { method: "select", title: SETTINGS_TITLE, answer: { value: DONE_LABEL } },
-    ],
-    nth(dialogTitled(SETTINGS_TITLE), 2),
+  const { capture, ...rest } = await storedConfig(world)
+  const legacy = JSON.stringify({ ...rest, capture: { model: capture.model, when: "at-session-end" } })
+  await writeFile(world.folders.configPath, legacy)
+  await world.restart()
+  await world.pi.waitFor(statusCleared(STATUS_LOADING.key), 0)
+  const screen = await settingsScreen(world, [leaveScreen])
+  expect(noticeTexts(world, 0).join("\n")).not.toContain(INVALID_CONFIG_NOTICE)
+  expect(dialogsTitled(world, REPAIR_TITLE)).toEqual([])
+  expect(dialogsTitled(world, SETTINGS_TITLE)[0]?.options).toEqual(
+    expect.arrayContaining(["Review during the session: off", "Flush at compaction: off", "Flush at session end: on"]),
   )
-  expect(notifiedWith(turn, SAVED)).toHaveLength(1)
-  const config = await readConfig(world.folders.configPath)
-  if (!config.succeeded) throw new Error(config.problems.join("\n"))
-  expect(config.output.capture.when).toBe("on-compaction")
+  expect(screen.notifications).toEqual([])
+  expect(await configText(world)).toBe(legacy)
   expect(world.pi.unexpected).toEqual([])
 })
 
@@ -118,10 +122,7 @@ test("an invalid config turns memory off with a notice, and /memory-setup repair
   const config = await readConfig(world.folders.configPath)
   if (!config.succeeded) throw new Error(config.problems.join("\n"))
   expect(await realpath(config.output.global.vault)).toBe(await realpath(world.folders.globalVault))
-  expect(config.output.capture).toEqual({
-    model: { provider: E2E_PROVIDER, id: E2E_MODEL },
-    when: "after-each-turn",
-  })
+  expect(config.output.capture).toEqual({ model: { provider: E2E_PROVIDER, id: E2E_MODEL }, ...DEFAULT_CADENCE })
   expect(config.output.memoryAgent).toEqual({ model: { provider: E2E_PROVIDER, id: E2E_MODEL } })
   expect(world.pi.unexpected).toEqual([])
 })

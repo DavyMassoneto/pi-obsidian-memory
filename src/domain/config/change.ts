@@ -46,8 +46,9 @@ function nextConfig(config: MemoryConfig, change: SettingChange): NextConfig {
       return done({ ...config, capture: { ...config.capture, model: change.model } })
     case "agentModel":
       return done({ ...config, memoryAgent: { model: change.model } })
-    case "captureWhen":
-      return done({ ...config, capture: { ...config.capture, when: change.when } })
+    case "captureCount":
+    case "captureSwitch":
+      return done({ ...config, capture: { ...config.capture, [change.name]: change.value } })
     case "embeddings":
       return done({ ...config, embeddings: change.embeddings })
     case "budgetChars":

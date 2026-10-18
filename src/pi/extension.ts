@@ -3,11 +3,14 @@ import { homedir } from "node:os"
 import { type ExtensionAPI, getAgentDir } from "@earendil-works/pi-coding-agent"
 
 import {
-  agentEndHandler,
   beforeCompactHandler,
+  CaptureCadence,
   CaptureRuntime,
   type CompletionFactory,
+  flushOnShutdownHandler,
+  messageEndHandler,
   registryCompletion,
+  turnEndHandler,
 } from "#src/pi/capture"
 import type { MemoryPaths } from "#src/pi/context"
 import { memoryAddTool } from "#src/pi/memory-add"
@@ -61,10 +64,13 @@ export function registerExtension(
     completionOf,
     writeCursor: (data) => registrar.appendCursor(data),
   })
-  registrar.onAgentEnd(agentEndHandler(capture))
-  registrar.onBeforeCompact(beforeCompactHandler(capture))
-  registrar.onSessionShutdown(async (_event, ctx) => {
-    await capture.request({ ctx, trigger: "at-session-end" })
+  const cadence = new CaptureCadence(capture, { paths, sessions })
+  const flushOnShutdown = flushOnShutdownHandler(cadence, capture)
+  registrar.onMessageEnd(messageEndHandler(cadence))
+  registrar.onTurnEnd(turnEndHandler(cadence))
+  registrar.onBeforeCompact(beforeCompactHandler(cadence))
+  registrar.onSessionShutdown(async (event, ctx) => {
+    await flushOnShutdown(event, ctx)
     sessions.shutdown()
     await block.settled()
     block.clear()

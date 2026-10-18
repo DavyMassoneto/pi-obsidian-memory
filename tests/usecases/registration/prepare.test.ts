@@ -83,7 +83,7 @@ test("invalid nested fields keep valid siblings and use selection only for missi
     succeeded: true,
     output: {
       draft: {
-        capture: { model: { provider: "retained", id: "chosen-id" }, when: "at-session-end" },
+        capture: { model: { provider: "retained", id: "chosen-id" }, reviewEnabled: false, flushOnCompact: false },
         memoryAgent: { model: { provider: "chosen", id: "retained-id" } },
         limits: { maxBodyChars: 321, maxStatementChars: 100, maxNotesPerFolder: 9 },
         embeddings: customizedSettings().embeddings,

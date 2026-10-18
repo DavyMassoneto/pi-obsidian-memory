@@ -6,9 +6,6 @@ import { vi } from "vitest"
 import type { CaptureAction, CaptureInput, CompletionPort, CompletionRequest } from "#src/services"
 import type { CaptureRun } from "#src/usecases"
 import { changeFixture } from "./memory-change.ts"
-import { registerFakePiAt } from "./pi.ts"
-import { piMemoryFixture } from "./pi-memory.ts"
-import { writeAgentConfig } from "./pi-registration.ts"
 import type { Check, ScriptStep } from "./types.ts"
 
 const DATA_START = "<MEMORY_DATA>\n"
@@ -40,29 +37,6 @@ export async function captureFixture() {
   return changeFixture()
 }
 
-const RETRIEVAL_MARK = "Find memory relevant to query"
-
-function withoutRetrieval(capture: CompletionPort): CompletionPort {
-  return async (request) => {
-    if (request.system.includes(RETRIEVAL_MARK)) {
-      return { status: "completed", text: JSON.stringify({ action: "finish", notes: [] }) }
-    }
-    return capture(request)
-  }
-}
-
-export async function capturePiFixture(
-  when: "after-each-turn" | "on-compaction" | "at-session-end",
-  steps: ScriptStep[],
-) {
-  const fixture = await piMemoryFixture()
-  const capture = { ...fixture.config.capture, when }
-  await writeAgentConfig(fixture.configPath, JSON.stringify({ ...fixture.config, capture }))
-  const complete = scriptedCompletion(steps)
-  const pi = registerFakePiAt(fixture.agentDir, { completionOf: () => withoutRetrieval(complete) })
-  return { ...fixture, pi, complete }
-}
-
 export const CLARIFY_REPLY = JSON.stringify({ action: "clarify", question: "Global or project?" })
 
 export const PNPM_ADD: CaptureAction = {
@@ -85,7 +59,7 @@ export async function noteWritten(globalVault: string): Promise<string[]> {
 }
 
 export function reviewRun(text: string): CaptureRun {
-  return { trigger: "after-each-turn", messages: userSays(text), explicitSaves: [] }
+  return { messages: userSays(text), explicitSaves: [] }
 }
 
 const EVENTUALLY_MS = 8000

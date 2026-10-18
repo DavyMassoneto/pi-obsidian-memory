@@ -20,7 +20,7 @@ test("a review stops between rounds when the operation is interrupted, as a fail
   ])
 
   const result = await captureMemory(
-    { trigger: "after-each-turn", messages: userSays("remember pnpm"), explicitSaves: [] },
+    { messages: userSays("remember pnpm"), explicitSaves: [] },
     { ...context, signal: controller.signal },
     complete,
   )
@@ -42,11 +42,7 @@ test("a review whose steps take hours of wall time is not cut off, and the note 
     PNPM_ADD,
   ])
 
-  const result = await captureMemory(
-    { trigger: "after-each-turn", messages: userSays("remember pnpm"), explicitSaves: [] },
-    context,
-    complete,
-  )
+  const result = await captureMemory({ messages: userSays("remember pnpm"), explicitSaves: [] }, context, complete)
 
   expect(result).toMatchObject({ succeeded: true, output: { applied: [{ operation: "add", status: "applied" }] } })
   expect(complete).toHaveBeenCalledTimes(3)
@@ -65,11 +61,7 @@ test("a window that keeps searching for many rounds is not cut off and ends when
     { action: "finish" },
   ])
 
-  const result = await captureMemory(
-    { trigger: "after-each-turn", messages: userSays("remember pnpm"), explicitSaves: [] },
-    context,
-    complete,
-  )
+  const result = await captureMemory({ messages: userSays("remember pnpm"), explicitSaves: [] }, context, complete)
 
   expect(result).toMatchObject({ succeeded: true, output: { reviewed: true, applied: [] } })
   expect(complete).toHaveBeenCalledTimes(13)

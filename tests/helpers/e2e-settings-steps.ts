@@ -6,9 +6,7 @@ import {
   PROJECT_ACTION_TITLE,
   PROJECT_TITLE,
   projectLabel,
-  WHEN_CHOICES,
 } from "#src/pi"
-import type { MemoryConfig } from "#src/services"
 import { leaveScreen, onlyProject, pickLine, rewriteConfig, storedConfig } from "./e2e-config.ts"
 import type { UiAnswer, UiStep } from "./e2e-protocol.ts"
 import type { E2eWorld } from "./e2e-world.ts"
@@ -50,12 +48,6 @@ export async function openProject(world: E2eWorld, action: string, further: UiSt
 export function embeddingLabel(provider: string): string {
   const choice = EMBEDDING_CHOICES.find((candidate) => candidate.value.provider === provider)
   if (!choice) throw new Error(`no embeddings choice for ${provider}`)
-  return choice.label
-}
-
-export function whenLabel(when: MemoryConfig["capture"]["when"]): string {
-  const choice = WHEN_CHOICES.find((candidate) => candidate.value === when)
-  if (!choice) throw new Error(`no capture moment ${when}`)
   return choice.label
 }
 

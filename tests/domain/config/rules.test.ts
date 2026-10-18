@@ -1,15 +1,23 @@
 import { expect, test } from "vitest"
 
 import { parseConfig } from "#src/domain"
-import { aConfig } from "#test-helpers"
+import { aConfig, DEFAULT_CADENCE } from "#test-helpers"
 
 test.each([
   {
     fields: { capture: {} },
-    problems: ["capture: must have required properties model", "capture: must have required properties when"],
+    problems: [
+      "capture: must have required properties model",
+      "capture: must have required properties nudgeInterval",
+      "capture: must have required properties nudgeToolCalls",
+      "capture: must have required properties flushMinTurns",
+      "capture: must have required properties reviewEnabled",
+      "capture: must have required properties flushOnCompact",
+      "capture: must have required properties flushOnShutdown",
+    ],
   },
   {
-    fields: { capture: { model: {}, when: "after-each-turn" } },
+    fields: { capture: { model: {}, ...DEFAULT_CADENCE } },
     problems: [
       "capture.model: must have required properties provider",
       "capture.model: must have required properties id",

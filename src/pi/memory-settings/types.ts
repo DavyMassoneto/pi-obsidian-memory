@@ -45,9 +45,22 @@ export interface Saving {
   reload: boolean
 }
 
-export interface WhenChoice {
-  value: MemoryConfig["capture"]["when"]
-  label: string
+export interface SwitchDiscriminant {
+  kind: "captureSwitch"
+}
+
+export interface CountDiscriminant {
+  kind: "captureCount"
+}
+
+export type CaptureCountName = Extract<SettingChange, CountDiscriminant>["name"]
+
+export type CaptureSwitchName = Extract<SettingChange, SwitchDiscriminant>["name"]
+
+export interface SwitchEditSpec {
+  name: CaptureSwitchName
+  what: string
+  current: boolean
 }
 
 export interface EmbeddingChoice {

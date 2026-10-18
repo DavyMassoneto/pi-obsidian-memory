@@ -33,6 +33,10 @@ export abstract class RpcCommands {
     await this.send({ type: "fork", entryId })
   }
 
+  async compact(): Promise<void> {
+    await this.send({ type: "compact" })
+  }
+
   async sessionFile(): Promise<string> {
     const { sessionFile } = (await this.#ask({ type: "get_state" }, StateResponseSchema)).data
     if (!sessionFile) throw new Error("pi has no session file yet")

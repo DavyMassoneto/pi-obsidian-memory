@@ -1,14 +1,30 @@
+import type { SessionShutdownHandler } from "#src/pi/memory-session"
+import type { CaptureCadence } from "./cadence.ts"
 import type { CaptureRuntime } from "./runtime.ts"
-import type { AgentEndHandler, BeforeCompactHandler } from "./types.ts"
+import { toolCallCount } from "./tool-calls.ts"
+import type { BeforeCompactHandler, MessageEndHandler, TurnEndHandler } from "./types.ts"
 
-export function agentEndHandler(runtime: CaptureRuntime): AgentEndHandler {
-  return async (_event, ctx) => {
-    void runtime.request({ ctx, trigger: "after-each-turn" })
+export function messageEndHandler(cadence: CaptureCadence): MessageEndHandler {
+  return async (event) => {
+    if (event.message.role === "user") cadence.userMessageEnded()
   }
 }
 
-export function beforeCompactHandler(runtime: CaptureRuntime): BeforeCompactHandler {
+export function turnEndHandler(cadence: CaptureCadence): TurnEndHandler {
+  return async (event, ctx) => {
+    await cadence.turnEnded(toolCallCount(event.message), ctx)
+  }
+}
+
+export function beforeCompactHandler(cadence: CaptureCadence): BeforeCompactHandler {
   return async (_event, ctx) => {
-    void runtime.request({ ctx, trigger: "on-compaction" })
+    await cadence.flush("compact", ctx)
+  }
+}
+
+export function flushOnShutdownHandler(cadence: CaptureCadence, runtime: CaptureRuntime): SessionShutdownHandler {
+  return async (event, ctx) => {
+    await runtime.stopReview()
+    if (event.reason !== "reload") await cadence.flush("shutdown", ctx)
   }
 }

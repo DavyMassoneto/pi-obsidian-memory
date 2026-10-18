@@ -1,3 +1,4 @@
+export * from "./cadence.ts"
 export * from "./completion.ts"
 export * from "./constants.ts"
 export * from "./handlers.ts"

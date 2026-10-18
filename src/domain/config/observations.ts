@@ -64,7 +64,12 @@ function retainSettingField(fields: ConfigFields, observation: ConfigFieldObserv
   if (observation.field === "/limits/maxStatementChars") fields.limits.maxStatementChars = observation.value
   if (observation.field === "/limits/maxNotesPerFolder") fields.limits.maxNotesPerFolder = observation.value
   if (observation.field === "/context/budgetChars") fields.context.budgetChars = observation.value
-  if (observation.field === "/capture/when") fields.capture.when = observation.value
+  if (observation.field === "/capture/nudgeInterval") fields.capture.nudgeInterval = observation.value
+  if (observation.field === "/capture/nudgeToolCalls") fields.capture.nudgeToolCalls = observation.value
+  if (observation.field === "/capture/flushMinTurns") fields.capture.flushMinTurns = observation.value
+  if (observation.field === "/capture/reviewEnabled") fields.capture.reviewEnabled = observation.value
+  if (observation.field === "/capture/flushOnCompact") fields.capture.flushOnCompact = observation.value
+  if (observation.field === "/capture/flushOnShutdown") fields.capture.flushOnShutdown = observation.value
   if (observation.field === "/capture/model/provider") fields.capture.model.provider = observation.value
   if (observation.field === "/capture/model/id") fields.capture.model.id = observation.value
   if (observation.field === "/memoryAgent/model/provider") fields.memoryAgent.model.provider = observation.value

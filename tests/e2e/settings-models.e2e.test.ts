@@ -1,14 +1,6 @@
 import { expect, test } from "vitest"
 
-import {
-  AGENT_MODEL_TITLE,
-  CAPTURE_MODEL_TITLE,
-  CURRENT_MARK,
-  SAVED,
-  SETTINGS_TITLE,
-  WHEN_CHOICES,
-  WHEN_TITLE,
-} from "#src/pi"
+import { AGENT_MODEL_TITLE, CAPTURE_MODEL_TITLE, CURRENT_MARK, SAVED, SETTINGS_TITLE } from "#src/pi"
 import {
   anotherModel,
   configText,
@@ -22,7 +14,6 @@ import {
   pressEscape,
   settingsScreen,
   storedConfig,
-  whenLabel,
 } from "#test-helpers"
 
 test("choosing a capture model from the list writes it, and the next screen shows it", async () => {
@@ -77,16 +68,20 @@ test.each([
   expect(world.pi.unexpected).toEqual([])
 })
 
-test("when capture runs is chosen from the three moments", async () => {
+test("each capture switch is flipped by choosing its line, and the next screen shows it", async () => {
   const world = await configuredWorld({})
   await settingsScreen(world, [
-    pickLine("Capture runs:"),
-    { method: "select", title: WHEN_TITLE, answer: { option: whenLabel("at-session-end") } },
+    pickLine("Review during the session:"),
+    pickLine("Flush at compaction:"),
+    pickLine("Flush at session end:"),
     leaveScreen,
   ])
-  const [first, ...others] = WHEN_CHOICES.map((choice) => choice.label)
-  expect(optionsOf(world, WHEN_TITLE)).toEqual([`${first} ${CURRENT_MARK}`, ...others])
-  expect((await storedConfig(world)).capture.when).toBe("at-session-end")
-  expect(dialogsTitled(world, SETTINGS_TITLE)[1]?.options).toContain(`Capture runs: ${whenLabel("at-session-end")}`)
+  expect((await storedConfig(world)).capture).toMatchObject({
+    reviewEnabled: false,
+    flushOnCompact: false,
+    flushOnShutdown: false,
+  })
+  expect(dialogsTitled(world, SETTINGS_TITLE)[1]?.options).toContain("Review during the session: off")
+  expect(dialogsTitled(world, SETTINGS_TITLE)[3]?.options).toContain("Flush at session end: off")
   expect(world.pi.unexpected).toEqual([])
 })

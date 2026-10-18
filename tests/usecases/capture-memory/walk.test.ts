@@ -48,11 +48,7 @@ test("a review can walk the tree with list, read the note with get and update it
     { action: "finish" },
   ])
 
-  const result = await captureMemory(
-    { trigger: "after-each-turn", messages: userSays("pnpm in CI too"), explicitSaves: [] },
-    context,
-    complete,
-  )
+  const result = await captureMemory({ messages: userSays("pnpm in CI too"), explicitSaves: [] }, context, complete)
 
   expect(seen).toEqual(["tools", "tools/Use pnpm.md"])
   expect(result).toMatchObject({ succeeded: true, output: { applied: [{ operation: "update", status: "applied" }] } })
