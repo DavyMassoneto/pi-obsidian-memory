@@ -2,179 +2,137 @@
 
 Long-term memory for the [pi coding agent](https://pi.dev), stored in [Obsidian](https://obsidian.md) vaults.
 
-Coding agents forget everything between sessions. This extension gives pi durable memory that changes its future
-behavior, that you can read and edit in Obsidian, and that lives in any folder you choose. Memory is two layers of
-dedicated vaults: one global vault about you (how to address you, preferences, patterns, lessons) and one vault per
-project. Notes are plain Markdown, written in English whatever language you speak, and never deleted: retired notes
-move to `archive/`. See [docs/VISION.md](docs/VISION.md) for the decisions behind it.
+Coding agents forget everything between sessions. This pi package gives pi a memory that you can read and edit in
+Obsidian:
 
-> **Status:** runs on Windows, macOS and Linux; CI runs the unit tests on all three and the end-to-end suite runs on
-> Windows. Requires Node 22.19 or later.
+- **A global vault about you**: how to address you, your preferences, patterns and lessons.
+- **One vault per project**: decisions, facts and rules of that project.
+- **Plain Markdown notes**, in folders you choose. Retired notes move to `archive/`; nothing is deleted.
+
+pi uses the memory in three ways: it saves what you ask it to remember, it finds the notes that matter for each
+message, and in the background it reviews the conversation and keeps the notes up to date.
+
+Runs on Windows, macOS and Linux, with pi 1.3 or later and Node 22.19 or later.
 
 ## Install
 
-From git:
-
 ```bash
-pi install git:github.com/DavyMassoneto/pi-obsidian-memory
+pi install npm:pi-obsidian-memory
 ```
 
-From a local clone (loaded from that path, not copied; pi does not install its dependencies, so do it first):
+Restart pi (or run `/reload`). To try it for one session without installing: `pi -e npm:pi-obsidian-memory`.
 
-```bash
-npm install --omit=dev --prefix ./pi-obsidian-memory
-pi install ./pi-obsidian-memory
-```
+## What you need
 
-Both write the package to `~/.pi/agent/settings.json`; add `--local` to write `.pi/settings.json` instead (pi reads it
-only after project trust is granted). You can also add the source yourself:
+| | For | Without it |
+|---|---|---|
+| A chat model in pi | Capture and the memory agent | Required |
+| `TYPESAFE_API_KEY` ([TypeSafe](https://docs.typesafe.ai)) | Picking the relevant notes per message (Jev) and the shell-edit guard | Relevant notes per message are off; every shell command is refused |
+| [Obsidian](https://obsidian.md) | Reading and editing the notes | Optional: the notes are plain Markdown |
 
-```json
-{
-  "packages": ["git:github.com/DavyMassoneto/pi-obsidian-memory"]
-}
-```
+Set `TYPESAFE_API_KEY` in your environment, or store it in pi's credentials for the `typesafe` provider. Jev costs
+$0.042 per million input tokens (docs.typesafe.ai). Semantic search uses a local model by default, downloaded once
+(about 135 MB); no key is needed.
 
-`pi list` shows installed packages. To try it for one run without installing:
-`pi -e git:github.com/DavyMassoneto/pi-obsidian-memory`. Pi's own docs cover every option (`docs/packages.md`).
+## Get started
 
-## Quick start
+1. Run `/memory-setup`. It asks where the global vault goes (a new folder or an existing one), which chat model
+   captures memory and which one runs the memory agent (a small, cheap one is enough). Run it again later to open the
+   settings screen.
+2. In each project folder, run `/memory-init` to give the project its own vault. A folder without one uses the global
+   vault only.
+3. Talk to pi as usual. Say "remember that…" to save a note. The rest happens on its own.
 
-1. `/memory-setup` chooses where the global vault lives (create a new one or attach an existing folder), asks which
-   chat model to use for capture (the model in use is the default) and for the memory agent (a small, cheap one is
-   enough; the list is sorted by price, cheapest first), shows the
-   warnings that apply and writes the config. Run again, it is the settings screen: every setting, and the projects,
-   one select at a time.
-2. In a project folder, `/memory-init` registers it with its own vault (created when missing). An unregistered folder
-   gets the global vault only.
+Both commands need pi's interactive UI. Settings live in `pi-obsidian-memory/config.json` in pi's agent folder,
+outside the vaults; you never need to edit it by hand ([all settings](docs/config.md)).
 
-Both commands need pi's UI. Until `/memory-setup` is done there is no memory, and session start says so. The config is
-`pi-obsidian-memory/config.json` in the pi agent directory, outside the vaults; every key is described in
-[docs/config.md](docs/config.md). Nothing needs editing by hand. Changing a vault leaves the old one as it was.
+## How it works
 
-## What works
+- **Don't forget notes.** A note with `dontForget: true` in its frontmatter is loaded in full at the start of every
+  session.
+- **Relevant notes per message.** For each message, a classifier (Jev) decides whether stored memory helps. If it does,
+  the memory agent searches and reads the vaults, and the notes that help are added after your message, within
+  `context.budgetChars` (12,000 characters by default).
+- **Automatic capture.** As in [pi-hermes-memory](https://github.com/chandra447/pi-hermes-memory), a background
+  review saves, updates and archives notes every 10 assistant turns or 15 tool calls, once the session has three user
+  messages. What was not reviewed yet is also saved before compaction and when the session ends. It never asks you
+  anything; what it is unsure of is not saved.
+- **Search by words and meaning.** `memory_search` finds a note even when the words differ.
+- **Edits are safe.** pi must read a note before changing it, and a note you edited in Obsidian since is never
+  overwritten.
 
-### Tools
-
-The LLM uses these; the ones that write act only on your explicit request ("remember this"), and nothing in the prompt
-nudges it to save on its own.
+### Tools the agent uses
 
 | Tool | Does |
 |---|---|
-| `memory_search` | Finds notes in the global vault, the project vault or both (words and meaning together) |
-| `memory_get` | Reads a note in full with its problems, a folder's index, or anything under `archive/` |
-| `memory_add` | Saves a new note when you ask to remember something |
-| `memory_update` | Changes a note you asked to change; keeps its identity |
+| `memory_search` | Finds notes in the global vault, the project vault or both |
+| `memory_get` | Reads a note, a folder's index, or anything under `archive/` |
+| `memory_add` | Saves a new note |
+| `memory_update` | Changes a note |
 | `memory_archive` | Moves a note to `archive/` |
-| `memory_succeed` | Replaces a note with a successor; the two link to each other |
+| `memory_succeed` | Replaces a note with a new one; the two link to each other |
 
-`memory_update`, `memory_archive` and `memory_succeed` first need a `memory_get` of the same note in the session, and
-refuse a note that changed on disk since (an edit you made in Obsidian is never overwritten). A shipped skill,
-`obsidian-memory`, teaches the agent the layout, note types and these rules; it is never written to a vault.
+A bundled skill, `obsidian-memory`, teaches the agent where notes go and how to use these tools.
 
 ### Commands
 
 | Command | Does |
 |---|---|
-| `/memory-setup` | First setup (vault and models); afterwards the settings screen for every setting and the projects |
-| `/memory-init` | Registers the working folder as a project with its own vault |
-| `/memory-doctor` | Reports problems in the vaults and the config; offers to complete blank notes after you confirm |
-| `/memory-export` | Writes both vaults to a new `.zip` (never overwrites; refuses a folder inside a vault) |
+| `/memory-setup` | First setup; afterwards, the settings screen |
+| `/memory-init` | Gives the current project its own vault |
+| `/memory-doctor` | Checks the vaults, the config and the models, and reports what is wrong |
+| `/memory-export` | Saves both vaults to a new `.zip` |
 
-`/memory-doctor` lists invalid notes, blank notes, duplicate ids, leftover temporary files and folders over the
-notes-per-folder limit, then checks the chat model, the embeddings and the decision model. Every other problem is left
-as it is on disk.
+### Guards
 
-### Memory in the conversation
-
-- **Don't forget.** Mark a note with `dontForget: true` in its frontmatter. Every such note, in both vaults, is loaded
-  in full at session start, with no limit.
-- **Relevant memory per message.** On each message, a fast decision model (a classifier that answers yes/no
-  probabilities; it never searches or generates) decides whether memory is needed. If so, the memory agent (a chat model)
-  searches and reads, the decision model scores each candidate note, and the relevant ones are added after your message. Earlier
-  messages are never rewritten, so the prompt cache holds; a loaded note that changed is added again, marked as
-  replacing the earlier copy. A loaded note that is gone is reported as "the note was archived or deleted"; one still
-  there but unusable, as "the note is still there but cannot be used (<problem>)"; one whose state is unknown, an
-  invalid config included, as "the note cannot be read (<problem>)". Session start also loads relevant notes within
-  `context.budgetChars` (12,000 by default). The decision model is Jev by default (by API; it needs `TYPESAFE_API_KEY`;
-  $0.042 per million input tokens, per docs.typesafe.ai), working from TypeSafe's starting cutoffs (0.5/0.5). Laya,
-  run locally, is an optional choice that needs explicit `gateThreshold` and `relevanceThreshold`: it ships none
-  because its gate measured at chance (see [decision-thresholds](docs/decision-thresholds.md)), so with Laya and no
-  cutoffs per-message memory is off and each session tells you. Setup steps are in
-  [Running the decision model](docs/config.md#running-the-decision-model). If the decision model is unavailable
-  nothing is added and you are told once per session; no other model takes over.
-- **Automatic capture.** As in pi-hermes-memory, a background review of the conversation saves, updates, archives and
-  succeeds notes every `capture.nudgeInterval` assistant turns (10) or `capture.nudgeToolCalls` tool calls (15), once
-  the session has three user messages. What was not yet reviewed is also reviewed before compaction and when the
-  session ends, once it has `capture.flushMinTurns` user messages (6). It never asks you anything: what it is unsure
-  of is not saved. Its judgement quality is not yet proven against a real model.
-- **Semantic search.** `memory_search` fuses words and meaning. The default is a local multilingual model (about
-  135 MB), downloaded when needed, without asking; OpenAI and Google are the alternatives. The index lives outside the
-  vaults and is rebuilt from the notes whenever needed.
-
-### Vault guard
-
-The LLM reaches vault files only through the memory tools. The extension refuses `read`, `write`, `edit`, `grep`, `find`
-and `ls` on a vault, `bash`/`powershell` commands that write a vault path out, and junctions and symlinks into a vault.
-You, and Obsidian, are not the LLM and stay free.
-
-Accepted as they are (your decision, 2026-10-17): reading a vault through a path the shell builds indirectly
-(variables, globs, scripts), tools of other extensions, and foreground subagents, which load no extensions. Creating
-hardlinks through the shell is refused by the shell-edit guard. Details in
-[docs/ROADMAP.md](docs/ROADMAP.md#2-memory-the-agent-can-read-vault-access-only).
-
-Paths are compared ignoring case on Windows and macOS and with case on Linux, whatever the volume: a case-sensitive
-macOS volume is still compared ignoring case, and a case-insensitive mount on Linux is still compared with case.
-
-### Shell-edit guard
-
-Before every `bash`/`powershell` call, Jev (`jev-latest`, which needs `TYPESAFE_API_KEY`) scores whether the command
-edits a file through a redirection, an in-place edit, inline code, a script that writes, a copy or download that
-creates a file, or a hardlink. A score at or above its cutoff refuses the call and points to `edit` and `write`;
-when Jev cannot answer, the call is refused. The cutoffs and how they were measured are in
-[docs/shell-edit-cutoffs.md](docs/shell-edit-cutoffs.md).
+- **Vault guard.** The agent reaches the vaults only through the memory tools. pi's file tools (`read`, `write`,
+  `edit`, `grep`, `find`, `ls`) and shell commands that name a vault path are refused. You and Obsidian are not
+  affected.
+- **Shell-edit guard.** Before every `bash` or `powershell` call, Jev checks whether the command edits a file (a
+  redirect, an in-place edit, inline code, a script that writes, a copy or download, a hardlink). If it does, the call
+  is refused and the agent is told to use `edit` or `write`. When Jev cannot answer, the call is refused.
 
 ### Dashboard
 
-Setup and init write `Memory.base` at each vault root when it is missing, with views for all notes, Don't forget and
-Archive (file name, folder, type, Don't forget, updated). Your edits to it are kept. It only displays.
+Each vault gets a `Memory.base` file with views of all notes, Don't forget notes and the archive. Your edits to it are
+kept.
 
 ## Privacy
 
 - Capture and the memory agent send conversation and note content to the chat model you choose.
-- Jev, the default decision model, sends your messages and candidate notes to TypeSafe; Laya, the optional local choice, runs on your machine.
-- Choosing a remote embeddings provider (OpenAI, Google) sends note content and queries to it.
-- `/memory-setup` warns about each of these before writing, as a plain warning with no question; nothing is asked at
-  runtime, and no other provider ever takes the place of the one you chose.
-- Secrets are saved as written: the vault is yours, with no masking or blocking.
-- Credentials come from pi or the environment; `config.json` never holds a key.
+- Jev sends your messages, candidate notes and shell commands to TypeSafe.
+- Semantic search runs locally by default; choosing OpenAI or Google sends note content and queries to them.
+- `/memory-setup` warns about each of these before saving.
+- Notes are saved as written: no masking. The config file never holds a key.
+
+## Known limits
+
+- Path case: compared ignoring case on Windows and macOS, and with case on Linux, whatever the volume.
+- Reading a vault through a path the shell builds indirectly (variables, globs, scripts), tools of other extensions,
+  and foreground subagents are not blocked by the vault guard.
+- How well capture judges what to save is not yet measured against a real model.
 
 ## Development
-
-Tested with pi `1.3.0` and TypeBox `1.3.27`, pinned as development dependencies. Pi provides both at runtime;
-following its package contract, they are wildcard peers, not bundled runtime dependencies.
 
 ```bash
 npm install
 npm run lint
 npm run typecheck
 npm test              # offline: pure tests and tests on a real temporary disk
-npm run test:e2e      # the real pi over RPC, with a temporary agent folder and vaults
+npm run test:e2e      # the real pi over RPC, through OmniRoute
 npm run test:model    # live tests: real models and network
 pi -e ./src/pi/extension.ts
 ```
 
-`npm test` needs no model and no network. `npm run test:e2e` uses the real Haiku (`cc/claude-haiku-5-5`) through
-OmniRoute, loaded in pi by `pi-omniroute-sync`, and the real Jev. It reads `OMNIROUTE_URL`, `OMNIROUTE_API_KEY` and
-`TYPESAFE_API_KEY` from the environment and runs one test file at a time. CI runs it on windows-latest (the secrets
-have the same names). The Laya tests use a real `laya-serve` from `tmp/laya-venv` and run only on request:
-`npx vitest run --project e2e-laya`.
+`npm run test:e2e` runs one test per feature with the real Haiku (`cc/claude-haiku-5-5`) through OmniRoute
+(`pi-omniroute-sync`) and the real Jev. It reads `OMNIROUTE_URL`, `OMNIROUTE_API_KEY` and `TYPESAFE_API_KEY` from the
+environment. CI runs it on Windows, and runs lint, typecheck and `npm test` on Windows, macOS and Linux.
 
-`npm run test:model` downloads the local embedding model (about 135 MB) to a cache folder outside the repository
-(`%LOCALAPPDATA%\pi-obsidian-memory-bench\models`) and is not part of `npm test`.
+Releases are automatic: every squash merge into `main` that holds a `feat` or `fix` commit bumps the version, rewrites
+`CHANGELOG.md` and publishes to npm.
 
-The roadmap is in [docs/ROADMAP.md](docs/ROADMAP.md); the note format is in
-[docs/vault-format.md](docs/vault-format.md).
+More: [vision](docs/VISION.md), [roadmap](docs/ROADMAP.md), [note format](docs/vault-format.md),
+[config](docs/config.md).
 
 ## License
 
