@@ -29,20 +29,3 @@ export async function searchAnswer(world: Pick<E2eWorld, "pi">, query: string): 
 export function foundLine(path: string, ...marks: string[]): string {
   return ["global", path, "rule", ...marks].join(SEARCH_FIELD_SEPARATOR)
 }
-
-export function sortedLines(text: string): string[] {
-  return text.split("\n").sort()
-}
-
-export function weatherSentences(count: number): string {
-  return Array.from({ length: count }, (_, number) => `Sentence ${number} about the weather in the city today.`).join(
-    " ",
-  )
-}
-
-export function catDays(count: number): string {
-  return Array.from(
-    { length: count },
-    (_, number) => `Day ${number}: whenever the vacuum cleaner starts, the cat runs under the bed.`,
-  ).join(" ")
-}

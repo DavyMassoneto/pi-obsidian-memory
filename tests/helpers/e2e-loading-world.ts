@@ -39,15 +39,3 @@ export async function expectReplacementSession(world: E2eWorld, from: number): P
   expect(await world.pi.lastAssistantText()).toContain("READY")
   expect(world.pi.stderr).not.toContain("stale")
 }
-
-export async function newSessionMeasured(world: E2eWorld, label: string): Promise<number> {
-  const from = world.pi.lines.length
-  const began = Date.now()
-  const loading = world.pi.waitFor(statusSet(STATUS_LOADING.key), from)
-  await world.pi.newSession()
-  await loading
-  const elapsed = Date.now() - began
-  console.info(`${label}: new_session to the new session's start took ${elapsed} ms`)
-  await expectReplacementSession(world, from)
-  return elapsed
-}

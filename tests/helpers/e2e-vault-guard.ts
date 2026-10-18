@@ -3,11 +3,9 @@ import { join } from "node:path"
 import { expect } from "vitest"
 
 import { VAULT_ACCESS_REFUSAL } from "#src/domain"
-import { onlyProject, rewriteConfig } from "./e2e-config.ts"
 import { type RpcTurn, toolText } from "./e2e-records.ts"
 import { callInNewSession, type StartedCall, startedCalls } from "./e2e-tool-calls.ts"
-import { type E2eWorld, e2eWorld } from "./e2e-world.ts"
-import type { WorldOptions } from "./e2e-world-types.ts"
+import type { E2eWorld } from "./e2e-world.ts"
 
 export function slashed(path: string): string {
   return path.replaceAll("\\", "/")
@@ -30,14 +28,6 @@ export function toolsOnVault(vault: string): StartedCall[] {
     { tool: "find", args: { pattern: "*.md", path: vault } },
     { tool: "ls", args: { path: join(vault, "tools") } },
   ]
-}
-
-export async function worldWithProjectVaultAsWorkingFolder(options: WorldOptions): Promise<E2eWorld> {
-  const world = await e2eWorld(options)
-  const project = await onlyProject(world)
-  await rewriteConfig(world, { projects: [{ ...project, vault: world.folders.cwd }] })
-  await world.restart()
-  return world
 }
 
 function startsLabel(call: StartedCall, turn: RpcTurn): string {
