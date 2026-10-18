@@ -4,8 +4,8 @@ import { STATUS_SEARCHING } from "#src/pi"
 import { DECISION_UNAVAILABLE } from "#src/usecases"
 import {
   DEPLOY,
+  DEPLOY_BLOCK,
   dontForgetText,
-  noteBlock,
   noticesStarting,
   putDeployNote,
   RELEASE,
@@ -19,8 +19,6 @@ import {
   writeVaultFile,
 } from "#test-helpers"
 
-const deployBlock = noteBlock("project", DEPLOY.path, DEPLOY.body)
-
 test("a Don't forget note reaches the model, and Jev adds a relevant project note to a message", async () => {
   const world = await relevantWorld()
   await writeVaultFile(world.folders.globalVault, RELEASE.path, dontForgetText(1, RELEASE.body))
@@ -33,7 +31,7 @@ test("a Don't forget note reaches the model, and Jev adds a relevant project not
   expect(await world.pi.lastAssistantText()).toContain("HARBOR-4417")
   const turn = await world.pi.prompt(DEPLOY.question, [])
   expect(noticesStarting(world, DECISION_UNAVAILABLE)).toEqual([])
-  expect(await relevantMessages(world)).toEqual([relevantMessage([deployBlock])])
+  expect(await relevantMessages(world)).toEqual([relevantMessage([DEPLOY_BLOCK])])
   expect(statusStates(world, STATUS_SEARCHING.key)).toEqual([
     STATUS_SEARCHING.text,
     undefined,

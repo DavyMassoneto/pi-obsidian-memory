@@ -25,5 +25,3 @@ export function mentionsIn(texts: string[]): string[] {
 export function unregisteredMentions(texts: string[], registered: string[]): string[] {
   return mentionsIn(texts).filter((mention) => !registered.includes(mention))
 }
-
-export const PI_BUILTIN_COMMANDS = ["/reload"]

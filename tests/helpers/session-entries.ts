@@ -1,9 +1,6 @@
 import type { SessionEntry, SessionMessageEntry } from "@earendil-works/pi-coding-agent"
-import { vi } from "vitest"
 
 import type { AddedDetails, RegistryMessage } from "#src/pi"
-import { fakePiContext } from "./pi-context.ts"
-import type { TurnMessage } from "./types.ts"
 
 const STAMP = "2026-10-20T10:00:00.000Z"
 
@@ -54,27 +51,5 @@ export function cursorEntry(id: string, lastEntryId: string): SessionEntry {
     timestamp: STAMP,
     customType: "obsidian-memory-capture",
     data: { lastEntryId },
-  }
-}
-
-export function contextReplying(reply: RegistryMessage | null) {
-  const { context } = fakePiContext("work", { available: [{ provider: "test-chat", id: "selected-chat" }] })
-  const complete = vi.fn(async () => {
-    if (!reply) throw new Error("unexpected")
-    return reply
-  })
-  return { context: { ...context, modelRegistry: { ...context.modelRegistry, complete } }, complete }
-}
-
-export function relevantEntry(id: string, message: TurnMessage): SessionEntry {
-  return {
-    type: "custom_message",
-    id,
-    parentId: null,
-    timestamp: STAMP,
-    customType: message.customType,
-    content: message.content,
-    display: message.display,
-    details: message.details,
   }
 }

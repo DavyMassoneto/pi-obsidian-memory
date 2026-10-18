@@ -3,7 +3,6 @@ import { mkdir } from "node:fs/promises"
 import { join } from "node:path"
 import { promisify } from "node:util"
 
-import { piMemoryFixture } from "./pi-memory.ts"
 import { noteWithId, searchFixture } from "./search-memory.ts"
 import { putCatalogFile } from "./vault-catalog.ts"
 
@@ -41,12 +40,4 @@ export async function unzipArchive(archive: string, into: string): Promise<void>
 
 export function isExported(line: string): boolean {
   return !line.startsWith(".obsidian") && !line.includes(".tmp-")
-}
-
-export async function exportablePiFixture() {
-  const fixture = await piMemoryFixture()
-  await putCatalogFile(fixture.vaults.global, "tools/Use pnpm.md", noteWithId(1, "Always pnpm.", []))
-  const out = join(fixture.root, "exports")
-  await mkdir(out)
-  return { ...fixture, out }
 }
