@@ -94,7 +94,7 @@ test("setup owns every nested submitted config value across the canonicalization
   const pending = setupMemory({ ...request, config: submitted }, context)
   await Promise.resolve()
   submitted.capture.model.id = ""
-  submitted.capture.when = "at-session-end"
+  submitted.capture.reviewEnabled = false
   submitted.memoryAgent.model.provider = "changed"
   submitted.limits.maxBodyChars = 1
   submitted.context.budgetChars = 1

@@ -1,10 +1,10 @@
 import type { CutoffValue, MemoryConfig } from "#src/usecases"
 import { resolveCutoffs } from "#src/usecases"
-import { AGENT_MODEL_TITLE, CAPTURE_MODEL_TITLE, WHEN_CHOICES } from "./constants.ts"
-import { modelEdit, numberEdit, whenEdit } from "./edits.ts"
+import { AGENT_MODEL_TITLE, CAPTURE_MODEL_TITLE } from "./constants.ts"
+import { modelEdit, numberEdit, switchEdit } from "./edits.ts"
 import { projectsEdit } from "./projects.ts"
 import { decisionEdit, embeddingsEdit } from "./providers.ts"
-import type { NumberChange, SettingLine } from "./types.ts"
+import type { CaptureCountName, CaptureSwitchName, NumberChange, SettingLine } from "./types.ts"
 
 function cutoffText(cutoff: CutoffValue): string {
   if (typeof cutoff.value !== "number") return "not set"
@@ -18,10 +18,11 @@ function decisionText(config: MemoryConfig): string {
   return "Jev (TypeSafe)"
 }
 
-function whenText(config: MemoryConfig): string {
-  const choice = WHEN_CHOICES.find((entry) => entry.value === config.capture.when)
-  if (choice) return choice.label
-  return config.capture.when
+function captureSwitchLine(label: string, name: CaptureSwitchName, config: MemoryConfig): SettingLine {
+  const current = config.capture[name]
+  let state = "off"
+  if (current) state = "on"
+  return { label: `${label}: ${state}`, edit: switchEdit({ name, what: label.toLowerCase(), current }) }
 }
 
 function cutoffLine(label: string, which: "gate" | "relevance", config: MemoryConfig): SettingLine {
@@ -55,8 +56,11 @@ function countLine(label: string, unit: string, current: number, change: NumberC
   }
 }
 
-export function settingLines(config: MemoryConfig): SettingLine[] {
-  const { limits } = config
+function captureCountLine(label: string, unit: string, name: CaptureCountName, config: MemoryConfig): SettingLine {
+  return countLine(label, unit, config.capture[name], (value) => ({ kind: "captureCount", name, value }))
+}
+
+function captureLines(config: MemoryConfig): SettingLine[] {
   return [
     {
       label: `Capture model: ${config.capture.model.provider}/${config.capture.model.id}`,
@@ -67,7 +71,19 @@ export function settingLines(config: MemoryConfig): SettingLine[] {
         current: config.capture.model,
       }),
     },
-    { label: `Capture runs: ${whenText(config)}`, edit: whenEdit },
+    captureSwitchLine("Review during the session", "reviewEnabled", config),
+    captureCountLine("Review every", " turns", "nudgeInterval", config),
+    captureCountLine("Review after tool calls", "", "nudgeToolCalls", config),
+    captureSwitchLine("Flush at compaction", "flushOnCompact", config),
+    captureSwitchLine("Flush at session end", "flushOnShutdown", config),
+    captureCountLine("Flush minimum user messages", "", "flushMinTurns", config),
+  ]
+}
+
+export function settingLines(config: MemoryConfig): SettingLine[] {
+  const { limits } = config
+  return [
+    ...captureLines(config),
     {
       label: `Memory agent model: ${config.memoryAgent.model.provider}/${config.memoryAgent.model.id}`,
       edit: modelEdit({

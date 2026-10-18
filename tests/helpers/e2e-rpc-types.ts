@@ -1,5 +1,5 @@
 import type { PiCredentialsEnv } from "./e2e-credentials.ts"
-import type { RecordTest } from "./e2e-records.ts"
+import type { RecordTest, RpcTurn } from "./e2e-records.ts"
 
 export interface RpcStart {
   cwd: string
@@ -25,6 +25,14 @@ export interface OutgoingCommand {
 }
 export interface IdentifiedCommand extends OutgoingCommand {
   id: string
+}
+export interface ReviewedTurns {
+  from: number
+  turn: RpcTurn
+}
+export interface SessionMessageEntry {
+  id: string
+  role: string
 }
 export interface Waiter {
   test: RecordTest

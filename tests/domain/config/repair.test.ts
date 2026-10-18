@@ -1,7 +1,7 @@
 import { expect, test } from "vitest"
 
 import { inspectConfigForRepair, parseConfig, proposeSetup } from "#src/domain"
-import { aConfig } from "#test-helpers"
+import { aConfig, DEFAULT_CADENCE } from "#test-helpers"
 
 test.each([
   { provider: "local", model: "text-embedding-3-small" },
@@ -69,7 +69,7 @@ test("old configuration is invalid at runtime and repair never invents a chat mo
   expect(inspectConfigForRepair(text)).toMatchObject({
     ...old,
     limits: { ...old.limits, maxNotesPerFolder: 20 },
-    capture: { model: {}, when: "after-each-turn" },
+    capture: { model: {}, ...DEFAULT_CADENCE },
     memoryAgent: { model: {} },
   })
 })
@@ -83,7 +83,12 @@ test("repair retains independently valid nested siblings and names discarded unk
     context: { budgetChars: 5678, extra: 1 },
   })
   const draft = inspectConfigForRepair(text)
-  expect(draft.capture).toEqual({ model: { provider: "keep" }, when: "at-session-end" })
+  expect(draft.capture).toEqual({
+    model: { provider: "keep" },
+    ...DEFAULT_CADENCE,
+    reviewEnabled: false,
+    flushOnCompact: false,
+  })
   expect(draft.memoryAgent).toEqual({ model: { id: "keep-id" } })
   expect(draft.limits).toEqual({ maxBodyChars: 700, maxStatementChars: 100, maxNotesPerFolder: 31 })
   expect(draft.context).toEqual({ budgetChars: 5678 })

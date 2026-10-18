@@ -39,6 +39,27 @@ test.each([
     section: "context",
     expected: { budgetChars: 500 },
   },
+  {
+    name: "the review turn interval",
+    line: "Review every",
+    typed: "4",
+    section: "capture",
+    expected: { nudgeInterval: 4 },
+  },
+  {
+    name: "the review tool call threshold",
+    line: "Review after tool calls",
+    typed: "8",
+    section: "capture",
+    expected: { nudgeToolCalls: 8 },
+  },
+  {
+    name: "the flush minimum",
+    line: "Flush minimum user messages",
+    typed: "3",
+    section: "capture",
+    expected: { flushMinTurns: 3 },
+  },
   { name: "the note body limit", line: "Max note body", typed: "7", section: "limits", expected: { maxBodyChars: 7 } },
   {
     name: "the statement limit",

@@ -3,7 +3,6 @@ import { join } from "node:path"
 import type { BeforeAgentStartEvent, SessionStartEvent, ToolCallEvent } from "@earendil-works/pi-coding-agent"
 
 import {
-  type AgentEndHandler,
   type BeforeAgentStartHandler,
   type BeforeCompactHandler,
   type CursorData,
@@ -46,7 +45,6 @@ export function registerFakePiAt(agentDir: string, overrides?: ExtensionOverride
   const startHandlers: SessionStartHandler[] = []
   const shutdownHandlers: SessionShutdownHandler[] = []
   const toolCallHandlers: ToolCallHandler[] = []
-  const agentEndHandlers: AgentEndHandler[] = []
   const compactHandlers: BeforeCompactHandler[] = []
   const cursors: CursorData[] = []
   const failures = { cursor: false }
@@ -88,9 +86,11 @@ export function registerFakePiAt(agentDir: string, overrides?: ExtensionOverride
       events.push("session_start")
       startHandlers.push(handler)
     },
-    onAgentEnd(handler) {
-      events.push("agent_end")
-      agentEndHandlers.push(handler)
+    onMessageEnd() {
+      events.push("message_end")
+    },
+    onTurnEnd() {
+      events.push("turn_end")
     },
     onBeforeCompact(handler) {
       events.push("session_before_compact")
@@ -165,9 +165,6 @@ export function registerFakePiAt(agentDir: string, overrides?: ExtensionOverride
     },
     async shutdownSession(context: MemoryPiContext) {
       for (const handler of shutdownHandlers) await handler({ type: "session_shutdown", reason: "quit" }, context)
-    },
-    async endAgent(context: MemoryPiContext) {
-      for (const handler of agentEndHandlers) await handler({ type: "agent_end", messages: [] }, context)
     },
     async compact(context: MemoryPiContext) {
       for (const handler of compactHandlers)

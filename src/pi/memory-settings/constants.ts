@@ -1,4 +1,4 @@
-import type { EmbeddingChoice, WhenChoice } from "./types.ts"
+import type { EmbeddingChoice } from "./types.ts"
 
 export const CURRENT_MARK = "(current)"
 
@@ -33,8 +33,6 @@ export const CAPTURE_MODEL_TITLE =
 export const AGENT_MODEL_TITLE =
   "Chat model for the memory agent (it searches memory for each message; Escape keeps the current one)"
 
-export const WHEN_TITLE = "When does capture run? (Escape keeps the current one)"
-
 export const DECISION_TITLE = "Decision model (Escape keeps the current one)"
 
 export const JEV_OPTION = "Jev (TypeSafe, by API)"
@@ -60,12 +58,6 @@ export const PROJECT_CHANGE_VAULT = "Change its vault"
 export const PROJECT_REMOVE = "Remove it from the memory"
 
 export const PROJECT_VAULT_TITLE = "Project vault (an existing folder; empty keeps the current one)"
-
-export const WHEN_CHOICES: WhenChoice[] = [
-  { value: "after-each-turn", label: "after each turn" },
-  { value: "on-compaction", label: "on compaction" },
-  { value: "at-session-end", label: "at session end" },
-]
 
 export const EMBEDDING_CHOICES: EmbeddingChoice[] = [
   {

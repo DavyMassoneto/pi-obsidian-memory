@@ -29,9 +29,18 @@ export async function captureMemory(
   complete: CompletionPort,
 ): Promise<CaptureMemoryResult> {
   const resolved = await resolveMemory(context)
-  if (!resolved.succeeded) return resolved
+  if (!resolved.succeeded) {
+    if (memoryOperationInterruption(context)) {
+      return {
+        succeeded: false,
+        reason: "interrupted",
+        problems: [INTERRUPTED],
+        report: { reviewed: false, applied: [] },
+      }
+    }
+    return resolved
+  }
   const { config, project } = resolved.output
-  if (config.capture.when !== run.trigger) return { succeeded: true, output: { reviewed: false, applied: [] } }
   const explicitSaves: ReadObservation[] = []
   for (const save of run.explicitSaves) {
     const read = await observeRead(save, context)

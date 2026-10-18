@@ -16,7 +16,15 @@ export function emptyConfigFields(): ConfigFields {
 export function productSettings(): Omit<MemoryConfig, "global" | "projects"> {
   return {
     limits: { maxBodyChars: 1000, maxStatementChars: 100, maxNotesPerFolder: 20 },
-    capture: { model: { provider: "test-chat", id: "selected-chat" }, when: "after-each-turn" },
+    capture: {
+      model: { provider: "test-chat", id: "selected-chat" },
+      nudgeInterval: 10,
+      nudgeToolCalls: 15,
+      flushMinTurns: 6,
+      reviewEnabled: true,
+      flushOnCompact: true,
+      flushOnShutdown: true,
+    },
     memoryAgent: { model: { provider: "test-chat", id: "selected-chat" } },
     context: { budgetChars: 12000 },
     embeddings: { provider: "local", model: "Xenova/multilingual-e5-small" },
@@ -33,7 +41,15 @@ export function productSettings(): Omit<MemoryConfig, "global" | "projects"> {
 export function customizedSettings(): Omit<MemoryConfig, "global" | "projects"> {
   return {
     limits: { maxBodyChars: 2000, maxStatementChars: 200, maxNotesPerFolder: 30 },
-    capture: { model: { provider: "capture-provider", id: "capture-id" }, when: "on-compaction" },
+    capture: {
+      model: { provider: "capture-provider", id: "capture-id" },
+      nudgeInterval: 4,
+      nudgeToolCalls: 7,
+      flushMinTurns: 2,
+      reviewEnabled: false,
+      flushOnCompact: true,
+      flushOnShutdown: false,
+    },
     memoryAgent: { model: { provider: "memory-provider", id: "memory-id" } },
     context: { budgetChars: 4321 },
     embeddings: { provider: "google", model: "gemini-embedding-001" },

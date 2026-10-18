@@ -7,15 +7,27 @@ import type { CaptureDeps, PendingCapture } from "./types.ts"
 export class CaptureRuntime {
   #deps: CaptureDeps
   #running: Promise<void> | null = null
-  #pending: PendingCapture | null = null
+  #current: PendingCapture | null = null
+  #pending: PendingCapture[] = []
+  #abort = new AbortController()
 
   constructor(deps: CaptureDeps) {
     this.#deps = deps
   }
 
+  get reviewActive(): boolean {
+    return [this.#current, ...this.#pending].some((capture) => capture?.kind === "review")
+  }
+
+  async stopReview(): Promise<void> {
+    this.#pending = this.#pending.filter((capture) => capture.kind === "flush")
+    if (this.#current?.kind === "review") this.#abort.abort()
+    await this.#running
+  }
+
   request(request: PendingCapture): Promise<void> {
     if (this.#running) {
-      this.#pending = request
+      this.#pending.push(request)
       return this.#running
     }
     const running = this.#drain(request).finally(() => {
@@ -26,17 +38,14 @@ export class CaptureRuntime {
   }
 
   async #drain(first: PendingCapture): Promise<void> {
-    let next: PendingCapture | null = first
+    let next: PendingCapture | undefined = first
     while (next) {
+      this.#current = next
+      this.#abort = new AbortController()
       await this.#run(next)
-      next = this.#takePending()
+      next = this.#pending.shift()
     }
-  }
-
-  #takePending(): PendingCapture | null {
-    const pending = this.#pending
-    this.#pending = null
-    return pending
+    this.#current = null
   }
 
   async #run(request: PendingCapture): Promise<void> {
@@ -48,12 +57,14 @@ export class CaptureRuntime {
     }
   }
 
-  async #review({ ctx, trigger }: PendingCapture): Promise<void> {
-    const operation = this.#deps.sessions.captureOperation(ctx.cwd, this.#deps.paths)
-    if (!operation) return
+  async #review({ ctx }: PendingCapture): Promise<void> {
+    const captureOperation = this.#deps.sessions.captureOperation(ctx.cwd, this.#deps.paths)
+    if (!captureOperation) return
+    const { signal } = this.#abort
+    const operation = { ...captureOperation, signal: AbortSignal.any([captureOperation.signal, signal]) }
     const transcript = reviewableSince(ctx.sessionManager.getBranch())
     if (transcript.messages.length === 0) return
-    const run = { trigger, messages: transcript.messages, explicitSaves: transcript.explicitSaves }
+    const run = { messages: transcript.messages, explicitSaves: transcript.explicitSaves }
     const result = await withMemoryStatus(ctx, STATUS_CAPTURING, () =>
       captureMemory(run, operation, this.#deps.completionOf(ctx)),
     )

@@ -1,8 +1,8 @@
 import { parseSettingNumber } from "#src/usecases"
-import { CURRENT_MARK, NONE_WORD, WHEN_CHOICES, WHEN_TITLE } from "./constants.ts"
+import { NONE_WORD } from "./constants.ts"
 import { chooseModel } from "./models.ts"
 import { saveChange } from "./save.ts"
-import type { LineEdit, ModelEditSpec, NumberEditSpec, SettingsEnv } from "./types.ts"
+import type { LineEdit, ModelEditSpec, NumberEditSpec, SwitchEditSpec } from "./types.ts"
 
 export function modelEdit(spec: ModelEditSpec): LineEdit {
   return async (env) => {
@@ -17,20 +17,17 @@ export function modelEdit(spec: ModelEditSpec): LineEdit {
   }
 }
 
-export async function whenEdit(env: SettingsEnv): Promise<void> {
-  const current = env.state.config.capture.when
-  const labels = WHEN_CHOICES.map((choice) => {
-    if (choice.value === current) return `${choice.label} ${CURRENT_MARK}`
-    return choice.label
-  })
-  const answer = await env.ctx.ui.select(WHEN_TITLE, labels)
-  const picked = WHEN_CHOICES.find((_choice, index) => labels[index] === answer)
-  if (!picked || picked.value === current) return
-  await saveChange(env, {
-    change: { kind: "captureWhen", when: picked.value },
-    what: `capture runs ${picked.label}`,
-    reload: false,
-  })
+export function switchEdit(spec: SwitchEditSpec): LineEdit {
+  return async (env) => {
+    const value = !spec.current
+    let state = "off"
+    if (value) state = "on"
+    await saveChange(env, {
+      change: { kind: "captureSwitch", name: spec.name, value },
+      what: `${spec.what} is now ${state}`,
+      reload: false,
+    })
+  }
 }
 
 export function numberEdit(spec: NumberEditSpec): LineEdit {

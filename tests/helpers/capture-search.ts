@@ -12,10 +12,6 @@ export async function capturedSearchPaths(context: MemoryOperationContext): Prom
     },
   ])
 
-  await captureMemory(
-    { trigger: "after-each-turn", messages: userSays("I drive an automobile"), explicitSaves: [] },
-    context,
-    complete,
-  )
+  await captureMemory({ messages: userSays("I drive an automobile"), explicitSaves: [] }, context, complete)
   return paths
 }

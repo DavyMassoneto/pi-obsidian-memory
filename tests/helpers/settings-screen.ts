@@ -13,7 +13,7 @@ export const CHEAP_LABEL = "cheap-co/haiku · $1 in / $5 out per 1M tokens"
 
 export const SCREEN = {
   captureModel: "Capture model: test-chat/selected-chat",
-  captureWhen: "Capture runs: after each turn",
+  review: "Review during the session: on",
   agentModel: "Memory agent model: test-chat/selected-chat",
   decision: "Decision model: Laya (http://127.0.0.1:8000/v1/systemone)",
   gate: "Gate cutoff: not set",

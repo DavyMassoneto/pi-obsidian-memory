@@ -1,7 +1,7 @@
 import { expect, test } from "vitest"
 
 import { inspectConfigForRepair, prepareSetupDefaults, proposeSetup } from "#src/domain"
-import { productSettings } from "#test-helpers"
+import { DEFAULT_CADENCE, productSettings } from "#test-helpers"
 
 test("setup alone can use the explicitly supplied model and null leaves both models unresolved", () => {
   const selected = { provider: "chosen-provider", id: "chosen-model" }
@@ -9,7 +9,7 @@ test("setup alone can use the explicitly supplied model and null leaves both mod
   expect(defaults).toEqual({
     ...productSettings(),
     decisionModel: { provider: "typesafe", model: "jev-latest" },
-    capture: { model: selected, when: "after-each-turn" },
+    capture: { model: selected, ...DEFAULT_CADENCE },
     memoryAgent: { model: selected },
     global: {},
     projects: [],

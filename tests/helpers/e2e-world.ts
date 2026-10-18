@@ -10,7 +10,7 @@ import { type PiCredentialsEnv, piCredentialsEnv } from "./e2e-credentials.ts"
 import { E2E_MODEL, E2E_PROVIDER, extensionPath, repoRoot, skillsPath } from "./e2e-paths.ts"
 import { RpcPi } from "./e2e-rpc.ts"
 import { configureMemory } from "./e2e-world-setup.ts"
-import type { WorldFolders, WorldOptions } from "./e2e-world-types.ts"
+import type { AgentSettings, WorldFolders, WorldOptions } from "./e2e-world-types.ts"
 import { benchmarkCacheFolder } from "./embedding-benchmark.ts"
 
 export class E2eWorld {
@@ -48,12 +48,9 @@ export class E2eWorld {
 
 export async function e2eWorld(options: WorldOptions): Promise<E2eWorld> {
   const folders = await worldFolders()
-  if ("installed" in options) {
-    await writeFile(
-      join(folders.agentDir, "settings.json"),
-      JSON.stringify({ packages: [repoRoot, await anthropicAuthPackageFolder()] }),
-    )
-  }
+  const settings = await agentSettings(options)
+  if (Object.keys(settings).length > 0)
+    await writeFile(join(folders.agentDir, "settings.json"), JSON.stringify(settings))
   let world: E2eWorld | null = null
   onTestFinished(async ({ task }) => {
     try {
@@ -66,8 +63,15 @@ export async function e2eWorld(options: WorldOptions): Promise<E2eWorld> {
   if (options.modelCache === "shared") await shareModelCache(folders.agentDir)
   if (options.startIn === "subfolder") await mkdir(folders.startFolder)
   world = new E2eWorld(folders, options, await startPi(folders, options))
-  if (options.memory === "configured") await configureMemory(world, options.capture)
+  if (options.memory === "configured") await configureMemory(world, options)
   return world
+}
+
+async function agentSettings(options: WorldOptions): Promise<AgentSettings> {
+  const settings: AgentSettings = {}
+  if ("installed" in options) settings.packages = [repoRoot, await anthropicAuthPackageFolder()]
+  if ("compactsSmallSessions" in options) settings.compaction = { keepRecentTokens: 1 }
+  return settings
 }
 
 async function worldFolders(): Promise<WorldFolders> {

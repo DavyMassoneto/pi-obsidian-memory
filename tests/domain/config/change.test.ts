@@ -15,11 +15,22 @@ describe("changeSetting", () => {
     expect(changed(config, { kind: "agentModel", model })).toEqual({ ...config, memoryAgent: { model } })
   })
 
-  test("changes when capture runs, the embeddings provider, the context budget and each limit", () => {
+  test("changes each capture count and switch, the embeddings provider, the context budget and each limit", () => {
     const config = aConfig()
     const embeddings = { provider: "google", model: "gemini-embedding-001" } as const
 
-    expect(changed(config, { kind: "captureWhen", when: "at-session-end" }).capture.when).toBe("at-session-end")
+    for (const name of ["nudgeInterval", "nudgeToolCalls", "flushMinTurns"] as const) {
+      expect(changed(config, { kind: "captureCount", name, value: 7 }).capture).toEqual({
+        ...config.capture,
+        [name]: 7,
+      })
+    }
+    for (const name of ["reviewEnabled", "flushOnCompact", "flushOnShutdown"] as const) {
+      expect(changed(config, { kind: "captureSwitch", name, value: false }).capture).toEqual({
+        ...config.capture,
+        [name]: false,
+      })
+    }
     expect(changed(config, { kind: "embeddings", embeddings }).embeddings).toEqual(embeddings)
     expect(changed(config, { kind: "budgetChars", value: 500 }).context).toEqual({ budgetChars: 500 })
     for (const name of ["maxBodyChars", "maxStatementChars", "maxNotesPerFolder"] as const) {

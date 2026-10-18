@@ -1,5 +1,6 @@
 import type {
   CaptureAction,
+  CaptureCadenceSettings,
   CaptureInput,
   CaptureObservation,
   ChatModelReference,
@@ -15,17 +16,26 @@ import type { MemoryResolutionRefusal } from "#src/usecases/resolve-memory"
 import type { SucceedMemoryResult } from "#src/usecases/succeed-memory"
 import type { UpdateMemoryResult } from "#src/usecases/update-memory"
 
-export type { CompletionPort, CompletionRequest, TranscriptMessage } from "#src/services"
+export type {
+  CaptureCadenceSettings,
+  CaptureTally,
+  CompletionPort,
+  CompletionRequest,
+  FinishedTurn,
+  FlushMoment,
+  TranscriptMessage,
+  TurnOutcome,
+} from "#src/services"
+export { EMPTY_TALLY, shouldFlush, tallyTurn, tallyUserMessage } from "#src/services"
 
 export interface ExplicitSave {
   vault: MemoryScope
   path: string
 }
 
-export type CaptureTrigger = "after-each-turn" | "on-compaction" | "at-session-end"
+export type CaptureSettingsResult = Succeeded<CaptureCadenceSettings> | MemoryResolutionRefusal
 
 export interface CaptureRun {
-  trigger: CaptureTrigger
   messages: TranscriptMessage[]
   explicitSaves: ExplicitSave[]
 }
