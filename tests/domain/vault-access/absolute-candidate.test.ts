@@ -41,9 +41,10 @@ test.each([
   ["a device volume GUID path", "\\\\.\\Volume{0123-ab}\\Notes", "\\\\.\\Volume{0123-ab}\\Notes"],
   ["a volume GUID path with slashes", "//?/Volume{0123-ab}/Notes", "\\\\?\\Volume{0123-ab}\\Notes"],
   ["a device that is not a drive", "\\\\.\\PhysicalDrive0", "\\\\.\\PhysicalDrive0"],
+  ["a volume GUID root", "\\\\?\\Volume{0123-ab}", "\\\\?\\Volume{0123-ab}"],
   ["a remote admin share", "\\\\srv\\C$\\Users", "\\\\srv\\C$\\Users"],
   ["a named local share", "\\\\localhost\\share\\Notes", "\\\\localhost\\share\\Notes"],
   ["an empty path", "", CWD],
 ])("resolves %s", (_case, raw, expected) => {
-  expect(absoluteCandidate(raw, CWD, HOME)).toBe(expected)
+  expect(absoluteCandidate(raw, CWD, HOME, "win32")).toBe(expected)
 })

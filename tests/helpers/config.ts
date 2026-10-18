@@ -36,6 +36,7 @@ export function configTextWithLimits(limits: LimitsInput): string {
 }
 
 export function volumeGuidRoot(drive: string): string | null {
+  if (process.platform !== "win32") return null
   const output = spawnSync("cmd.exe", ["/c", "mountvol", drive, "/L"], { encoding: "utf8" }).stdout.trim()
   if (/^\\\\\?\\Volume\{[^}]+\}\\$/i.test(output)) return output
   return null

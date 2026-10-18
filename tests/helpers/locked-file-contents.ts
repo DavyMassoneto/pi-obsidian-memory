@@ -1,7 +1,12 @@
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process"
+import { chmod } from "node:fs/promises"
 import { dirname, join } from "node:path"
 
 export async function holdFileContentsLocked(path: string) {
+  if (process.platform !== "win32") {
+    await chmod(path, 0o000)
+    return () => chmod(path, 0o644)
+  }
   const systemRoot = process.env.SystemRoot
   if (typeof systemRoot !== "string") throw new Error("SystemRoot is required for the Windows lock fixture")
   const child = spawn(

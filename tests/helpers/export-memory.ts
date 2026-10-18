@@ -29,6 +29,12 @@ export async function exportFixture() {
 
 export async function unzipArchive(archive: string, into: string): Promise<void> {
   await mkdir(into, { recursive: true })
+  if (process.platform !== "win32") {
+    const extraction = promisify(execFile)("python3", ["-m", "zipfile", "-e", archive, into])
+    extraction.child.stdin?.end()
+    await extraction
+    return
+  }
   if (typeof SYSTEM_ROOT !== "string") throw new Error("SystemRoot is required to find tar.exe")
   await promisify(execFile)(join(SYSTEM_ROOT, "System32", "tar.exe"), ["-xf", archive, "-C", into])
 }

@@ -22,14 +22,14 @@ export async function guardedTargets(written: string[]): Promise<GuardedTargets>
 }
 
 export async function hitsTargets(check: TargetCheck): Promise<boolean> {
-  const { request, cwd, home, targets } = check
-  if (vaultAccessRefusal(request, cwd, home, targets.roots)) return true
+  const { request, cwd, home, platform, targets } = check
+  if (vaultAccessRefusal(request, cwd, home, targets.roots, platform)) return true
   if (request.kind === "command") return false
-  const absolute = absoluteCandidate(request.path, cwd, home)
+  const absolute = absoluteCandidate(request.path, cwd, home, platform)
   const canonical = await canonicalizeAccessPath(absolute)
   if (
     canonical.succeeded &&
-    vaultAccessRefusal({ kind: request.kind, path: canonical.output }, cwd, home, targets.roots)
+    vaultAccessRefusal({ kind: request.kind, path: canonical.output }, cwd, home, targets.roots, platform)
   ) {
     return true
   }
