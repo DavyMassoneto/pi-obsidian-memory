@@ -6,7 +6,7 @@ import { expect, test } from "vitest"
 
 import { VAULT_ACCESS_REFUSAL } from "#src/services"
 import { checkVaultAccess } from "#src/usecases"
-import { guardFixture, useTempFolder, writeRegistrationSnapshot } from "#test-helpers"
+import { guardFixture, testPlatform, useTempFolder, writeRegistrationSnapshot } from "#test-helpers"
 
 const refused = { succeeded: false, reason: "vault-access", problems: [VAULT_ACCESS_REFUSAL] }
 
@@ -56,7 +56,9 @@ test("with no config, an invalid config or an unreadable config nothing is guard
   await writeRegistrationSnapshot(context, "")
   expect(await check(request)).toEqual({ succeeded: true })
   const folder = await useTempFolder()
-  expect(await checkVaultAccess({ configPath: folder, cwd: folder, home: homedir(), request })).toEqual({
+  expect(
+    await checkVaultAccess({ configPath: folder, cwd: folder, home: homedir(), platform: testPlatform(), request }),
+  ).toEqual({
     succeeded: true,
   })
 })

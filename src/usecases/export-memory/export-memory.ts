@@ -3,6 +3,7 @@ import { join, resolve } from "node:path"
 import { zipSync } from "fflate"
 
 import { canonicalizeAccessPath, exportEntries, vaultAccessRefusal, writeNewFile } from "#src/services"
+import type { PathPlatform } from "#src/usecases/check-vault-access"
 import {
   captureMemoryOperationContext,
   type MemoryOperationContext,
@@ -18,7 +19,7 @@ export async function exportMemory(
   input: ExportMemoryRequest,
   callerContext: MemoryOperationContext,
 ): Promise<ExportMemoryResult> {
-  const request = { folder: input.folder, fileName: input.fileName }
+  const request = { folder: input.folder, fileName: input.fileName, platform: input.platform }
   const invalid = checkFileName(request.fileName)
   if (invalid) return { succeeded: false, reason: "invalid", problems: [invalid] }
   const context = captureMemoryOperationContext(callerContext)
@@ -38,7 +39,7 @@ async function exportLeasedMemory(
   const memory = await resolveLeasedMemory(context)
   if (!memory.succeeded) return memory
   const folder = resolve(context.workingFolder, request.folder)
-  if (await isInsideVault(folder, memory.output.protectedRoots)) {
+  if (await isInsideVault(folder, memory.output.protectedRoots, request.platform)) {
     return {
       succeeded: false,
       reason: "inside-vault",
@@ -61,15 +62,15 @@ async function exportLeasedMemory(
   return { succeeded: true, output: { path, files: entries.length, vaults } }
 }
 
-async function isInsideVault(folder: string, vaults: string[]): Promise<boolean> {
-  if (isInside(folder, vaults)) return true
+async function isInsideVault(folder: string, vaults: string[], platform: PathPlatform): Promise<boolean> {
+  if (isInside(folder, vaults, platform)) return true
   const canonical = await canonicalizeAccessPath(folder)
   if (!canonical.succeeded) return false
-  return isInside(canonical.output, vaults)
+  return isInside(canonical.output, vaults, platform)
 }
 
-function isInside(folder: string, vaults: string[]): boolean {
-  return typeof vaultAccessRefusal({ kind: "file", path: folder }, folder, folder, vaults) === "string"
+function isInside(folder: string, vaults: string[], platform: PathPlatform): boolean {
+  return typeof vaultAccessRefusal({ kind: "file", path: folder }, folder, folder, vaults, platform) === "string"
 }
 
 function checkFileName(fileName: string): string | null {
