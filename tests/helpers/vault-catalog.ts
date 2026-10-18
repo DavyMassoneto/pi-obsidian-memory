@@ -1,5 +1,5 @@
 import type { Dirent } from "node:fs"
-import { mkdir, readdir, writeFile } from "node:fs/promises"
+import { mkdir, readdir, stat, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
 
 import {
@@ -8,7 +8,7 @@ import {
   type VaultCatalogEntry,
   type VaultCatalogFailure,
 } from "#src/domain"
-import { type CompleteBlankRequest, inspectVaultFile, type VaultContext } from "#src/services"
+import { type CompleteBlankRequest, catalogStat, inspectVaultFile, type VaultContext } from "#src/services"
 import { aLimits } from "./limits.ts"
 import { aNote } from "./note.ts"
 import { useTempFolder } from "./temp-folder.ts"
@@ -63,4 +63,8 @@ export async function blankFileRequest(vault: VaultContext, path: string, text: 
   const blank = await inspectVaultFile(vault, { path })
   if (!blank.succeeded) throw new Error("Expected raw inspection")
   return { path, expectedHash: blank.output.rawHash, note: aNote(), confirmed: true }
+}
+
+export async function statOfFile(path: string) {
+  return catalogStat(await stat(path))
 }
