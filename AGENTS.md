@@ -39,13 +39,13 @@ pi → usecases → services → domain. Each layer imports only the one right b
   To do in [docs/ROADMAP.md](docs/ROADMAP.md)).
 - `npm test` is offline: pure domain tests, and services and usecases tests on a real temporary disk that simulate
   nothing, with no model and no network.
-- `npm run test:e2e` is real and required before every commit: the real pi in RPC mode in a temporary agent folder,
-  logged in with pi's own login (`pi auth print-*` passes the credentials as environment variables; nothing is copied
-  to disk), temporary vaults, `claude-haiku-5-5` for the conversation, the real Jev and the real local embeddings
-  model. The test acts as the user and answers the dialogs; every result is checked on disk. One scenario loads the
-  package the way the user installs it, which proves pi loads the extension; run it after updating pi. `test:e2e`
-  runs at most 3 test files at once; run one e2e run at a time. The Laya tests, on a real laya-serve on 127.0.0.1,
-  are the separate `e2e-laya` project and run only on request.
+- `npm run test:e2e` is real and runs in CI on windows-latest for every push; a release needs it green. It runs the real
+  pi in RPC mode in a temporary agent folder, talking to OmniRoute through `pi-omniroute-sync` (`OMNIROUTE_URL`,
+  `OMNIROUTE_API_KEY` and `TYPESAFE_API_KEY` come from the environment), with temporary vaults, `cc/claude-haiku-5-5`
+  for the conversation, the real Jev and the real local embeddings model. The test acts as the user and answers the
+  dialogs; every result is checked on disk. One scenario loads the package the way the user installs it, which proves
+  pi loads the extension. It runs one test file at a time, and only one e2e run at a time. The Laya tests, on a real
+  laya-serve on 127.0.0.1, are the separate `e2e-laya` project and run only on request.
 - `npm run test:model` runs the live model tests: the shell-edit cutoff measurement and the `checkShellEdit` checks
   against `jev-latest`, Laya, the local embeddings model and the real model download. Run it when asked or when a
   model changes; measured numbers go to `docs/`.

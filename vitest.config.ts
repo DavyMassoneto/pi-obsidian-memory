@@ -24,7 +24,7 @@ export default defineConfig({
           name: "e2e",
           include: ["tests/e2e/**/*.e2e.test.ts"],
           exclude: ["tests/e2e/**/*.laya.e2e.test.ts"],
-          maxWorkers: 3,
+          fileParallelism: false,
           testTimeout: 600_000,
           hookTimeout: 600_000,
         },
