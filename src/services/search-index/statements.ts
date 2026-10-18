@@ -13,7 +13,6 @@ export function prepareStatements(database: DatabaseSync) {
       JOIN notes ON notes.rowid = notes_fts.rowid
       WHERE notes_fts MATCH :match AND notes.id IS NOT NULL AND (notes.archived = 0 OR :includeArchived = 1)
       ORDER BY score DESC, notes.id
-      LIMIT :limit
     `),
   }
 }

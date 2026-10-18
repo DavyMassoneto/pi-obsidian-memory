@@ -9,7 +9,7 @@ import type { SearchHit, SearchOptions, SearchResult } from "./types.ts"
 
 export function readSearchHits(statement: StatementSync, query: string, options: SearchOptions): SearchResult {
   if (!Value.Check(SearchOptionsSchema, options)) {
-    return { succeeded: false, reason: "invalid", problems: ["search options require a positive integer limit"] }
+    return { succeeded: false, reason: "invalid", problems: ["search options require a boolean includeArchived"] }
   }
 
   const terms = searchTermsOf(query)
@@ -18,7 +18,6 @@ export function readSearchHits(statement: StatementSync, query: string, options:
   const rows = statement.all({
     match: terms.map((term) => `"${term}"`).join(" OR "),
     includeArchived: Number(options.includeArchived),
-    limit: options.limit,
     statementWeight: STATEMENT_WEIGHT,
     bodyWeight: BODY_WEIGHT,
   })

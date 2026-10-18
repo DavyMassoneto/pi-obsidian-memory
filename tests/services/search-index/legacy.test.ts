@@ -7,7 +7,7 @@ test("legacy archived results preserve the supplied folder field", async () => {
   const { index } = await useIndexFile()
   const entry = { ...anEntry(), archived: true }
   expect(putNote(index, entry)).toEqual({ succeeded: true })
-  expect(searchText(index, "pnpm", { limit: 10, includeArchived: true })).toMatchObject({
+  expect(searchText(index, "pnpm", { includeArchived: true })).toMatchObject({
     succeeded: true,
     output: [{ folder: entry.folder }],
   })

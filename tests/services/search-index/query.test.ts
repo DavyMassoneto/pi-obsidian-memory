@@ -1,9 +1,9 @@
 import { expect, test } from "vitest"
 
 import { putNote, searchText } from "#src/services"
-import { anEntry, changeIndexFile, useIndexFile, useTempIndex } from "#test-helpers"
+import { anEntry, changeIndexFile, useIndexFile } from "#test-helpers"
 
-const defaults = { limit: 10, includeArchived: false }
+const defaults = { includeArchived: false }
 
 test.each(["type = 'made-up'", "id = 'invalid'", "statement = X'FF'"])(
   "reports corrupt result data (%s) instead of leaking a row or throwing",
@@ -19,9 +19,3 @@ test.each(["type = 'made-up'", "id = 'invalid'", "statement = X'FF'"])(
     })
   },
 )
-
-test.each([0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])("rejects invalid search limit %s", async (limit) => {
-  const index = await useTempIndex()
-
-  expect(searchText(index, "pnpm", { ...defaults, limit })).toMatchObject({ succeeded: false, reason: "invalid" })
-})

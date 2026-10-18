@@ -3,7 +3,7 @@ import { expect, test } from "vitest"
 import { putNote, searchText } from "#src/services"
 import { anEntry, assertIndexConsistent, holdIndexLock, openedIndex, useIndexFile } from "#test-helpers"
 
-const defaults = { limit: 10, includeArchived: false }
+const defaults = { includeArchived: false }
 
 test("refuses a contended BEGIN without changing the resource or rolling back another connection", async () => {
   const { index, path } = await useIndexFile()

@@ -82,7 +82,6 @@ export const ReadActionSchema = Type.Union([
       action: Type.Literal("search"),
       vault: VaultSchema,
       query: TextSchema,
-      limit: Type.Integer({ minimum: 1 }),
     },
     { additionalProperties: false },
   ),

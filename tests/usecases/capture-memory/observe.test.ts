@@ -101,25 +101,38 @@ test("a get that fails is an unavailable observation for the model", async () =>
   })
 })
 
-test("a search gives candidates with vault, path, id and statement, at most the limit", async () => {
+test("a search gives candidates with vault, path, id and statement", async () => {
   const { context, vault } = await captureFixture()
   await putCatalogFile(vault, "a/Use pnpm.md", noteWithId(1, "pnpm here", []))
   await putCatalogFile(vault, "b/Prefer pnpm.md", noteWithId(2, "pnpm there", []))
 
-  const all = await observeSearch("global", "pnpm", 5, context)
-  const one = await observeSearch("global", "pnpm", 1, context)
+  const all = await observeSearch("global", "pnpm", context)
 
   expect(all).toMatchObject({ kind: "search", query: "pnpm", candidates: [expect.anything(), expect.anything()] })
   expect(all).toMatchObject({
     candidates: [{ vault: "global", id: expect.stringMatching(/^[0-9A-Z]{26}$/) }, expect.anything()],
   })
-  expect(one).toMatchObject({ kind: "search", candidates: [expect.anything()] })
+})
+
+test("a search gives every hit, however many", async () => {
+  const { context, vault } = await captureFixture()
+  const numbers = Array.from({ length: 30 }, (_, index) => index + 1)
+  for (const number of numbers) {
+    await putCatalogFile(vault, `many/Use pnpm ${number}.md`, noteWithId(number, `pnpm ${number}`, []))
+  }
+
+  const result = await observeSearch("global", "pnpm", context)
+
+  if (result.kind !== "search") throw new Error(`expected a search observation, got ${result.kind}`)
+  expect(result.candidates.map((candidate) => candidate.path).toSorted()).toEqual(
+    numbers.map((number) => `many/Use pnpm ${number}.md`).toSorted(),
+  )
 })
 
 test("a search of a vault that is not registered is unavailable", async () => {
   const { context, root } = await captureFixture()
 
-  expect(await observeSearch("project", "pnpm", 5, { ...context, workingFolder: root })).toMatchObject({
+  expect(await observeSearch("project", "pnpm", { ...context, workingFolder: root })).toMatchObject({
     kind: "unavailable",
     operation: "search",
   })

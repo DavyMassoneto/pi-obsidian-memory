@@ -11,11 +11,11 @@ test("closes idempotently and refuses operations on a closed resource", async ()
   expect(closeIndex(index)).toEqual({ succeeded: true })
   expect(putNote(index, anEntry())).toMatchObject({ succeeded: false, reason: "closed" })
   expect(removeNote(index, anEntry().id)).toMatchObject({ succeeded: false, reason: "closed" })
-  expect(searchText(index, "pnpm", { limit: 10, includeArchived: false })).toMatchObject({
+  expect(searchText(index, "pnpm", { includeArchived: false })).toMatchObject({
     succeeded: false,
     reason: "closed",
   })
-  expect(searchText(index, "", { limit: 10, includeArchived: false })).toMatchObject({
+  expect(searchText(index, "", { includeArchived: false })).toMatchObject({
     succeeded: false,
     reason: "closed",
   })

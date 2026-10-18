@@ -55,7 +55,7 @@ test("keeps the notes after the index is closed and opened again", async () => {
   const again = openIndex(path)
   expect(again).toMatchObject({ succeeded: true, rebuilt: false })
   if (!again.succeeded) throw new Error("reopen failed")
-  const hits = searchText(again.output, "pnpm", { limit: 10, includeArchived: false })
+  const hits = searchText(again.output, "pnpm", { includeArchived: false })
   again.output.close()
 
   expect(statementsOf(hits)).toEqual([anEntry().statement])
@@ -76,7 +76,5 @@ test("refuses FTS content divergence without replacing the database and releases
 
   changeIndexFile(path, "INSERT INTO notes_fts(notes_fts) VALUES ('rebuild')")
   const repaired = openedIndex(path)
-  expect(statementsOf(searchText(repaired, "pnpm", { limit: 10, includeArchived: false }))).toEqual([
-    anEntry().statement,
-  ])
+  expect(statementsOf(searchText(repaired, "pnpm", { includeArchived: false }))).toEqual([anEntry().statement])
 })

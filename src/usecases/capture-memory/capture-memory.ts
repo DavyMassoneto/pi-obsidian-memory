@@ -95,7 +95,7 @@ async function act(action: CaptureAction, observations: CaptureObservation[], to
   const { context } = tools
   if (action.action === "finish") return "stop"
   if (action.action === "search") {
-    observations.push(await observeSearch(action.vault, action.query, action.limit, context))
+    observations.push(await observeSearch(action.vault, action.query, context))
   } else if (action.action === "get") {
     observations.push(await observeGet({ vault: action.vault, path: action.path }, context))
   } else if (action.action === "list") {
