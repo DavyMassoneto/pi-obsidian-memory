@@ -9,11 +9,11 @@ description: Map of pi-obsidian-memory — areas and owners, interfaces between 
 
 | Owner | Paths (src + mirrored tests/) | Purpose |
 | --- | --- | --- |
-| nucleo | `src/domain`, `src/shared`, `tests/domain` | Pure rules (note, config incl. `disclosures.ts`, `vault-access/`, names, vault-path, capture, lifecycle, catalogs, `*/dont-forget.ts`, `vault-diagnosis`, `vault-assets`); generic result types |
+| nucleo | `src/domain`, `src/shared`, `tests/domain` | Pure rules (note, config incl. `disclosures.ts`, `legacy-capture.ts`, `vault-access/`, names, vault-path, `path-platform/`, capture (`tally.ts`), lifecycle, catalogs, `*/dont-forget.ts`, `vault-diagnosis`, `vault-assets`); generic result types |
 | cofre | `src/services/vault`, `tests/services/vault` | Notes on disk: read/write/archive/relocate/list, bootstrap, catalog, folder indexes, `inspect-folder.ts`; seams `domain-rules.ts`, `folder-listing.ts`, `catalog/dont-forget.ts` |
 | indice | `src/services/{search-index,embeddings}` + tests | SQLite search index, reconcile/recovery, embedding providers; seams `search-index/{inspection,dont-forget,ranking}.ts` |
-| ponte | `src/services/{config,llm,decision-model,clock,id}`, `src/services/index.ts` + tests | Config I/O (`config/vault-access.ts` seam), LLM (`llm/domain-rules.ts` seam, `llm/limits.ts`), decision model (`laya.ts`, `jev.ts`), clock, ids |
-| maestro | `src/usecases` (incl. `registration/`, `check-vault-access/`, `load-dont-forget/`, `memory-change/`, `semantic*/`, `capture-memory/`, `relevant-memory/`, `operation-context/` (`limitOperation`), `diagnose-memory/`, `export-memory/`, `search-memory/`, `archive-memory/`, `succeed-memory/`, `update-memory/`, `complete-blank-memory/`), `src/pi` (incl. `registrar.ts`, `vault-guard/`, `memory-{setup,init,search,get,update,archive,succeed,doctor,export}`, `memory-block`, `semantic`, `change-report`, `registration-report`, `memory-session`, `session-start`, `context`, `capture`, `relevant-memory`), `tests/usecases`, `tests/pi` | Operation flows; pi tools/events/commands, vault guard, extension entry (`src/pi/extension.ts`) |
+| ponte | `src/services/{config,llm,decision-model,clock,id,capture-cadence}`, `src/services/index.ts` + tests | Config I/O (`config/vault-access.ts` seam), LLM (`llm/domain-rules.ts` seam, `llm/limits.ts`), decision model (`laya.ts`, `jev.ts`), clock, ids, capture cadence (`capture-cadence/domain-rules.ts`) |
+| maestro | `src/usecases` (incl. `registration/`, `check-vault-access/`, `load-dont-forget/`, `memory-change/`, `semantic*/`, `capture-memory/`, `relevant-memory/`, `operation-context/` (`limitOperation`), `diagnose-memory/`, `export-memory/`, `search-memory/`, `archive-memory/`, `succeed-memory/`, `update-memory/`, `complete-blank-memory/`), `src/pi` (incl. `registrar.ts`, `vault-guard/`, `shell-edit-guard/`, `paths/platform.ts`, `capture/cadence.ts`, `memory-{setup,init,search,get,update,archive,succeed,doctor,export}`, `memory-block`, `semantic`, `change-report`, `registration-report`, `memory-session`, `session-start`, `context`, `capture`, `relevant-memory`), `tests/usecases`, `tests/pi` | Operation flows; pi tools/events/commands, vault guard, shell-edit guard, extension entry (`src/pi/extension.ts`) |
 | cartografo | `.pi/skills/project-map/SKILL.md` | Keeps this map |
 
 Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`, `tsconfig.json`, `vitest.config.ts`,
@@ -27,7 +27,7 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 - ponte: `llm.ts`, `decision-model.ts`, `laya-script.ts`
 - maestro: `check-vault-access.ts`, `diagnose-memory.ts`, `export-memory.ts`, `memory.ts`, `memory-change.ts`, `memory-read.ts`, `operation-context.ts`, `registration-usecases.ts`, `search-memory.ts`, `semantic-memory.ts`, `session.ts`, `synchronize-memory.ts`, `pi.ts`, `pi-context.ts`, `pi-memory.ts`, `pi-prompt.ts`, `pi-registration.ts`, `pi-responses.ts`, `pi-smoke.ts`, `capture-memory.ts`, `capture-search.ts`, `relevant-fixtures.ts`, `relevant-memory.ts`, `relevant-pi.ts`, `relevant-texts.ts`, `session-entries.ts`, `pi-text.ts`, `index.ts` (barrel)
 - Owners are by topic (verify the first lines of a helper before editing it). `tests/helpers/memory.test.ts` is a test file in helpers, not exported by the barrel.
-- Test projects (`vitest.config.ts`, `maxWorkers: 8`): `unit` (`tests/**/*.test.ts` minus `*.smoke.test.ts`, `*.model.test.ts`); `pi` (`*.smoke.test.ts`, 30 s); `model` (`*.model.test.ts`, 600 s, `npm run test:model`, real models, only when asked).
+- Test projects (`vitest.config.ts`, `maxWorkers: 8`): `unit` (`tests/**/*.test.ts`, minus `*.model.test.ts` and `tests/e2e/**`, 30 s); `model` (`*.model.test.ts`, 600 s, `npm run test:model`, real models, only when asked); `e2e` (`tests/e2e/**/*.e2e.test.ts` minus Laya, `maxWorkers: 3`, Jev only); `e2e-laya` (`*.laya.e2e.test.ts`, `fileParallelism: false`, Laya, only on request).
 - Shared helpers (`note`, `temp-folder`, `settings`, `config`, `index`) are used across areas: others request additions via the orchestrator.
 
 ## Interfaces
@@ -36,6 +36,7 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
   no layer (`biome/layer-*.grit`).
 - Seam: usecases reach domain rules only through `#src/services` re-exports, never `#src/domain` directly. Re-export-only seam files (one `export ... from "#src/domain"` each): `services/vault/{domain-rules,folder-listing}.ts`, `services/vault/catalog/dont-forget.ts`, `services/search-index/{inspection,dont-forget,ranking}.ts`, `services/llm/domain-rules.ts`, `services/config/vault-access.ts`.
 - Vault guard (`src/pi/vault-guard`, maestro): `accessRequestsOf` maps read/write/edit/grep/find/ls/bash/powershell to requests (file, config-write, tree, listing, command); each goes to `checkVaultAccess`. A `config-protected` refusal blocks with `CONFIG_PROTECTED_REFUSAL`; other refusals block with their problems.
+- Shell-edit guard (`src/pi/shell-edit-guard`, maestro): `onShellToolCall`, registered after the vault guard; calls `checkShellEdit` (usecases).
 - Aliases (`package.json` `imports`): `#src/<layer-or-folder>` → `./src/<x>/index.ts` (`#src/domain`, `#src/services`,
   `#src/usecases`, `#src/shared`); `#test-helpers` → `tests/helpers/index.ts`.
 - Barrels: every `index.ts` only has `export * from "./x.ts"` / `"./folder/index.ts"` (`biome/index-reexports-only.grit`).
@@ -56,12 +57,14 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 
 ## Build / test / run
 
-- `npm test` (vitest project `unit`: `tests/**/*.test.ts` minus `*.smoke.test.ts` and `*.model.test.ts`); `npm run test:pi` (project `pi`, real pi
-  smoke, 30 s timeout; only when the orchestrator asks); `npm run test:model` (project `model`, 600 s, only when asked); `npm run lint` (`biome check .`); `npm run typecheck`
-  (`tsc --noEmit`); `npm run format` (`biome check --write .`).
+- `npm test` (vitest project `unit`); `npm run test:model` (project `model`, 600 s, only when asked);
+  e2e: `npx vitest run --project e2e` (only when asked; one at a time on the machine);
+  `npm run lint` (`biome check .`); `npm run typecheck` (`tsc --noEmit`); `npm run format` (`biome check --write .`).
 - One file: `npx vitest run --project unit tests/services/vault/save.test.ts` (add `-t "name"` for one test).
-- Conventions: `tests/` mirrors `src/`; real disk in temp folders (`useTempFolder`), never a mocked filesystem or the user's
-  vaults/config; mock only pi (fake pi), the LLM (`vi.mock`), the clock (`vi.setSystemTime`). TDD red → green → refactor.
+- Conventions: `tests/` mirrors `src/`; real disk in temp folders (`useTempFolder`), never the user's vaults/config. No mocks,
+  fakes, `vi.fn`, or simulation in any test (AGENTS.md Tests section); unprovable parts are recorded as gaps. TDD red → green → refactor.
+- CI (`.github/workflows/ci.yml`): lint, typecheck, `npm test` on windows-latest, ubuntu-latest, macos-latest, Node 22.19.0.
+  Release (`release.yml`): semantic-release on push to main, npm publish via trusted publishing (`.releaserc.json`).
 
 ## Pitfalls — Biome rules (`biome/*.grit`)
 
@@ -84,7 +87,13 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 - Folder maintenance must re-check every fully enumerated physical folder on each sync (REVISAO-DE-CODIGO.md, findings 1-2).
 - `src/domain/config/problems.ts` was removed; do not import it.
 - Old incomplete configs are invalid at runtime, never silently migrated; /memory-setup repairs them.
-- Every roadmap milestone ends with `npm test`, lint, typecheck and `test:pi` passing on Windows, and updates the README Status (ROADMAP intro).
+- Every roadmap milestone ends with `npm test`, lint and typecheck passing on all CI OSes, and updates the README Status (ROADMAP intro).
+- Only one e2e run may happen at a time on the machine (shared pi/Laya state); never start a second in parallel.
+- Platform is passed down, never read inside the domain: `hostPathPlatform` (`src/pi/paths/platform.ts`) picks the `PathPlatform`
+  (`win32 | darwin | linux`, `src/domain/path-platform/`) and the pi layer passes it to domain code. Case is ignored on win32 and
+  darwin, kept on linux. POSIX namespace paths (`/proc/self/fd`, `/dev/fd`, `/proc/<pid>/root`) always refuse.
+- Capture follows the pi-hermes-memory cadence (`src/pi/capture/cadence.ts`, `src/domain/capture/tally.ts`,
+  `src/services/capture-cadence/`). A legacy `capture.when` is upgraded when read (`src/domain/config/legacy-capture.ts`).
 
 ## Pitfalls — working in parallel
 
@@ -99,9 +108,8 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 
 ## Pitfalls — runtime
 
-- pi supports Node >= 22.19 and loads the extension through jiti; the real `pi` here runs on Node 22 (first `node`
-  on PATH). Subpath aliases must be valid there: use `#src/<layer>`, never `#/`. `npm run test:pi` must pass on the
-  default PATH node.
+- pi supports Node >= 22.19 and loads the extension through jiti; CI pins Node 22.19.0. Subpath aliases must be valid
+  there: use `#src/<layer>`, never `#/`.
 - pi 1.3.0: `before_agent_start` is a union on `messageType`; `"user"` has `prompt`, `"custom"` starts have no prompt. Guard on `messageType` (`src/pi/relevant-memory/runtime.ts`).
 - TypeBox error texts must be built from error data, not from `messages`.
 - Lockfile was regenerated with Node 24 npm (after pi 1.3.0 bump).
@@ -111,7 +119,7 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 
 1. Targeted tests written first (red), then passing (green); `npm run lint` and `npm run typecheck` clean.
 2. `revisor` returns APPROVED on the diff; CHANGES REQUIRED goes back to the same owner.
-3. Before marking a ROADMAP item done: full `npm test` passes; at milestone end also `npm run test:pi`.
+3. Before marking a ROADMAP item done: full `npm test` passes on the affected platforms; e2e runs only when asked.
 
 ## Docs
 
