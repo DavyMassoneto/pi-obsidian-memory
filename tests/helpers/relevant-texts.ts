@@ -26,12 +26,15 @@ const RELEVANT_CONSTANTS = [
 export function relevantTexts(): string[] {
   const constants = RELEVANT_CONSTANTS
   const edited = { ...ALPHA, body: "Edited body." }
+  const gone = invalidatedBlock(ALPHA, { kind: "gone" })
+  const unusable = invalidatedBlock(ALPHA, { kind: "unusable", problem: "tools/Alpha.md has no body" })
   return [
     ...constants,
     loadedNoteBlock(ALPHA),
     replacementBlock(ALPHA, edited),
-    invalidatedBlock(ALPHA),
-    [usecases.RELEVANT_INTRO, loadedNoteBlock(ALPHA), replacementBlock(ALPHA, edited), invalidatedBlock(ALPHA)].join(
+    gone,
+    unusable,
+    [usecases.RELEVANT_INTRO, loadedNoteBlock(ALPHA), replacementBlock(ALPHA, edited), gone].join(
       usecases.BLOCK_SEPARATOR,
     ),
   ]
