@@ -27,7 +27,7 @@ test.each([
   ["a trailing dot, which Windows ignores", "dir D:\\Notes."],
   ["the extended-length prefix", "type \\\\?\\D:\\Notes\\a.md"],
 ])("finds the vault written as %s", (_case, command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [VAULT])).toBe(VAULT)
+  expect(commandMentionsVault(command, CWD, HOME, [VAULT], "win32")).toBe(VAULT)
 })
 
 test.each([
@@ -38,7 +38,7 @@ test.each([
   ["no path", "echo hello"],
   ["a drive letter inside a longer word", "cat xD:\\Notes\\a.md"],
 ])("does not find the vault in %s", (_case, command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [VAULT])).toBeNull()
+  expect(commandMentionsVault(command, CWD, HOME, [VAULT], "win32")).toBeNull()
 })
 
 test.each([
@@ -51,7 +51,7 @@ test.each([
   ["$env:USERPROFILE in quotes", 'Get-Content "$env:USERPROFILE\\Documents\\Vault\\a.md"'],
   ["the absolute path", "cat C:\\Users\\ana\\Documents\\Vault\\a.md"],
 ])("finds a vault under the home folder written with %s", (_case, command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [HOME_VAULT])).toBe(HOME_VAULT)
+  expect(commandMentionsVault(command, CWD, HOME, [HOME_VAULT], "win32")).toBe(HOME_VAULT)
 })
 
 test.each([
@@ -59,7 +59,7 @@ test.each([
   ["$HOME with a name that continues", "cat $HOME/Documents/Vaults/a.md"],
   ["a home path that is not the vault", "cat ~/Documents/a.md"],
 ])("does not find the home vault in %s", (_case, command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [HOME_VAULT])).toBeNull()
+  expect(commandMentionsVault(command, CWD, HOME, [HOME_VAULT], "win32")).toBeNull()
 })
 
 test.each([
@@ -71,7 +71,7 @@ test.each([
   ["a quoted path", 'cat "memory/a.md"'],
   ["the folder alone", "ls memory"],
 ])("finds a vault under the working folder written as %s", (_case, command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [CWD_VAULT])).toBe(CWD_VAULT)
+  expect(commandMentionsVault(command, CWD, HOME, [CWD_VAULT], "win32")).toBe(CWD_VAULT)
 })
 
 test.each([
@@ -80,7 +80,7 @@ test.each([
   ["a longer word", "cat mymemory/a.md"],
   ["an absolute path elsewhere", "cat D:\\other\\memory\\a.md"],
 ])("does not find the working folder vault in %s", (_case, command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [CWD_VAULT])).toBeNull()
+  expect(commandMentionsVault(command, CWD, HOME, [CWD_VAULT], "win32")).toBeNull()
 })
 
 test.each([
@@ -91,7 +91,7 @@ test.each([
   ["a name that follows a dot", "cat file.memory/a.md"],
   ["a folder name with a longer prefix", "cat old-memory/a.md"],
 ])("does not find the working folder vault in %s", (_case, command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [CWD_VAULT])).toBeNull()
+  expect(commandMentionsVault(command, CWD, HOME, [CWD_VAULT], "win32")).toBeNull()
 })
 
 test.each([
@@ -101,7 +101,7 @@ test.each([
   ["a dot-slash folder", "ls ./memory"],
   ["a pipe before the path", "echo x|cat memory/a.md"],
 ])("finds the working folder vault after %s", (_case, command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [CWD_VAULT])).toBe(CWD_VAULT)
+  expect(commandMentionsVault(command, CWD, HOME, [CWD_VAULT], "win32")).toBe(CWD_VAULT)
 })
 
 test.each([
@@ -109,7 +109,7 @@ test.each([
   ["braces", "cat \u0024{HOME}/Documents/Vault/a.md"],
   ["%HOMEDRIVE%%HOMEPATH%", "type %HOMEDRIVE%%HOMEPATH%\\Documents\\Vault\\a.md"],
 ])("finds a vault under the home folder written with %s", (_case, command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [HOME_VAULT])).toBe(HOME_VAULT)
+  expect(commandMentionsVault(command, CWD, HOME, [HOME_VAULT], "win32")).toBe(HOME_VAULT)
 })
 
 test.each([
@@ -117,14 +117,14 @@ test.each([
   ["a WSL drive path", "cat /mnt/d/notes/a.md"],
   ["a Cygwin drive path", "cat /cygdrive/d/Notes"],
 ])("finds the vault written as %s", (_case, command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [VAULT])).toBe(VAULT)
+  expect(commandMentionsVault(command, CWD, HOME, [VAULT], "win32")).toBe(VAULT)
 })
 
 test.each([
   ["a Git Bash path with a longer name", "cat /d/Notes2/a.md"],
   ["a path on another drive", "cat /e/Notes/a.md"],
 ])("does not find the vault in %s", (_case, command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [VAULT])).toBeNull()
+  expect(commandMentionsVault(command, CWD, HOME, [VAULT], "win32")).toBeNull()
 })
 
 test.each([
@@ -132,22 +132,22 @@ test.each([
   ["the working folder is inside the vault", "D:\\Notes\\tools\\deep", "D:\\Notes"],
   ["the working folder is inside the vault in another case", "d:/notes/tools", "D:\\Notes"],
 ])("refuses every command when %s", (_case, cwd, vault) => {
-  expect(commandMentionsVault("echo hello", cwd, HOME, [vault])).toBe(vault)
+  expect(commandMentionsVault("echo hello", cwd, HOME, [vault], "win32")).toBe(vault)
 })
 
 test("does not refuse every command when the working folder is beside the vault", () => {
-  expect(commandMentionsVault("echo hello", "D:\\Notes2", HOME, ["D:\\Notes"])).toBeNull()
+  expect(commandMentionsVault("echo hello", "D:\\Notes2", HOME, ["D:\\Notes"], "win32")).toBeNull()
 })
 
 test.each([
   ["backslashes", "D:\\work\\sub", "cat ..\\Notes\\a.md"],
   ["slashes from a deeper folder", "D:\\work\\project", "cat ../Notes/a.md"],
 ])("finds a vault beside the working folder written with dot-dot and %s", (_case, cwd, command) => {
-  expect(commandMentionsVault(command, cwd, HOME, ["D:\\work\\Notes"])).toBe("D:\\work\\Notes")
+  expect(commandMentionsVault(command, cwd, HOME, ["D:\\work\\Notes"], "win32")).toBe("D:\\work\\Notes")
 })
 
 test("does not match a dot-dot path that leads to a different folder", () => {
-  expect(commandMentionsVault("cat ../../Notes/a.md", CWD, HOME, ["D:\\work\\Notes"])).toBeNull()
+  expect(commandMentionsVault("cat ../../Notes/a.md", CWD, HOME, ["D:\\work\\Notes"], "win32")).toBeNull()
 })
 
 test.each([
@@ -156,11 +156,13 @@ test.each([
   ["quotes and another case", 'cat "\\\\SRV\\share\\team vault\\a.md"'],
   ["the extended-length UNC prefix", "type \\\\?\\UNC\\srv\\share\\Team Vault\\a.md"],
 ])("finds a UNC vault written with %s", (_case, command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [UNC_VAULT])).toBe(UNC_VAULT)
+  expect(commandMentionsVault(command, CWD, HOME, [UNC_VAULT], "win32")).toBe(UNC_VAULT)
 })
 
 test("does not find a UNC vault in a longer folder name", () => {
-  expect(commandMentionsVault("type \\\\srv\\share\\Team Vault2\\a.md", CWD, HOME, [UNC_VAULT])).toBeNull()
+  const command = "type \\\\srv\\share\\Team Vault2\\a.md"
+
+  expect(commandMentionsVault(command, CWD, HOME, [UNC_VAULT], "win32")).toBeNull()
 })
 
 test.each([
@@ -169,11 +171,11 @@ test.each([
   ['echo "the vault mem is old"'],
   ["echo vault mem"],
 ])("does not find a relative vault name used as a word in %s", (command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [SPACED_VAULT])).toBeNull()
+  expect(commandMentionsVault(command, CWD, HOME, [SPACED_VAULT], "win32")).toBeNull()
 })
 
 test("does not find a home vault name used as a word inside a quoted sentence", () => {
-  expect(commandMentionsVault('git commit -m "memory fix"', HOME, HOME, [HOME_MEMORY])).toBeNull()
+  expect(commandMentionsVault('git commit -m "memory fix"', HOME, HOME, [HOME_MEMORY], "win32")).toBeNull()
 })
 
 test.each([
@@ -184,7 +186,7 @@ test.each([
   ['cat "./vault mem"'],
   ['cd "vault mem" && cat x.md'],
 ])("finds a spaced relative vault in %s", (command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [SPACED_VAULT])).toBe(SPACED_VAULT)
+  expect(commandMentionsVault(command, CWD, HOME, [SPACED_VAULT], "win32")).toBe(SPACED_VAULT)
 })
 
 test.each([
@@ -197,17 +199,19 @@ test.each([
   ["ls memory."],
   ["tool --dir=memory"],
 ])("finds the working folder vault as a whole argument in %s", (command) => {
-  expect(commandMentionsVault(command, CWD, HOME, [CWD_VAULT])).toBe(CWD_VAULT)
+  expect(commandMentionsVault(command, CWD, HOME, [CWD_VAULT], "win32")).toBe(CWD_VAULT)
 })
 
 test("finds a quoted vault path with spaces", () => {
-  expect(commandMentionsVault('cat "D:\\My Notes\\a b.md"', CWD, HOME, ["D:\\My Notes"])).toBe("D:\\My Notes")
+  const command = 'cat "D:\\My Notes\\a b.md"'
+
+  expect(commandMentionsVault(command, CWD, HOME, ["D:\\My Notes"], "win32")).toBe("D:\\My Notes")
 })
 
 test("returns the vault that is mentioned among several", () => {
-  expect(commandMentionsVault("cat D:\\Beta\\a.md", CWD, HOME, ["D:\\Alpha", "D:\\Beta"])).toBe("D:\\Beta")
+  expect(commandMentionsVault("cat D:\\Beta\\a.md", CWD, HOME, ["D:\\Alpha", "D:\\Beta"], "win32")).toBe("D:\\Beta")
 })
 
 test("finds nothing when there are no vaults", () => {
-  expect(commandMentionsVault("cat D:\\Notes\\a.md", CWD, HOME, [])).toBeNull()
+  expect(commandMentionsVault("cat D:\\Notes\\a.md", CWD, HOME, [], "win32")).toBeNull()
 })

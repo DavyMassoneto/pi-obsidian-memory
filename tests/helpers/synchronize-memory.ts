@@ -18,46 +18,19 @@ import { putCatalogFile } from "./vault-catalog.ts"
 export async function denySynchronizationRead(path: string) {
   const systemRoot = process.env.SystemRoot
   if (typeof systemRoot !== "string") throw new Error("SystemRoot required for Windows read denial")
-  const executable = join(systemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe")
-  const command = promisify(execFile)
-  const options = {
-    cwd: dirname(path),
-    env: { SystemRoot: systemRoot, MEMORY_TEST_PATH: path },
-    windowsHide: true,
-    timeout: 15000,
+  const { USERDOMAIN, USERNAME } = process.env
+  if (typeof USERDOMAIN !== "string" || typeof USERNAME !== "string") {
+    throw new Error("USERDOMAIN and USERNAME required for Windows read denial")
   }
-  const args = ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command"]
-  const before = await command(
-    executable,
-    [...args, "$ErrorActionPreference='Stop'; [Console]::Write((Get-Acl -LiteralPath $env:MEMORY_TEST_PATH).Sddl)"],
-    options,
-  )
+  const user = `${USERDOMAIN}\\${USERNAME}`
+  const executable = join(systemRoot, "System32", "icacls.exe")
+  const command = promisify(execFile)
+  const options = { cwd: dirname(path), env: { SystemRoot: systemRoot }, windowsHide: true }
   const restore = async () => {
-    const restored = await command(
-      executable,
-      [
-        ...args,
-        "$ErrorActionPreference='Stop'; $acl=Get-Acl -LiteralPath $env:MEMORY_TEST_PATH; " +
-          "$acl.SetSecurityDescriptorSddlForm($env:MEMORY_TEST_SDDL); " +
-          "Set-Acl -LiteralPath $env:MEMORY_TEST_PATH -AclObject $acl; " +
-          "[Console]::Write((Get-Acl -LiteralPath $env:MEMORY_TEST_PATH).Sddl)",
-      ],
-      { ...options, env: { ...options.env, MEMORY_TEST_SDDL: before.stdout } },
-    )
-    if (restored.stdout !== before.stdout) throw new Error("Temporary fixture ACL was not restored exactly")
+    await command(executable, [path, "/remove:d", user], options)
   }
   try {
-    await command(
-      executable,
-      [
-        ...args,
-        "$ErrorActionPreference='Stop'; $acl=Get-Acl -LiteralPath $env:MEMORY_TEST_PATH; " +
-          "$sid=[Security.Principal.WindowsIdentity]::GetCurrent().User; " +
-          "$rule=New-Object Security.AccessControl.FileSystemAccessRule($sid, 'ReadData', 'Deny'); " +
-          "$acl.AddAccessRule($rule); Set-Acl -LiteralPath $env:MEMORY_TEST_PATH -AclObject $acl",
-      ],
-      options,
-    )
+    await command(executable, [path, "/deny", `${user}:(RD)`], options)
   } catch (error) {
     await restore()
     throw error

@@ -6,6 +6,7 @@ import { expect, test } from "vitest"
 import { guardedTargets } from "#src/usecases"
 import { adminShareForm, devicePathForm, guardFixture, linkFolder, targetHits, volumeGuidForm } from "#test-helpers"
 
+const onWindows = process.platform === "win32"
 const missingVolume = String.raw`\\?\Volume{00000000-0000-0000-0000-000000000000}\Users\nobody\Note.md`
 
 test("the targets hold each written path and its real location, and the identity of those that exist", async () => {
@@ -61,32 +62,41 @@ test("a path that cannot be canonicalized is decided by its written form", async
   expect(await targetHits(targets, cwd, { kind: "file", path: join(root, "bad\0name.md") })).toBe(false)
 })
 
-test("the machine's own admin share and a device path reach a target, and a path elsewhere stays outside", async () => {
-  const { vault, root, cwd } = await guardFixture()
-  const targets = await guardedTargets([vault.path])
-  const note = join(vault.path, "tools", "Note.md")
+test.runIf(onWindows)(
+  "the machine's own admin share and a device path reach a target, and a path elsewhere stays outside",
+  async () => {
+    const { vault, root, cwd } = await guardFixture()
+    const targets = await guardedTargets([vault.path])
+    const note = join(vault.path, "tools", "Note.md")
 
-  expect(await targetHits(targets, cwd, { kind: "file", path: adminShareForm(note) })).toBe(true)
-  expect(await targetHits(targets, cwd, { kind: "tree", path: adminShareForm(vault.path) })).toBe(true)
-  expect(await targetHits(targets, cwd, { kind: "file", path: devicePathForm(note) })).toBe(true)
-  expect(await targetHits(targets, cwd, { kind: "file", path: adminShareForm(join(root, "elsewhere.txt")) })).toBe(
-    false,
-  )
-})
+    expect(await targetHits(targets, cwd, { kind: "file", path: adminShareForm(note) })).toBe(true)
+    expect(await targetHits(targets, cwd, { kind: "tree", path: adminShareForm(vault.path) })).toBe(true)
+    expect(await targetHits(targets, cwd, { kind: "file", path: devicePathForm(note) })).toBe(true)
+    expect(await targetHits(targets, cwd, { kind: "file", path: adminShareForm(join(root, "elsewhere.txt")) })).toBe(
+      false,
+    )
+  },
+)
 
-test("a folder is reached through a junction or an admin share as well as written out", async () => {
+test("a folder is reached through a junction as well as written out", async () => {
   const { dataFolder, root, cwd } = await guardFixture()
   const alias = join(root, "machine-alias")
   await linkFolder(dataFolder, alias)
   const targets = await guardedTargets([dataFolder])
 
   expect(await targetHits(targets, cwd, { kind: "file", path: join(alias, "config.json") })).toBe(true)
+})
+
+test.runIf(onWindows)("a folder is reached through an admin share as well as written out", async () => {
+  const { dataFolder, cwd } = await guardFixture()
+  const targets = await guardedTargets([dataFolder])
+
   expect(await targetHits(targets, cwd, { kind: "file", path: adminShareForm(join(dataFolder, "config.json")) })).toBe(
     true,
   )
 })
 
-test("a path through the real volume GUID reaches a target", async () => {
+test.runIf(onWindows)("a path through the real volume GUID reaches a target", async () => {
   const { vault, dataFolder, cwd } = await guardFixture()
   const targets = await guardedTargets([vault.path, dataFolder])
 
@@ -96,13 +106,16 @@ test("a path through the real volume GUID reaches a target", async () => {
   )
 })
 
-test("a namespace path whose identity cannot be read is hit, since it cannot be shown to be outside", async () => {
-  const { vault, cwd } = await guardFixture()
-  const targets = await guardedTargets([vault.path])
+test.runIf(onWindows)(
+  "a namespace path whose identity cannot be read is hit, since it cannot be shown to be outside",
+  async () => {
+    const { vault, cwd } = await guardFixture()
+    const targets = await guardedTargets([vault.path])
 
-  expect(await targetHits(targets, cwd, { kind: "file", path: missingVolume })).toBe(true)
-  expect(await targetHits(targets, cwd, { kind: "tree", path: missingVolume })).toBe(true)
-})
+    expect(await targetHits(targets, cwd, { kind: "file", path: missingVolume })).toBe(true)
+    expect(await targetHits(targets, cwd, { kind: "tree", path: missingVolume })).toBe(true)
+  },
+)
 
 test("a missing plain path outside the targets is not hit", async () => {
   const { vault, root, cwd } = await guardFixture()

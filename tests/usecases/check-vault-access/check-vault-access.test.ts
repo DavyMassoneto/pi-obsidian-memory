@@ -6,7 +6,7 @@ import { expect, test } from "vitest"
 
 import { VAULT_ACCESS_REFUSAL } from "#src/services"
 import { checkVaultAccess } from "#src/usecases"
-import { guardFixture, useTempFolder, writeRegistrationSnapshot } from "#test-helpers"
+import { guardFixture, testPlatform, useTempFolder, writeRegistrationSnapshot } from "#test-helpers"
 
 const refused = { succeeded: false, reason: "vault-access", problems: [VAULT_ACCESS_REFUSAL] }
 
@@ -56,7 +56,9 @@ test("with no config, an invalid config or an unreadable config nothing is guard
   await writeRegistrationSnapshot(context, "")
   expect(await check(request)).toEqual({ succeeded: true })
   const folder = await useTempFolder()
-  expect(await checkVaultAccess({ configPath: folder, cwd: folder, home: homedir(), request })).toEqual({
+  expect(
+    await checkVaultAccess({ configPath: folder, cwd: folder, home: homedir(), platform: testPlatform(), request }),
+  ).toEqual({
     succeeded: true,
   })
 })
@@ -104,10 +106,25 @@ test("with no config registered a raw device path is not guarded", async () => {
   expect(await check({ kind: "file", path: String.raw`\\.\PhysicalDrive0` })).toEqual({ succeeded: true })
 })
 
-test("a raw device or a namespace path that cannot be read is refused through the guard", async () => {
-  const { check } = await guardFixture()
+test.runIf(process.platform === "win32")(
+  "a raw device or a namespace path that cannot be read is refused through the guard",
+  async () => {
+    const { check } = await guardFixture()
 
-  for (const kind of ["file", "tree", "listing"] as const) {
-    expect(await check({ kind, path: String.raw`\\.\PhysicalDrive0` })).toEqual(refused)
-  }
-})
+    for (const kind of ["file", "tree", "listing"] as const) {
+      expect(await check({ kind, path: String.raw`\\.\PhysicalDrive0` })).toEqual(refused)
+    }
+  },
+)
+
+test.runIf(process.platform !== "win32")(
+  "a process-relative path under /proc/self/fd or /dev/fd is refused through the guard",
+  async () => {
+    const { check } = await guardFixture()
+
+    for (const kind of ["file", "tree", "listing"] as const) {
+      expect(await check({ kind, path: "/proc/self/fd/3" })).toEqual(refused)
+      expect(await check({ kind, path: "/dev/fd/0" })).toEqual(refused)
+    }
+  },
+)
