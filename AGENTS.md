@@ -1,6 +1,7 @@
 # AGENTS.md
 
-A pi extension that stores the agent's long-term memory in Obsidian vaults. Product and decisions: [docs/VISION.md](docs/VISION.md).
+A pi extension that stores the agent's long-term memory in Obsidian vaults. Product and decisions:
+[docs/VISION.md](docs/VISION.md).
 
 Git worktrees always go in `.worktrees/` (ignored by git).
 
@@ -33,17 +34,18 @@ pi → usecases → services → domain. Each layer imports only the one right b
   with all tests passing). For a bug fix, the failing test reproduces the bug.
 - No simulated tests: nothing fakes pi, the LLM, Jev, Laya, embeddings or the clock (no fake contexts, no `vi.fn`,
   `vi.mock` or `vi.spyOn`, no fake timers or system time). The simulated tests that still exist are deleted area by
-  area, each only after that area's end-to-end scenario passes, and only the tests that simulate. Waiting for the
-  user's decision: the remote embeddings tests (`openai`, `google`, `http`) keep their local HTTP server until a real
-  key exists.
+  area, each only after that area's end-to-end scenario passes, and only the tests that simulate. The remote
+  embeddings providers (`openai`, `google`, `http`) get real tests once the source of a real key is decided (see the
+  To do in [docs/ROADMAP.md](docs/ROADMAP.md)).
 - `npm test` is offline: pure domain tests, and services and usecases tests on a real temporary disk that simulate
   nothing, with no model and no network.
 - `npm run test:e2e` is real and required before every commit: the real pi in RPC mode in a temporary agent folder,
   logged in with pi's own login (`pi auth print-*` passes the credentials as environment variables; nothing is copied
-  to disk), temporary vaults, `claude-haiku-5-5` for the conversation, the real Jev, a real laya-serve on 127.0.0.1
-  where Laya is tested, and the real local embeddings model. The test acts as the user and answers the dialogs; every
-  result is checked on disk. One scenario loads the package the way the user installs it, which proves pi loads the
-  extension; run it after updating pi.
+  to disk), temporary vaults, `claude-haiku-5-5` for the conversation, the real Jev and the real local embeddings
+  model. The test acts as the user and answers the dialogs; every result is checked on disk. One scenario loads the
+  package the way the user installs it, which proves pi loads the extension; run it after updating pi. `test:e2e`
+  runs at most 3 test files at once; run one e2e run at a time. The Laya tests, on a real laya-serve on 127.0.0.1,
+  are the separate `e2e-laya` project and run only on request.
 - `npm run test:model` runs the live model tests: the shell-edit cutoff measurement and the `checkShellEdit` checks
   against `jev-latest`, Laya, the local embeddings model and the real model download. Run it when asked or when a
   model changes; measured numbers go to `docs/`.
