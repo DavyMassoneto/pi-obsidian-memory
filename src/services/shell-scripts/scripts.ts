@@ -15,14 +15,13 @@ export async function readExecutedScripts(cwd: string, files: ExecutedFile[]): P
     else if ("problems" in read) return read
     else missing.push(file.path)
   }
-  const names = files.flatMap((file) => {
-    if (file.kind === "package-script") return [file.name]
-    return []
-  })
-  const packaged = await readPackageScripts(cwd, names)
-  if (!packaged.succeeded) return packaged
-  return {
-    succeeded: true,
-    output: { scripts: [...scripts, ...packaged.output.scripts], missing: [...missing, ...packaged.output.missing] },
+  const packages = files.filter((file) => file.kind === "package-script")
+  for (const prefix of new Set(packages.map((file) => file.prefix))) {
+    const names = packages.filter((file) => file.prefix === prefix).map((file) => file.name)
+    const packaged = await readPackageScripts(cwd, prefix, names)
+    if (!packaged.succeeded) return packaged
+    scripts.push(...packaged.output.scripts)
+    missing.push(...packaged.output.missing)
   }
+  return { succeeded: true, output: { scripts, missing } }
 }

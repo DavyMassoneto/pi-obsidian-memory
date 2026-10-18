@@ -118,6 +118,7 @@ export interface RecordTest {
 export interface RpcTurn {
   disposition: Disposition
   toolStarts: ToolStart[]
+  toolStartLines: string[]
   toolEnds: ToolEnd[]
   notifications: Notify[]
   statuses: StatusUpdate[]
@@ -148,6 +149,7 @@ export function turnOf(lines: string[], disposition: Disposition): RpcTurn {
   return {
     disposition,
     toolStarts: recordsOf(ToolStartSchema, lines),
+    toolStartLines: lines.filter((line) => isRecord(ToolStartSchema, line)),
     toolEnds: recordsOf(ToolEndSchema, lines),
     notifications: recordsOf(NotifySchema, lines),
     statuses: recordsOf(StatusSchema, lines),

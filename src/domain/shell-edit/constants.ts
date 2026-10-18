@@ -1,3 +1,4 @@
+import { NPM_VALUE_FLAGS } from "#src/domain/tool-flags"
 import type { ShellEditQuestionName, ShellEditQuestions, ShellEditScores } from "./types.ts"
 
 export const SCRIPT_EXTENSION = /\.(?:sh|ps1)$/i
@@ -31,13 +32,17 @@ export const CONFIG_FILE_FLAGS = ["-c", "--config"]
 
 export const RUN_SUBCOMMAND = "run"
 
-export const POWERSHELL_PROGRAMS = ["pwsh", "powershell"]
+export const NO_FLAGS: string[] = []
 
-export const POWERSHELL_FILE_FLAGS = ["-file", "-f"]
+export const PACKAGE_MANAGERS = new Map([
+  ["npm", NPM_VALUE_FLAGS],
+  ["pnpm", NO_FLAGS],
+  ["yarn", NO_FLAGS],
+])
 
-export const PACKAGE_MANAGERS = ["npm", "pnpm", "yarn"]
+export const BUN_SOURCE_FILE = /[\\/]|\.(?:[cm]?[jt]sx?|sh|ps1)$/i
 
-export const PRELOAD_FLAGS = ["-r", "--require", "--import"]
+export const PRELOAD_FLAGS = ["-r", "--require", "--import", "--preload", "--loader", "--experimental-loader"]
 
 export const PACKAGE_RUN_COMMANDS = ["run", "run-script"]
 

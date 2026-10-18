@@ -4,7 +4,7 @@ import { expect } from "vitest"
 
 import { VAULT_ACCESS_REFUSAL } from "#src/domain"
 import { onlyProject, rewriteConfig } from "./e2e-config.ts"
-import { toolText } from "./e2e-records.ts"
+import { type RpcTurn, toolText } from "./e2e-records.ts"
 import { callInNewSession, type StartedCall, startedCalls } from "./e2e-tool-calls.ts"
 import { type E2eWorld, e2eWorld } from "./e2e-world.ts"
 import type { WorldOptions } from "./e2e-world-types.ts"
@@ -40,17 +40,21 @@ export async function worldWithProjectVaultAsWorkingFolder(options: WorldOptions
   return world
 }
 
+function startsLabel(call: StartedCall, turn: RpcTurn): string {
+  return [JSON.stringify(call), ...turn.toolStartLines].join("\n")
+}
+
 export async function expectVaultRefusal(world: E2eWorld, call: StartedCall): Promise<void> {
-  const label = JSON.stringify(call)
   const { turn, end } = await callInNewSession(world, call)
+  const label = startsLabel(call, turn)
   expect.soft(startedCalls(turn), label).toEqual([call])
   expect.soft(end.isError, label).toBe(true)
   expect.soft(toolText(end), label).toBe(VAULT_ACCESS_REFUSAL)
 }
 
 export async function runAllowed(world: E2eWorld, call: StartedCall): Promise<string> {
-  const label = JSON.stringify(call)
   const { turn, end } = await callInNewSession(world, call)
+  const label = startsLabel(call, turn)
   expect.soft(startedCalls(turn), label).toEqual([call])
   expect.soft(end.isError, label).toBe(false)
   expect.soft(toolText(end), label).not.toContain(VAULT_ACCESS_REFUSAL)

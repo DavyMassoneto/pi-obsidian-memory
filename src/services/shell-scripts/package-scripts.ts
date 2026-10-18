@@ -21,6 +21,16 @@ async function nearestPackageJson(cwd: string): Promise<string> {
   }
 }
 
+async function packageJsonFor(cwd: string, prefix: string): Promise<string> {
+  if (prefix === "") return nearestPackageJson(cwd)
+  return join(resolve(cwd, prefix), "package.json")
+}
+
+function scriptLabel(prefix: string, name: string): string {
+  if (prefix === "") return PACKAGE_SCRIPT_PREFIX + name
+  return `${prefix}/${PACKAGE_SCRIPT_PREFIX}${name}`
+}
+
 function scriptLines(path: string, text: string): ScriptLinesResult {
   try {
     const parsed = JSON.parse(text)
@@ -34,12 +44,12 @@ function scriptLines(path: string, text: string): ScriptLinesResult {
   }
 }
 
-export async function readPackageScripts(cwd: string, names: string[]): Promise<ExecutedScriptsResult> {
-  const label = (name: string) => PACKAGE_SCRIPT_PREFIX + name
+export async function readPackageScripts(cwd: string, prefix: string, names: string[]): Promise<ExecutedScriptsResult> {
+  const label = (name: string) => scriptLabel(prefix, name)
   const labels = names.map(label)
   if (names.length === 0) return { succeeded: true, output: { scripts: [], missing: [] } }
   try {
-    const path = await nearestPackageJson(cwd)
+    const path = await packageJsonFor(cwd, prefix)
     if (path === "") return { succeeded: true, output: { scripts: [], missing: labels } }
     const read = await readScriptText(path)
     if (!read.succeeded) {

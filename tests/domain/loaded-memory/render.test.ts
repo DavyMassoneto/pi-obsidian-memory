@@ -31,10 +31,26 @@ describe("replacementBlock", () => {
 })
 
 describe("invalidatedBlock", () => {
-  it("names the vault and path, says the earlier copy is no longer valid and does not repeat the body", () => {
-    const block = invalidatedBlock(alpha)
+  it("for a note that is gone names the vault and path, says it was archived or deleted and does not repeat the body", () => {
+    const block = invalidatedBlock(alpha, { kind: "gone" })
     expect(block).toBe(
       'The earlier copy of "global · tools/Alpha.md" loaded above is no longer valid: the note was archived or deleted. Do not rely on it.',
+    )
+    expect(block).not.toContain(alpha.body)
+  })
+
+  it("for a note that is still there says it cannot be used and names the problem", () => {
+    const block = invalidatedBlock(alpha, { kind: "unusable", problem: "tools/Alpha.md has no body" })
+    expect(block).toBe(
+      'The earlier copy of "global · tools/Alpha.md" loaded above is no longer valid: the note is still there but cannot be used (tools/Alpha.md has no body). Do not rely on it.',
+    )
+    expect(block).not.toContain(alpha.body)
+  })
+
+  it("for a note that cannot be read names the problem without saying the note exists", () => {
+    const block = invalidatedBlock(alpha, { kind: "unreadable", problem: "extra: not a known field" })
+    expect(block).toBe(
+      'The earlier copy of "global · tools/Alpha.md" loaded above is no longer valid: the note cannot be read (extra: not a known field). Do not rely on it.',
     )
     expect(block).not.toContain(alpha.body)
   })

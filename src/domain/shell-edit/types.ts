@@ -6,9 +6,24 @@ export interface ScriptFile {
 export interface PackageScript {
   kind: "package-script"
   name: string
+  prefix: string
 }
 
 export type ExecutedFile = ScriptFile | PackageScript
+
+export type MainFile = (path: string, folder: string) => ExecutedFile
+
+export interface FolderRead {
+  folder: string
+  width: number
+}
+
+export interface InterpreterRules {
+  inlineCode: string[]
+  withValue: string[]
+  folderFlags: string[]
+  mainFile: MainFile
+}
 
 export type ShellEditQuestionName =
   | "redirection"

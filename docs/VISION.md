@@ -31,7 +31,7 @@ history.
     The user edits the vault freely in Obsidian. Missing: a Jev guard that refuses shell commands which create or
     change a file's contents, or create a hardlink. Accepted by the user (2026-10-17): reading a vault through a path
     the shell builds indirectly, tools of other extensions, and foreground subagents (they load no extensions).
-14. **Platform.** pi only for now. Windows first.
+14. **Platform.** pi only for now. Windows, macOS and Linux.
 
 ## Not in scope
 

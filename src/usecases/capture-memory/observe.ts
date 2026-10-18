@@ -1,23 +1,43 @@
 import type { MemoryObservation, ReadObservation } from "#src/services"
+import type { Failed } from "#src/shared"
 import { BLANK_NOTE_TYPES } from "#src/usecases/complete-blank-memory"
 import { getMemory } from "#src/usecases/get-memory"
 import { listMemory } from "#src/usecases/list-memory"
 import type { MemoryOperationContext } from "#src/usecases/operation-context"
 import { searchMemory } from "#src/usecases/search-memory"
 import { DONT_FORGET_MARK, NO_DETAIL, NOTE_LINE, SOURCE_CALL, SUBFOLDER_LINE } from "./constants.ts"
-import type { ExplicitSave, ListedNote } from "./types.ts"
+import type { ExplicitSave, ListedNote, UnreadableNote } from "./types.ts"
 
 export async function observeRead(
   save: ExplicitSave,
   context: MemoryOperationContext,
 ): Promise<ReadObservation | string> {
+  const read = await observeLoadedNote(save, context)
+  if (read.kind === "unreadable") return read.detail
+  return read
+}
+
+export async function observeLoadedNote(
+  save: ExplicitSave,
+  context: MemoryOperationContext,
+): Promise<ReadObservation | UnreadableNote> {
   const result = await getMemory({ vault: save.vault, path: save.path, sourceCallId: SOURCE_CALL }, context)
-  if (!result.succeeded) return detailOf(result.problems)
-  if (result.output.kind !== "note") return `${save.path} is a folder, not a note`
+  if (!result.succeeded) {
+    return { kind: "unreadable", existence: existenceAfterFailure(result), detail: detailOf(result.problems) }
+  }
+  if (result.output.kind !== "note") {
+    return { kind: "unreadable", existence: "present", detail: `${save.path} is a folder, not a note` }
+  }
   const { file } = result.output
   const { frontmatter, parsed } = file.analysis
-  if (!frontmatter) return `${save.path} has invalid frontmatter and cannot be changed`
-  if (parsed.body.length === 0) return `${save.path} has no body`
+  if (!frontmatter) {
+    return {
+      kind: "unreadable",
+      existence: "present",
+      detail: `${save.path} has invalid frontmatter and cannot be changed`,
+    }
+  }
+  if (parsed.body.length === 0) return { kind: "unreadable", existence: "present", detail: `${save.path} has no body` }
   return {
     kind: "read",
     vault: save.vault,
@@ -29,6 +49,13 @@ export async function observeRead(
     type: frontmatter.type,
     dontForget: "dontForget" in frontmatter,
   }
+}
+
+function existenceAfterFailure(failure: Failed): UnreadableNote["existence"] {
+  if (!("reason" in failure)) return "unknown"
+  if (failure.reason === "not-found" || failure.reason === "not-directory") return "gone"
+  if (failure.reason === "unclosed-frontmatter") return "present"
+  return "unknown"
 }
 
 export async function observeGet(save: ExplicitSave, context: MemoryOperationContext): Promise<MemoryObservation> {

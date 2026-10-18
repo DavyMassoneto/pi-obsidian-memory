@@ -1,4 +1,4 @@
-import { type LoadedNote, loadedNoteBlock } from "#src/domain"
+import { INVALID_GONE, INVALID_UNUSABLE, type LoadedNote, loadedNoteBlock } from "#src/domain"
 import {
   BLOCK_INTRO,
   BLOCK_SEPARATOR,
@@ -41,6 +41,14 @@ export function loadedNote(vault: LoadedNote["vault"], path: string, body: strin
 
 export function noteBlock(vault: LoadedNote["vault"], path: string, body: string): string {
   return loadedNoteBlock(loadedNote(vault, path, body))
+}
+
+export function goneBlock(vault: LoadedNote["vault"], path: string): string {
+  return `The earlier copy of "${vault} · ${path}" loaded above is no longer valid: ${INVALID_GONE}. Do not rely on it.`
+}
+
+export function unusableBlock(vault: LoadedNote["vault"], path: string, problem: string): string {
+  return `The earlier copy of "${vault} · ${path}" loaded above is no longer valid: ${INVALID_UNUSABLE} (${problem}). Do not rely on it.`
 }
 
 export const DEPLOY_BLOCK = noteBlock("project", DEPLOY.path, DEPLOY.body)
