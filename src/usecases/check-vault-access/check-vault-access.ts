@@ -5,7 +5,7 @@ import type { CheckVaultAccessInput, CheckVaultAccessResult } from "./types.ts"
 
 export async function checkVaultAccess(input: CheckVaultAccessInput): Promise<CheckVaultAccessResult> {
   const { request, cwd, home, platform } = input
-  const config = await readConfig(input.configPath)
+  const config = await readConfig(input.configPath, platform)
   if (!config.succeeded) return allowed()
   const written = [config.output.global.vault, ...config.output.projects.map((project) => project.vault)]
   if (request.kind !== "command" && isRawDevicePath(request.path, cwd, platform)) return refusal()

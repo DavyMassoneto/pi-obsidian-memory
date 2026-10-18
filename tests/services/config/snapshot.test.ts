@@ -19,7 +19,7 @@ test("preservation: schema-invalid snapshot retains contradictory resources and 
       "embeddings.model: must be one of text-embedding-3-small",
       "decisionModel: must have required properties provider",
     ]
-    expect(await readConfigSnapshot({ path: fixture.path })).toMatchObject({
+    expect(await readConfigSnapshot({ path: fixture.path, platform: fixture.platform })).toMatchObject({
       succeeded: true,
       output: {
         state: "present",
@@ -43,15 +43,17 @@ test("preservation: schema-invalid snapshot retains contradictory resources and 
 test("snapshot distinguishes absence, unreadable destinations and invalid content with exact byte hash", async () => {
   const fixture = await registrationFixture()
   try {
-    expect(await readConfigSnapshot({ path: fixture.path })).toEqual({
+    expect(await readConfigSnapshot({ path: fixture.path, platform: fixture.platform })).toEqual({
       succeeded: true,
       output: { state: "missing", hash: null },
     })
-    expect(await readConfigSnapshot({ path: fixture.root })).toMatchObject({ succeeded: false })
+    expect(await readConfigSnapshot({ path: fixture.root, platform: fixture.platform })).toMatchObject({
+      succeeded: false,
+    })
     await mkdir(dirname(fixture.path))
     const text = "{ invalid\r\n"
     await writeFile(fixture.path, text)
-    expect(await readConfigSnapshot({ path: fixture.path })).toMatchObject({
+    expect(await readConfigSnapshot({ path: fixture.path, platform: fixture.platform })).toMatchObject({
       succeeded: true,
       output: {
         state: "present",
@@ -62,7 +64,7 @@ test("snapshot distinguishes absence, unreadable destinations and invalid conten
       },
     })
     await writeFile(fixture.path, JSON.stringify(fixture.config))
-    expect(await readConfigSnapshot({ path: fixture.path })).toMatchObject({
+    expect(await readConfigSnapshot({ path: fixture.path, platform: fixture.platform })).toMatchObject({
       succeeded: true,
       output: {
         state: "present",

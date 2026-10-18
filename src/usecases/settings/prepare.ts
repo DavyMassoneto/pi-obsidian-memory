@@ -8,7 +8,7 @@ export async function prepareMemorySettings(callerContext: RegistrationContext):
   const lease = await context.session.acquire(context.stamp, context.signal)
   if (!lease) return { succeeded: false, reason: "unreadable", problems: ["settings session admission refused"] }
   try {
-    const snapshot = await readConfigSnapshot({ path: context.configPath })
+    const snapshot = await readConfigSnapshot({ path: context.configPath, platform: context.platform })
     if (!snapshot.succeeded) return { succeeded: false, reason: "unreadable", problems: snapshot.problems }
     if (snapshot.output.state === "missing") {
       return { succeeded: false, reason: "not-configured", problems: ["memory is not configured"] }

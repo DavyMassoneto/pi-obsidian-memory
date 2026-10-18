@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { expect, test } from "vitest"
 
 import { readConfig } from "#src/services"
-import { customizedSettings, memoryConfigAt, registrationFixture, useTempFolder } from "#test-helpers"
+import { customizedSettings, memoryConfigAt, registrationFixture, testPlatform, useTempFolder } from "#test-helpers"
 
 test("old config is refused without migration or partial settings while its exact bytes survive", async () => {
   const folder = await useTempFolder()
@@ -15,7 +15,7 @@ test("old config is refused without migration or partial settings while its exac
     limits: { maxBodyChars: 1000, maxStatementChars: 100 },
   })
   await writeFile(path, text)
-  const result = await readConfig(path)
+  const result = await readConfig(path, testPlatform())
   expect(result).toMatchObject({ succeeded: false, reason: "invalid-config" })
   expect(result).not.toHaveProperty("output")
   if (result.succeeded) throw new Error("old config accepted")
@@ -31,7 +31,7 @@ test("reading configured remote choices neither defaults nor requires credential
   const path = join(folder, "config.json")
   const text = JSON.stringify(config)
   await writeFile(path, text)
-  expect(await readConfig(path)).toEqual({ succeeded: true, output: config })
+  expect(await readConfig(path, testPlatform())).toEqual({ succeeded: true, output: config })
   expect(await readFile(path, "utf8")).toBe(text)
 })
 
@@ -40,7 +40,7 @@ test("reads a valid config file", async () => {
   try {
     await mkdir(join(fixture.root, "machine"))
     await writeFile(fixture.path, JSON.stringify(fixture.config, null, 2))
-    expect(await readConfig(fixture.path)).toEqual({ succeeded: true, output: fixture.config })
+    expect(await readConfig(fixture.path, fixture.platform)).toEqual({ succeeded: true, output: fixture.config })
   } finally {
     await rm(fixture.root, { recursive: true, force: true })
   }
@@ -49,7 +49,7 @@ test("reads a valid config file", async () => {
 test("tells the memory is not configured when the file does not exist", async () => {
   const folder = await useTempFolder()
 
-  expect(await readConfig(join(folder, "config.json"))).toEqual({
+  expect(await readConfig(join(folder, "config.json"), testPlatform())).toEqual({
     succeeded: false,
     reason: "not-configured",
     configPath: join(folder, "config.json"),
@@ -66,7 +66,10 @@ test("refuses hand-edited junction vault overlaps without changing config or vau
     await mkdir(join(fixture.root, "machine"))
     const text = JSON.stringify(fixture.config)
     await writeFile(fixture.path, text)
-    expect(await readConfig(fixture.path)).toMatchObject({ succeeded: false, reason: "invalid-config" })
+    expect(await readConfig(fixture.path, fixture.platform)).toMatchObject({
+      succeeded: false,
+      reason: "invalid-config",
+    })
     expect(await readFile(fixture.path, "utf8")).toBe(text)
   } finally {
     await rm(fixture.root, { recursive: true, force: true })
@@ -78,7 +81,7 @@ test("refuses an invalid file with every problem", async () => {
   const path = join(folder, "config.json")
   await writeFile(path, JSON.stringify({ ...memoryConfigAt(folder), theme: "dark" }))
 
-  expect(await readConfig(path)).toEqual({
+  expect(await readConfig(path, testPlatform())).toEqual({
     succeeded: false,
     reason: "invalid-config",
     configPath: path,
@@ -91,7 +94,7 @@ test("reports an unreadable config path with its cause instead of throwing", asy
   const path = join(folder, "config.json")
   await mkdir(path)
 
-  expect(await readConfig(path)).toEqual({
+  expect(await readConfig(path, testPlatform())).toEqual({
     succeeded: false,
     reason: "unreadable",
     configPath: path,

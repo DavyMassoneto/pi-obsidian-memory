@@ -49,6 +49,7 @@ export async function publishRegistration(
     config: write.config,
     configPath: write.path,
     indexPath: write.indexPath,
+    platform: context.platform,
   })
   const interrupted = registrationInterruption(context)
   if (interrupted) return registrationValidationFailure(interrupted)
@@ -57,7 +58,7 @@ export async function publishRegistration(
   const stale = registrationInterruption(context)
   if (stale) return registrationValidationFailure(stale)
   if (!snapshot.succeeded) return registrationValidationFailure(snapshot)
-  const target = targetVault(write.config, scope, context.workingFolder)
+  const target = targetVault(write.config, scope, context.workingFolder, context.platform)
   if (!target.succeeded) return registrationValidationFailure(target)
   const assets = await ensureVaultAssets({ ...target.output, limits: write.config.limits })
   if (!assets.succeeded) return registrationFailure("bootstrap", assets, assets)

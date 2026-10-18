@@ -1,4 +1,11 @@
-import type { ConfigRefusal, MemoryConfig, MemoryScope, NamedVaultContext, NoProjectRefusal } from "#src/services"
+import type {
+  ConfigRefusal,
+  MemoryConfig,
+  MemoryScope,
+  NamedVaultContext,
+  NoProjectRefusal,
+  PathPlatform,
+} from "#src/services"
 import type { Failed, Succeeded } from "#src/shared"
 import type { MemoryOperationRefusal } from "#src/usecases/operation-context"
 
@@ -15,6 +22,7 @@ export interface ResolvedMemory {
   protectedRoots: string[]
   workingFolder: string
   indexPath: string
+  platform: PathPlatform
 }
 
 export interface MemoryConfigurationUnavailable extends Failed {

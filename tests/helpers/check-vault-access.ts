@@ -2,22 +2,11 @@ import { execFileSync } from "node:child_process"
 import { homedir, hostname } from "node:os"
 import { dirname, parse } from "node:path"
 
-import {
-  checkVaultAccess,
-  type GuardedTargets,
-  hitsTargets,
-  type PathPlatform,
-  type VaultAccessRequest,
-} from "#src/usecases"
+import { checkVaultAccess, type GuardedTargets, hitsTargets, type VaultAccessRequest } from "#src/usecases"
 import { searchFixture } from "./search-memory.ts"
+import { testPlatform } from "./test-platform.ts"
 
 const SEPARATOR = "\\"
-
-export function testPlatform(): PathPlatform {
-  if (process.platform === "win32") return "win32"
-  if (process.platform === "darwin") return "darwin"
-  return "linux"
-}
 
 export async function guardFixture() {
   const fixture = await searchFixture()

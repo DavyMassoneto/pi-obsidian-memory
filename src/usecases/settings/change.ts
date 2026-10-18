@@ -53,7 +53,7 @@ async function currentConfig(
   expectedHash: string,
   context: RegistrationContext,
 ): Promise<Succeeded<MemoryConfig> | SettingsChangeFailure> {
-  const snapshot = await readConfigSnapshot({ path: context.configPath })
+  const snapshot = await readConfigSnapshot({ path: context.configPath, platform: context.platform })
   if (!snapshot.succeeded) return refused(snapshot.problems)
   if (snapshot.output.state === "missing") return refused(["memory is not configured"])
   if (snapshot.output.hash !== expectedHash) {
@@ -89,9 +89,10 @@ async function prepareProjectVault(
     config,
     configPath: context.configPath,
     indexPath: context.indexPath,
+    platform: context.platform,
   })
   if (!canonical.succeeded) return refused(canonical.problems)
-  const target = targetVault(config, "project", project.folder)
+  const target = targetVault(config, "project", project.folder, context.platform)
   if (!target.succeeded) return refused(target.problems)
   const assets = await ensureVaultAssets({ ...target.output, limits: config.limits })
   if (!assets.succeeded) return refused(assets.problems)
@@ -110,7 +111,7 @@ async function applyChange(
   if (!("output" in current)) return current
   const change = await resolvedVault(request.change, context)
   if (isFailure(change)) return change
-  const next = changeSetting(current.output, change)
+  const next = changeSetting(current.output, change, context.platform)
   if (!next.succeeded) return refused(next.problems)
   const stopped = interruption(context)
   if (stopped) return stopped
@@ -118,6 +119,7 @@ async function applyChange(
   if (!assets.succeeded) return assets
   const written = await writeConfig({
     path: context.configPath,
+    platform: context.platform,
     indexPath: context.indexPath,
     config: next.output,
     expectedHash: request.expectedHash,

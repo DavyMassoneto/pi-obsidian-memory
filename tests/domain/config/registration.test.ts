@@ -1,7 +1,15 @@
 import { expect, test } from "vitest"
 
-import { inspectConfigForRepair, parseConfig, prepareSetupDefaults, proposeInit, proposeSetup } from "#src/domain"
-import { aConfig, customizedSettings, productSettings } from "#test-helpers"
+import { prepareSetupDefaults } from "#src/domain"
+import {
+  aConfig,
+  customizedSettings,
+  inspectConfigForRepair,
+  parseConfig,
+  productSettings,
+  proposeInit,
+  proposeSetup,
+} from "#test-helpers"
 
 test("complete settings survive strict parsing, repair, setup and init without replacement by defaults", () => {
   const config = { ...aConfig(), ...customizedSettings() }

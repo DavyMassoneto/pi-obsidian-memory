@@ -1,3 +1,4 @@
+import type { PathPlatform } from "#src/domain/path-platform"
 import { inspectConfig } from "./inspection.ts"
 import { observedConfigFields } from "./observations.ts"
 import { parseConfigInspection } from "./parse.ts"
@@ -5,13 +6,13 @@ import { repairDecision, repairEmbeddings } from "./resources.ts"
 import { prepareSetupDefaults } from "./settings.ts"
 import type { ConfigAssessment, ConfigInspection, ConfigRepairDraft, ParseConfigResult } from "./types.ts"
 
-export function inspectConfigForRepair(text: string): ConfigRepairDraft {
-  return assessConfig(text).repair
+export function inspectConfigForRepair(text: string, platform: PathPlatform): ConfigRepairDraft {
+  return assessConfig(text, platform).repair
 }
 
-export function assessConfig(text: string): ConfigAssessment {
+export function assessConfig(text: string, platform: PathPlatform): ConfigAssessment {
   const inspection = inspectConfig(text)
-  const lexicalParse = parseConfigInspection(inspection)
+  const lexicalParse = parseConfigInspection(inspection, platform)
   return { lexicalParse, repair: repairConfigInspection(inspection, lexicalParse) }
 }
 

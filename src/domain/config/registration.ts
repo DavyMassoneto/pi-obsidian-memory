@@ -1,8 +1,9 @@
+import type { PathPlatform } from "#src/domain/path-platform"
 import { parseConfig } from "./parse.ts"
 import { resolveProject } from "./paths.ts"
 import type { InitProposal, ParseConfigResult, SetupProposal } from "./types.ts"
 
-export function proposeSetup(request: SetupProposal): ParseConfigResult {
+export function proposeSetup(request: SetupProposal, platform: PathPlatform): ParseConfigResult {
   const config = {
     global: { vault: request.vault },
     projects: request.config.projects,
@@ -13,11 +14,11 @@ export function proposeSetup(request: SetupProposal): ParseConfigResult {
     embeddings: request.config.embeddings,
     decisionModel: request.config.decisionModel,
   }
-  return parseConfig(JSON.stringify(config))
+  return parseConfig(JSON.stringify(config), platform)
 }
 
-export function proposeInit(request: InitProposal): ParseConfigResult {
-  const existing = resolveProject(request.config, request.folder)
+export function proposeInit(request: InitProposal, platform: PathPlatform): ParseConfigResult {
+  const existing = resolveProject(request.config, request.folder, platform)
   let folder = request.folder
   if (existing.succeeded) {
     folder = existing.output.folder
@@ -29,5 +30,5 @@ export function proposeInit(request: InitProposal): ParseConfigResult {
   } else {
     projects.push(replacement)
   }
-  return parseConfig(JSON.stringify({ ...request.config, projects }))
+  return parseConfig(JSON.stringify({ ...request.config, projects }), platform)
 }

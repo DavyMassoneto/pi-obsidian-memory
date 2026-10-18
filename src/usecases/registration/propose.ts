@@ -13,7 +13,7 @@ export async function proposeMemorySetup(
   if (!vault.succeeded) return vault
   const refusal = await vaultFolderRefusal(vault.output, request.mode)
   if (refusal) return refusal
-  const proposal = proposeSetup({ config: request.draft, vault: vault.output })
+  const proposal = proposeSetup({ config: request.draft, vault: vault.output }, context.platform)
   if (!proposal.succeeded) return proposal
   return { succeeded: true, output: { config: proposal.output, disclosures: setupDisclosures(proposal.output) } }
 }

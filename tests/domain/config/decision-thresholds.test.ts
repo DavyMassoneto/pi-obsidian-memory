@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 
-import { inspectConfigForRepair, parseConfig, readConfigFields } from "#src/domain"
-import { aConfig, configTextWithDecisionModel } from "#test-helpers"
+import { readConfigFields } from "#src/domain"
+import { aConfig, configTextWithDecisionModel, inspectConfigForRepair, parseConfig } from "#test-helpers"
 
 const jev = { provider: "typesafe", model: "jev-latest" }
 

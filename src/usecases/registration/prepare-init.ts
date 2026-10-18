@@ -5,7 +5,7 @@ import type { MemoryContext } from "#src/usecases/add-memory"
 import type { InitPreparation, InitPreparationResult, ProjectNameResult } from "./types.ts"
 
 export async function prepareProjectInit(context: MemoryContext): Promise<InitPreparationResult> {
-  const snapshot = await readConfigSnapshot({ path: context.configPath })
+  const snapshot = await readConfigSnapshot({ path: context.configPath, platform: context.platform })
   if (!snapshot.succeeded) {
     return { succeeded: false, reason: "unreadable", configPath: context.configPath, problems: snapshot.problems }
   }
@@ -21,7 +21,7 @@ export async function prepareProjectInit(context: MemoryContext): Promise<InitPr
   if (!parsed.succeeded) {
     return { succeeded: false, reason: "invalid-config", configPath: context.configPath, problems: parsed.problems }
   }
-  const registered = resolveProject(parsed.output, context.workingFolder)
+  const registered = resolveProject(parsed.output, context.workingFolder, context.platform)
   let existing: ProjectEntry | null = null
   let defaultName = basename(context.workingFolder)
   if (registered.succeeded) {

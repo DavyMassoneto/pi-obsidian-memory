@@ -23,7 +23,7 @@ test("publishes only once, replaces only matching bytes and never touches old va
       reason: "conflict",
     })
     expect(await readFile(fixture.path)).toEqual(bytes)
-    const proposal = proposeSetup({ config: fixture.config, vault: join(fixture.root, "new-vault") })
+    const proposal = proposeSetup({ config: fixture.config, vault: join(fixture.root, "new-vault") }, fixture.platform)
     if (!proposal.succeeded) throw new Error("setup proposal failed")
     const config = proposal.output
     expect(config).toEqual({ ...fixture.config, global: { vault: join(fixture.root, "new-vault") } })
@@ -63,7 +63,7 @@ test("invalid JSON requires explicit replacement confirmation as well as its sna
   try {
     await mkdir(dirname(fixture.path))
     await writeFile(fixture.path, "{ malformed")
-    const snapshot = await readConfigSnapshot({ path: fixture.path })
+    const snapshot = await readConfigSnapshot({ path: fixture.path, platform: fixture.platform })
     if (!snapshot.succeeded || snapshot.output.state !== "present") {
       throw new Error("snapshot missing")
     }
@@ -115,12 +115,15 @@ test("init from a registered subfolder repoints only that entry and preserves ol
     if (!initial.succeeded) {
       throw new Error("initial failed")
     }
-    const proposal = proposeInit({
-      config: fixture.config,
-      folder: join(project.folder, "src"),
-      name: project.name,
-      vault: join(fixture.root, "new-project"),
-    })
+    const proposal = proposeInit(
+      {
+        config: fixture.config,
+        folder: join(project.folder, "src"),
+        name: project.name,
+        vault: join(fixture.root, "new-project"),
+      },
+      fixture.platform,
+    )
     if (!proposal.succeeded) {
       throw new Error("proposal failed")
     }

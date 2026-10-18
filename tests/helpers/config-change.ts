@@ -8,7 +8,7 @@ export function jevConfig(thresholds: Pick<DecisionFields, "gateThreshold" | "re
 }
 
 export function changed(config: MemoryConfig, change: SettingChange): MemoryConfig {
-  const result = changeSetting(config, change)
+  const result = changeSetting(config, change, "win32")
   if (!result.succeeded) throw new Error(result.problems.join("; "))
   return result.output
 }
