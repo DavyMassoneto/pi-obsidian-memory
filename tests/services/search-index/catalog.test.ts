@@ -13,7 +13,7 @@ test("persists path identities, invalid-frontmatter inventory and full search me
   const copy = { ...catalogEntry("tools/Copy.md"), needsFixing: true }
   const invalid = { ...catalogEntry("tools/Invalid.md"), note: null, contentFingerprint: null, needsFixing: true }
   expect(applyIndexChanges(index, catalogChanges([first, copy, invalid], 0))).toEqual({ succeeded: true })
-  const result = searchCatalog(index, { query: "pnpm", limit: 10 })
+  const result = searchCatalog(index, { query: "pnpm" })
   expect(result).toMatchObject({
     succeeded: true,
     output: [
@@ -46,7 +46,7 @@ test("atomically replaces searchable text with malformed content and excludes ro
     statUpdates: [{ path: nested.path, stat: { size: 100, mtimeMs: 2000 } }],
   }
   expect(applyIndexChanges(index, changes)).toEqual({ succeeded: true })
-  expect(searchCatalog(index, { query: "pnpm", limit: 10 })).toMatchObject({
+  expect(searchCatalog(index, { query: "pnpm" })).toMatchObject({
     succeeded: true,
     output: [{ path: nested.path }],
   })
@@ -65,7 +65,7 @@ test.each(["FAIL", "ABORT", "ROLLBACK"])("rolls back the whole reconciliation ba
   const changes = { ...catalogChanges([catalogEntry("tools/Second.md")], 1), deletes: [first.path] }
   expect(applyIndexChanges(index, changes)).toMatchObject({ succeeded: false, reason: "unavailable" })
   expect(readIndexInventory(index)).toEqual(before)
-  expect(searchCatalog(index, { query: "pnpm", limit: 10 })).toMatchObject({
+  expect(searchCatalog(index, { query: "pnpm" })).toMatchObject({
     succeeded: true,
     output: [{ path: first.path }],
   })

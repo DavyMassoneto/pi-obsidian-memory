@@ -47,7 +47,7 @@ export function synchronizedCatalog(path: string) {
   if (!opened.succeeded) throw new Error(opened.problems.join("; "))
   try {
     const inventory = readIndexInventory(opened.output)
-    const hits = searchCatalog(opened.output, { query: "memory", limit: 100 })
+    const hits = searchCatalog(opened.output, { query: "memory" })
     if (!inventory.succeeded || !hits.succeeded) throw new Error("catalog unavailable")
     return { inventory: inventory.output, hits: hits.output }
   } finally {

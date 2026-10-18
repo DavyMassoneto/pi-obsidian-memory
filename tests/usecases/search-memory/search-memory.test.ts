@@ -145,7 +145,7 @@ test("both vaults are searched separately, each with its own hits", async () => 
   })
 })
 
-test("each vault returns at most ten results", async () => {
+test("a vault with more than ten matching notes returns every one of them", async () => {
   const { vault, context } = await searchFixture()
   for (let number = 1; number <= 12; number++) {
     await putCatalogFile(vault, `Note ${number}.md`, noteWithId(number, "pnpm many", []))
@@ -153,7 +153,20 @@ test("each vault returns at most ten results", async () => {
 
   const result = await searchMemory({ query: "pnpm", vault: "global" }, context)
 
-  expect(searchedHits(result, "global")).toHaveLength(10)
+  expect(searchedHits(result, "global").map((hit) => hit.path)).toEqual([
+    "Note 1.md",
+    "Note 10.md",
+    "Note 11.md",
+    "Note 12.md",
+    "Note 2.md",
+    "Note 3.md",
+    "Note 4.md",
+    "Note 5.md",
+    "Note 6.md",
+    "Note 7.md",
+    "Note 8.md",
+    "Note 9.md",
+  ])
 })
 
 test("a folder without a registered project reports projectMissing and still searches global", async () => {

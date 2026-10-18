@@ -32,9 +32,9 @@ test("rejects malformed cached boolean flags rather than coercing them into vali
   applyIndexChanges(index, catalogChanges([catalogEntry("tools/First.md")], 0))
   changeIndexFile(path, "UPDATE notes SET dont_forget = 'invalid'")
   expect(readIndexInventory(index)).toMatchObject({ succeeded: false, reason: "corrupted" })
-  expect(searchCatalog(index, { query: "pnpm", limit: 10 })).toMatchObject({ succeeded: false, reason: "corrupted" })
+  expect(searchCatalog(index, { query: "pnpm" })).toMatchObject({ succeeded: false, reason: "corrupted" })
   changeIndexFile(path, "UPDATE notes SET dont_forget = NULL")
-  expect(searchCatalog(index, { query: "pnpm", limit: 10 })).toMatchObject({ succeeded: false, reason: "corrupted" })
+  expect(searchCatalog(index, { query: "pnpm" })).toMatchObject({ succeeded: false, reason: "corrupted" })
   expect(applyIndexChanges(index, catalogChanges([catalogEntry("tools/First.md")], 1))).toEqual({ succeeded: true })
   expect(readIndexInventory(index)).toMatchObject({ succeeded: true, output: { revision: 2 } })
 })
@@ -46,14 +46,14 @@ test("preserves frontmatter-archived identity outside archive while excluding it
   entry.note.archived = true
   expect(applyIndexChanges(index, catalogChanges([entry], 0))).toEqual({ succeeded: true })
   expect(readIndexInventory(index)).toMatchObject({ succeeded: true, output: { entries: [entry] } })
-  expect(searchCatalog(index, { query: "pnpm", limit: 10 })).toEqual({ succeeded: true, output: [] })
+  expect(searchCatalog(index, { query: "pnpm" })).toEqual({ succeeded: true, output: [] })
   index.close()
   const reopened = recoverIndex({ path })
   if (!reopened.succeeded) throw new Error("reopen required")
   try {
     expect(reopened.rebuilt).toBe(false)
     expect(readIndexInventory(reopened.output)).toMatchObject({ succeeded: true, output: { entries: [entry] } })
-    expect(searchCatalog(reopened.output, { query: "pnpm", limit: 10 })).toEqual({ succeeded: true, output: [] })
+    expect(searchCatalog(reopened.output, { query: "pnpm" })).toEqual({ succeeded: true, output: [] })
     expect(applyIndexChanges(reopened.output, catalogChanges([catalogEntry("archive/False.md")], 1))).toMatchObject({
       succeeded: false,
       reason: "invalid",

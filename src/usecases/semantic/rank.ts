@@ -12,7 +12,6 @@ import {
   semanticRanking,
   type VectorChunk,
 } from "#src/services"
-import { SEMANTIC_CANDIDATES } from "./constants.ts"
 import type { QueryVector, SemanticRanked } from "./types.ts"
 
 export function rankSemantically(
@@ -34,7 +33,7 @@ export function rankSemantically(
     scored.push({ path: entry.path, similarity: hit.score })
     hits.set(entry.path, hit)
   }
-  const paths = semanticRanking(scored, MINIMUM_SIMILARITY[provider], SEMANTIC_CANDIDATES)
+  const paths = semanticRanking(scored, MINIMUM_SIMILARITY[provider])
   return { paths, hits: paths.flatMap((path) => listed(hits.get(path))), problems: [] }
 }
 
@@ -69,13 +68,12 @@ function listed(hit: CatalogHit | undefined): CatalogHit[] {
   return [hit]
 }
 
-export function fuseSearchHits(text: CatalogHit[], semantic: SemanticRanked, limit: number): CatalogHit[] {
+export function fuseSearchHits(text: CatalogHit[], semantic: SemanticRanked): CatalogHit[] {
   const byPath = new Map<string, CatalogHit>()
   for (const hit of [...semantic.hits, ...text]) byPath.set(hit.path, hit)
   const fused = fuseRankings(
     text.map((hit) => hit.path),
     semantic.paths,
-    limit,
   )
   return fused.flatMap((item) => {
     const hit = byPath.get(item.path)

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { EMBED_BATCH_SIZE, SEARCH_RESULT_LIMIT } from "#src/usecases"
+import { EMBED_BATCH_SIZE } from "#src/usecases"
 import {
   beginSearch,
   configuredWorld,
@@ -33,7 +33,7 @@ test("an interrupted indexing keeps the vectors already stored, and the next sea
   const answer = await searchAnswer(world, "plain words")
   expect(answer.isError).toBe(false)
   const lines = answer.text.split("\n")
-  expect(lines).toHaveLength(SEARCH_RESULT_LIMIT)
+  expect(lines).toHaveLength(NOTES)
   expect(lines.every((line) => NOTE_LINE.test(line))).toBe(true)
   await world.pi.stop()
   const complete = await storedChunks(world)

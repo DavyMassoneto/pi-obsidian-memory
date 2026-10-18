@@ -27,7 +27,7 @@ export function prepareCatalogStatements(database: DatabaseSync) {
         notes.dont_forget, notes.needs_fixing, -bm25(notes_fts, :statementWeight, :bodyWeight) AS score
       FROM notes_fts JOIN notes ON notes.rowid = notes_fts.rowid
       WHERE notes_fts MATCH :match AND notes.archived = 0 AND notes.id IS NOT NULL
-      ORDER BY score DESC, notes.path LIMIT :limit
+      ORDER BY score DESC, notes.path
     `),
   }
 }

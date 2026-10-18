@@ -9,14 +9,10 @@ import { CatalogHitRowSchema } from "./schemas.ts"
 import type { CatalogHit, CatalogQuery, CatalogSearchResult } from "./types.ts"
 
 export function readCatalogHits(statement: StatementSync, request: CatalogQuery): CatalogSearchResult {
-  if (!Number.isSafeInteger(request.limit) || request.limit < 1) {
-    return { succeeded: false, reason: "invalid", problems: ["search requires a positive integer limit"] }
-  }
   const terms = searchTermsOf(request.query)
   if (terms.length === 0) return { succeeded: true, output: [] }
   const rows = statement.all({
     match: terms.map((term) => `"${term}"`).join(" OR "),
-    limit: request.limit,
     statementWeight: STATEMENT_WEIGHT,
     bodyWeight: BODY_WEIGHT,
   })
