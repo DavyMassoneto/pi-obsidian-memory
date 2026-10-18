@@ -4,7 +4,7 @@ import { fuseRankings, semanticRanking } from "#src/domain"
 
 describe("fuseRankings", () => {
   it("scores each list by 1 / (60 + rank) and sums them", () => {
-    const fused = fuseRankings(["a", "b"], ["b", "c"], 10)
+    const fused = fuseRankings(["a", "b"], ["b", "c"])
     expect(fused).toEqual([
       { path: "b", score: 1 / 62 + 1 / 61 },
       { path: "a", score: 1 / 61 },
@@ -13,27 +13,18 @@ describe("fuseRankings", () => {
   })
 
   it("orders a note found by both lists before notes found by one", () => {
-    expect(fuseRankings(["a", "b", "c"], ["c"], 10).map((item) => item.path)).toEqual(["c", "a", "b"])
+    expect(fuseRankings(["a", "b", "c"], ["c"]).map((item) => item.path)).toEqual(["c", "a", "b"])
   })
 
   it("breaks ties by path", () => {
-    expect(fuseRankings(["z", "a"], ["a", "z"], 10).map((item) => item.path)).toEqual(["a", "z"])
-    expect(fuseRankings(["b"], ["a"], 10).map((item) => item.path)).toEqual(["a", "b"])
-  })
-
-  it("cuts to the limit after fusing", () => {
-    expect(fuseRankings(["a", "b", "c"], ["c", "b", "a"], 2).map((item) => item.path)).toEqual(["a", "c"])
-    expect(fuseRankings(["a"], ["b"], 0)).toEqual([])
+    expect(fuseRankings(["z", "a"], ["a", "z"]).map((item) => item.path)).toEqual(["a", "z"])
+    expect(fuseRankings(["b"], ["a"]).map((item) => item.path)).toEqual(["a", "b"])
   })
 
   it("works when one list is empty", () => {
-    expect(fuseRankings([], ["b", "a"], 10).map((item) => item.path)).toEqual(["b", "a"])
-    expect(fuseRankings(["b", "a"], [], 10).map((item) => item.path)).toEqual(["b", "a"])
-    expect(fuseRankings([], [], 10)).toEqual([])
-  })
-
-  it.each([-1, 1.5, Number.NaN, Infinity])("refuses limit %s", (limit) => {
-    expect(() => fuseRankings(["a"], ["b"], limit)).toThrow(RangeError)
+    expect(fuseRankings([], ["b", "a"]).map((item) => item.path)).toEqual(["b", "a"])
+    expect(fuseRankings(["b", "a"], []).map((item) => item.path)).toEqual(["b", "a"])
+    expect(fuseRankings([], [])).toEqual([])
   })
 })
 
@@ -45,7 +36,7 @@ describe("semanticRanking", () => {
   ]
 
   it("sorts by similarity descending", () => {
-    expect(semanticRanking(scored, null, 10)).toEqual(["c", "b", "a"])
+    expect(semanticRanking(scored, null)).toEqual(["c", "b", "a"])
   })
 
   it("breaks equal similarity by path", () => {
@@ -53,12 +44,12 @@ describe("semanticRanking", () => {
       { path: "z", similarity: 0.8 },
       { path: "a", similarity: 0.8 },
     ]
-    expect(semanticRanking(tied, null, 10)).toEqual(["a", "z"])
+    expect(semanticRanking(tied, null)).toEqual(["a", "z"])
   })
 
   it("drops entries below the minimum and keeps one exactly at it", () => {
-    expect(semanticRanking(scored, 0.9, 10)).toEqual(["c", "b"])
-    expect(semanticRanking(scored, 0.91, 10)).toEqual(["c"])
+    expect(semanticRanking(scored, 0.9)).toEqual(["c", "b"])
+    expect(semanticRanking(scored, 0.91)).toEqual(["c"])
   })
 
   it("keeps a minimum of 0 as a real minimum", () => {
@@ -66,20 +57,10 @@ describe("semanticRanking", () => {
       { path: "a", similarity: -0.1 },
       { path: "b", similarity: 0 },
     ]
-    expect(semanticRanking(mixed, 0, 10)).toEqual(["b"])
-  })
-
-  it("applies the minimum before the limit", () => {
-    expect(semanticRanking(scored, 0.9, 1)).toEqual(["c"])
-    expect(semanticRanking(scored, null, 2)).toEqual(["c", "b"])
-    expect(semanticRanking(scored, null, 0)).toEqual([])
+    expect(semanticRanking(mixed, 0)).toEqual(["b"])
   })
 
   it("returns nothing for no entries", () => {
-    expect(semanticRanking([], 0.8, 5)).toEqual([])
-  })
-
-  it.each([-1, 1.5, Number.NaN, Infinity])("refuses limit %s", (limit) => {
-    expect(() => semanticRanking(scored, null, limit)).toThrow(RangeError)
+    expect(semanticRanking([], 0.8)).toEqual([])
   })
 })

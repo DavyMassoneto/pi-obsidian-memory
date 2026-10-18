@@ -22,7 +22,7 @@ test("real vault directory replacement removes a cached note using actual enumer
   const entry = catalogEntry("tools/First.md")
   await putCatalogFile(vault, entry.path, noteText(validFrontmatterLines(), "Install packages with pnpm."))
   expect(applyIndexChanges(index, catalogChanges([entry], 0))).toEqual({ succeeded: true })
-  expect(searchCatalog(index, { query: "pnpm", limit: 10 })).toMatchObject({
+  expect(searchCatalog(index, { query: "pnpm" })).toMatchObject({
     succeeded: true,
     output: [{ path: entry.path }],
   })
@@ -48,7 +48,7 @@ test("real vault directory replacement removes a cached note using actual enumer
     succeeded: true,
     output: { entries: [], revision: 2, population: "ready" },
   })
-  expect(searchCatalog(index, { query: "pnpm", limit: 10 })).toEqual({ succeeded: true, output: [] })
+  expect(searchCatalog(index, { query: "pnpm" })).toEqual({ succeeded: true, output: [] })
   expect((await stat(join(vault.path, entry.path))).isDirectory()).toBe(true)
 })
 
@@ -65,7 +65,7 @@ test("stat-only changes leave the text index untouched", async () => {
     succeeded: true,
   })
   expect(readIndexInventory(index)).toMatchObject({ succeeded: true, output: { entries: [{ ...entry, stat }] } })
-  expect(searchCatalog(index, { query: "pnpm", limit: 10 })).toMatchObject({
+  expect(searchCatalog(index, { query: "pnpm" })).toMatchObject({
     succeeded: true,
     output: [{ path: entry.path }],
   })
@@ -81,7 +81,7 @@ test("contention refuses without advancing the revision and retries the same bat
   expect(applyIndexChanges(index, changes)).toEqual({ succeeded: true })
   index.close()
   expect(readIndexInventory(index)).toMatchObject({ succeeded: false, reason: "closed" })
-  expect(searchCatalog(index, { query: "pnpm", limit: 10 })).toMatchObject({ succeeded: false, reason: "closed" })
+  expect(searchCatalog(index, { query: "pnpm" })).toMatchObject({ succeeded: false, reason: "closed" })
   expect(applyIndexChanges(index, changes)).toMatchObject({ succeeded: false, reason: "closed" })
 })
 

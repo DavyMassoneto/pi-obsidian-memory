@@ -66,7 +66,6 @@ export interface IndexReplacement {
 
 export interface CatalogQuery {
   query: string
-  limit: number
 }
 
 export interface CatalogWriteRow extends CatalogRow {

@@ -20,8 +20,7 @@ import {
 } from "#src/usecases/resolve-memory/leased"
 import { fuseSearchHits, prepareSemanticSearch, rankSemantically, semanticPortOf } from "#src/usecases/semantic"
 import { openVaultIndex, synchronizeOpenedMemory } from "#src/usecases/synchronize-memory/leased"
-import { SEARCH_RESULT_LIMIT, SEMANTIC_PARTIAL_LINE } from "./constants.ts"
-import { textLimitFor } from "./limit.ts"
+import { SEMANTIC_PARTIAL_LINE } from "./constants.ts"
 import type {
   SearchedMemory,
   SearchMemoryRequest,
@@ -113,15 +112,15 @@ async function searchSynchronizedVault(
 ): Promise<VaultSearchHits | VaultSearchFailure> {
   const synchronized = await synchronizeOpenedMemory(opened, memory, target, context, semantic.port)
   if (!synchronized.succeeded) return { vault: target.scope, problems: synchronized.problems }
-  const found = searchCatalog(opened.output, { query, limit: textLimitFor(semantic.query) })
+  const found = searchCatalog(opened.output, { query })
   if (!found.succeeded) return { vault: target.scope, problems: found.problems }
   const warnings = [...synchronized.output.warnings]
-  if (!semantic.query) return { vault: target.scope, hits: found.output.slice(0, SEARCH_RESULT_LIMIT), warnings }
+  if (!semantic.query) return { vault: target.scope, hits: found.output, warnings }
   const ranked = rankSemantically(opened.output, semantic.query, memory.config.embeddings.provider)
   warnings.push(...ranked.problems)
   const missing = missingVectors(opened, memory)
   if (missing > 0) problems.push(`${target.scope}: ${missing} ${SEMANTIC_PARTIAL_LINE}`)
-  return { vault: target.scope, hits: fuseSearchHits(found.output, ranked, SEARCH_RESULT_LIMIT), warnings }
+  return { vault: target.scope, hits: fuseSearchHits(found.output, ranked), warnings }
 }
 
 function missingVectors(opened: OpenedIndex, memory: ResolvedMemory): number {

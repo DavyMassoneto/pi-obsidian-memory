@@ -53,7 +53,7 @@ test("rebuilds an external-content FTS index that lost its postings and persists
   const { index, path } = await useIndexFile()
   const entry = catalogEntry("tools/First.md")
   expect(applyIndexChanges(index, catalogChanges([entry], 0))).toEqual({ succeeded: true })
-  expect(searchCatalog(index, { query: "pnpm", limit: 10 })).toMatchObject({
+  expect(searchCatalog(index, { query: "pnpm" })).toMatchObject({
     succeeded: true,
     output: [{ path: entry.path }],
   })
@@ -84,13 +84,13 @@ test("preserves a healthy populated catalog and searchable postings on recovery"
   const entry = catalogEntry("tools/First.md")
   expect(applyIndexChanges(index, catalogChanges([entry], 0))).toEqual({ succeeded: true })
   const inventory = readIndexInventory(index)
-  const hits = searchCatalog(index, { query: "pnpm", limit: 10 })
+  const hits = searchCatalog(index, { query: "pnpm" })
   index.close()
 
   const recovered = recoverIndex({ path })
   if (!recovered.succeeded) throw new Error(recovered.problems.join("; "))
   expect(readIndexInventory(recovered.output)).toEqual(inventory)
-  expect(searchCatalog(recovered.output, { query: "pnpm", limit: 10 })).toEqual(hits)
+  expect(searchCatalog(recovered.output, { query: "pnpm" })).toEqual(hits)
   recovered.output.close()
   expect(recovered.rebuilt).toBe(false)
   assertIndexConsistent(path)
