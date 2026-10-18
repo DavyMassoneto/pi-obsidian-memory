@@ -2,7 +2,7 @@ import { expect, test } from "vitest"
 
 import { DOCTOR_TITLE, MODELS_HEADING } from "#src/pi"
 import { NO_API_KEY } from "#src/services"
-import { configuredWorld, onlyNotice, rewriteConfig, runDoctor, storedConfig } from "#test-helpers"
+import { configuredWorld, onlyNotice, rewriteConfig, runDoctor, startSession, storedConfig } from "#test-helpers"
 
 const PROVIDER_WITHOUT_CREDENTIALS = "anthropic"
 const MODEL_WITHOUT_CREDENTIALS = "claude-haiku-5-5"
@@ -12,6 +12,7 @@ test("with no credentials for the provider, the doctor reports the capture and a
   const model = { provider: PROVIDER_WITHOUT_CREDENTIALS, id: MODEL_WITHOUT_CREDENTIALS }
   const { capture } = await storedConfig(world)
   await rewriteConfig(world, { capture: { ...capture, model }, memoryAgent: { model } })
+  await startSession(world)
   const turn = await runDoctor(world, [], 0)
   const report = turn.notifications.filter((notice) => notice.message.startsWith(DOCTOR_TITLE))
   const { message, notifyType } = onlyNotice({ ...turn, notifications: report })

@@ -90,7 +90,7 @@ export function startedCalls(turn: RpcTurn): StartedCall[] {
   })
 }
 
-async function startSession(world: E2eWorld): Promise<void> {
+export async function startSession(world: E2eWorld): Promise<void> {
   if (world.memory === "none") {
     await world.pi.newSession()
     return
