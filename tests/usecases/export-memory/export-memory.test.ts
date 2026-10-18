@@ -3,10 +3,10 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { exportMemory } from "#src/usecases"
 import {
   expectRegistrationLeaseReleased,
   exportFixture,
+  exportMemory,
   holdFileContentsLocked,
   isExported,
   memoryReadTree,

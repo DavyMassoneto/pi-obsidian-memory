@@ -7,6 +7,12 @@ export const WINDOWS_SHELL_DRIVE_PREFIX = /^\/(?:mnt\/|cygdrive\/)?([a-z])(?:\/|
 
 export const NAMESPACE_UNC_PREFIX = /^\\\\[?.]\\UNC\\/i
 
+export const TRAILING_NAMESPACE_SEPARATOR = /^(\\\\[?.]\\.+)\\$/
+
+export const FILE_URL_PREFIX = /(?<=^|[\s=(,;|&<>])file:\/\//g
+
+export const WINDOWS_FILE_URL_PREFIX = /(?<=^|[\s=(,;|&<>])file:\/\/\/(?=[a-z]:)/gi
+
 export const NAMESPACE_PREFIX = /^\\\\[?.]\\/
 
 export const LOCAL_ADMIN_SHARE = /^\\\\(?:localhost|127\.0\.0\.1)\\([a-z])\$(?:\\|$)/i

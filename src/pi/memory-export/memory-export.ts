@@ -1,5 +1,6 @@
 import type { MemoryCommand, MemoryPaths, MemoryPiContext } from "#src/pi/context"
 import type { MemorySessionKeeper } from "#src/pi/memory-session"
+import { hostPathPlatform } from "#src/pi/paths"
 import { type ExportedMemory, exportMemory, type MemoryOperationContext } from "#src/usecases"
 import {
   EXPORT_CANCELLED,
@@ -31,7 +32,7 @@ async function runMemoryExport(ctx: MemoryPiContext, context: MemoryOperationCon
   for (;;) {
     const fileName = await askOrDefault(ctx, EXPORT_NAME_TITLE, suggested)
     if (typeof fileName !== "string") return ctx.ui.notify(EXPORT_CANCELLED, "info")
-    const result = await exportMemory({ folder, fileName }, context)
+    const result = await exportMemory({ folder, fileName, platform: hostPathPlatform(process.platform) }, context)
     if (result.succeeded) return ctx.ui.notify(describeExported(result.output), "info")
     if (result.reason !== "exists") return ctx.ui.notify(describeRefusal(result), "error")
     ctx.ui.notify(`${fileName} ${EXPORT_NAME_TAKEN}`, "error")
