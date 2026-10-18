@@ -14,7 +14,7 @@ export async function readConfigSnapshot(request: ConfigLocation): Promise<ReadC
         state: "present",
         hash: createHash("sha256").update(bytes).digest("hex"),
         text,
-        ...assessConfig(text),
+        ...assessConfig(text, request.platform),
       },
     }
   } catch (error) {

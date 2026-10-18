@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 
-import { changeSetting, parseSettingNumber, type SettingChange } from "#src/domain"
-import { aConfig, changed, jevConfig, jevDecision } from "#test-helpers"
+import { parseSettingNumber, type SettingChange } from "#src/domain"
+import { aConfig, changed, changeSetting, jevConfig, jevDecision } from "#test-helpers"
 
 describe("changeSetting", () => {
   test("changes only the chosen model and keeps everything else", () => {

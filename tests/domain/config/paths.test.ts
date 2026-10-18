@@ -11,7 +11,7 @@ test.each([
   ["the folder with Windows separators", "D:\\Projects\\loja\\src", "loja"],
   ["the folder with a trailing separator", "D:/Projects/loja/", "loja"],
 ])("finds the project for %s", (_case, folder, name) => {
-  expect(resolveProject(aConfig(), folder)).toMatchObject({ succeeded: true, output: { name } })
+  expect(resolveProject(aConfig(), folder, "win32")).toMatchObject({ succeeded: true, output: { name } })
 })
 
 test.each([
@@ -20,32 +20,35 @@ test.each([
   ["C:/vaults/loja/", "loja"],
   ["C:/", "C:"],
 ])("names the vault after its folder: %s", (path, name) => {
-  expect(vaultNameOf(path)).toBe(name)
+  expect(vaultNameOf(path, "win32")).toBe(name)
 })
 
 test.each(["C:\\Vaults\\Memory\\", "c:/vaults/memory", "C:/VAULTS/Memory///"])(
   "compares equivalent vault paths identically: %s",
   (path) => {
-    expect(comparablePath(path)).toBe("c:/vaults/memory")
+    expect(comparablePath(path, "win32")).toBe("c:/vaults/memory")
   },
 )
 
 test("does not collapse distinct vault folder names", () => {
-  expect(comparablePath("C:/vaults/memory-old")).not.toBe(comparablePath("C:/vaults/memory"))
+  expect(comparablePath("C:/vaults/memory-old", "win32")).not.toBe(comparablePath("C:/vaults/memory", "win32"))
 })
 
 test("root boundaries and dot segments do not evade containment", () => {
-  expect(isInside("C:/work/project", "C:/")).toBe(true)
-  expect(isInside("/work/project", "/")).toBe(true)
-  expect(isInside("C:/work-old", "C:/work")).toBe(false)
-  expect(pathsOverlap("C:/work/child/..", "c:\\work\\nested")).toBe(true)
-  expect(comparablePath("\\\\server\\share\\folder\\..")).toBe("//server/share")
+  expect(isInside("C:/work/project", "C:/", "win32")).toBe(true)
+  expect(isInside("/work/project", "/", "win32")).toBe(true)
+  expect(isInside("C:/work-old", "C:/work", "win32")).toBe(false)
+  expect(pathsOverlap("C:/work/child/..", "c:\\work\\nested", "win32")).toBe(true)
+  expect(comparablePath("\\\\server\\share\\folder\\..", "win32")).toBe("//server/share")
 })
 
 test("finds a project registered with Windows separators", () => {
   const config = { ...aConfig(), projects: [{ name: "api", folder: "D:\\Work\\api\\", vault: "C:/vaults/api" }] }
 
-  expect(resolveProject(config, "D:/Work/api/src")).toMatchObject({ succeeded: true, output: { name: "api" } })
+  expect(resolveProject(config, "D:/Work/api/src", "win32")).toMatchObject({
+    succeeded: true,
+    output: { name: "api" },
+  })
 })
 
 test.each([
@@ -53,5 +56,5 @@ test.each([
   ["a folder that is not registered", "D:/Downloads"],
   ["a folder above a project", "D:/Projects"],
 ])("finds no project for %s", (_case, folder) => {
-  expect(resolveProject(aConfig(), folder)).toEqual({ succeeded: false })
+  expect(resolveProject(aConfig(), folder, "win32")).toEqual({ succeeded: false })
 })

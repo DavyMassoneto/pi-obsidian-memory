@@ -16,6 +16,7 @@ import {
 import { sessionIdentity } from "./session.ts"
 import { productSettings } from "./settings.ts"
 import { useTempFolder } from "./temp-folder.ts"
+import { testPlatform } from "./test-platform.ts"
 
 export async function registrationUsecaseFixture() {
   const root = await useTempFolder()
@@ -25,6 +26,7 @@ export async function registrationUsecaseFixture() {
     configPath: join(root, "machine", "config.json"),
     workingFolder: join(root, "work"),
     indexPath: join(root, "machine", "index"),
+    platform: testPlatform(),
     session,
     stamp: session.stamp(),
     signal: controller.signal,
@@ -37,7 +39,7 @@ export async function registrationUsecaseFixture() {
 export async function writeRegistrationSnapshot(context: RegistrationContext, text: string): Promise<string> {
   await mkdir(dirname(context.configPath), { recursive: true })
   await writeFile(context.configPath, text)
-  const snapshot = await readConfigSnapshot({ path: context.configPath })
+  const snapshot = await readConfigSnapshot({ path: context.configPath, platform: context.platform })
   if (!snapshot.succeeded || snapshot.output.state !== "present") throw new Error("snapshot unavailable")
   return snapshot.output.hash
 }

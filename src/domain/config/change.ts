@@ -1,3 +1,4 @@
+import type { PathPlatform } from "#src/domain/path-platform"
 import { COUNT_REASON, COUNT_TEXT, THRESHOLD_REASON, THRESHOLD_TEXT } from "./constants.ts"
 import { parseConfig } from "./parse.ts"
 import { repairDecision } from "./resources.ts"
@@ -14,10 +15,10 @@ import type {
   ThresholdChange,
 } from "./types.ts"
 
-export function changeSetting(config: MemoryConfig, change: SettingChange): ParseConfigResult {
+export function changeSetting(config: MemoryConfig, change: SettingChange, platform: PathPlatform): ParseConfigResult {
   const next = nextConfig(config, change)
   if (!next.succeeded) return next
-  return parseConfig(JSON.stringify(next.output))
+  return parseConfig(JSON.stringify(next.output), platform)
 }
 
 export function parseSettingNumber(text: string, kind: SettingNumberKind): SettingNumberResult {

@@ -63,7 +63,7 @@ async function synchronizeSelectedMemory(
 }
 
 export function openVaultIndex(memory: ResolvedMemory, target: ResolvedVault): OpenIndexResult {
-  return recoverIndex({ path: indexFileFor(memory.indexPath, target.vault.path) })
+  return recoverIndex({ path: indexFileFor(memory.indexPath, target.vault.path, memory.platform) })
 }
 
 export async function synchronizeOpenedMemory(

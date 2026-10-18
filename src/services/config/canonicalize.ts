@@ -31,7 +31,10 @@ export async function canonicalizeRegistration(request: RegistrationPaths): Prom
   }
 
   const canonical = { ...location.output, indexPath: index.output }
-  problems.push(...infrastructureProblems(request), ...infrastructureProblems(canonical))
+  problems.push(
+    ...infrastructureProblems(request, request.platform),
+    ...infrastructureProblems(canonical, request.platform),
+  )
   if (problems.length > 0) {
     return { succeeded: false, problems: [...new Set(problems)] }
   }
@@ -42,7 +45,7 @@ export async function canonicalizeRegistration(request: RegistrationPaths): Prom
 export async function canonicalizeConfigLocation(
   request: ConfigRegistrationLocation,
 ): Promise<ConfigRegistrationLocationResult> {
-  const parsed = parseConfig(JSON.stringify(request.config))
+  const parsed = parseConfig(JSON.stringify(request.config), request.platform)
   if (!parsed.succeeded) {
     return parsed
   }
@@ -56,11 +59,11 @@ export async function canonicalizeConfigLocation(
     return { succeeded: false, problems }
   }
 
-  const canonical = { config: config.output, configPath: path.output }
+  const canonical = { config: config.output, configPath: path.output, platform: request.platform }
   problems.push(
-    ...registrationProblems(canonical.config),
-    ...configLocationProblems(request),
-    ...configLocationProblems(canonical),
+    ...registrationProblems(canonical.config, request.platform),
+    ...configLocationProblems(request, request.platform),
+    ...configLocationProblems(canonical, request.platform),
   )
   if (problems.length > 0) {
     return { succeeded: false, problems: [...new Set(problems)] }

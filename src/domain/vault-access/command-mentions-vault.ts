@@ -27,7 +27,7 @@ export function commandMentionsVault(
   const text = comparableText(command, platform)
   const tokens = argumentTokens(command).map((token) => comparableText(token, platform).replace(/(?<=.)\.+$/, ""))
   for (const vault of vaults) {
-    if (isInside(cwd, vault) || mentionsForms(text, tokens, vaultForms(vault, cwd, home, platform))) {
+    if (isInside(cwd, vault, platform) || mentionsForms(text, tokens, vaultForms(vault, cwd, home, platform))) {
       return vault
     }
   }

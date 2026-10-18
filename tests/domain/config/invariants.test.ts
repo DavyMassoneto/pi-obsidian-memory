@@ -1,7 +1,7 @@
 import { expect, test } from "vitest"
 
-import { infrastructureProblems, registeredVaults, registrationProblems } from "#src/domain"
-import { aConfig } from "#test-helpers"
+import { registeredVaults } from "#src/domain"
+import { aConfig, infrastructureProblems, registrationProblems } from "#test-helpers"
 
 test("reports every side of a conflicting registration without choosing one to discard", () => {
   const config = aConfig()

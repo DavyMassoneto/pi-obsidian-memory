@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 
-import { inspectConfigForRepair, parseConfig, readConfigFields } from "#src/domain"
-import { aConfig, legacyCaptureText, upgradedCapture } from "#test-helpers"
+import { readConfigFields } from "#src/domain"
+import { aConfig, inspectConfigForRepair, legacyCaptureText, parseConfig, upgradedCapture } from "#test-helpers"
 
 describe.each([
   { when: "after-each-turn", cadence: {} },

@@ -39,7 +39,7 @@ export async function denySynchronizationRead(path: string) {
 }
 
 export async function synchronizedIndexPath(context: MemoryOperationContext, vault: string): Promise<string> {
-  return indexFileFor(context.indexPath, await realpath(vault))
+  return indexFileFor(context.indexPath, await realpath(vault), context.platform)
 }
 
 export function synchronizedCatalog(path: string) {

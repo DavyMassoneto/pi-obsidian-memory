@@ -1,7 +1,6 @@
 import { expect, test } from "vitest"
 
-import { parseConfig } from "#src/domain"
-import { aConfig, DEFAULT_CADENCE } from "#test-helpers"
+import { aConfig, DEFAULT_CADENCE, parseConfig } from "#test-helpers"
 
 test.each([
   {

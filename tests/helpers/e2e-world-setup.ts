@@ -25,6 +25,7 @@ import { notifySettles, type RpcTurn } from "./e2e-records.ts"
 import type { RpcPi } from "./e2e-rpc.ts"
 import { dialogTitled, nth } from "./e2e-turns.ts"
 import type { WorldOptions } from "./e2e-world-types.ts"
+import { testPlatform } from "./test-platform.ts"
 
 export interface VaultFolders {
   globalVault: string
@@ -90,7 +91,7 @@ const SWITCHES_OFF: Record<WorldOptions["capture"], string[]> = {
 }
 
 async function overrideCaptureSettings(configPath: string, overrides: Partial<CaptureCadenceSettings>): Promise<void> {
-  const config = await readConfig(configPath)
+  const config = await readConfig(configPath, testPlatform())
   if (!config.succeeded) throw new Error(config.problems.join("\n"))
   const capture = { ...config.output.capture, ...overrides }
   await writeFile(configPath, JSON.stringify({ ...config.output, capture }))
