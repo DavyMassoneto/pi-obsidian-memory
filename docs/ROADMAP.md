@@ -8,7 +8,7 @@ Every milestone:
 - starts by checking whether pi-hermes-memory already does it, and reuses only what is needed (VISION 1);
 - is built test first, layer by layer (AGENTS.md), with one folder per topic;
 - adds its settings to [config.md](config.md) with their defaults, and `/memory-setup` writes them;
-- ends with `npm test`, `npm run lint`, `npm run typecheck` and `npm run test:pi` passing on Windows (VISION 14);
+- ends with `npm test`, `npm run lint`, `npm run typecheck` and `npm run test:e2e` passing on Windows (VISION 14);
 - ends with the README saying what works, and with every text the LLM or the user sees naming only commands
   and tools that exist.
 
@@ -54,13 +54,16 @@ Every milestone:
 - **Goal (user rule):** the shell never edits files; files are created or changed only with the `edit` and `write`
   tools. Deleting, moving and renaming stay allowed, and so do lint, formatters, git, npm and test runners.
 - **Scope:**
-  - [ ] before every `bash`/`powershell` call, Jev (`jev-latest`) gets the command, the working folder and the text
+  - [x] before every `bash`/`powershell` call, Jev (`jev-latest`) gets the command, the working folder and the text
     of the scripts it runs, and answers narrow yes/no questions in one request: redirection into a file, in-place
     edit, inline code that writes a file, a script that writes a file, a file created by copy or download, and a
     hardlink created;
-  - [ ] any answer at or above its measured cutoff refuses the call, naming the question and pointing to
+  - [x] any answer at or above its measured cutoff refuses the call, naming the question and pointing to
     `edit`/`write`; when Jev cannot answer, the call is refused with the cause;
-  - [ ] cutoffs measured on labelled commands, split into fit and check groups, with the results documented.
+  - [x] cutoffs measured on labelled commands, split into fit and check groups, with the results documented.
+  - Commits: f3bd10b (the check), 6efa68c (wired into pi), f620882 (cutoffs), 403fcd9 (script finding).
+  - [ ] end-to-end scenarios on the real pi: 1 (a9e1a59), 2 (6fa8fb4, 7cd3b8a), 3 (6f21afd), 4 (0c1cf16),
+    6 (5f1b444), 7 (6efa68c), 8 (89423cb); 5 (capture) still to land.
 - **Done when:** the labelled check group shows each question separating, and the guard refuses the edits and lets
   the allowed runs through in tests.
 
