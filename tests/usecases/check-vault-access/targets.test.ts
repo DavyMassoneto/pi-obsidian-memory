@@ -106,13 +106,16 @@ test.runIf(onWindows)("a path through the real volume GUID reaches a target", as
   )
 })
 
-test("a namespace path whose identity cannot be read is hit, since it cannot be shown to be outside", async () => {
-  const { vault, cwd } = await guardFixture()
-  const targets = await guardedTargets([vault.path])
+test.runIf(onWindows)(
+  "a namespace path whose identity cannot be read is hit, since it cannot be shown to be outside",
+  async () => {
+    const { vault, cwd } = await guardFixture()
+    const targets = await guardedTargets([vault.path])
 
-  expect(await targetHits(targets, cwd, { kind: "file", path: missingVolume })).toBe(true)
-  expect(await targetHits(targets, cwd, { kind: "tree", path: missingVolume })).toBe(true)
-})
+    expect(await targetHits(targets, cwd, { kind: "file", path: missingVolume })).toBe(true)
+    expect(await targetHits(targets, cwd, { kind: "tree", path: missingVolume })).toBe(true)
+  },
+)
 
 test("a missing plain path outside the targets is not hit", async () => {
   const { vault, root, cwd } = await guardFixture()

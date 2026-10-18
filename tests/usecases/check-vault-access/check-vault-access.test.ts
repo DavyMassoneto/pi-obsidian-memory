@@ -106,10 +106,25 @@ test("with no config registered a raw device path is not guarded", async () => {
   expect(await check({ kind: "file", path: String.raw`\\.\PhysicalDrive0` })).toEqual({ succeeded: true })
 })
 
-test("a raw device or a namespace path that cannot be read is refused through the guard", async () => {
-  const { check } = await guardFixture()
+test.runIf(process.platform === "win32")(
+  "a raw device or a namespace path that cannot be read is refused through the guard",
+  async () => {
+    const { check } = await guardFixture()
 
-  for (const kind of ["file", "tree", "listing"] as const) {
-    expect(await check({ kind, path: String.raw`\\.\PhysicalDrive0` })).toEqual(refused)
-  }
-})
+    for (const kind of ["file", "tree", "listing"] as const) {
+      expect(await check({ kind, path: String.raw`\\.\PhysicalDrive0` })).toEqual(refused)
+    }
+  },
+)
+
+test.runIf(process.platform !== "win32")(
+  "a process-relative path under /proc/self/fd or /dev/fd is refused through the guard",
+  async () => {
+    const { check } = await guardFixture()
+
+    for (const kind of ["file", "tree", "listing"] as const) {
+      expect(await check({ kind, path: "/proc/self/fd/3" })).toEqual(refused)
+      expect(await check({ kind, path: "/dev/fd/0" })).toEqual(refused)
+    }
+  },
+)
