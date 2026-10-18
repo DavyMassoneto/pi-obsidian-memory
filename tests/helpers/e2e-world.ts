@@ -5,8 +5,8 @@ import { dirname, join } from "node:path"
 import { onTestFinished } from "vitest"
 
 import { memoryConfigPath, memoryModelCachePath } from "#src/pi"
-import { anthropicAuthExtensionPaths, anthropicAuthPackageFolder } from "./e2e-anthropic-auth.ts"
 import { type PiCredentialsEnv, piCredentialsEnv } from "./e2e-credentials.ts"
+import { omnirouteSyncExtensionPath, omnirouteSyncPackageFolder, writeOmnirouteWorld } from "./e2e-omniroute.ts"
 import { E2E_MODEL, E2E_PROVIDER, extensionPath, repoRoot, skillsPath } from "./e2e-paths.ts"
 import { RpcPi } from "./e2e-rpc.ts"
 import { configureMemory } from "./e2e-world-setup.ts"
@@ -48,7 +48,8 @@ export class E2eWorld {
 
 export async function e2eWorld(options: WorldOptions): Promise<E2eWorld> {
   const folders = await worldFolders()
-  const settings = await agentSettings(options)
+  const settings = agentSettings(options)
+  if (options.credentials !== "none") await writeOmnirouteWorld(folders.agentDir)
   if (Object.keys(settings).length > 0)
     await writeFile(join(folders.agentDir, "settings.json"), JSON.stringify(settings))
   let world: E2eWorld | null = null
@@ -67,9 +68,9 @@ export async function e2eWorld(options: WorldOptions): Promise<E2eWorld> {
   return world
 }
 
-async function agentSettings(options: WorldOptions): Promise<AgentSettings> {
+function agentSettings(options: WorldOptions): AgentSettings {
   const settings: AgentSettings = {}
-  if ("installed" in options) settings.packages = [repoRoot, await anthropicAuthPackageFolder()]
+  if ("installed" in options) settings.packages = [repoRoot, omnirouteSyncPackageFolder()]
   if ("compactsSmallSessions" in options) settings.compaction = { keepRecentTokens: 1 }
   return settings
 }
@@ -96,13 +97,11 @@ async function shareModelCache(agentDir: string): Promise<void> {
 
 async function startPi(folders: WorldFolders, options: WorldOptions): Promise<RpcPi> {
   let credentials: PiCredentialsEnv | null = null
-  if (options.credentials !== "none") credentials = await piCredentialsEnv()
-  let authExtensions: string[] = []
-  if (!("installed" in options)) authExtensions = await anthropicAuthExtensionPaths()
+  if (options.credentials !== "none") credentials = piCredentialsEnv()
   return new RpcPi({
     cwd: startFolderOf(folders, options),
     agentDir: folders.agentDir,
-    args: piArgs(options, authExtensions),
+    args: piArgs(options),
     credentials,
     omitTypesafeKey: "withoutTypesafeKey" in options,
     offlineNpmCache: offlineNpmCacheOf(folders, options),
@@ -119,11 +118,12 @@ function startFolderOf(folders: WorldFolders, options: WorldOptions): string {
   return folders.cwd
 }
 
-export function piArgs(options: WorldOptions, authExtensions: string[]): string[] {
-  const args = ["--provider", E2E_PROVIDER, "--model", E2E_MODEL]
+export function piArgs(options: WorldOptions): string[] {
+  const args: string[] = []
+  if (options.credentials !== "none") args.push("--provider", E2E_PROVIDER, "--model", E2E_MODEL)
   if (options.session !== "saved") args.unshift("--no-session")
   if (!("installed" in options)) args.push("-ne", "-e", extensionPath())
-  for (const authExtension of authExtensions) args.push("-e", authExtension)
+  if (!("installed" in options)) args.push("-e", omnirouteSyncExtensionPath())
   if (!("installed" in options)) args.push("-ns", "--skill", skillsPath())
   args.push("-np", "--no-themes", "-nc", "--no-mcp", "-na")
   if (options.tools.length > 0) args.push("--tools", options.tools.map((tool) => `+${tool}`).join(","))

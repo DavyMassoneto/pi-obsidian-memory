@@ -24,3 +24,22 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+
+  e2e:
+    runs-on: windows-latest
+    env:
+      OMNIROUTE_URL: ${{ secrets.OMNIROUTE_URL }}
+      OMNIROUTE_API_KEY: ${{ secrets.OMNIROUTE_API_KEY }}
+      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          cache: npm
+      - uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pi-obsidian-memory-bench\models
+          key: local-embeddings-model-761b726dd34fb83930e26aab4e9ac3899aa1fa78
+      - run: npm ci
+      - run: npm run test:e2e

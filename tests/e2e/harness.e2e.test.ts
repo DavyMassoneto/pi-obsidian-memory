@@ -22,7 +22,7 @@ test("our extension's commands are exactly the four memory commands", async () =
   )
 })
 
-test("Haiku answers through pi's own login", async () => {
+test("Haiku answers through OmniRoute", async () => {
   const world = await e2eWorld({ memory: "none", tools: [], modelCache: "fresh", capture: "after-each-turn" })
   const turn = await world.pi.prompt("Reply with the single word READY and nothing else.", [])
   expect(turn.disposition).toBe("started")
