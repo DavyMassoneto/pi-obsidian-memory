@@ -12,6 +12,7 @@ import {
   PATH_FOLLOWS,
   PATH_TOKEN_END,
   PATH_TOKEN_START,
+  VARIABLE_REFERENCE,
   WINDOWS_DRIVE_START,
   WINDOWS_FILE_URL_PREFIX,
 } from "./constants.ts"
@@ -27,7 +28,7 @@ export function commandMentionsVault(
   const text = comparableText(command, platform)
   const tokens = argumentTokens(command).map((token) => comparableText(token, platform).replace(/(?<=.)\.+$/, ""))
   for (const vault of vaults) {
-    if (isInside(cwd, vault) || mentionsForms(text, tokens, vaultForms(vault, cwd, home, platform))) {
+    if (isInside(cwd, vault, platform) || mentionsForms(text, tokens, vaultForms(vault, cwd, home, platform))) {
       return vault
     }
   }
@@ -85,6 +86,16 @@ function appearsIn(text: string, form: string, end: RegExp): boolean {
   return false
 }
 
+function cased(text: string, platform: PathPlatform): string {
+  if (platform === "linux") return text.replace(VARIABLE_REFERENCE, (name: string) => name.toLowerCase())
+  return text.toLowerCase()
+}
+
+function separated(text: string, platform: PathPlatform): string {
+  if (platform === "win32") return text.replaceAll("\\", "/")
+  return text
+}
+
 function withoutFileUrl(text: string, platform: PathPlatform): string {
   if (platform === "win32") {
     return text.replace(WINDOWS_FILE_URL_PREFIX, "")
@@ -94,9 +105,7 @@ function withoutFileUrl(text: string, platform: PathPlatform): string {
 }
 
 function comparableText(text: string, platform: PathPlatform): string {
-  return withoutFileUrl(text, platform)
-    .toLowerCase()
-    .replaceAll("\\", "/")
+  return separated(cased(withoutFileUrl(text, platform), platform), platform)
     .replace(/["'`]/g, "")
     .replace(COMPARABLE_NAMESPACE_UNC, "//")
     .replace(COMPARABLE_NAMESPACE, "")

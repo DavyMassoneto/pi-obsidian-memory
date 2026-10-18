@@ -4,7 +4,7 @@ import {
   exportMemory as exportMemoryOn,
   type MemoryOperationContext,
 } from "#src/usecases"
-import { testPlatform } from "./check-vault-access.ts"
+import { testPlatform } from "./test-platform.ts"
 
 export function exportMemory(
   request: Omit<ExportMemoryRequest, "platform">,

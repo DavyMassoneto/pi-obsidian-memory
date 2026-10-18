@@ -1,10 +1,11 @@
 import { readFile } from "node:fs/promises"
 
+import type { PathPlatform } from "#src/domain"
 import { parseConfig } from "#src/domain"
 import { canonicalizeConfigLocation } from "./canonicalize.ts"
 import type { ReadConfigResult } from "./types.ts"
 
-export async function readConfig(path: string): Promise<ReadConfigResult> {
+export async function readConfig(path: string, platform: PathPlatform): Promise<ReadConfigResult> {
   let text: string
   try {
     text = await readFile(path, "utf8")
@@ -32,12 +33,12 @@ export async function readConfig(path: string): Promise<ReadConfigResult> {
     }
   }
 
-  const parsed = parseConfig(text)
+  const parsed = parseConfig(text, platform)
   if (!parsed.succeeded) {
     return { succeeded: false, reason: "invalid-config", configPath: path, problems: parsed.problems }
   }
 
-  const canonical = await canonicalizeConfigLocation({ config: parsed.output, configPath: path })
+  const canonical = await canonicalizeConfigLocation({ config: parsed.output, configPath: path, platform })
   if (!canonical.succeeded) {
     return { succeeded: false, reason: "invalid-config", configPath: path, problems: canonical.problems }
   }

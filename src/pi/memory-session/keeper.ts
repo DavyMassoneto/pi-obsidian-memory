@@ -1,4 +1,5 @@
 import type { MemoryPaths, MemoryPiContext } from "#src/pi/context"
+import { hostPathPlatform } from "#src/pi/paths"
 import type { SemanticRuntime } from "#src/pi/semantic"
 import { createMemorySession, LoadedMemory, type MemoryOperationContext, type MemorySession } from "#src/usecases"
 import { CAPTURE_BRANCH, RETRIEVAL_BRANCH, STALE_SESSION_REASON } from "./constants.ts"
@@ -40,6 +41,7 @@ export class MemorySessionKeeper {
       configPath: paths.configPath,
       indexPath: paths.indexPath,
       workingFolder,
+      platform: hostPathPlatform(process.platform),
       session,
       stamp,
       signal,

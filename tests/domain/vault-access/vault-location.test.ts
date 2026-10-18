@@ -14,7 +14,7 @@ test.each([
   ["a file in a UNC vault", "\\\\SRV\\Share\\team vault\\a.md", "\\\\srv\\share\\Team Vault"],
   ["a UNC path with slashes", "//srv/share/Team Vault/a.md", "\\\\srv\\share\\Team Vault"],
 ])("finds the vault containing %s", (_case, path, expected) => {
-  expect(vaultContaining(path, VAULTS)).toBe(expected)
+  expect(vaultContaining(path, VAULTS, "win32")).toBe(expected)
 })
 
 test.each([
@@ -25,7 +25,7 @@ test.each([
   ["another UNC share", "\\\\srv\\share2\\Team Vault\\a.md"],
   ["a UNC share parent", "\\\\srv\\share"],
 ])("finds no vault containing %s", (_case, path) => {
-  expect(vaultContaining(path, VAULTS)).toBeNull()
+  expect(vaultContaining(path, VAULTS, "win32")).toBeNull()
 })
 
 test.each([
@@ -34,7 +34,7 @@ test.each([
   ["another case", "d:\\", "D:\\Notes"],
   ["a UNC share", "\\\\srv\\share", "\\\\srv\\share\\Team Vault"],
 ])("finds the vault below %s", (_case, path, expected) => {
-  expect(vaultBelow(path, VAULTS)).toBe(expected)
+  expect(vaultBelow(path, VAULTS, "win32")).toBe(expected)
 })
 
 test.each([
@@ -43,5 +43,5 @@ test.each([
   ["a file in the vault", "D:\\Notes\\a.md"],
   ["another drive", "E:\\"],
 ])("finds no vault below %s", (_case, path) => {
-  expect(vaultBelow(path, VAULTS)).toBeNull()
+  expect(vaultBelow(path, VAULTS, "win32")).toBeNull()
 })

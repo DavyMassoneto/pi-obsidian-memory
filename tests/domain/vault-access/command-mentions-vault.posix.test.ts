@@ -29,6 +29,19 @@ test.each(PLATFORMS)("does not find a vault in a name that continues on %s", (pl
   }
 })
 
+test("keeps case significant on linux", () => {
+  const command = "cat /home/ana/vaults/global/x.md"
+
+  expect(commandMentionsVault(command, CWD, HOME, [VAULT], "linux")).toBeNull()
+  expect(commandMentionsVault(command, CWD, HOME, [VAULT], "darwin")).toBe(VAULT)
+})
+
+test("does not split a posix name at a backslash on linux", () => {
+  const command = "cat /home/ana/vaults\\Global/x.md"
+
+  expect(commandMentionsVault(command, CWD, HOME, [VAULT], "linux")).toBeNull()
+})
+
 test("finds a vault when the working folder is inside it", () => {
   expect(commandMentionsVault("ls", `${VAULT}/tools`, HOME, [VAULT], "linux")).toBe(VAULT)
 })

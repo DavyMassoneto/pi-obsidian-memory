@@ -14,7 +14,7 @@ export async function prepareMemorySetup(
   try {
     const interrupted = registrationInterruption(context)
     if (interrupted) return interrupted
-    const snapshot = await readConfigSnapshot({ path: context.configPath })
+    const snapshot = await readConfigSnapshot({ path: context.configPath, platform: context.platform })
     const stale = registrationInterruption(context)
     if (stale) return stale
     if (!snapshot.succeeded) return snapshot

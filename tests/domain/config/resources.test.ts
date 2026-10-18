@@ -1,7 +1,6 @@
 import { expect, test } from "vitest"
 
-import { inspectConfigForRepair, parseConfig } from "#src/domain"
-import { aConfig } from "#test-helpers"
+import { aConfig, inspectConfigForRepair, parseConfig } from "#test-helpers"
 
 test.each([
   { provider: "local", model: "Xenova/multilingual-e5-small" },

@@ -10,6 +10,7 @@ import { localEmbeddingPolicy } from "#src/domain"
 import { memoryIndexPath } from "#src/pi"
 import { indexFileFor, openIndex, readVectorCache, readVectorCoverage } from "#src/services"
 import type { E2eWorld } from "./e2e-world.ts"
+import { testPlatform } from "./test-platform.ts"
 
 const StoredChunkSchema = Type.Object({
   rowid: Type.Number(),
@@ -32,7 +33,11 @@ export interface StoredChunk {
 }
 
 export async function globalIndexFile(world: Pick<E2eWorld, "folders">): Promise<string> {
-  return indexFileFor(memoryIndexPath(world.folders.agentDir), await realpath(world.folders.globalVault))
+  return indexFileFor(
+    memoryIndexPath(world.folders.agentDir),
+    await realpath(world.folders.globalVault),
+    testPlatform(),
+  )
 }
 
 export async function vectorsOnDisk(world: Pick<E2eWorld, "folders">) {

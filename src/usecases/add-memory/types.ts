@@ -1,6 +1,13 @@
 import type { Static } from "typebox"
 
-import type { ConfigRefusal, CreateResult, MemoryScope, NoProjectRefusal, StoredNote } from "#src/services"
+import type {
+  ConfigRefusal,
+  CreateResult,
+  MemoryScope,
+  NoProjectRefusal,
+  PathPlatform,
+  StoredNote,
+} from "#src/services"
 import type { Failed, Succeeded } from "#src/shared"
 import type { MemoryOperationRefusal } from "#src/usecases/operation-context"
 import type { AddMemoryRequestSchema } from "./schemas.ts"
@@ -10,6 +17,7 @@ export type AddMemoryRequest = Static<typeof AddMemoryRequestSchema>
 export interface MemoryContext {
   configPath: string
   workingFolder: string
+  platform: PathPlatform
 }
 
 export interface AddedMemory {

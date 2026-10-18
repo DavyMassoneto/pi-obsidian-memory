@@ -4,6 +4,7 @@ import {
   canonicalizeWorkingFolder,
   type MemoryConfig,
   type MemoryScope,
+  type PathPlatform,
   readConfigSnapshot,
   targetVault,
 } from "#src/services"
@@ -17,7 +18,7 @@ import type { ResolvedMemory, ResolveMemoryResult, SelectMemoryVaultResult } fro
 export async function resolveLeasedMemory(context: MemoryOperationContext): Promise<ResolveMemoryResult> {
   const interrupted = memoryOperationInterruption(context)
   if (interrupted) return interrupted
-  const snapshot = await readConfigSnapshot({ path: context.configPath })
+  const snapshot = await readConfigSnapshot({ path: context.configPath, platform: context.platform })
   const stale = memoryOperationInterruption(context)
   if (stale) return stale
   if (!snapshot.succeeded) {
@@ -48,6 +49,7 @@ async function validateMemoryLocations(
     config,
     configPath: context.configPath,
     indexPath: context.indexPath,
+    platform: context.platform,
   })
   const interrupted = memoryOperationInterruption(context)
   if (interrupted) return interrupted
@@ -56,7 +58,13 @@ async function validateMemoryLocations(
   const stale = memoryOperationInterruption(context)
   if (stale) return stale
   if (!workingFolder.succeeded) return invalidMemoryConfiguration(context, workingFolder.problems)
-  return resolvedMemory(canonical.output.config, hash, workingFolder.output, canonical.output.indexPath)
+  return resolvedMemory(
+    canonical.output.config,
+    hash,
+    workingFolder.output,
+    canonical.output.indexPath,
+    context.platform,
+  )
 }
 
 function resolvedMemory(
@@ -64,15 +72,17 @@ function resolvedMemory(
   configHash: string,
   workingFolder: string,
   indexPath: string,
+  platform: PathPlatform,
 ): ResolveMemoryResult {
-  const global = targetVault(config, "global", workingFolder)
+  const global = targetVault(config, "global", workingFolder, platform)
   if (!global.succeeded) throw new Error("Global target requires no project selection")
-  const projectTarget = targetVault(config, "project", workingFolder)
+  const projectTarget = targetVault(config, "project", workingFolder, platform)
   const output: ResolvedMemory = {
     config,
     configHash,
     workingFolder,
     indexPath,
+    platform,
     global: { scope: "global", vault: { ...global.output, limits: { ...config.limits } } },
     project: null,
     protectedRoots: [config.global.vault, ...config.projects.map((project) => project.vault)],

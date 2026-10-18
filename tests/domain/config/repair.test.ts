@@ -1,7 +1,6 @@
 import { expect, test } from "vitest"
 
-import { inspectConfigForRepair, parseConfig, proposeSetup } from "#src/domain"
-import { aConfig, DEFAULT_CADENCE } from "#test-helpers"
+import { aConfig, DEFAULT_CADENCE, inspectConfigForRepair, parseConfig, proposeSetup } from "#test-helpers"
 
 test.each([
   { provider: "local", model: "text-embedding-3-small" },

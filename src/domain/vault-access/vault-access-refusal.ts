@@ -15,16 +15,21 @@ export function vaultAccessRefusal(
     return commandMentionsVault(request.command, cwd, home, vaults, platform)
   }
 
-  return pathVaultHit(request, absoluteCandidate(request.path, cwd, home, platform), vaults)
+  return pathVaultHit(request, absoluteCandidate(request.path, cwd, home, platform), vaults, platform)
 }
 
-function pathVaultHit(request: PathAccessRequest, path: string, vaults: string[]): string | null {
-  const containing = vaultContaining(path, vaults)
+function pathVaultHit(
+  request: PathAccessRequest,
+  path: string,
+  vaults: string[],
+  platform: PathPlatform,
+): string | null {
+  const containing = vaultContaining(path, vaults, platform)
   if (containing) {
     return containing
   }
   if (request.kind === "tree") {
-    return vaultBelow(path, vaults)
+    return vaultBelow(path, vaults, platform)
   }
 
   return null

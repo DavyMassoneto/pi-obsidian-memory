@@ -31,6 +31,7 @@ async function prepareGlobalRegistration(
   if (!vault.succeeded) return registrationValidationFailure(vault)
   const write: WriteConfigRequest = {
     path: context.configPath,
+    platform: context.platform,
     indexPath: context.indexPath,
     config: { ...request.config, global: { ...request.config.global, vault: vault.output } },
     expectedHash: request.expectedHash,
