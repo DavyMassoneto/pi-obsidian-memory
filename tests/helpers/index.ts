@@ -1,3 +1,4 @@
+export * from "./blocked-write.ts"
 export * from "./candidate-scores.ts"
 export * from "./capture-memory.ts"
 export * from "./capture-search.ts"

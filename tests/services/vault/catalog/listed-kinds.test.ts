@@ -1,7 +1,7 @@
 import { link, lstat, mkdir, readdir, realpath, symlink } from "node:fs/promises"
 import { join } from "node:path"
 
-import { expect, test } from "vitest"
+import { expect, it, test } from "vitest"
 
 import { enumerateVault } from "#src/services"
 import { catalogVault, linkFolder, listedEntry, putCatalogFile, tryLinkFile, useTempFolder } from "#test-helpers"
@@ -66,6 +66,12 @@ test("listed regular names are already canonical: on-disk casing, spaces, accent
       expect(await realpath(join(folder, entry.name))).toBe(join(folder, entry.name))
     }
   }
+})
+
+it.skipIf(process.platform === "linux")("a path that differs only in case resolves to the on-disk casing", async () => {
+  const vault = await catalogVault()
+  const root = await realpath(vault.path)
+  await putCatalogFile(vault, "MixedCase/Ação Nota.MD", "x")
   expect(await realpath(join(root, "mixedcase", "AÇÃO nota.md"))).toBe(join(root, "MixedCase", "Ação Nota.MD"))
 })
 
