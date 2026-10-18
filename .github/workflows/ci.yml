@@ -27,6 +27,9 @@ jobs:
 
   e2e:
     runs-on: windows-latest
+    concurrency:
+      group: e2e
+      cancel-in-progress: false
     env:
       OMNIROUTE_URL: ${{ secrets.OMNIROUTE_URL }}
       OMNIROUTE_API_KEY: ${{ secrets.OMNIROUTE_API_KEY }}

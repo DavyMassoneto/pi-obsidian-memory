@@ -130,8 +130,8 @@ macOS volume is still compared ignoring case, and a case-insensitive mount on Li
 
 Before every `bash`/`powershell` call, Jev (`jev-latest`, which needs `TYPESAFE_API_KEY`) scores whether the command
 edits a file through a redirection, an in-place edit, inline code, a script that writes, a copy or download that
-creates a file, or a hardlink. A score at or above its cutoff refuses the call and points to `edit` and `write`; when Jev cannot
-answer, the call is refused. The cutoffs and how they were measured are in
+creates a file, or a hardlink. A score at or above its cutoff refuses the call and points to `edit` and `write`;
+when Jev cannot answer, the call is refused. The cutoffs and how they were measured are in
 [docs/shell-edit-cutoffs.md](docs/shell-edit-cutoffs.md).
 
 ### Dashboard
@@ -164,9 +164,10 @@ npm run test:model    # live tests: real models and network
 pi -e ./src/pi/extension.ts
 ```
 
-`npm test` needs no model and no network. `npm run test:e2e` uses the real Haiku through pi's login and the real Jev
-through pi's TypeSafe key, at most 3 test files at once. Run one e2e run at a time: each test file starts its own pi
-and the RAM is shared. The Laya tests use a real `laya-serve` from `tmp/laya-venv` and run only on request:
+`npm test` needs no model and no network. `npm run test:e2e` uses the real Haiku (`cc/claude-haiku-5-5`) through
+OmniRoute, loaded in pi by `pi-omniroute-sync`, and the real Jev. It reads `OMNIROUTE_URL`, `OMNIROUTE_API_KEY` and
+`TYPESAFE_API_KEY` from the environment and runs one test file at a time. CI runs it on windows-latest (the secrets
+have the same names). The Laya tests use a real `laya-serve` from `tmp/laya-venv` and run only on request:
 `npx vitest run --project e2e-laya`.
 
 `npm run test:model` downloads the local embedding model (about 135 MB) to a cache folder outside the repository
