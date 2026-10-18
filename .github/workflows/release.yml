@@ -19,8 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      issues: write
-      pull-requests: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -29,9 +27,37 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+          registry-url: https://registry.npmjs.org
           cache: npm
       - run: npm install --global npm@11
       - run: npm ci
-      - run: npx semantic-release
+      - id: next
+        run: |
+          bumped="$(npx git-cliff --bumped-version)"
+          if [ "$bumped" = "v$(node -p "require('./package.json').version")" ]; then
+            echo "Nothing to release"
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$bumped" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.next.outputs.release == 'true'
+        run: |
+          npm version "${{ steps.next.outputs.tag }}" --no-git-tag-version
+          npx git-cliff --tag "${{ steps.next.outputs.tag }}" --output CHANGELOG.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json CHANGELOG.md
+          git commit -m "chore(release): ${{ steps.next.outputs.tag }} [skip ci]"
+          git tag "${{ steps.next.outputs.tag }}"
+      - if: steps.next.outputs.release == 'true'
+        run: npm publish --access public
+      - if: steps.next.outputs.release == 'true'
+        run: git push origin HEAD:main "${{ steps.next.outputs.tag }}"
+      - if: steps.next.outputs.release == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          npx git-cliff --latest --strip header --output notes.md
+          gh release create "${{ steps.next.outputs.tag }}" --title "${{ steps.next.outputs.tag }}" \
+            --notes-file notes.md --latest --verify-tag

@@ -64,7 +64,9 @@ Unowned (orchestrator only; owners ask): `biome/`, `biome.json`, `package.json`,
 - Conventions: `tests/` mirrors `src/`; real disk in temp folders (`useTempFolder`), never the user's vaults/config. No mocks,
   fakes, `vi.fn`, or simulation in any test (AGENTS.md Tests section); unprovable parts are recorded as gaps. TDD red → green → refactor.
 - CI (`.github/workflows/ci.yml`): lint, typecheck, `npm test` on windows-latest, ubuntu-latest, macos-latest, Node 22.19.0.
-  Release (`release.yml`): semantic-release on push to main, npm publish via trusted publishing (`.releaserc.json`).
+  Release (`release.yml`): on push to main, after CI, git-cliff (`cliff.toml`) computes the next 0.x version from the
+  squash commit (header plus one commit per body line) and regenerates `CHANGELOG.md`; then tag, npm publish via
+  trusted publishing and a GitHub release. Only docs/test/chore... items: no release.
 
 ## Pitfalls — Biome rules (`biome/*.grit`)
 
