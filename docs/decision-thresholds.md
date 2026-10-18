@@ -92,6 +92,17 @@ Holdout precision / recall per cutoff:
 With labels the whole score distribution shifts up (negatives average 0.53), so the labelled variant needs a high cutoff
 for the same precision and loses recall there. Plain `noul` ranks relevant notes higher and keeps negatives low.
 
+## Live run of 2026-10-17
+
+Source: `tests/services/decision-model/thresholds.model.test.ts`, run on a real `laya-serve`. No cutoff changed.
+
+| question | items | all-items AUC | holdout AUC |
+| --- | ---: | ---: | ---: |
+| gate | 60 | 0.589 | 0.476 |
+| relevance | 48 | 0.762 | 0.807 |
+
+The gate barely separates: its holdout AUC is below 0.5. Relevance keeps a weak signal.
+
 ## Limits of this measurement
 
 - 60 and 48 synthetic examples, one run; the holdout halves are 30 and 24 items. Intervals are wide.

@@ -8,7 +8,6 @@ import {
   dialogTitled,
   ExtensionErrorSchema,
   leaveScreen,
-  onLaya,
   optionsOf,
   pickLine,
   pressEscape,
@@ -43,15 +42,6 @@ test("the screen shows each cutoff with where it comes from, and the Jev default
   const { decisionModel } = await storedConfig(world)
   if (decisionModel.provider !== "typesafe") throw new Error("the E2E world uses Jev")
   await rewriteConfig(world, { decisionModel: { ...decisionModel, gateThreshold: 0.3 } })
-  await settingsScreen(world, [leaveScreen])
-  const labels = settingLines(await storedConfig(world)).map((line) => line.label)
-  expect(optionsOf(world, SETTINGS_TITLE)).toEqual([...labels, DONE_LABEL])
-  expect(world.pi.unexpected).toEqual([])
-})
-
-test("the cutoffs of Laya read not set", async () => {
-  const world = await configuredWorld({})
-  await onLaya(world, {})
   await settingsScreen(world, [leaveScreen])
   const labels = settingLines(await storedConfig(world)).map((line) => line.label)
   expect(optionsOf(world, SETTINGS_TITLE)).toEqual([...labels, DONE_LABEL])

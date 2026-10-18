@@ -9,7 +9,11 @@ export function runsScript(path: string): ExecutedFile {
 }
 
 export function runsPackageScript(name: string): ExecutedFile {
-  return { kind: "package-script", name }
+  return { kind: "package-script", name, prefix: "" }
+}
+
+export function runsPackageScriptIn(prefix: string, name: string): ExecutedFile {
+  return { kind: "package-script", name, prefix }
 }
 
 export async function resetShellEditProject(cwd: string): Promise<void> {

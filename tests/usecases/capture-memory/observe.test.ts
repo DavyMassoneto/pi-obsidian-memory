@@ -2,8 +2,15 @@ import { Value } from "typebox/value"
 import { expect, test } from "vitest"
 
 import { ObservationSchema } from "#src/domain"
-import { observeGet, observeList, observeRead, observeSearch, synchronizeMemory } from "#src/usecases"
-import { captureFixture, noteWithId, putCatalogFile } from "#test-helpers"
+import {
+  observeGet,
+  observeList,
+  observeLoadedNote,
+  observeRead,
+  observeSearch,
+  synchronizeMemory,
+} from "#src/usecases"
+import { captureFixture, noteWithId, putCatalogFile, writeRegistrationSnapshot } from "#test-helpers"
 
 test("a note that was read becomes a read observation with its id, hash, text, type and mark", async () => {
   const { context, vault } = await captureFixture()
@@ -31,6 +38,58 @@ test("a missing note, a folder and a note with invalid frontmatter are unavailab
   expect(await observeRead({ vault: "global", path: "tools/Missing.md" }, context)).toEqual(expect.any(String))
   expect(await observeRead({ vault: "global", path: "tools" }, context)).toEqual(expect.any(String))
   expect(await observeRead({ vault: "global", path: "tools/Odd.md" }, context)).toContain("invalid frontmatter")
+})
+
+test.each([
+  { case: "a missing note", path: "tools/Missing.md" },
+  { case: "a note under a parent that became a file", path: "flat/Use pnpm.md" },
+  { case: "a path that expects a folder where there is a file", path: "flat/" },
+])("$case is gone", async ({ path }) => {
+  const { context, vault } = await captureFixture()
+  await putCatalogFile(vault, "flat", "not a folder")
+
+  expect(await observeLoadedNote({ vault: "global", path }, context)).toMatchObject({
+    kind: "unreadable",
+    existence: "gone",
+  })
+})
+
+test.each([
+  { case: "unclosed frontmatter", path: "tools/Unclosed.md", text: "---\ntype: rule\nnot closed" },
+  { case: "invalid frontmatter", path: "tools/Odd.md", text: noteWithId(2, "Odd.", ["colour: red"]) },
+  { case: "no body", path: "tools/Empty.md", text: noteWithId(3, "", []) },
+])("a note with $case is still there", async ({ path, text }) => {
+  const { context, vault } = await captureFixture()
+  await putCatalogFile(vault, path, text)
+
+  expect(await observeLoadedNote({ vault: "global", path }, context)).toMatchObject({
+    kind: "unreadable",
+    existence: "present",
+  })
+})
+
+test("a folder where the note was is still there", async () => {
+  const { context, vault } = await captureFixture()
+  await putCatalogFile(vault, "tools/index.md", "# Tools")
+
+  expect(await observeLoadedNote({ vault: "global", path: "tools" }, context)).toMatchObject({
+    kind: "unreadable",
+    existence: "present",
+  })
+})
+
+test("an invalid config leaves it unknown whether the note exists", async () => {
+  const { context, vault, config } = await captureFixture()
+  await putCatalogFile(vault, "tools/Use pnpm.md", noteWithId(1, "Always pnpm.", []))
+  await writeRegistrationSnapshot(context, JSON.stringify({ ...config, extra: true }))
+  await observeLoadedNote({ vault: "global", path: "tools/Use pnpm.md" }, context)
+  context.stamp = context.session.stamp()
+
+  expect(await observeLoadedNote({ vault: "global", path: "tools/Use pnpm.md" }, context)).toMatchObject({
+    kind: "unreadable",
+    existence: "unknown",
+    detail: "extra: not a known field",
+  })
 })
 
 test("a get that fails is an unavailable observation for the model", async () => {

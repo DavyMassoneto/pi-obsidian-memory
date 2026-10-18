@@ -92,13 +92,16 @@ as it is on disk.
   probabilities; it never searches or generates) decides whether memory is needed. If so, the memory agent (a chat model)
   searches and reads, the decision model scores each candidate note, and the relevant ones are added after your message. Earlier
   messages are never rewritten, so the prompt cache holds; a loaded note that changed is added again, marked as
-  replacing the earlier copy. Session start also loads relevant notes within `context.budgetChars` (12,000 by
-  default). The decision model is Jev by default (by API; it needs `TYPESAFE_API_KEY`; $0.042 per million input tokens, per
-  docs.typesafe.ai), working from TypeSafe's starting cutoffs (0.5/0.5). Laya, run locally, is an optional choice that
-  needs explicit `gateThreshold` and `relevanceThreshold`: it ships none because its gate measured at chance (see
-  [decision-thresholds](docs/decision-thresholds.md)), so with Laya and no cutoffs per-message memory is off and each
-  session tells you. Setup steps are in [Running the decision model](docs/config.md#running-the-decision-model). If the decision model is unavailable nothing is added and you are told once per session;
-  no other model takes over.
+  replacing the earlier copy. A loaded note that is gone is reported as "the note was archived or deleted"; one still
+  there but unusable, as "the note is still there but cannot be used (<problem>)"; one whose state is unknown, an
+  invalid config included, as "the note cannot be read (<problem>)". Session start also loads relevant notes within
+  `context.budgetChars` (12,000 by default). The decision model is Jev by default (by API; it needs `TYPESAFE_API_KEY`;
+  $0.042 per million input tokens, per docs.typesafe.ai), working from TypeSafe's starting cutoffs (0.5/0.5). Laya,
+  run locally, is an optional choice that needs explicit `gateThreshold` and `relevanceThreshold`: it ships none
+  because its gate measured at chance (see [decision-thresholds](docs/decision-thresholds.md)), so with Laya and no
+  cutoffs per-message memory is off and each session tells you. Setup steps are in
+  [Running the decision model](docs/config.md#running-the-decision-model). If the decision model is unavailable
+  nothing is added and you are told once per session; no other model takes over.
 - **Automatic capture.** A background review of the conversation saves, updates, archives and succeeds notes, at the
   moment set by `capture.when`: `after-each-turn` (the default), `on-compaction` or `at-session-end`. It never asks you anything:
   what it is unsure of is not saved. Its judgement quality is not yet proven against a real model.
@@ -140,15 +143,19 @@ following its package contract, they are wildcard peers, not bundled runtime dep
 npm install
 npm run lint
 npm run typecheck
-npm test              # unit and integration tests
-npm run test:pi       # smoke test in the real pi
-npm run test:model    # opt-in: real embedding model benchmark
+npm test              # offline: pure tests and tests on a real temporary disk
+npm run test:e2e      # the real pi over RPC, with a temporary agent folder and vaults
+npm run test:model    # live tests: real models and network
 pi -e ./src/pi/extension.ts
 ```
 
+`npm test` needs no model and no network. `npm run test:e2e` uses the real Haiku through pi's login and the real Jev
+through pi's TypeSafe key, at most 3 test files at once. Run one e2e run at a time: each test file starts its own pi
+and the RAM is shared. The Laya tests use a real `laya-serve` from `tmp/laya-venv` and run only on request:
+`npx vitest run --project e2e-laya`.
+
 `npm run test:model` downloads the local embedding model (about 135 MB) to a cache folder outside the repository
-(`%LOCALAPPDATA%\pi-obsidian-memory-bench\models`) and is not part of `npm test`. Run `npm run test:pi` before each
-release and after updating pi.
+(`%LOCALAPPDATA%\pi-obsidian-memory-bench\models`) and is not part of `npm test`.
 
 The roadmap is in [docs/ROADMAP.md](docs/ROADMAP.md); the note format is in
 [docs/vault-format.md](docs/vault-format.md).

@@ -3,7 +3,7 @@ import { join } from "node:path"
 
 import { expect, test } from "vitest"
 
-import { invalidatedBlock, replacementBlock } from "#src/domain"
+import { replacementBlock } from "#src/domain"
 import {
   configuredWorld,
   currentMemorySection,
@@ -12,6 +12,7 @@ import {
   dontForgetText,
   endOf,
   fileExists,
+  goneBlock,
   loadedNote,
   memorySectionHistory,
   noteWithId,
@@ -25,6 +26,7 @@ import {
   rewriteConfig,
   SAY_OK,
   toolCallPrompt,
+  unusableBlock,
   writeVaultFile,
 } from "#test-helpers"
 
@@ -46,19 +48,37 @@ test("an edit to a loaded note comes back as a block that replaces the copy, and
   expect(messages).toEqual([
     DEPLOY_MESSAGE,
     relevantMessage([replacementBlock(deployBefore, deployAfter)]),
-    relevantMessage([invalidatedBlock(deployAfter)]),
+    relevantMessage([goneBlock("project", DEPLOY.path)]),
   ])
   expect(await memorySectionHistory(world)).toHaveLength(1)
 })
 
-test("a loaded note rewritten with no body is still on disk and is marked archived or deleted", async () => {
+test("a loaded note rewritten with no body is still on disk and is marked still there but unusable", async () => {
   const world = await relevantWorld()
   await putDeployNote(world)
   await world.pi.prompt(DEPLOY.question, [])
   await writeVaultFile(world.folders.projectVault, DEPLOY.path, noteWithId(2, "", []))
   await world.pi.prompt(SAY_OK, [])
   expect(await fileExists(join(world.folders.projectVault, DEPLOY.path))).toBe(true)
-  expect(await relevantMessages(world)).toEqual([DEPLOY_MESSAGE, relevantMessage([invalidatedBlock(deployBefore)])])
+  expect(await relevantMessages(world)).toEqual([
+    DEPLOY_MESSAGE,
+    relevantMessage([unusableBlock("project", DEPLOY.path, `${DEPLOY.path} has no body`)]),
+  ])
+})
+
+test("a loaded note rewritten with broken frontmatter is still on disk and is marked still there but unusable", async () => {
+  const world = await relevantWorld()
+  await putDeployNote(world)
+  await world.pi.prompt(DEPLOY.question, [])
+  await writeVaultFile(world.folders.projectVault, DEPLOY.path, noteWithId(2, newDeployBody, ["colour: red"]))
+  await world.pi.prompt(SAY_OK, [])
+  expect(await fileExists(join(world.folders.projectVault, DEPLOY.path))).toBe(true)
+  expect(await relevantMessages(world)).toEqual([
+    DEPLOY_MESSAGE,
+    relevantMessage([
+      unusableBlock("project", DEPLOY.path, `${DEPLOY.path} has invalid frontmatter and cannot be changed`),
+    ]),
+  ])
 })
 
 test("a Don't forget note edited or archived later is told in a message and never in the section", async () => {
@@ -75,7 +95,7 @@ test("a Don't forget note edited or archived later is told in a message and neve
   await world.pi.prompt(SAY_OK, [])
   expect(await relevantMessages(world)).toEqual([
     relevantMessage([replacementBlock(releaseBefore, releaseAfter)]),
-    relevantMessage([invalidatedBlock(releaseAfter)]),
+    relevantMessage([goneBlock("global", RELEASE.path)]),
   ])
   const history = await memorySectionHistory(world)
   expect(history).toEqual([section])

@@ -35,6 +35,12 @@ export interface ExplicitSave {
 
 export type CaptureSettingsResult = Succeeded<CaptureCadenceSettings> | MemoryResolutionRefusal
 
+export interface UnreadableNote {
+  kind: "unreadable"
+  existence: "gone" | "present" | "unknown"
+  detail: string
+}
+
 export interface CaptureRun {
   messages: TranscriptMessage[]
   explicitSaves: ExplicitSave[]
