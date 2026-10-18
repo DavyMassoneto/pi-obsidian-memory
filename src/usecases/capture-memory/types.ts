@@ -22,6 +22,12 @@ export interface ExplicitSave {
   path: string
 }
 
+export interface UnreadableNote {
+  kind: "unreadable"
+  existence: "gone" | "present" | "unknown"
+  detail: string
+}
+
 export type CaptureTrigger = "after-each-turn" | "on-compaction" | "at-session-end"
 
 export interface CaptureRun {
