@@ -16,7 +16,7 @@ export async function holdFileWithoutDeleteSharing(path: string) {
         "try { [Console]::WriteLine('ready'); [Console]::Out.Flush(); [Console]::ReadLine() | Out-Null } " +
         "finally { $file.Dispose() }",
     ],
-    { cwd: dirname(path), env: { SystemRoot: systemRoot }, windowsHide: true, timeout: 15000 },
+    { cwd: dirname(path), env: { SystemRoot: systemRoot }, windowsHide: true },
   )
   const closed = new Promise<void>((resolve) => child.once("close", () => resolve()))
   const release = () => releaseHandle(child, closed)
@@ -45,30 +45,10 @@ async function waitForHandle(child: ChildProcessWithoutNullStreams, path: string
     child.stdin.on("error", reject)
     child.stdin.write(`${path}\n`)
   })
-  await boundedHandleWait(ready, 5000)
+  await ready
 }
 
 async function releaseHandle(child: ChildProcessWithoutNullStreams, closed: Promise<void>): Promise<void> {
   child.stdin.end("\n")
-  const forceExit = setTimeout(() => child.kill(), 2000)
-  try {
-    await boundedHandleWait(closed, 5000)
-  } finally {
-    clearTimeout(forceExit)
-    if (typeof child.exitCode !== "number") child.kill()
-  }
-}
-
-async function boundedHandleWait(operation: Promise<void>, milliseconds: number): Promise<void> {
-  let timeout: ReturnType<typeof setTimeout> | undefined
-  try {
-    await Promise.race([
-      operation,
-      new Promise<never>((_resolve, reject) => {
-        timeout = setTimeout(() => reject(new Error("Windows handle fixture timed out")), milliseconds)
-      }),
-    ])
-  } finally {
-    clearTimeout(timeout)
-  }
+  await closed
 }
