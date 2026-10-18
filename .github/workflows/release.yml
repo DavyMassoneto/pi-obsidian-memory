@@ -51,11 +51,9 @@ jobs:
           git commit -m "chore(release): ${{ steps.next.outputs.tag }} [skip ci]"
           git tag "${{ steps.next.outputs.tag }}"
       - if: steps.next.outputs.release == 'true'
-        run: |
-          token="$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=claims-check" | node -p 'JSON.parse(require("fs").readFileSync(0)).value')"
-          node -e 'const c = JSON.parse(Buffer.from(process.argv[1].split(".")[1], "base64url").toString()); console.log(JSON.stringify({ repository: c.repository, repository_owner: c.repository_owner, repository_id: c.repository_id, workflow_ref: c.workflow_ref, job_workflow_ref: c.job_workflow_ref, environment: c.environment, ref: c.ref, event_name: c.event_name, runner_environment: c.runner_environment }))' "$token"
-          npm --version
-          npm publish --access public --loglevel verbose
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
       - if: steps.next.outputs.release == 'true'
         run: git push origin HEAD:main "${{ steps.next.outputs.tag }}"
       - if: steps.next.outputs.release == 'true'
