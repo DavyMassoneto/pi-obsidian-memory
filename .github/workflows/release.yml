@@ -51,7 +51,9 @@ jobs:
           git commit -m "chore(release): ${{ steps.next.outputs.tag }} [skip ci]"
           git tag "${{ steps.next.outputs.tag }}"
       - if: steps.next.outputs.release == 'true'
-        run: npm publish --access public
+        run: |
+          npm --version
+          npm publish --access public --loglevel verbose
       - if: steps.next.outputs.release == 'true'
         run: git push origin HEAD:main "${{ steps.next.outputs.tag }}"
       - if: steps.next.outputs.release == 'true'
