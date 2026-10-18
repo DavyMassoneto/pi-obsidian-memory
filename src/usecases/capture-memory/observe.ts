@@ -67,7 +67,6 @@ export async function observeGet(save: ExplicitSave, context: MemoryOperationCon
 export async function observeSearch(
   vault: ExplicitSave["vault"],
   query: string,
-  limit: number,
   context: MemoryOperationContext,
 ): Promise<MemoryObservation> {
   const result = await searchMemory({ query, vault }, context)
@@ -76,7 +75,7 @@ export async function observeSearch(
   if (!found || !("hits" in found)) {
     return { kind: "unavailable", operation: "search", detail: "That vault is not available" }
   }
-  const candidates = found.hits.slice(0, limit).map((hit) => ({
+  const candidates = found.hits.map((hit) => ({
     vault,
     path: hit.path,
     id: hit.id,

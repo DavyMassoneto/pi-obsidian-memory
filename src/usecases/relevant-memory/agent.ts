@@ -36,7 +36,7 @@ export async function findNotes(
 }
 
 function observe(action: ReadStep, context: MemoryOperationContext): Promise<MemoryObservation> {
-  if (action.action === "search") return observeSearch(action.vault, action.query, action.limit, context)
+  if (action.action === "search") return observeSearch(action.vault, action.query, context)
   if (action.action === "get") return observeGet({ vault: action.vault, path: action.path }, context)
   return observeList(action.vault, action.folder, context)
 }

@@ -143,7 +143,6 @@ export const VectorRowSchema = Type.Object(
 
 export const SearchOptionsSchema = Type.Object(
   {
-    limit: Type.Integer({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER }),
     includeArchived: Type.Boolean(),
   },
   { additionalProperties: false },

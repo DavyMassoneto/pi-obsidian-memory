@@ -12,7 +12,7 @@ test("rebuilds an incompatible derived schema without pretending to restore vaul
   const result = openIndex(path)
   expect(result).toMatchObject({ succeeded: true, rebuilt: true })
   if (!result.succeeded) throw new Error("rebuild failed")
-  expect(searchText(result.output, "legacy", { limit: 10, includeArchived: false })).toEqual({
+  expect(searchText(result.output, "legacy", { includeArchived: false })).toEqual({
     succeeded: true,
     output: [],
   })
@@ -20,9 +20,7 @@ test("rebuilds an incompatible derived schema without pretending to restore vaul
   result.output.close()
 
   const reopened = openedIndex(path)
-  expect(statementsOf(searchText(reopened, "pnpm", { limit: 10, includeArchived: false }))).toEqual([
-    anEntry().statement,
-  ])
+  expect(statementsOf(searchText(reopened, "pnpm", { includeArchived: false }))).toEqual([anEntry().statement])
 })
 
 test("rolls back schema and version changes together if rebuilding fails after dropping old tables", async () => {

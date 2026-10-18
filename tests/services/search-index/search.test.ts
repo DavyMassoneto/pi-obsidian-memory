@@ -11,7 +11,7 @@ import {
   useTempIndex,
 } from "#test-helpers"
 
-const defaults = { limit: 10, includeArchived: false }
+const defaults = { includeArchived: false }
 
 test("finds a note by a word of its statement or of its body", async () => {
   const index = await useTempIndex()
@@ -104,11 +104,14 @@ test("reports SQLite query failures from an externally damaged schema", async ()
   expect(searchText(index, "pnpm", defaults)).toMatchObject({ succeeded: false, reason: "corrupted" })
 })
 
-test("returns at most the asked number of notes", async () => {
+test("returns every matching note, however many", async () => {
   const index = await useTempIndex()
-  for (const suffix of ["60", "61", "62"]) {
+  const suffixes = Array.from({ length: 30 }, (_, number) => String(number + 10))
+  for (const suffix of suffixes) {
     putNote(index, entryWith(`01JABCDE7XKQ2M9V3RTN8WPZ${suffix}`, `pnpm note ${suffix}`, "pnpm"))
   }
 
-  expect(searchHits(searchText(index, "pnpm", { ...defaults, limit: 2 }))).toHaveLength(2)
+  expect(statementsOf(searchText(index, "pnpm", defaults)).toSorted()).toEqual(
+    suffixes.map((suffix) => `pnpm note ${suffix}`),
+  )
 })

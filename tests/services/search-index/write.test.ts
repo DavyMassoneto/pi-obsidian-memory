@@ -12,7 +12,7 @@ import {
   useTempIndex,
 } from "#test-helpers"
 
-const defaults = { limit: 10, includeArchived: false }
+const defaults = { includeArchived: false }
 
 test("updates the same id, forgetting its old words even after reopening", async () => {
   const { index, path } = await useIndexFile()
