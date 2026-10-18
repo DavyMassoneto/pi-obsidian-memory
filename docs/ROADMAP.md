@@ -8,7 +8,8 @@ Every milestone:
 - starts by checking whether pi-hermes-memory already does it, and reuses only what is needed (VISION 1);
 - is built test first, layer by layer (AGENTS.md), with one folder per topic;
 - adds its settings to [config.md](config.md) with their defaults, and `/memory-setup` writes them;
-- ends with `npm test`, `npm run lint`, `npm run typecheck` and `npm run test:e2e` passing on Windows (VISION 14);
+- ends with `npm test`, `npm run lint` and `npm run typecheck` passing in CI on Windows, macOS and Linux, and
+  `npm run test:e2e` passing on Windows (VISION 14);
 - ends with the README saying what works, and with every text the LLM or the user sees naming only commands
   and tools that exist.
 
@@ -62,8 +63,8 @@ Every milestone:
     `edit`/`write`; when Jev cannot answer, the call is refused with the cause;
   - [x] cutoffs measured on labelled commands, split into fit and check groups, with the results documented.
   - Commits: f3bd10b (the check), 6efa68c (wired into pi), f620882 (cutoffs), 403fcd9 (script finding).
-  - [ ] end-to-end scenarios on the real pi: 1 (a9e1a59), 2 (6fa8fb4, 7cd3b8a), 3 (6f21afd), 4 (0c1cf16),
-    6 (5f1b444), 7 (6efa68c), 8 (89423cb); 5 (capture) still to land.
+  - [x] end-to-end scenarios on the real pi: 1 (a9e1a59), 2 (6fa8fb4, 7cd3b8a), 3 (6f21afd), 4 (0c1cf16),
+    5 (8d7e3be), 6 (5f1b444), 7 (6efa68c), 8 (89423cb).
 - **Done when:** the labelled check group shows each question separating, and the guard refuses the edits and lets
   the allowed runs through in tests.
 
@@ -85,8 +86,7 @@ Every milestone:
 | 1 Reuse | every milestone (checked first) |
 | 7 Language | 4: captured notes in English |
 | 11 Secrets | 4 proves a secret is saved as written |
-| 12 Vault access | Shell-edit guard (Jev) |
-| 14 Platform | every milestone (Windows smoke test) |
+| 14 Platform | every milestone: lint, typecheck, `npm test` in CI on Windows, macOS, Linux; `test:e2e` on Windows |
 
 ## To do
 
@@ -100,7 +100,7 @@ Every milestone:
 - Saving skills to the vaults: VISION, Not in scope.
 - Hosts other than pi: VISION 14, not for now.
 - Searching past pi sessions: VISION, not for now.
-- Platforms other than Windows: Windows first; others are not tested until the user asks.
+- The end-to-end suite on macOS and Linux: it needs the user's pi login, so it runs on Windows only.
 - Consolidation or an approval step: ruled out by the user (memory is written directly, with full detail).
 - Masking or blocking secrets: VISION 11 rules it out.
 - Checking links at the same moment as the read or write: a known limit in vault-format Writing.

@@ -8,7 +8,8 @@ dedicated vaults: one global vault about you (how to address you, preferences, p
 project. Notes are plain Markdown, written in English whatever language you speak, and never deleted: retired notes
 move to `archive/`. See [docs/VISION.md](docs/VISION.md) for the decisions behind it.
 
-> **Status:** early development (`0.0.1`), Windows first. Requires Node 22.19 or later.
+> **Status:** runs on Windows, macOS and Linux; CI runs the unit tests on all three and the end-to-end suite runs on
+> Windows. Requires Node 22.19 or later.
 
 ## Install
 
@@ -102,11 +103,14 @@ as it is on disk.
   cutoffs per-message memory is off and each session tells you. Setup steps are in
   [Running the decision model](docs/config.md#running-the-decision-model). If the decision model is unavailable
   nothing is added and you are told once per session; no other model takes over.
-- **Automatic capture.** A background review of the conversation saves, updates, archives and succeeds notes, at the
-  moment set by `capture.when`: `after-each-turn` (the default), `on-compaction` or `at-session-end`. It never asks you anything:
-  what it is unsure of is not saved. Its judgement quality is not yet proven against a real model.
+- **Automatic capture.** As in pi-hermes-memory, a background review of the conversation saves, updates, archives and
+  succeeds notes every `capture.nudgeInterval` assistant turns (10) or `capture.nudgeToolCalls` tool calls (15), once
+  the session has three user messages. What was not yet reviewed is also reviewed before compaction and when the
+  session ends, once it has `capture.flushMinTurns` user messages (6). It never asks you anything: what it is unsure
+  of is not saved. Its judgement quality is not yet proven against a real model.
 - **Semantic search.** `memory_search` fuses words and meaning. The default is a local multilingual model (about
-  135 MB), downloaded when needed, without asking; OpenAI and Google are the alternatives. The index lives outside the vaults and is rebuilt from the notes whenever needed.
+  135 MB), downloaded when needed, without asking; OpenAI and Google are the alternatives. The index lives outside the
+  vaults and is rebuilt from the notes whenever needed.
 
 ### Vault guard
 
@@ -116,8 +120,19 @@ You, and Obsidian, are not the LLM and stay free.
 
 Accepted as they are (your decision, 2026-10-17): reading a vault through a path the shell builds indirectly
 (variables, globs, scripts), tools of other extensions, and foreground subagents, which load no extensions. Creating
-hardlinks through the shell will be refused by the shell-edit guard, still in progress. Details in
+hardlinks through the shell is refused by the shell-edit guard. Details in
 [docs/ROADMAP.md](docs/ROADMAP.md#2-memory-the-agent-can-read-vault-access-only).
+
+Paths are compared ignoring case on Windows and macOS and with case on Linux, whatever the volume: a case-sensitive
+macOS volume is still compared ignoring case, and a case-insensitive mount on Linux is still compared with case.
+
+### Shell-edit guard
+
+Before every `bash`/`powershell` call, Jev (`jev-latest`, which needs `TYPESAFE_API_KEY`) scores whether the command
+edits a file through a redirection, an in-place edit, inline code, a script that writes, a copy or download that
+creates a file, or a hardlink. A score at or above its cutoff refuses the call and points to `edit` and `write`; when Jev cannot
+answer, the call is refused. The cutoffs and how they were measured are in
+[docs/shell-edit-cutoffs.md](docs/shell-edit-cutoffs.md).
 
 ### Dashboard
 
