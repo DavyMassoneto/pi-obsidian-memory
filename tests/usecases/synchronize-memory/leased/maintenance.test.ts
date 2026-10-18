@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs"
-import { chmod, mkdir, readFile, rm, stat } from "node:fs/promises"
+import { mkdir, readFile, rm, stat } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
@@ -7,6 +7,7 @@ import { expect, test } from "vitest"
 import { synchronizeMemory } from "#src/usecases"
 import {
   abortWhileFileExists,
+  blockWrite,
   corruptFolderIndexRows,
   expectRegistrationLeaseReleased,
   inFreshSession,
@@ -52,7 +53,7 @@ test("retries failed folder maintenance after the catalog has already committed"
   await putCatalogFile(vault, "Note.md", noteText(validFrontmatterLines(), "memory"))
   expect((await synchronizeMemory({ vault: "global" }, context)).succeeded).toBe(true)
   const index = join(vault.path, "index.md")
-  await chmod(index, 0o444)
+  const release = await blockWrite(index)
   try {
     await putCatalogFile(vault, "Note.md", noteText([...validFrontmatterLines(), "dontForget: true"], "memory"))
     const failed = await synchronizeMemory({ vault: "global" }, context)
@@ -61,7 +62,7 @@ test("retries failed folder maintenance after the catalog has already committed"
     expect(failed.output.warnings.length).toBeGreaterThan(0)
     expect(await readFile(index, "utf8")).not.toContain("don't forget")
   } finally {
-    await chmod(index, 0o666)
+    await release()
   }
   expect(await synchronizeMemory({ vault: "global" }, context)).toMatchObject({
     succeeded: true,
@@ -107,7 +108,7 @@ test("a folder whose index cannot be written does not stop the other folders", a
   await putCatalogFile(vault, "b/Note.md", noteText(validFrontmatterLines(), "memory"))
   expect((await synchronizeMemory({ vault: "global" }, context)).succeeded).toBe(true)
   const blocked = join(vault.path, "a/index.md")
-  await chmod(blocked, 0o444)
+  const release = await blockWrite(blocked)
   try {
     await putCatalogFile(vault, "a/Note.md", noteText([...validFrontmatterLines(), "dontForget: true"], "memory"))
     await putCatalogFile(vault, "b/Note.md", noteText([...validFrontmatterLines(), "dontForget: true"], "memory"))
@@ -118,7 +119,7 @@ test("a folder whose index cannot be written does not stop the other folders", a
     expect(await readFile(blocked, "utf8")).not.toContain("don't forget")
     expect(await readFile(join(vault.path, "b/index.md"), "utf8")).toContain("don't forget")
   } finally {
-    await chmod(blocked, 0o666)
+    await release()
   }
 })
 

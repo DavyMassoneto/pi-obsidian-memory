@@ -1,4 +1,4 @@
-import { chmod, readdir, readFile, writeFile } from "node:fs/promises"
+import { readdir, readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
@@ -9,6 +9,7 @@ import {
   aLimits,
   allowing,
   aNote,
+  blockWrite,
   keepGoing,
   linkFolder,
   putNoteFile,
@@ -45,7 +46,7 @@ test("refreshes the remaining folders after one index cannot be written", async 
   await putNoteFile(vault, "b", "Note", renderNote(aNote()))
   const blocked = join(vault, "a", "index.md")
   await writeFile(blocked, "STALE")
-  await chmod(blocked, 0o444)
+  const release = await blockWrite(blocked)
 
   try {
     const result = await refreshFolders(
@@ -58,7 +59,7 @@ test("refreshes the remaining folders after one index cannot be written", async 
     expect(result).toMatchObject({ succeeded: false, problems: [expect.stringContaining("a/index")] })
     expect(await readFile(blocked, "utf8")).toBe("STALE")
   } finally {
-    await chmod(blocked, 0o666)
+    await release()
   }
   expect(await readIndexOf(vault, "b")).toContain("## Notes")
   expect(await readIndexOf(vault, "")).toContain("- [[b/index|b]]")
