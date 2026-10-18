@@ -8,7 +8,7 @@ export async function piWithoutCredentials(world: E2eWorld): Promise<Pick<E2eWor
   const pi = new RpcPi({
     cwd: world.folders.cwd,
     agentDir: world.folders.agentDir,
-    args: piArgs(world.options, []),
+    args: piArgs(world.options),
     credentials: null,
     omitTypesafeKey: false,
     offlineNpmCache: null,

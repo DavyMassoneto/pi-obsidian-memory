@@ -2,9 +2,9 @@ import { join, resolve } from "node:path"
 
 export const repoRoot = resolve(import.meta.dirname, "..", "..")
 
-export const E2E_PROVIDER = "anthropic"
+export const E2E_PROVIDER = "omni"
 
-export const E2E_MODEL = "claude-haiku-5-5"
+export const E2E_MODEL = "cc/claude-haiku-5-5"
 
 export const E2E_PROJECT_NAME = "e2e-project"
 

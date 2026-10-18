@@ -1,19 +1,17 @@
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
 
+import { requiredEnv } from "./e2e-omniroute.ts"
 import { piCliPath } from "./e2e-paths.ts"
 
 const run = promisify(execFile)
 
 export interface PiCredentialsEnv {
-  ANTHROPIC_OAUTH_TOKEN: string
   TYPESAFE_API_KEY: string
 }
 
-export async function piCredentialsEnv(): Promise<PiCredentialsEnv> {
-  const anthropic = await printedByPi(["auth", "print-bearer-token", "--provider", "anthropic"])
-  const typesafe = await typesafeApiKey()
-  return { ANTHROPIC_OAUTH_TOKEN: anthropic, TYPESAFE_API_KEY: typesafe }
+export function piCredentialsEnv(): PiCredentialsEnv {
+  return { TYPESAFE_API_KEY: requiredEnv("TYPESAFE_API_KEY") }
 }
 
 export async function typesafeApiKey(): Promise<string> {

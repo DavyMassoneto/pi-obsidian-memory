@@ -8,7 +8,6 @@ import {
   NO_MEMORY_NOTICE,
 } from "#src/pi"
 import {
-  anthropicAuthPackageFolder,
   callMemoryToolOnce,
   e2eWorld,
   expectedNoteText,
@@ -20,6 +19,7 @@ import {
   noMemoryWorld,
   noteTextAt,
   notifySettles,
+  omnirouteSyncPackageFolder,
   recordOf,
   vaultNotes,
 } from "#test-helpers"
@@ -48,8 +48,8 @@ test("installed with no config, pi tells the user to run /memory-setup", async (
   expect([notice?.notifyType, notice?.message]).toEqual(["info", NO_MEMORY_NOTICE])
 })
 
-test("installed, the six memory tools each run once on a Haiku turn, and pi writes nothing into the auth package", async () => {
-  const authFolder = await anthropicAuthPackageFolder()
+test("installed, the six memory tools each run once on a Haiku turn, and pi writes nothing into the OmniRoute package", async () => {
+  const authFolder = omnirouteSyncPackageFolder()
   const authBefore = await folderSnapshot(authFolder)
   const world = await e2eWorld({
     memory: "configured",

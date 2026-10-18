@@ -5,6 +5,7 @@ import {
   allNotes,
   cadenceWorld,
   captureStatusTexts,
+  E2E_PROVIDER,
   newSessionMeasured,
   noticeTexts,
   PLAIN_PROMPT,
@@ -20,7 +21,7 @@ import {
 test("a capture model that pi does not know ends the review with one warning, saves nothing and keeps the cursor", async () => {
   const world = await cadenceWorld({ captureSettings: { nudgeInterval: 1 } })
   const { capture } = await storedConfig(world)
-  await rewriteConfig(world, { capture: { ...capture, model: { provider: "anthropic", id: "no-such-model" } } })
+  await rewriteConfig(world, { capture: { ...capture, model: { provider: E2E_PROVIDER, id: "no-such-model" } } })
   const { from } = await reviewedAfterThreeTurns(world, PNPM_RULE)
   expect(noticeTexts(world, from)).toEqual([`${CAPTURE_FAILED} Model call unsupported`])
   expect(captureStatusTexts(world, from)).toEqual([STATUS_CAPTURING.text, undefined])
