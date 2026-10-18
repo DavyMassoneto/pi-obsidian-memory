@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { expect, test } from "vitest"
 
 import { canonicalizeConfigLocation, canonicalizeRegistration, canonicalizeWorkingFolder } from "#src/services"
-import { productSettings, registrationFixture, useTempFolder } from "#test-helpers"
+import { productSettings, registrationFixture, testPlatform, useTempFolder } from "#test-helpers"
 
 test("working-folder resolution uses supplied absolute paths and rejects files and broken aliases", async () => {
   const root = await useTempFolder()
@@ -42,7 +42,9 @@ test("reports every independent filesystem failure with its config field", async
     ...productSettings(),
   }
 
-  expect(await canonicalizeConfigLocation({ config, configPath: join(root, "config.json") })).toEqual({
+  expect(
+    await canonicalizeConfigLocation({ config, configPath: join(root, "config.json"), platform: testPlatform() }),
+  ).toEqual({
     succeeded: false,
     problems: [
       `global.vault: Error: ${global}: expected a directory`,
@@ -70,6 +72,7 @@ test("keeps genuine link diagnostics alongside independent registration and infr
     },
     configPath: join(file, "config.json"),
     indexPath: file,
+    platform: testPlatform(),
   })
 
   expect(result).toEqual({
@@ -99,6 +102,7 @@ test("canonical junction aliases and missing suffixes cannot nest vaults", async
         config: fixture.config,
         configPath: fixture.path,
         indexPath: fixture.indexPath,
+        platform: fixture.platform,
       }),
     ).toMatchObject({ succeeded: false, problems: [expect.stringContaining("vaults")] })
     expect(
@@ -106,6 +110,7 @@ test("canonical junction aliases and missing suffixes cannot nest vaults", async
         config: { ...fixture.config, projects: [] },
         configPath: fixture.path,
         indexPath: fixture.indexPath,
+        platform: fixture.platform,
       }),
     ).toMatchObject({ succeeded: true })
   } finally {
@@ -122,7 +127,9 @@ test("keeps config and index outside vaults including new destinations via an an
       { configPath: join(alias, "future", "config.json"), indexPath: fixture.indexPath },
       { configPath: fixture.path, indexPath: join(alias, "future", "index") },
     ]) {
-      expect(await canonicalizeRegistration({ config: fixture.config, ...infrastructure })).toMatchObject({
+      expect(
+        await canonicalizeRegistration({ config: fixture.config, platform: fixture.platform, ...infrastructure }),
+      ).toMatchObject({
         succeeded: false,
       })
     }
@@ -144,6 +151,7 @@ test("refuses duplicate canonical working folders while allowing nested roots", 
         config: fixture.config,
         configPath: fixture.path,
         indexPath: fixture.indexPath,
+        platform: fixture.platform,
       }),
     ).toMatchObject({ succeeded: false, problems: [expect.stringContaining("folder")] })
     fixture.config.projects[1] = {
@@ -156,6 +164,7 @@ test("refuses duplicate canonical working folders while allowing nested roots", 
         config: fixture.config,
         configPath: fixture.path,
         indexPath: fixture.indexPath,
+        platform: fixture.platform,
       }),
     ).toMatchObject({ succeeded: true })
   } finally {
@@ -171,6 +180,7 @@ test.runIf(process.platform === "win32")("on Windows: does not infer a drive for
         config: { ...fixture.config, global: { vault: "/unspecified-drive" } },
         configPath: fixture.path,
         indexPath: fixture.indexPath,
+        platform: fixture.platform,
       }),
     ).toMatchObject({ succeeded: false })
   } finally {
@@ -191,6 +201,7 @@ test("refuses broken links and files used as vault roots or ancestors instead of
           config: { ...fixture.config, global: { vault } },
           configPath: fixture.path,
           indexPath: fixture.indexPath,
+          platform: fixture.platform,
         }),
       ).toMatchObject({ succeeded: false })
     }

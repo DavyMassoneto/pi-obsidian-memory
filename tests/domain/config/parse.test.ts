@@ -1,7 +1,6 @@
 import { expect, test } from "vitest"
 
-import { parseConfig } from "#src/domain"
-import { aConfig, configTextWithLimits } from "#test-helpers"
+import { aConfig, configTextWithLimits, parseConfig } from "#test-helpers"
 
 test("reads a complete config", () => {
   expect(parseConfig(JSON.stringify(aConfig()))).toEqual({ succeeded: true, output: aConfig() })

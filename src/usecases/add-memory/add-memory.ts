@@ -36,12 +36,12 @@ export async function addMemory(
 }
 
 async function addLeasedMemory(request: AddMemoryRequest, context: MemoryOperationContext): Promise<AddMemoryResult> {
-  const config = await readConfig(context.configPath)
+  const config = await readConfig(context.configPath, context.platform)
   if (!config.succeeded) {
     return config
   }
 
-  const target = targetVault(config.output, request.scope, context.workingFolder)
+  const target = targetVault(config.output, request.scope, context.workingFolder, context.platform)
   if (!target.succeeded) {
     return { ...target, configPath: context.configPath }
   }

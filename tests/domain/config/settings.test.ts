@@ -1,7 +1,7 @@
 import { expect, test } from "vitest"
 
-import { inspectConfigForRepair, prepareSetupDefaults, proposeSetup } from "#src/domain"
-import { DEFAULT_CADENCE, productSettings } from "#test-helpers"
+import { prepareSetupDefaults } from "#src/domain"
+import { DEFAULT_CADENCE, inspectConfigForRepair, productSettings, proposeSetup } from "#test-helpers"
 
 test("setup alone can use the explicitly supplied model and null leaves both models unresolved", () => {
   const selected = { provider: "chosen-provider", id: "chosen-model" }

@@ -5,6 +5,7 @@ export function captureRegistrationContext(context: RegistrationContext): Regist
     configPath: context.configPath,
     workingFolder: context.workingFolder,
     indexPath: context.indexPath,
+    platform: context.platform,
     session: context.session,
     stamp: context.stamp,
     signal: context.signal,

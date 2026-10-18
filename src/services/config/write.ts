@@ -11,6 +11,7 @@ export async function writeConfig(request: WriteConfigRequest): Promise<WriteCon
     config: request.config,
     configPath: request.path,
     indexPath: request.indexPath,
+    platform: request.platform,
   })
   if (!canonical.succeeded) {
     return { ...canonical, reason: "invalid-config", warnings: [] }

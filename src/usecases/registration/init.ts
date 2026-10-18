@@ -32,7 +32,7 @@ async function prepareProjectRegistration(
   request: InitCommitRequest,
   context: RegistrationContext,
 ): Promise<RegistrationResult> {
-  const snapshot = await readConfigSnapshot({ path: context.configPath })
+  const snapshot = await readConfigSnapshot({ path: context.configPath, platform: context.platform })
   const interrupted = registrationInterruption(context)
   if (interrupted) return registrationValidationFailure(interrupted)
   if (!snapshot.succeeded) return registrationValidationFailure(snapshot)
@@ -62,19 +62,28 @@ async function proposeProjectRegistration(
   context: RegistrationContext,
   config: MemoryConfig,
 ): Promise<RegistrationResult> {
-  const valid = await canonicalizeRegistration({ config, configPath: context.configPath, indexPath: context.indexPath })
+  const valid = await canonicalizeRegistration({
+    config,
+    configPath: context.configPath,
+    indexPath: context.indexPath,
+    platform: context.platform,
+  })
   const stale = registrationInterruption(context)
   if (stale) return registrationValidationFailure(stale)
   if (!valid.succeeded) return registrationValidationFailure(valid)
   const vault = resolveRegistrationVault({ vault: request.vault, workingFolder: context.workingFolder })
   if (!vault.succeeded) return registrationValidationFailure(vault)
-  const proposal = proposeInit({ config, folder: context.workingFolder, name: request.name, vault: vault.output })
+  const proposal = proposeInit(
+    { config, folder: context.workingFolder, name: request.name, vault: vault.output },
+    context.platform,
+  )
   if (!proposal.succeeded) return registrationValidationFailure(proposal)
   return publishRegistration(
     {
       scope: "project",
       write: {
         path: context.configPath,
+        platform: context.platform,
         indexPath: context.indexPath,
         config: proposal.output,
         expectedHash: request.expectedHash,

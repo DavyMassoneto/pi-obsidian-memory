@@ -4,6 +4,7 @@ import { join } from "node:path"
 
 import type { MemoryConfig } from "#src/domain"
 import { productSettings } from "./settings.ts"
+import { testPlatform } from "./test-platform.ts"
 
 export async function registrationFixture() {
   const root = await mkdtemp(join(tmpdir(), "memory-registration-"))
@@ -14,5 +15,11 @@ export async function registrationFixture() {
   }
   await mkdir(config.global.vault)
   await mkdir(join(root, "project"))
-  return { root, config, path: join(root, "machine", "config.json"), indexPath: join(root, "machine", "index") }
+  return {
+    root,
+    config,
+    path: join(root, "machine", "config.json"),
+    indexPath: join(root, "machine", "index"),
+    platform: testPlatform(),
+  }
 }

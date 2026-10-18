@@ -1,4 +1,4 @@
-import type { ConfigRepairDraft, MemoryConfig, ParseConfigResult } from "#src/domain"
+import type { ConfigRepairDraft, MemoryConfig, ParseConfigResult, PathPlatform } from "#src/domain"
 import type { Failed, Succeeded } from "#src/shared"
 
 export type ConfigFailureReason = "not-configured" | "invalid-config" | "unreadable"
@@ -17,6 +17,7 @@ export type ReadConfigResult = Succeeded<MemoryConfig> | ConfigRefusal | ConfigU
 
 export interface ConfigLocation {
   path: string
+  platform: PathPlatform
 }
 
 export interface RegistrationVaultInput {
@@ -43,6 +44,7 @@ export type ReadConfigSnapshotResult = Succeeded<ConfigSnapshot> | Failed
 export interface ConfigRegistrationLocation {
   config: MemoryConfig
   configPath: string
+  platform: PathPlatform
 }
 
 export type ConfigRegistrationLocationResult = Succeeded<ConfigRegistrationLocation> | Failed
@@ -55,8 +57,7 @@ export type RegistrationPathsResult = Succeeded<RegistrationPaths> | Failed
 export type CanonicalPathResult = Succeeded<string> | Failed
 export type CanonicalConfigResult = Succeeded<MemoryConfig> | Failed
 
-export interface WriteConfigRequest {
-  path: string
+export interface WriteConfigRequest extends ConfigLocation {
   indexPath: string
   config: MemoryConfig
   expectedHash: string | null

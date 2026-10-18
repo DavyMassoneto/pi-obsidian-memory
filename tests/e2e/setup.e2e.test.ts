@@ -41,6 +41,7 @@ import {
   settingsScreen,
   statusCleared,
   storedConfig,
+  testPlatform,
 } from "#test-helpers"
 
 const model = `${E2E_PROVIDER}/${E2E_MODEL}`
@@ -59,7 +60,7 @@ test("with no config, pi tells the user to run /memory-setup, and /memory-init r
 test("first /memory-setup and /memory-init write every key, the templates and the dashboards", async () => {
   const world = await e2eWorld({ memory: "configured", tools: [], modelCache: "shared", capture: "after-each-turn" })
   const { globalVault, projectVault, cwd } = world.folders
-  const config = await readConfig(world.folders.configPath)
+  const config = await readConfig(world.folders.configPath, testPlatform())
   if (!config.succeeded) throw new Error(config.problems.join("\n"))
   const saved = config.output
   const [project] = saved.projects
@@ -119,7 +120,7 @@ test("an invalid config turns memory off with a notice, and /memory-setup repair
     notifySettles([SETUP_DONE, SETUP_CANCELLED]),
   )
   expect(notifiedWith(turn, SETUP_DONE)).toHaveLength(1)
-  const config = await readConfig(world.folders.configPath)
+  const config = await readConfig(world.folders.configPath, testPlatform())
   if (!config.succeeded) throw new Error(config.problems.join("\n"))
   expect(await realpath(config.output.global.vault)).toBe(await realpath(world.folders.globalVault))
   expect(config.output.capture).toEqual({ model: { provider: E2E_PROVIDER, id: E2E_MODEL }, ...DEFAULT_CADENCE })
