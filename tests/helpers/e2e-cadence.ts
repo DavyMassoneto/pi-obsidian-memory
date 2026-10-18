@@ -30,14 +30,6 @@ export async function cursorsIn(sessionFile: string): Promise<number> {
     .filter((line) => recordOf(CursorLineSchema, line)).length
 }
 
-export async function untilCursors(sessionFile: string, count: number): Promise<void> {
-  const deadline = Date.now() + 180_000
-  while ((await cursorsIn(sessionFile)) < count) {
-    if (Date.now() > deadline) throw new Error(`no ${count} cursor in ${sessionFile}`)
-    await new Promise((resolve) => setTimeout(resolve, 500))
-  }
-}
-
 export async function promptTimes(world: E2eWorld, count: number, prompt: string): Promise<void> {
   for (let index = 0; index < count; index++) await world.pi.prompt(prompt, [])
 }

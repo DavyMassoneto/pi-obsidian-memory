@@ -13,9 +13,6 @@ import { noteWithId } from "./search-memory.ts"
 export const RULE_AND_TASK =
   "For your information: in this project we always use pnpm, never npm. Separately, a task for me today: rename the build-cache-9137 folder. Reply with only OK and do not call any tool."
 
-export const PNPM_RULE =
-  "For your information: in this project we always use pnpm, never npm. Reply with only OK and do not call any tool."
-
 const TASK_MARKER = "build-cache-9137"
 
 export function seedToolingFolder(world: E2eWorld): Promise<void> {

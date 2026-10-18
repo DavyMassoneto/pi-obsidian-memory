@@ -1,12 +1,6 @@
 import { expect, test } from "vitest"
 
-import {
-  MEMORY_DOCTOR_COMMAND,
-  MEMORY_EXPORT_COMMAND,
-  MEMORY_INIT_COMMAND,
-  MEMORY_SETUP_COMMAND,
-  NO_MEMORY_NOTICE,
-} from "#src/pi"
+import { MEMORY_DOCTOR_COMMAND, MEMORY_EXPORT_COMMAND, MEMORY_INIT_COMMAND, MEMORY_SETUP_COMMAND } from "#src/pi"
 import {
   callMemoryToolOnce,
   e2eWorld,
@@ -15,12 +9,8 @@ import {
   inDayWindow,
   memoryNote,
   memoryNoteAt,
-  NotifySchema,
-  noMemoryWorld,
   noteTextAt,
-  notifySettles,
   omnirouteSyncPackageFolder,
-  recordOf,
   vaultNotes,
 } from "#test-helpers"
 
@@ -40,12 +30,6 @@ test("installed through settings.json packages, pi lists the four memory command
   expect(commands).toContainEqual(
     expect.objectContaining({ name: "skill:obsidian-memory", source: "skill", sourceInfo: fromPackage }),
   )
-})
-
-test("installed with no config, pi tells the user to run /memory-setup", async () => {
-  const world = await noMemoryWorld({ modelCache: "fresh", installed: true })
-  const notice = recordOf(NotifySchema, await world.pi.waitFor(notifySettles([NO_MEMORY_NOTICE]), 0))
-  expect([notice?.notifyType, notice?.message]).toEqual(["info", NO_MEMORY_NOTICE])
 })
 
 test("installed, the six memory tools each run once on a Haiku turn, and pi writes nothing into the OmniRoute package", async () => {

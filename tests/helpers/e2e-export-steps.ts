@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile } from "node:fs/promises"
+import { readdir, readFile } from "node:fs/promises"
 import { join, relative } from "node:path"
 
 import { unzipSync } from "fflate"
@@ -13,8 +13,8 @@ import type { E2eWorld } from "./e2e-world.ts"
 import { noteWithId } from "./search-memory.ts"
 
 export const DEFAULT_EXPORT_NAME = /^memory-export-\d{4}-\d{2}-\d{2}-\d{6}\.zip$/
-export const GLOBAL_NOTE = noteWithId(1, "Always pnpm.", [])
-export const PROJECT_NOTE = noteWithId(2, "Jenkins builds main.", [])
+const GLOBAL_NOTE = noteWithId(1, "Always pnpm.", [])
+const PROJECT_NOTE = noteWithId(2, "Jenkins builds main.", [])
 export const EXPORT_SETTLES = notifySettles([EXPORT_DONE, EXPORT_CANCELLED])
 
 export function exportFolderStep(answer: UiStep["answer"]): UiStep {
@@ -30,12 +30,6 @@ export async function exportableWorld(): Promise<E2eWorld> {
   await writeVaultFile(world.folders.globalVault, "tools/Use pnpm.md", GLOBAL_NOTE)
   await writeVaultFile(world.folders.projectVault, "ci/CI runs on Jenkins.md", PROJECT_NOTE)
   return world
-}
-
-export async function outFolder(world: E2eWorld): Promise<string> {
-  const out = join(world.folders.root, "out")
-  await mkdir(out)
-  return out
 }
 
 export async function expectZipHoldsBothVaults(world: E2eWorld, zipPath: string): Promise<number> {
