@@ -1,4 +1,4 @@
-import { chmod, rm, stat, writeFile } from "node:fs/promises"
+import { rm, stat, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
@@ -9,6 +9,7 @@ import {
   aLimits,
   allowing,
   aNote,
+  blockWrite,
   indexStatOnDisk,
   keepGoing,
   linkFolder,
@@ -76,7 +77,7 @@ test("leaves a folder that failed out of the refreshed list", async () => {
   await putNoteFile(vault, "b", "Note", renderNote(aNote()))
   const blocked = join(vault, "a", "index.md")
   await writeFile(blocked, "STALE")
-  await chmod(blocked, 0o444)
+  const release = await blockWrite(blocked)
 
   try {
     const result = await refreshFolders({ path: vault, name: "Memory", limits }, ["a", "b"], keepGoing, "exact")
@@ -84,7 +85,7 @@ test("leaves a folder that failed out of the refreshed list", async () => {
     expect(result).toMatchObject({ succeeded: false, refreshed: [{ folder: "b" }] })
     expect(result.refreshed).toHaveLength(1)
   } finally {
-    await chmod(blocked, 0o666)
+    await release()
   }
 })
 
