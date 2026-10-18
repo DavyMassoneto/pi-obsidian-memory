@@ -39,6 +39,8 @@ export const WINDOWS_DRIVE_START = /^[a-z]:\//
 
 export const DRIVE_PATH_PREFIXES = ["/", "/mnt/", "/cygdrive/"]
 
+export const VARIABLE_REFERENCE = /\$(?:env:)?\{?\w+\}?|%\w+%/gi
+
 export const PARENT_FOLDER_START = /^\.\.(\/|$)/
 
 export const HOME_PREFIXES = [
