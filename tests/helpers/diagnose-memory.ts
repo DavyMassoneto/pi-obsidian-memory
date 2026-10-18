@@ -1,34 +1,7 @@
-import { join } from "node:path"
-
-import type { ChatModelPort, VaultContext } from "#src/services"
-import {
-  type DecisionProbe,
-  type DiagnosedMemory,
-  diagnoseMemory,
-  type EmbeddingProbe,
-  type MemoryOperationContext,
-  resolveMemory,
-} from "#src/usecases"
-import { piMemoryFixture } from "./pi-memory.ts"
+import type { VaultContext } from "#src/services"
+import { type DiagnosedMemory, type MemoryOperationContext, resolveMemory } from "#src/usecases"
 import { noteWithId, searchFixture } from "./search-memory.ts"
-import { useTempFolder } from "./temp-folder.ts"
 import { putCatalogFile } from "./vault-catalog.ts"
-
-export interface FakeModel {
-  provider: string
-  id: string
-}
-
-export function chatModelPort(registered: FakeModel[], refusing: string[]): ChatModelPort<FakeModel> {
-  return {
-    find: (provider, id) => registered.find((model) => model.provider === provider && model.id === id),
-    configured: () => true,
-    async auth(model) {
-      if (refusing.includes(`${model.provider}/${model.id}`)) return { ok: false, error: "No API key" }
-      return { ok: true }
-    },
-  }
-}
 
 export async function putBrokenVault(vault: VaultContext, maxNotesPerFolder: number): Promise<void> {
   await putCatalogFile(vault, "tools/Good.md", noteWithId(1, "Fine.", []))
@@ -40,35 +13,6 @@ export async function putBrokenVault(vault: VaultContext, maxNotesPerFolder: num
   for (let number = 1; number <= maxNotesPerFolder + 1; number++) {
     await putCatalogFile(vault, `crowded/Note ${number}.md`, noteWithId(10 + number, `Crowded ${number}.`, []))
   }
-}
-
-export async function blankMemoryFixture(text: string) {
-  const fixture = await searchFixture()
-  await putCatalogFile(fixture.vault, "tools/Blank.md", text)
-  await putCatalogFile(fixture.vault, "tools/Other.md", noteWithId(2, "Other.", []))
-  const report = await diagnoseMemory(
-    { port: chatModelPort([], []), embeddings: await emptyEmbeddingProbe(), decision: NO_DECISION_PROBE },
-    fixture.context,
-  )
-  if (!report.succeeded) throw new Error("diagnosis failed")
-  const global = report.output.vaults[0]
-  if (!global || !("blanks" in global)) throw new Error("no blanks")
-  const [blank] = global.blanks
-  if (!blank) throw new Error("blank file not found")
-  return { ...fixture, blank }
-}
-
-export async function brokenPiFixture() {
-  const fixture = await piMemoryFixture()
-  await putBrokenVault(fixture.vaults.global, fixture.config.limits.maxNotesPerFolder)
-  return fixture
-}
-
-export async function blankPiFixture(text: string) {
-  const fixture = await piMemoryFixture()
-  await putCatalogFile(fixture.vaults.global, "tools/Blank.md", text)
-  await putCatalogFile(fixture.vaults.global, "tools/Other.md", noteWithId(2, "Other.", []))
-  return { ...fixture, blankFile: join(fixture.vaults.global.path, "tools/Blank.md") }
 }
 
 const CLEAN_DIAGNOSIS = { invalid: [], blank: [], duplicateIds: [], temporaries: [], crowdedFolders: [] }
@@ -102,20 +46,3 @@ export async function resolvedFixture() {
   if (!projectTarget) throw new Error("project did not resolve")
   return { ...fixture, memory, projectTarget }
 }
-
-export function embeddingProbe(modelCachePath: string, credentials: string[]): EmbeddingProbe {
-  return { modelCachePath, hasCredentials: async (provider) => credentials.includes(provider) }
-}
-
-export async function emptyEmbeddingProbe(): Promise<EmbeddingProbe> {
-  return embeddingProbe(join(await useTempFolder(), "models"), [])
-}
-
-export function decisionProbe(classifiers: string[], credentials: string[]): DecisionProbe {
-  return {
-    hasClassifier: (provider, model) => classifiers.includes(`${provider}/${model}`),
-    hasCredentials: async (provider) => credentials.includes(provider),
-  }
-}
-
-export const NO_DECISION_PROBE: DecisionProbe = decisionProbe([], [])

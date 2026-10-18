@@ -4,7 +4,7 @@ import { loadDontForget, refreshLoaded, trackDontForget } from "#src/usecases"
 import { noteWithId, putCatalogFile, putDontForget, relevantFixture } from "#test-helpers"
 
 test("every Don't forget note that was loaded is remembered, so a later edit is noticed", async () => {
-  const fixture = await relevantFixture({ laya: null })
+  const fixture = await relevantFixture()
   const path = await putDontForget(fixture.vault, "Never rm", 1, "Never rm -rf.")
   const loaded = await loadDontForget(fixture.context)
 
@@ -18,7 +18,7 @@ test("every Don't forget note that was loaded is remembered, so a later edit is 
 })
 
 test("a failed load remembers nothing", async () => {
-  const fixture = await relevantFixture({ laya: null })
+  const fixture = await relevantFixture()
 
   trackDontForget(fixture.loaded, {
     succeeded: false,
@@ -31,7 +31,7 @@ test("a failed load remembers nothing", async () => {
 })
 
 test("a Don't forget note without a body is not remembered, since it could not be read again", async () => {
-  const fixture = await relevantFixture({ laya: null })
+  const fixture = await relevantFixture()
   await putCatalogFile(fixture.vault, "Empty.md", noteWithId(2, "", ["dontForget: true"]))
   const loaded = await loadDontForget(fixture.context)
 

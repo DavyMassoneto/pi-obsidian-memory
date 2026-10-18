@@ -19,8 +19,6 @@ export function localModelFolder(world: Pick<E2eWorld, "folders">): string {
   )
 }
 
-export const pinnedAssetPaths: string[] = localModelAssets.map((asset) => asset.path).sort()
-
 export async function plantDamagedModel(world: Pick<E2eWorld, "folders">): Promise<string> {
   const folder = localModelFolder(world)
   await mkdir(folder, { recursive: true })

@@ -4,7 +4,7 @@ import Type from "typebox"
 
 import { CURSOR_TYPE, STATUS_CAPTURING } from "#src/pi"
 import { PLAIN_PROMPT, promptTimes } from "./e2e-cadence.ts"
-import { NotifySchema, type RecordTest, recordOf, recordsOf, StatusSchema } from "./e2e-records.ts"
+import { NotifySchema, recordOf, recordsOf, StatusSchema } from "./e2e-records.ts"
 import type { ReviewedTurns, SessionMessageEntry } from "./e2e-rpc-types.ts"
 import { statusCleared } from "./e2e-turns.ts"
 import { type VaultNote, vaultNotes } from "./e2e-vault.ts"
@@ -21,17 +21,6 @@ const MessageEntrySchema = Type.Object({
   id: Type.String(),
   message: Type.Object({ role: Type.String() }),
 })
-
-export function noticeStarting(prefix: string): RecordTest {
-  return {
-    description: `a notice starting with ${JSON.stringify(prefix)}`,
-    matches: (line) => {
-      const notice = recordOf(NotifySchema, line)
-      if (!notice) return false
-      return notice.message.startsWith(prefix)
-    },
-  }
-}
 
 export function noticeTexts(world: E2eWorld, from: number): string[] {
   return recordsOf(NotifySchema, world.pi.lines.slice(from)).map((notice) => notice.message)

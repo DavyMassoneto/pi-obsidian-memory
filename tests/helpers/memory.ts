@@ -1,7 +1,6 @@
-import { copyFile, mkdir } from "node:fs/promises"
-import { dirname, join } from "node:path"
+import { mkdir } from "node:fs/promises"
+import { join } from "node:path"
 
-import { memoryConfigPath } from "#src/pi"
 import { memoryConfigAt, writeConfig } from "./config.ts"
 import { useTempFolder } from "./temp-folder.ts"
 
@@ -20,12 +19,4 @@ export async function setupVaults() {
   const configPath = await writeConfig(root, config)
 
   return { root, globalVault, projectVault, configPath, config, projectFolder, unregisteredFolder }
-}
-
-export async function setupRegisteredMemoryAdd() {
-  const vaults = await setupVaults()
-  const configPath = memoryConfigPath(vaults.root)
-  await mkdir(dirname(configPath))
-  await copyFile(vaults.configPath, configPath)
-  return { ...vaults, configPath, agentDir: vaults.root }
 }

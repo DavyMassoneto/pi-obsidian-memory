@@ -4,12 +4,12 @@ import { DOCTOR_TITLE, LAYA_OPTION, MEMORY_DOCTOR_COMMAND, MEMORY_SETUP_COMMAND,
 import { DECISION_UNAVAILABLE } from "#src/usecases"
 import {
   DEPLOY,
+  DEPLOY_BLOCK,
   decision,
   dialogTitled,
   endpoint,
   LAYA_DEFAULTS,
   leaveScreen,
-  noteBlock,
   noticesStarting,
   notifySettles,
   nth,
@@ -26,7 +26,6 @@ import {
 
 const LOOPBACK_PROBLEM =
   "decisionModel.endpoint: must be a loopback HTTP(S) /v1/systemone URL without credentials, query or fragment"
-const deployBlock = noteBlock("project", DEPLOY.path, DEPLOY.body)
 
 test("a Laya endpoint that is not a loopback address is refused and the config keeps Jev", async () => {
   const world = await relevantWorld()
@@ -74,7 +73,7 @@ test("with Laya from the settings screen and both cutoffs set, Laya answers mess
   await putDeployNote(world)
   await world.pi.prompt(DEPLOY.question, [])
   expect(noticesStarting(world, DECISION_UNAVAILABLE)).toEqual([])
-  expect(await relevantMessages(world)).toEqual([relevantMessage([deployBlock])])
+  expect(await relevantMessages(world)).toEqual([relevantMessage([DEPLOY_BLOCK])])
   const doctor = await world.pi.command(`/${MEMORY_DOCTOR_COMMAND}`, [], notifySettles([DOCTOR_TITLE]))
   expect(doctor.notifications.map((notice) => notice.message).join("\n")).toContain(
     "- decision model laya/multilingual: ready (",

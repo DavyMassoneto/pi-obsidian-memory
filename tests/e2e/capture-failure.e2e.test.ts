@@ -8,6 +8,7 @@ import {
   newSessionMeasured,
   noticeTexts,
   PLAIN_PROMPT,
+  PNPM_RULE,
   promptTimes,
   reviewedAfterThreeTurns,
   rewriteConfig,
@@ -16,14 +17,11 @@ import {
   storedConfig,
 } from "#test-helpers"
 
-const rule =
-  "For your information: in this project we always use pnpm, never npm. Reply with only OK and do not call any tool."
-
 test("a capture model that pi does not know ends the review with one warning, saves nothing and keeps the cursor", async () => {
   const world = await cadenceWorld({ captureSettings: { nudgeInterval: 1 } })
   const { capture } = await storedConfig(world)
   await rewriteConfig(world, { capture: { ...capture, model: { provider: "anthropic", id: "no-such-model" } } })
-  const { from } = await reviewedAfterThreeTurns(world, rule)
+  const { from } = await reviewedAfterThreeTurns(world, PNPM_RULE)
   expect(noticeTexts(world, from)).toEqual([`${CAPTURE_FAILED} Model call unsupported`])
   expect(captureStatusTexts(world, from)).toEqual([STATUS_CAPTURING.text, undefined])
   expect(await allNotes(world)).toEqual([])
@@ -35,7 +33,7 @@ test("a capture model whose provider has no credentials names pi's error in the 
   const world = await cadenceWorld({ captureSettings: { nudgeInterval: 1 } })
   const { capture } = await storedConfig(world)
   await rewriteConfig(world, { capture: { ...capture, model: { provider: "openai", id: "gpt-4o" } } })
-  const { from } = await reviewedAfterThreeTurns(world, rule)
+  const { from } = await reviewedAfterThreeTurns(world, PNPM_RULE)
   expect(noticeTexts(world, from)).toEqual([`${CAPTURE_FAILED} Model call error: Provider is not configured: openai`])
   expect(captureStatusTexts(world, from)).toEqual([STATUS_CAPTURING.text, undefined])
   expect(await allNotes(world)).toEqual([])
@@ -47,7 +45,7 @@ test("a review ended by a new session is an interruption: no warning, no cursor 
   await promptTimes(world, 2, PLAIN_PROMPT)
   const sessionFile = await world.pi.sessionFile()
   const from = world.pi.lines.length
-  await world.pi.prompt(rule, [])
+  await world.pi.prompt(PNPM_RULE, [])
   await world.pi.waitFor(statusSet(STATUS_CAPTURING.key), from)
   await newSessionMeasured(world, "review in flight")
   expect(noticeTexts(world, from).filter((text) => text.startsWith(CAPTURE_FAILED))).toEqual([])
