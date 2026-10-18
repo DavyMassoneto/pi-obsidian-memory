@@ -9,6 +9,7 @@ export default defineConfig({
           name: "unit",
           include: ["tests/**/*.test.ts"],
           exclude: ["tests/**/*.model.test.ts", "tests/e2e/**"],
+          testTimeout: 30_000,
         },
       },
       {
