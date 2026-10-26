@@ -9,6 +9,8 @@ export function proposeSetup(request: SetupProposal, platform: PathPlatform): Pa
     projects: request.config.projects,
     limits: request.config.limits,
     capture: request.config.capture,
+    observer: request.config.observer,
+    compaction: request.config.compaction,
     memoryAgent: request.config.memoryAgent,
     context: request.config.context,
     embeddings: request.config.embeddings,

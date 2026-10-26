@@ -85,6 +85,18 @@ export const ConfigFieldObservationSchema = Type.Union([
   Type.Object({ field: Type.Literal("/capture/flushOnShutdown"), index: Type.Integer(), value: Type.Boolean() }),
   Type.Object({ field: Type.Literal("/capture/model/provider"), index: Type.Integer(), value: ChatModelPartSchema }),
   Type.Object({ field: Type.Literal("/capture/model/id"), index: Type.Integer(), value: ChatModelPartSchema }),
+  Type.Object({ field: Type.Literal("/observer/model/provider"), index: Type.Integer(), value: ChatModelPartSchema }),
+  Type.Object({ field: Type.Literal("/observer/model/id"), index: Type.Integer(), value: ChatModelPartSchema }),
+  Type.Object({ field: Type.Literal("/observer/thinking"), index: Type.Integer(), value: ThinkingLevelSchema }),
+  Type.Object({ field: Type.Literal("/observer/chunkTokens"), index: Type.Integer(), value: ConfigLimitSchema }),
+  Type.Object({ field: Type.Literal("/observer/concurrency"), index: Type.Integer(), value: ConfigLimitSchema }),
+  Type.Object({
+    field: Type.Literal("/compaction/atContextTokens"),
+    index: Type.Integer(),
+    value: ConfigLimitSchema,
+  }),
+  Type.Object({ field: Type.Literal("/compaction/tailTokens"), index: Type.Integer(), value: ConfigLimitSchema }),
+  Type.Object({ field: Type.Literal("/compaction/mapTokens"), index: Type.Integer(), value: ConfigLimitSchema }),
   Type.Object({
     field: Type.Literal("/memoryAgent/model/provider"),
     index: Type.Integer(),
@@ -153,6 +165,19 @@ export const MemoryConfigSchema = Type.Object(
         flushOnCompact: Type.Boolean(),
         flushOnShutdown: Type.Boolean(),
       },
+      { additionalProperties: false },
+    ),
+    observer: Type.Object(
+      {
+        model: ChatModelReferenceSchema,
+        thinking: ThinkingLevelSchema,
+        chunkTokens: ConfigLimitSchema,
+        concurrency: ConfigLimitSchema,
+      },
+      { additionalProperties: false },
+    ),
+    compaction: Type.Object(
+      { atContextTokens: ConfigLimitSchema, tailTokens: ConfigLimitSchema, mapTokens: ConfigLimitSchema },
       { additionalProperties: false },
     ),
     memoryAgent: Type.Object({ model: ChatModelReferenceSchema }, { additionalProperties: false }),

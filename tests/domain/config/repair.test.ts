@@ -73,6 +73,30 @@ test("old configuration is invalid at runtime and repair never invents a chat mo
   })
 })
 
+test("repair keeps a valid observer model and thinking level and fills missing numbers with defaults", () => {
+  const { observer: _observer, compaction: _compaction, ...rest } = aConfig()
+  const observer = { model: { provider: "keep-provider", id: "keep-id" }, thinking: "high" }
+  const draft = inspectConfigForRepair(JSON.stringify({ ...rest, observer, compaction: { tailTokens: 777 } }))
+
+  expect(draft.observer).toEqual({ ...observer, chunkTokens: 10000, concurrency: 4 })
+  expect(draft.compaction).toEqual({ atContextTokens: 150000, tailTokens: 777, mapTokens: 2000 })
+  expect(draft.problems).toEqual([
+    "observer: must have required properties chunkTokens",
+    "observer: must have required properties concurrency",
+    "compaction: must have required properties atContextTokens",
+    "compaction: must have required properties mapTokens",
+  ])
+})
+
+test("repair never invents an observer model and drops an invalid thinking level for the default", () => {
+  const config = aConfig()
+  const draft = inspectConfigForRepair(
+    JSON.stringify({ ...config, observer: { ...config.observer, model: {}, thinking: "extreme" } }),
+  )
+
+  expect(draft.observer).toEqual({ ...config.observer, model: {}, thinking: "low" })
+})
+
 test("repair retains independently valid nested siblings and names discarded unknown fields", () => {
   const text = JSON.stringify({
     ...aConfig(),
