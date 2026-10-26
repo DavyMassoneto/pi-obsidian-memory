@@ -16,7 +16,14 @@ import {
   THRESHOLD_TEXT,
 } from "#src/domain/config"
 import type { PathPlatform } from "#src/domain/path-platform"
-import type { DecisionChange, SettingChange, ThresholdChange } from "./types.ts"
+import type {
+  DecisionChange,
+  ObserverCountChange,
+  ObserverModelChange,
+  SettingChange,
+  ThinkingChange,
+  ThresholdChange,
+} from "./types.ts"
 
 export function changeSetting(config: MemoryConfig, change: SettingChange, platform: PathPlatform): ParseConfigResult {
   const next = nextConfig(config, change)
@@ -50,6 +57,12 @@ function nextConfig(config: MemoryConfig, change: SettingChange): NextConfig {
       return done({ ...config, capture: { ...config.capture, model: change.model } })
     case "agentModel":
       return done({ ...config, memoryAgent: { model: change.model } })
+    case "observerModel":
+    case "thinking":
+    case "observerCount":
+      return done({ ...config, observer: withObserver(config.observer, change) })
+    case "compactionCount":
+      return done({ ...config, compaction: { ...config.compaction, [change.name]: change.value } })
     case "captureCount":
     case "captureSwitch":
       return done({ ...config, capture: { ...config.capture, [change.name]: change.value } })
@@ -73,6 +86,15 @@ function nextConfig(config: MemoryConfig, change: SettingChange): NextConfig {
 
 function done(output: ConfigCandidate): NextConfig {
   return { succeeded: true, output }
+}
+
+function withObserver(
+  observer: MemoryConfig["observer"],
+  change: ObserverModelChange | ThinkingChange | ObserverCountChange,
+): MemoryConfig["observer"] {
+  if (change.kind === "observerModel") return { ...observer, model: change.model }
+  if (change.kind === "thinking") return { ...observer, thinking: change.value }
+  return { ...observer, [change.name]: change.value }
 }
 
 function withDecision(config: MemoryConfig, change: DecisionChange): ConfigCandidate {

@@ -1,4 +1,4 @@
-import type { ChatModelReference, MemoryConfig } from "#src/domain/config"
+import type { ChatModelReference, MemoryConfig, ThinkingLevel } from "#src/domain/config"
 
 export interface CaptureModelChange {
   kind: "captureModel"
@@ -8,6 +8,29 @@ export interface CaptureModelChange {
 export interface AgentModelChange {
   kind: "agentModel"
   model: ChatModelReference
+}
+
+export interface ObserverModelChange {
+  kind: "observerModel"
+  model: ChatModelReference
+}
+
+export interface ThinkingChange {
+  kind: "thinking"
+  role: "observer"
+  value: ThinkingLevel
+}
+
+export interface ObserverCountChange {
+  kind: "observerCount"
+  name: "chunkTokens" | "concurrency"
+  value: number
+}
+
+export interface CompactionCountChange {
+  kind: "compactionCount"
+  name: keyof MemoryConfig["compaction"]
+  value: number
 }
 
 export interface CaptureCountChange {
@@ -70,6 +93,10 @@ export type DecisionChange = JevDecisionChange | LayaDecisionChange
 export type SettingChange =
   | CaptureModelChange
   | AgentModelChange
+  | ObserverModelChange
+  | ThinkingChange
+  | ObserverCountChange
+  | CompactionCountChange
   | CaptureCountChange
   | CaptureSwitchChange
   | EmbeddingsChange
