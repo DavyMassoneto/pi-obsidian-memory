@@ -59,6 +59,19 @@ export interface OtherRecord {
   id: string
 }
 
+export interface CoveredRange {
+  from: number
+  to: number
+  observations: LedgerObservation[]
+}
+
+export interface Ledger {
+  ranges: CoveredRange[]
+  used: ReadonlySet<string>
+  consolidated: ReadonlySet<string>
+  journey: string
+}
+
 export interface ChunkRange {
   fromId: string
   coversUpToId: string
