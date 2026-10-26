@@ -81,7 +81,7 @@ test("strict settings report every independent missing, wrong and unknown nested
   const result = parseConfig(
     JSON.stringify({
       ...aConfig(),
-      capture: { model: { provider: "", apiKey: "secret" }, when: "never", extra: 1 },
+      observer: { model: { provider: "", apiKey: "secret" }, thinking: "extreme", extra: 1 },
       memoryAgent: { model: { id: false }, extra: 1 },
       context: { budgetChars: 0, extra: 1 },
       limits: { maxBodyChars: 0, maxStatementChars: -1, maxNotesPerFolder: 1.5 },
@@ -90,11 +90,11 @@ test("strict settings report every independent missing, wrong and unknown nested
   expect(result.succeeded).toBe(false)
   if (result.succeeded) throw new Error("invalid config accepted")
   for (const field of [
-    "capture.model.provider",
-    "capture.model: must have required properties id",
-    "capture.model.apiKey",
-    "capture.when",
-    "capture.extra",
+    "observer.model.provider",
+    "observer.model: must have required properties id",
+    "observer.model.apiKey",
+    "observer.thinking",
+    "observer.extra",
     "memoryAgent.model: must have required properties provider",
     "memoryAgent.model.id",
     "memoryAgent.extra",

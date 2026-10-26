@@ -1,10 +1,5 @@
 import type { ChatModelReference, MemoryConfig, ThinkingLevel } from "#src/domain/config"
 
-export interface CaptureModelChange {
-  kind: "captureModel"
-  model: ChatModelReference
-}
-
 export interface AgentModelChange {
   kind: "agentModel"
   model: ChatModelReference
@@ -31,18 +26,6 @@ export interface CompactionCountChange {
   kind: "compactionCount"
   name: keyof MemoryConfig["compaction"]
   value: number
-}
-
-export interface CaptureCountChange {
-  kind: "captureCount"
-  name: "nudgeInterval" | "nudgeToolCalls" | "flushMinTurns"
-  value: number
-}
-
-export interface CaptureSwitchChange {
-  kind: "captureSwitch"
-  name: "reviewEnabled" | "flushOnCompact" | "flushOnShutdown"
-  value: boolean
 }
 
 export interface EmbeddingsChange {
@@ -91,14 +74,11 @@ export interface RemoveProjectChange {
 export type DecisionChange = JevDecisionChange | LayaDecisionChange
 
 export type SettingChange =
-  | CaptureModelChange
   | AgentModelChange
   | ObserverModelChange
   | ThinkingChange
   | ObserverCountChange
   | CompactionCountChange
-  | CaptureCountChange
-  | CaptureSwitchChange
   | EmbeddingsChange
   | DecisionChange
   | ThresholdChange

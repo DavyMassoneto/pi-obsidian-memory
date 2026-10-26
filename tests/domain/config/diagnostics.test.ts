@@ -9,7 +9,6 @@ test("an empty object names each missing root field once, in schema order, under
       "config: must have required properties global",
       "config: must have required properties projects",
       "config: must have required properties limits",
-      "config: must have required properties capture",
       "config: must have required properties observer",
       "config: must have required properties compaction",
       "config: must have required properties memoryAgent",
@@ -28,9 +27,9 @@ test("a wrong value is named by its dotted path with the schema message and noth
 
 test("a non-object where an object is required is reported once at its own path", () => {
   const config = aConfig()
-  expect(parseConfig(JSON.stringify({ ...config, capture: { model: 5, when: "on-compaction" } }))).toEqual({
+  expect(parseConfig(JSON.stringify({ ...config, observer: { ...config.observer, model: 5 } }))).toEqual({
     succeeded: false,
-    problems: ["capture.model: must be object"],
+    problems: ["observer.model: must be object"],
   })
   expect(parseConfig(JSON.stringify({ ...config, global: 5 }))).toEqual({
     succeeded: false,

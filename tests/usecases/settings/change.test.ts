@@ -18,10 +18,10 @@ test("a change reaches the file and nothing else in it changes", async () => {
   const { context, config, hash } = await configuredSettings()
   const model = { provider: "other", id: "model-x" }
 
-  const result = await changeMemorySettings({ change: { kind: "captureModel", model }, expectedHash: hash }, context)
+  const result = await changeMemorySettings({ change: { kind: "observerModel", model }, expectedHash: hash }, context)
 
-  expect(result).toMatchObject({ succeeded: true, output: { config: { capture: { model } } } })
-  expect(await writtenConfig(context.configPath)).toEqual({ ...config, capture: { ...config.capture, model } })
+  expect(result).toMatchObject({ succeeded: true, output: { config: { observer: { model } } } })
+  expect(await writtenConfig(context.configPath)).toEqual({ ...config, observer: { ...config.observer, model } })
   await expectRegistrationLeaseReleased(context)
 })
 

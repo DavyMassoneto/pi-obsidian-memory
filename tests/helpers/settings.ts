@@ -5,7 +5,6 @@ export function emptyConfigFields(): ConfigFields {
     global: {},
     projects: [],
     limits: {},
-    capture: { model: {} },
     observer: { model: {} },
     compaction: {},
     memoryAgent: { model: {} },
@@ -18,15 +17,6 @@ export function emptyConfigFields(): ConfigFields {
 export function productSettings(): Omit<MemoryConfig, "global" | "projects"> {
   return {
     limits: { maxBodyChars: 1000, maxStatementChars: 100, maxNotesPerFolder: 20 },
-    capture: {
-      model: { provider: "test-chat", id: "selected-chat" },
-      nudgeInterval: 10,
-      nudgeToolCalls: 15,
-      flushMinTurns: 6,
-      reviewEnabled: true,
-      flushOnCompact: true,
-      flushOnShutdown: true,
-    },
     observer: {
       model: { provider: "test-chat", id: "selected-chat" },
       thinking: "low",
@@ -50,15 +40,6 @@ export function productSettings(): Omit<MemoryConfig, "global" | "projects"> {
 export function customizedSettings(): Omit<MemoryConfig, "global" | "projects"> {
   return {
     limits: { maxBodyChars: 2000, maxStatementChars: 200, maxNotesPerFolder: 30 },
-    capture: {
-      model: { provider: "capture-provider", id: "capture-id" },
-      nudgeInterval: 4,
-      nudgeToolCalls: 7,
-      flushMinTurns: 2,
-      reviewEnabled: false,
-      flushOnCompact: true,
-      flushOnShutdown: false,
-    },
     observer: {
       model: { provider: "observer-provider", id: "observer-id" },
       thinking: "high",

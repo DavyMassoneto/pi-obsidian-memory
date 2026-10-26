@@ -27,7 +27,6 @@ function repairConfigInspection(inspection: ConfigInspection, parsed: ParseConfi
   draft.global = fields.global
   draft.projects = fields.projects
   draft.limits = { ...draft.limits, ...fields.limits }
-  draft.capture = { ...draft.capture, ...fields.capture }
   draft.observer = { ...draft.observer, ...fields.observer }
   draft.compaction = { ...draft.compaction, ...fields.compaction }
   draft.memoryAgent = fields.memoryAgent

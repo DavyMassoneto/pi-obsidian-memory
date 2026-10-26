@@ -1,7 +1,7 @@
 import { expect, test } from "vitest"
 
 import { prepareSetupDefaults } from "#src/domain"
-import { DEFAULT_CADENCE, inspectConfigForRepair, productSettings, proposeSetup } from "#test-helpers"
+import { inspectConfigForRepair, productSettings, proposeSetup } from "#test-helpers"
 
 test("setup alone can use the explicitly supplied model and null leaves both models unresolved", () => {
   const selected = { provider: "chosen-provider", id: "chosen-model" }
@@ -9,7 +9,6 @@ test("setup alone can use the explicitly supplied model and null leaves both mod
   expect(defaults).toEqual({
     ...productSettings(),
     decisionModel: { provider: "typesafe", model: "jev-latest" },
-    capture: { model: selected, ...DEFAULT_CADENCE },
     observer: { ...productSettings().observer, model: selected },
     memoryAgent: { model: selected },
     global: {},
@@ -17,13 +16,11 @@ test("setup alone can use the explicitly supplied model and null leaves both mod
     replacementRequired: false,
     problems: [],
   })
-  expect(prepareSetupDefaults(null).capture.model).toEqual({})
   expect(prepareSetupDefaults(null).observer.model).toEqual({})
   expect(prepareSetupDefaults(null).memoryAgent.model).toEqual({})
-  expect(inspectConfigForRepair("{}").capture.model).toEqual({})
+  expect(inspectConfigForRepair("{}").observer.model).toEqual({})
   expect(proposeSetup({ config: prepareSetupDefaults(null), vault: "C:/new" }).succeeded).toBe(false)
   selected.id = "changed-after-preparation"
-  expect(defaults.capture.model.id).toBe("chosen-model")
   expect(defaults.observer.model.id).toBe("chosen-model")
 })
 
