@@ -1,12 +1,16 @@
-import type {
-  BranchSummaryRecord,
-  CompactionRecord,
-  CustomMessageRecord,
-  LedgerObservation,
-  MessageRecord,
-  ObservationsRecord,
-  OtherRecord,
-  RecordPart,
+import {
+  type BranchSummaryRecord,
+  type ChunkPlanRequest,
+  type ChunkRange,
+  type CompactionRecord,
+  type CustomMessageRecord,
+  type LedgerObservation,
+  ledgerOf,
+  type MessageRecord,
+  type ObservationsRecord,
+  type OtherRecord,
+  type RecordPart,
+  type SessionRecord,
 } from "#src/domain"
 
 const defaultLocalTime = "2026-10-26T13:35:00"
@@ -84,4 +88,32 @@ export function compactionRecord(id: string, firstKeptEntryId: string): Compacti
 
 export function otherRecord(id: string): OtherRecord {
   return { kind: "other", id }
+}
+
+export function chunkRange(fromId: string, coversUpToId: string): ChunkRange {
+  return { fromId, coversUpToId }
+}
+
+export function conversation(count: number, tokens: number): SessionRecord[] {
+  const records: SessionRecord[] = []
+  for (let number = 1; number <= count; number++) {
+    if (number % 2 === 1) records.push(userRecord(`r${number}`, `message ${number}`, tokens))
+    else records.push(assistantRecord(`r${number}`, `message ${number}`, tokens))
+  }
+  return records
+}
+
+export function chunkPlan(records: SessionRecord[], changes: Partial<ChunkPlanRequest>): ChunkPlanRequest {
+  return {
+    records,
+    ledger: ledgerOf(records),
+    inFlight: [],
+    failed: [],
+    attempted: [],
+    chunkTokens: 25,
+    concurrency: 4,
+    nowMs: 0,
+    until: null,
+    ...changes,
+  }
 }
