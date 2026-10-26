@@ -40,6 +40,7 @@ export {
   compactionRetryDue,
   consolidatedData,
   idealCutId,
+  importParts,
   isCutPoint,
   isSourceRecord,
   LedgerObservationSchema,
