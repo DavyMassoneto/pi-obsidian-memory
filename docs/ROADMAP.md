@@ -74,15 +74,15 @@ Every milestone:
   can be uninstalled.
 - **Phase 1: observe and compact.** Released on its own. Until phase 2, the vault gets only what the user asks to
   remember.
-  - [ ] The observer: the conversation is summarized into dated observations in the pi session.
-  - [ ] The compaction block: journey, memory map, observations and a verbatim tail.
-  - [ ] The memory map: the vault notes shown in the form of OM's map, with the instruction to use `memory_search`
+  - [x] The observer: the conversation is summarized into dated observations in the pi session.
+  - [x] The compaction block: journey, memory map, observations and a verbatim tail.
+  - [x] The memory map: the vault notes shown in the form of OM's map, with the instruction to use `memory_search`
     and `memory_get`.
-  - [ ] The trigger and the resume after a compaction in the middle of a run.
-  - [ ] The current capture is removed.
-  - [ ] The settings of the observer and of compaction, in [config.md](config.md), written by `/memory-setup`.
-  - [ ] `/memory-doctor` and the README tell the user to uninstall OM.
-  - [ ] End-to-end scenarios E1 to E5.
+  - [x] The trigger and the resume after a compaction in the middle of a run.
+  - [x] The current capture is removed.
+  - [x] The settings of the observer and of compaction, in [config.md](config.md), written by `/memory-setup`.
+  - [x] `/memory-doctor` and the README tell the user to uninstall OM.
+  - [x] End-to-end scenarios E1 to E5.
 - **Phase 2: consolidate and import.** Released on its own.
   - [ ] The consolidator: the older observations become vault notes, in the vault format.
   - [ ] The journey, kept in the session.
