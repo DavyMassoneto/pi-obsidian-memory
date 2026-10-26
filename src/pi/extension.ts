@@ -10,6 +10,7 @@ import { MemoryBlock } from "#src/pi/memory-block"
 import { MEMORY_DOCTOR_COMMAND, memoryDoctorCommand } from "#src/pi/memory-doctor"
 import { MEMORY_EXPORT_COMMAND, memoryExportCommand } from "#src/pi/memory-export"
 import { memoryGetTool } from "#src/pi/memory-get"
+import { MEMORY_IMPORT_COMMAND, memoryImportCommand } from "#src/pi/memory-import"
 import { MEMORY_INIT_COMMAND, memoryInitCommand } from "#src/pi/memory-init"
 import { memorySearchTool } from "#src/pi/memory-search"
 import { MemorySessionKeeper } from "#src/pi/memory-session"
@@ -25,7 +26,7 @@ import { shellEditGuardHandler } from "#src/pi/shell-edit-guard"
 import { vaultGuardHandler } from "#src/pi/vault-guard"
 import { loadDontForget } from "#src/usecases"
 import { registrarFor } from "./registrar.ts"
-import type { ExtensionOverrides, ExtensionRegistrar } from "./types.ts"
+import type { CommandDeps, ExtensionOverrides, ExtensionRegistrar } from "./types.ts"
 
 export default function extension(pi: ExtensionAPI): void {
   registerExtension(registrarFor(pi), getAgentDir())
@@ -40,10 +41,10 @@ export function registerExtension(
   const semantic = new SemanticRuntime(memoryModelCachePath(agentDir), overrides?.localModel)
   const sessions = new MemorySessionKeeper(semantic)
   const block = new MemoryBlock(loadDontForget)
-  registerTools(registrar, paths, sessions)
-  registerCommands(registrar, paths, sessions, memoryModelCachePath(agentDir))
   let completionOf: CompletionFactory = registryCompletion
   if (overrides?.completionOf) completionOf = overrides.completionOf
+  registerTools(registrar, paths, sessions)
+  registerCommands(registrar, { paths, sessions, completionOf, modelCachePath: memoryModelCachePath(agentDir) })
   const relevant = new RelevantMemoryRuntime({ paths, sessions, completionOf })
   const cycle = new ObservationRuntime({
     paths,
@@ -79,15 +80,12 @@ function registerTools(registrar: ExtensionRegistrar, paths: MemoryPaths, sessio
   registrar.registerSucceedTool(memorySucceedTool(paths, sessions))
 }
 
-function registerCommands(
-  registrar: ExtensionRegistrar,
-  paths: MemoryPaths,
-  sessions: MemorySessionKeeper,
-  modelCachePath: string,
-): void {
+function registerCommands(registrar: ExtensionRegistrar, commands: CommandDeps): void {
+  const { paths, sessions, completionOf, modelCachePath } = commands
   registrar.registerCommand(MEMORY_SETUP_COMMAND, memorySetupCommand(paths, sessions))
   registrar.registerCommand(MEMORY_INIT_COMMAND, memoryInitCommand(paths, sessions))
   registrar.registerCommand(MEMORY_EXPORT_COMMAND, memoryExportCommand(paths, sessions))
+  registrar.registerCommand(MEMORY_IMPORT_COMMAND, memoryImportCommand(paths, sessions, completionOf))
   registrar.registerCommand(
     MEMORY_DOCTOR_COMMAND,
     memoryDoctorCommand(paths, sessions, modelCachePath, () => registrar.commandNames()),

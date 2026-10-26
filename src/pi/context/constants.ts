@@ -5,3 +5,5 @@ export const STATUS_SEARCHING = { key: "obsidian-memory-searching", text: "memor
 export const STATUS_OBSERVING = { key: "obsidian-memory-observing", text: "memory: observing" }
 
 export const STATUS_CONSOLIDATING = { key: "obsidian-memory-consolidating", text: "memory: consolidating" }
+
+export const STATUS_IMPORTING = { key: "obsidian-memory-importing", text: "memory: importing" }

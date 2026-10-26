@@ -1,11 +1,11 @@
 import type { CompletionFactory } from "#src/pi/completion"
-import type { MemoryCommand } from "#src/pi/context"
+import type { MemoryCommand, MemoryPaths } from "#src/pi/context"
 import type { MemoryAddTool } from "#src/pi/memory-add"
 import type { MemoryArchiveTool } from "#src/pi/memory-archive"
 import type { BeforeAgentStartHandler } from "#src/pi/memory-block"
 import type { MemoryGetTool } from "#src/pi/memory-get"
 import type { MemorySearchTool } from "#src/pi/memory-search"
-import type { SessionShutdownHandler } from "#src/pi/memory-session"
+import type { MemorySessionKeeper, SessionShutdownHandler } from "#src/pi/memory-session"
 import type { MemorySucceedTool } from "#src/pi/memory-succeed"
 import type { MemoryUpdateTool } from "#src/pi/memory-update"
 import type { AgentStartHandler, BeforeCompactHandler, TurnEndHandler } from "#src/pi/observation-cycle"
@@ -34,6 +34,13 @@ export interface ExtensionRegistrar {
   commandNames(): string[]
   onBeforeCompact(handler: BeforeCompactHandler): void
   onSessionShutdown(handler: SessionShutdownHandler): void
+}
+
+export interface CommandDeps {
+  paths: MemoryPaths
+  sessions: MemorySessionKeeper
+  completionOf: CompletionFactory
+  modelCachePath: string
 }
 
 export interface ExtensionOverrides {

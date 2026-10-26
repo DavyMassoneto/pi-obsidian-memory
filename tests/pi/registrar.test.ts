@@ -52,6 +52,14 @@ test("the extension handles session_before_compact", async () => {
   expect([...loaded.handlers.keys()]).toContain("session_before_compact")
 })
 
+test("the import command is registered as memory-import", async () => {
+  const agentDir = await useTempFolder()
+
+  const loaded = await loadWithRegistrar((registrar) => registerExtension(registrar, agentDir))
+
+  expect(loaded.commands).toContain("memory-import")
+})
+
 test("a command reaches pi's command registration under its name", async () => {
   const loaded = await loadWithRegistrar((registrar) => {
     registrar.registerCommand("memory-x", { description: "d", handler: async () => undefined })
