@@ -1,42 +1,16 @@
 import { describe, expect, it } from "vitest"
 
-import { type MapVault, renderMemoryMap } from "#src/domain"
-import { mapNote, mapVault } from "#test-helpers"
+import { renderMemoryMap } from "#src/domain"
+import { globalMemoryVault, lojaVault, mapNote, mapVault } from "#test-helpers"
 
 const header = [
   "## Memory map",
   "Your long-term memory is kept as notes in Obsidian vaults, one point per note; a note's file name is what it says. When a note looks relevant, read it with memory_get, passing the vault named in its heading (project or global) and its path. memory_search finds notes by words or meaning, including notes not listed here.",
 ].join("\n")
 
-function loja(): MapVault {
-  return mapVault(
-    "project",
-    "loja",
-    [
-      mapNote("search/Chose SQLite FTS5 over a vector DB.md", "decision", false),
-      mapNote("pnpm/Use pnpm, never npm.md", "rule", true),
-      mapNote("csv/CSV files use a semicolon separator.md", "rule", false),
-      mapNote("deploy/Deploy only with release.sh.md", "rule", false),
-    ],
-    [],
-  )
-}
-
-function globalMemory(): MapVault {
-  return mapVault(
-    "global",
-    "Global memory",
-    [
-      mapNote("windows/git is not on PATH in PowerShell.md", "lesson", false),
-      mapNote("profile/User talks in Brazilian Portuguese.md", "fact", true),
-    ],
-    [],
-  )
-}
-
 describe("renderMemoryMap", () => {
   it("the map lists the project vault first, notes sorted by path ignoring case, with type and the don't forget mark", () => {
-    expect(renderMemoryMap([globalMemory(), loja()], 2000)).toBe(
+    expect(renderMemoryMap([globalMemoryVault(), lojaVault()], 2000)).toBe(
       [
         header,
         [
@@ -72,7 +46,7 @@ describe("renderMemoryMap", () => {
   })
 
   it("notes past the budget are cut and counted in a final line", () => {
-    expect(renderMemoryMap([loja(), globalMemory()], 104)).toBe(
+    expect(renderMemoryMap([lojaVault(), globalMemoryVault()], 104)).toBe(
       [
         header,
         [
@@ -85,7 +59,7 @@ describe("renderMemoryMap", () => {
   })
 
   it("a vault heading that still fits is written even when its notes are cut", () => {
-    expect(renderMemoryMap([loja(), globalMemory()], 112)).toBe(
+    expect(renderMemoryMap([lojaVault(), globalMemoryVault()], 112)).toBe(
       [
         header,
         ["### project vault (loja)", "- `csv/CSV files use a semicolon separator.md` · rule"].join("\n"),
@@ -97,7 +71,7 @@ describe("renderMemoryMap", () => {
   it("a vault that could not be read shows its problem", () => {
     const unreadable = mapVault("global", "Global memory", [], ["Vault folder is missing", "Index is locked"])
 
-    expect(renderMemoryMap([loja(), unreadable], 2000)).toContain(
+    expect(renderMemoryMap([lojaVault(), unreadable], 2000)).toContain(
       [
         "### global vault (Global memory)",
         "Could not read the global vault: Vault folder is missing; Index is locked.",

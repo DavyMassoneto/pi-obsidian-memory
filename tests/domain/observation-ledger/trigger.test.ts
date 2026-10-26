@@ -1,30 +1,19 @@
 import { describe, expect, it } from "vitest"
 
-import { type CompactionDueRequest, compactionDue, retriedByPi } from "#src/domain"
-import { conversation } from "#test-helpers"
-
-function request(changes: Partial<CompactionDueRequest>): CompactionDueRequest {
-  return {
-    contextTokens: 50,
-    records: conversation(6, 10),
-    atContextTokens: 50,
-    tailTokens: 20,
-    chunkTokens: 30,
-    ...changes,
-  }
-}
+import { compactionDue, retriedByPi } from "#src/domain"
+import { compactionDueRequest } from "#test-helpers"
 
 describe("compactionDue", () => {
   it("compaction is due at the context threshold only with a chunk beyond the tail since the last compaction", () => {
-    expect(compactionDue(request({}))).toBe(true)
-    expect(compactionDue(request({ contextTokens: 49 }))).toBe(false)
-    expect(compactionDue(request({ tailTokens: 40 }))).toBe(false)
-    expect(compactionDue(request({ tailTokens: 30 }))).toBe(true)
+    expect(compactionDue(compactionDueRequest({}))).toBe(true)
+    expect(compactionDue(compactionDueRequest({ contextTokens: 49 }))).toBe(false)
+    expect(compactionDue(compactionDueRequest({ tailTokens: 40 }))).toBe(false)
+    expect(compactionDue(compactionDueRequest({ tailTokens: 30 }))).toBe(true)
   })
 
   it("with no live context tokens the raw tokens since the last compaction decide", () => {
-    expect(compactionDue(request({ contextTokens: null, atContextTokens: 60 }))).toBe(true)
-    expect(compactionDue(request({ contextTokens: null, atContextTokens: 61 }))).toBe(false)
+    expect(compactionDue(compactionDueRequest({ contextTokens: null, atContextTokens: 60 }))).toBe(true)
+    expect(compactionDue(compactionDueRequest({ contextTokens: null, atContextTokens: 61 }))).toBe(false)
   })
 })
 

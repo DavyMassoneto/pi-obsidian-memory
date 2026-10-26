@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest"
 
-import { idealCutId, ledgerOf, rawTokensSinceLastCompaction, type SessionRecord, snapCutoff } from "#src/domain"
+import { idealCutId, ledgerOf, rawTokensSinceLastCompaction, snapCutoff } from "#src/domain"
 import {
   assistantRecord,
   compactionRecord,
   conversation,
   observation,
   observationsRecord,
+  observedAfterTwoAndFour,
   toolResultRecord,
   turn,
   userRecord,
@@ -14,22 +15,9 @@ import {
 
 const seen = observation("2026-10-26T13:35:00", "seen")
 
-function observedAfterTwoAndFour(): SessionRecord[] {
-  return [
-    turn(1, 10),
-    turn(2, 10),
-    observationsRecord("o1", "r1", "r2", [seen]),
-    turn(3, 10),
-    turn(4, 10),
-    observationsRecord("o2", "r3", "r4", [seen]),
-    turn(5, 10),
-    turn(6, 10),
-  ]
-}
-
 describe("snapCutoff", () => {
   it("with boundaries after raw-2 and raw-4 and 10 tokens each, a tail target of 25 keeps from raw-5 and 40 keeps from raw-3", () => {
-    const records = observedAfterTwoAndFour()
+    const records = observedAfterTwoAndFour(seen)
     const ledger = ledgerOf(records)
 
     expect(snapCutoff(records, ledger, 25)).toEqual({ firstKeptEntryId: "r5", firstKeptIndex: 6, tail: 20 })
@@ -37,7 +25,7 @@ describe("snapCutoff", () => {
   })
 
   it("a tie between two boundaries goes to the earlier one", () => {
-    const records = observedAfterTwoAndFour()
+    const records = observedAfterTwoAndFour(seen)
 
     expect(snapCutoff(records, ledgerOf(records), 30)).toEqual({ firstKeptEntryId: "r3", firstKeptIndex: 3, tail: 40 })
   })
