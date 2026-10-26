@@ -32,6 +32,9 @@ export const CUTOFFS_HINT = "set both cutoffs in /memory-setup, see docs/decisio
 
 export const MODELS_HEADING = "Models:"
 
+export const DOCTOR_OM_LOADED =
+  'pi-observational-memory is also loaded: it compacts sessions too and only one compaction is kept. Uninstall it: run "pi list" to see its source, then "pi remove <source>".'
+
 export const COMPLETE_TYPE_TITLE = "Complete this blank note: which type is it?"
 
 export const COMPLETE_BODY_TITLE = "Body of the new note (written in English)"

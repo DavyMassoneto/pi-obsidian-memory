@@ -69,6 +69,18 @@ test("the models section names the observer", () => {
   expect(report).not.toContain("capture")
 })
 
+test("with OM loaded the report says to uninstall it with pi remove", () => {
+  const report = renderDoctorReport(diagnosedMemory({ omLoaded: true }))
+
+  expect(report).toContain(
+    'pi-observational-memory is also loaded: it compacts sessions too and only one compaction is kept. Uninstall it: run "pi list" to see its source, then "pi remove <source>".',
+  )
+})
+
+test("without OM the report has no such line", () => {
+  expect(renderDoctorReport(diagnosedMemory({ omLoaded: false }))).not.toContain("pi-observational-memory")
+})
+
 test("a model that is not registered or has no credentials shows its problem", () => {
   const report = renderDoctorReport(
     diagnosedMemory({

@@ -30,6 +30,7 @@ export interface ExtensionRegistrar {
   onAgentStart(handler: AgentStartHandler): void
   appendObservations(data: ObservationsRecorded): void
   sendResume(): void
+  commandNames(): string[]
   onBeforeCompact(handler: BeforeCompactHandler): void
   onSessionShutdown(handler: SessionShutdownHandler): void
 }

@@ -18,6 +18,7 @@ export function registrarFor(pi: ExtensionAPI): ExtensionRegistrar {
     onShellToolCall: (handler) => pi.on("tool_call", handler),
     onTurnEnd: (handler) => pi.on("turn_end", handler),
     onAgentStart: (handler) => pi.on("agent_start", handler),
+    commandNames: () => pi.getCommands().map((command) => command.name),
     appendObservations: (data) => pi.appendEntry(OBSERVATIONS_TYPE, data),
     sendResume: () =>
       pi.sendMessage({ customType: RESUME_TYPE, content: RESUME_PROMPT, display: false }, { triggerTurn: true }),

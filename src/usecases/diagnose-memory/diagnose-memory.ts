@@ -1,4 +1,4 @@
-import { checkChatModels } from "#src/services"
+import { type ChatModelPort, checkChatModels, type MemoryConfig } from "#src/services"
 import {
   captureMemoryOperationContext,
   type MemoryOperationContext,
@@ -11,6 +11,15 @@ import { checkDecision } from "./decision.ts"
 import { checkEmbeddings } from "./embeddings.ts"
 import type { DiagnosedMemory, DiagnoseMemoryRequest, DiagnoseMemoryResult, ModelReport } from "./types.ts"
 import { reportVault } from "./vault.ts"
+
+async function modelReportsOf<TModel>(config: MemoryConfig, port: ChatModelPort<TModel>): Promise<ModelReport[]> {
+  const checks = await checkChatModels([config.observer.model, config.memoryAgent.model], port)
+  const models: ModelReport[] = []
+  const [observerCheck, agentCheck] = checks
+  if (observerCheck) models.push({ role: "observer", check: observerCheck })
+  if (agentCheck) models.push({ role: "memory agent", check: agentCheck })
+  return models
+}
 
 export async function diagnoseMemory<TModel>(
   request: DiagnoseMemoryRequest<TModel>,
@@ -30,21 +39,17 @@ export async function diagnoseMemory<TModel>(
     }
     const vaults: DiagnosedMemory["vaults"] = []
     for (const target of targets) vaults.push(await reportVault(memory.output, target, context))
-    const { observer, memoryAgent } = memory.output.config
-    const checks = await checkChatModels([observer.model, memoryAgent.model], request.port)
-    const models: ModelReport[] = []
-    const [observerCheck, agentCheck] = checks
-    if (observerCheck) models.push({ role: "observer", check: observerCheck })
-    if (agentCheck) models.push({ role: "memory agent", check: agentCheck })
+    const models = await modelReportsOf(memory.output.config, request.port)
     const embeddings = await checkEmbeddings(memory.output.config.embeddings, request.embeddings, context.signal)
     const decision = await checkDecision(memory.output.config.decisionModel, request.decision, context.signal)
     const cutoffs = resolveCutoffs(memory.output.config.decisionModel)
     const interrupted = memoryOperationInterruption(context)
     if (interrupted) return interrupted
     const { maxNotesPerFolder } = memory.output.config.limits
+    const { omLoaded } = request
     return {
       succeeded: true,
-      output: { vaults, projectMissing, maxNotesPerFolder, models, embeddings, decision, cutoffs },
+      output: { vaults, projectMissing, maxNotesPerFolder, models, embeddings, decision, cutoffs, omLoaded },
     }
   } finally {
     lease.release()

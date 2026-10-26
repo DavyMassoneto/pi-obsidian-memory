@@ -87,5 +87,8 @@ function registerCommands(
   registrar.registerCommand(MEMORY_SETUP_COMMAND, memorySetupCommand(paths, sessions))
   registrar.registerCommand(MEMORY_INIT_COMMAND, memoryInitCommand(paths, sessions))
   registrar.registerCommand(MEMORY_EXPORT_COMMAND, memoryExportCommand(paths, sessions))
-  registrar.registerCommand(MEMORY_DOCTOR_COMMAND, memoryDoctorCommand(paths, sessions, modelCachePath))
+  registrar.registerCommand(
+    MEMORY_DOCTOR_COMMAND,
+    memoryDoctorCommand(paths, sessions, modelCachePath, () => registrar.commandNames()),
+  )
 }
