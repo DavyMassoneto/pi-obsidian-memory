@@ -59,6 +59,11 @@ export interface OtherRecord {
   id: string
 }
 
+export interface ChunkRange {
+  fromId: string
+  coversUpToId: string
+}
+
 export type SourceRecord = MessageRecord | CustomMessageRecord | BranchSummaryRecord
 
 export type SessionRecord = SourceRecord | ObservationsRecord | CompactionRecord | OtherRecord
