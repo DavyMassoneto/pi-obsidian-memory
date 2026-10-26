@@ -2,6 +2,7 @@ import type {
   CaptureInput,
   CaptureResult,
   ChatModelReference,
+  MaterialItem,
   ObserverDraft,
   RetrievalInput,
   RetrievalResult,
@@ -14,12 +15,22 @@ export interface ModelStepContext {
   model: ChatModelReference
 }
 
-export interface CaptureRequest extends ModelStepContext, CaptureInput {}
+export interface CaptureRequest extends ModelStepContext, CaptureInput {
+  thinking: ThinkingLevel
+}
 export interface RetrievalRequest extends ModelStepContext, RetrievalInput {}
 
 export interface ObserveRequest extends ModelStepContext {
   thinking: ThinkingLevel
   chunk: string
+  now: string
+}
+
+export interface JourneyRequest extends ModelStepContext {
+  thinking: ThinkingLevel
+  journey: string
+  material: MaterialItem[]
+  targetTokens: number
   now: string
 }
 
@@ -52,6 +63,7 @@ export interface ModelCallFailure extends Failed {
 export type CompletionResult = Succeeded<string> | Failed | ModelCallFailure
 export type CaptureStepResult = CaptureResult | ModelCallFailure
 export type RetrievalStepResult = RetrievalResult | ModelCallFailure
+export type JourneyStepResult = Succeeded<string> | Failed | ModelCallFailure
 export type ObserveStepResult = Succeeded<ObserverDraft[]> | Failed | ModelCallFailure
 export type DisposeCompletion = () => void
 

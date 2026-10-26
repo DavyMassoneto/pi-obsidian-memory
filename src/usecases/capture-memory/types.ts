@@ -7,6 +7,7 @@ import type {
   MaterialItem,
   MemoryScope,
   ReadObservation,
+  ThinkingLevel,
 } from "#src/services"
 import type { Failed, Succeeded } from "#src/shared"
 import type { ArchiveMemoryResult } from "#src/usecases/archive-memory"
@@ -30,6 +31,7 @@ export interface UnreadableNote {
 
 export interface CaptureRun {
   model: ChatModelReference
+  thinking: ThinkingLevel
   messages: MaterialItem[]
   explicitSaves: ExplicitSave[]
 }
@@ -67,6 +69,7 @@ export interface CaptureBase {
   explicitSaves: ReadObservation[]
   limits: CaptureInput["limits"]
   model: ChatModelReference
+  thinking: ThinkingLevel
   signal: AbortSignal
 }
 

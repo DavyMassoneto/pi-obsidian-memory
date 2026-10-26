@@ -53,6 +53,7 @@ export async function captureMemory(
     explicitSaves,
     limits: { maxBodyChars: config.limits.maxBodyChars, maxStatementChars: config.limits.maxStatementChars },
     model: run.model,
+    thinking: run.thinking,
     signal: context.signal,
   }
   const report: CaptureReport = { reviewed: false, applied: [] }
