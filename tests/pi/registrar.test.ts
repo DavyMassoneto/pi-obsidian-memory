@@ -8,8 +8,9 @@ import {
   memorySearchTool,
   memorySucceedTool,
   memoryUpdateTool,
+  registerExtension,
 } from "#src/pi"
-import { loadWithRegistrar } from "#test-helpers"
+import { loadWithRegistrar, useTempFolder } from "#test-helpers"
 
 const paths = { configPath: "config.json", indexPath: "index" }
 
@@ -33,6 +34,14 @@ test("each tool reaches pi's tool registration under its own name", async () => 
     "memory_archive",
     "memory_succeed",
   ])
+})
+
+test("the observation cycle listens to turn_end, agent_start and session_shutdown", async () => {
+  const agentDir = await useTempFolder()
+
+  const loaded = await loadWithRegistrar((registrar) => registerExtension(registrar, agentDir))
+
+  expect([...loaded.handlers.keys()]).toEqual(expect.arrayContaining(["turn_end", "agent_start", "session_shutdown"]))
 })
 
 test("a command reaches pi's command registration under its name", async () => {

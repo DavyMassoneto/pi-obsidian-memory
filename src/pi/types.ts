@@ -8,11 +8,11 @@ import type { MemorySearchTool } from "#src/pi/memory-search"
 import type { SessionShutdownHandler } from "#src/pi/memory-session"
 import type { MemorySucceedTool } from "#src/pi/memory-succeed"
 import type { MemoryUpdateTool } from "#src/pi/memory-update"
-import type { BeforeCompactHandler, TurnEndHandler } from "#src/pi/observation-cycle"
+import type { AgentStartHandler, BeforeCompactHandler, TurnEndHandler } from "#src/pi/observation-cycle"
 import type { SessionStartHandler } from "#src/pi/session-start"
 import type { ShellEditHandler } from "#src/pi/shell-edit-guard"
 import type { ToolCallHandler } from "#src/pi/vault-guard"
-import type { LocalModelAccess } from "#src/usecases"
+import type { LocalModelAccess, ObservationsRecorded } from "#src/usecases"
 
 export interface ExtensionRegistrar {
   registerAddTool(tool: MemoryAddTool): void
@@ -27,6 +27,8 @@ export interface ExtensionRegistrar {
   onToolCall(handler: ToolCallHandler): void
   onShellToolCall(handler: ShellEditHandler): void
   onTurnEnd(handler: TurnEndHandler): void
+  onAgentStart(handler: AgentStartHandler): void
+  appendObservations(data: ObservationsRecorded): void
   onBeforeCompact(handler: BeforeCompactHandler): void
   onSessionShutdown(handler: SessionShutdownHandler): void
 }
