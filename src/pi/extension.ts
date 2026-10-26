@@ -2,14 +2,6 @@ import { homedir } from "node:os"
 
 import { type ExtensionAPI, getAgentDir } from "@earendil-works/pi-coding-agent"
 
-import {
-  beforeCompactHandler,
-  CaptureCadence,
-  CaptureRuntime,
-  flushOnShutdownHandler,
-  messageEndHandler,
-  turnEndHandler,
-} from "#src/pi/capture"
 import { type CompletionFactory, registryCompletion } from "#src/pi/completion"
 import type { MemoryPaths } from "#src/pi/context"
 import { memoryAddTool } from "#src/pi/memory-add"
@@ -57,19 +49,7 @@ export function registerExtension(
   registrar.onBeforeAgentStart(relevant.beforeAgentStart())
   registrar.onToolCall(vaultGuardHandler(paths.configPath, homedir()))
   registrar.onShellToolCall(shellEditGuardHandler())
-  const capture = new CaptureRuntime({
-    paths,
-    sessions,
-    completionOf,
-    writeCursor: (data) => registrar.appendCursor(data),
-  })
-  const cadence = new CaptureCadence(capture, { paths, sessions })
-  const flushOnShutdown = flushOnShutdownHandler(cadence, capture)
-  registrar.onMessageEnd(messageEndHandler(cadence))
-  registrar.onTurnEnd(turnEndHandler(cadence))
-  registrar.onBeforeCompact(beforeCompactHandler(cadence))
-  registrar.onSessionShutdown(async (event, ctx) => {
-    await flushOnShutdown(event, ctx)
+  registrar.onSessionShutdown(async () => {
     sessions.shutdown()
     await block.settled()
     block.clear()

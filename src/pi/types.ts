@@ -1,4 +1,3 @@
-import type { BeforeCompactHandler, CursorData, MessageEndHandler, TurnEndHandler } from "#src/pi/capture"
 import type { CompletionFactory } from "#src/pi/completion"
 import type { MemoryCommand } from "#src/pi/context"
 import type { MemoryAddTool } from "#src/pi/memory-add"
@@ -9,6 +8,7 @@ import type { MemorySearchTool } from "#src/pi/memory-search"
 import type { SessionShutdownHandler } from "#src/pi/memory-session"
 import type { MemorySucceedTool } from "#src/pi/memory-succeed"
 import type { MemoryUpdateTool } from "#src/pi/memory-update"
+import type { BeforeCompactHandler, TurnEndHandler } from "#src/pi/observation-cycle"
 import type { SessionStartHandler } from "#src/pi/session-start"
 import type { ShellEditHandler } from "#src/pi/shell-edit-guard"
 import type { ToolCallHandler } from "#src/pi/vault-guard"
@@ -26,10 +26,8 @@ export interface ExtensionRegistrar {
   onBeforeAgentStart(handler: BeforeAgentStartHandler): void
   onToolCall(handler: ToolCallHandler): void
   onShellToolCall(handler: ShellEditHandler): void
-  onMessageEnd(handler: MessageEndHandler): void
   onTurnEnd(handler: TurnEndHandler): void
   onBeforeCompact(handler: BeforeCompactHandler): void
-  appendCursor(data: CursorData): void
   onSessionShutdown(handler: SessionShutdownHandler): void
 }
 

@@ -42,14 +42,3 @@ export function toolResultEntry(id: string, toolName: string, saved: AddedDetail
   if (saved) message = { ...base, details: { vault: saved.vault, path: saved.path } }
   return { type: "message", id, parentId: null, timestamp: STAMP, message }
 }
-
-export function cursorEntry(id: string, lastEntryId: string): SessionEntry {
-  return {
-    type: "custom",
-    id,
-    parentId: null,
-    timestamp: STAMP,
-    customType: "obsidian-memory-capture",
-    data: { lastEntryId },
-  }
-}

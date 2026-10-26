@@ -1,6 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent"
 
-import { CURSOR_TYPE } from "#src/pi/capture"
 import type { ExtensionRegistrar } from "./types.ts"
 
 export function registrarFor(pi: ExtensionAPI): ExtensionRegistrar {
@@ -16,10 +15,8 @@ export function registrarFor(pi: ExtensionAPI): ExtensionRegistrar {
     onBeforeAgentStart: (handler) => pi.on("before_agent_start", handler),
     onToolCall: (handler) => pi.on("tool_call", handler),
     onShellToolCall: (handler) => pi.on("tool_call", handler),
-    onMessageEnd: (handler) => pi.on("message_end", handler),
     onTurnEnd: (handler) => pi.on("turn_end", handler),
     onBeforeCompact: (handler) => pi.on("session_before_compact", handler),
-    appendCursor: (data) => pi.appendEntry(CURSOR_TYPE, data),
     onSessionShutdown: (handler) => pi.on("session_shutdown", handler),
   }
 }
