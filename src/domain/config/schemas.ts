@@ -13,6 +13,15 @@ export const ChatModelReferenceSchema = Type.Object(
   { provider: ChatModelPartSchema, id: ChatModelPartSchema },
   { additionalProperties: false },
 )
+export const ThinkingLevelSchema = Type.Union([
+  Type.Literal("off"),
+  Type.Literal("minimal"),
+  Type.Literal("low"),
+  Type.Literal("medium"),
+  Type.Literal("high"),
+  Type.Literal("xhigh"),
+  Type.Literal("max"),
+])
 export const CaptureWhenSchema = Type.Union([
   Type.Literal("after-each-turn"),
   Type.Literal("on-compaction"),

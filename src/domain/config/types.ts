@@ -8,11 +8,14 @@ import type {
   ConfigFieldObservationSchema,
   MemoryConfigSchema,
   ProjectEntrySchema,
+  ThinkingLevelSchema,
 } from "./schemas.ts"
 
 export type MemoryConfig = Static<typeof MemoryConfigSchema>
 
 export type ProjectEntry = Static<typeof ProjectEntrySchema>
+
+export type ThinkingLevel = Static<typeof ThinkingLevelSchema>
 
 export type LegacyCaptureWhen = Static<typeof CaptureWhenSchema>
 
