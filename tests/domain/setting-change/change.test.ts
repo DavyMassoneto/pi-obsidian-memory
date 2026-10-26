@@ -38,6 +38,44 @@ describe("changeSetting", () => {
     }
   })
 
+  test("changing the observer model keeps every other setting", () => {
+    const config = aConfig()
+    const model = { provider: "other", id: "model-x" }
+
+    expect(changed(config, { kind: "observerModel", model })).toEqual({
+      ...config,
+      observer: { ...config.observer, model },
+    })
+  })
+
+  test("changing the observer thinking level writes it", () => {
+    const config = aConfig()
+
+    for (const value of ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const) {
+      expect(changed(config, { kind: "thinking", role: "observer", value })).toEqual({
+        ...config,
+        observer: { ...config.observer, thinking: value },
+      })
+    }
+  })
+
+  test("changing the chunk size, concurrency, threshold, tail or map budget writes that number only", () => {
+    const config = aConfig()
+
+    for (const name of ["chunkTokens", "concurrency"] as const) {
+      expect(changed(config, { kind: "observerCount", name, value: 7 })).toEqual({
+        ...config,
+        observer: { ...config.observer, [name]: 7 },
+      })
+    }
+    for (const name of ["atContextTokens", "tailTokens", "mapTokens"] as const) {
+      expect(changed(config, { kind: "compactionCount", name, value: 7 })).toEqual({
+        ...config,
+        compaction: { ...config.compaction, [name]: 7 },
+      })
+    }
+  })
+
   test("sets and clears a threshold on either provider", () => {
     for (const config of [aConfig(), jevConfig({})]) {
       const gated = changed(config, { kind: "gateThreshold", value: 0.4 })
@@ -114,6 +152,12 @@ describe("changeSetting", () => {
       "decisionModel.relevanceThreshold: must be >= 0",
     ],
     ["a limit of 0", { kind: "limit", name: "maxBodyChars", value: 0 }, "limits.maxBodyChars: must be >= 1"],
+    [
+      "a chunk size of 0",
+      { kind: "observerCount", name: "chunkTokens", value: 0 },
+      "observer.chunkTokens: must be >= 1",
+    ],
+    ["a tail of 0", { kind: "compactionCount", name: "tailTokens", value: 0 }, "compaction.tailTokens: must be >= 1"],
     ["a context budget of 0", { kind: "budgetChars", value: 0 }, "context.budgetChars: must be >= 1"],
     [
       "a Laya endpoint that is not loopback",
