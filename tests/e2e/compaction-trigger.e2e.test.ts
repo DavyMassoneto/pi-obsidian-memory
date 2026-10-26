@@ -4,7 +4,9 @@ import {
   compactionsIn,
   ExtensionErrorSchema,
   isResume,
+  NotifySchema,
   recordsOf,
+  refusedCompactionWorld,
   TRIGGER_PROMPT,
   triggerWorld,
   waitForResumedRun,
@@ -27,6 +29,22 @@ test("crossing the threshold mid-run compacts between turns and resumes the run 
   expect(resumes.length).toBeGreaterThan(0)
   for (const resume of resumes) expect(resume.display).toBe(false)
   expect(timeline.findIndex(isResume)).toBeGreaterThan(firstCompaction)
+  expect(world.pi.unexpected).toEqual([])
+  expect(recordsOf(ExtensionErrorSchema, world.pi.lines)).toEqual([])
+})
+
+test("a mid-run compaction that pi refuses still lets the run finish", async () => {
+  const world = await refusedCompactionWorld()
+
+  await world.pi.prompt(TRIGGER_PROMPT, [])
+  const file = await world.pi.sessionFile()
+  const timeline = await waitForResumedRun(file)
+  await waitForSettledRun(world)
+
+  expect(await compactionsIn(file)).toEqual([])
+  expect(timeline.some(isResume)).toBe(true)
+  const warnings = recordsOf(NotifySchema, world.pi.lines).filter((notice) => notice.notifyType === "warning")
+  expect(warnings.some((notice) => notice.message.includes("Nothing to compact"))).toBe(true)
   expect(world.pi.unexpected).toEqual([])
   expect(recordsOf(ExtensionErrorSchema, world.pi.lines)).toEqual([])
 })

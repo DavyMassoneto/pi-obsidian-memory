@@ -1,4 +1,4 @@
-import type { MemoryPiContext, NotifyLevel } from "#src/pi/context"
+import type { MemoryPiContext } from "#src/pi/context"
 import { STATUS_OBSERVING } from "#src/pi/context"
 import {
   assignObservationIds,
@@ -16,7 +16,9 @@ import {
   recordedData,
   type SessionRecord,
 } from "#src/usecases"
+import { CompactionTrigger } from "./compaction-trigger.ts"
 import { OBSERVER_FAILED, OBSERVER_RETRY_NOTICE, OBSERVER_UNEXPECTED } from "./constants.ts"
+import { tell } from "./notice.ts"
 import { recordsOf } from "./records.ts"
 import type { IdleRelease, ObservationCycleDeps } from "./types.ts"
 
@@ -27,14 +29,11 @@ export class ObservationRuntime {
   #told = new Set<string>()
   #abort = new AbortController()
   #idle: IdleRelease[] = []
-  #compacting = false
+  readonly compaction: CompactionTrigger
 
   constructor(deps: ObservationCycleDeps) {
     this.#deps = deps
-  }
-
-  get compacting(): boolean {
-    return this.#compacting
+    this.compaction = new CompactionTrigger(() => deps.sendResume())
   }
 
   reset(): void {
@@ -43,7 +42,7 @@ export class ObservationRuntime {
     this.#inFlight = []
     this.#failed = []
     this.#told = new Set<string>()
-    this.#compacting = false
+    this.compaction.reset()
     this.#releaseIdle()
   }
 
@@ -101,28 +100,6 @@ export class ObservationRuntime {
     const operation = this.#deps.sessions.currentOperation(ctx.cwd, this.#deps.paths, signal)
     if (!operation) return Promise.resolve(null)
     return compactSession({ records: recordsOf(ctx.sessionManager.getBranch()) }, operation)
-  }
-
-  compact(ctx: MemoryPiContext, resume: boolean): void {
-    this.#compacting = true
-    ctx.compact({
-      onComplete: () => {
-        this.#compacting = false
-        if (resume) this.#resume()
-      },
-      onError: () => {
-        this.#compacting = false
-      },
-    })
-  }
-
-  tell(ctx: MemoryPiContext, message: string, level: NotifyLevel): void {
-    if (!ctx.hasUI) return
-    try {
-      ctx.ui.notify(message, level)
-    } catch {
-      return
-    }
   }
 
   #plan(records: SessionRecord[], settings: CycleSettings, attempted: string[], until: string | null): ChunkRange[] {
@@ -188,7 +165,7 @@ export class ObservationRuntime {
     const notice = `${OBSERVER_FAILED} ${problems.join("; ")}. ${OBSERVER_RETRY_NOTICE}`
     if (this.#told.has(notice)) return
     this.#told.add(notice)
-    this.tell(ctx, notice, "warning")
+    tell(ctx, notice, "warning")
   }
 
   #showStatus(ctx: MemoryPiContext): void {
@@ -206,13 +183,5 @@ export class ObservationRuntime {
     const waiting = this.#idle
     this.#idle = []
     for (const release of waiting) release()
-  }
-
-  #resume(): void {
-    try {
-      this.#deps.sendResume()
-    } catch {
-      return
-    }
   }
 }

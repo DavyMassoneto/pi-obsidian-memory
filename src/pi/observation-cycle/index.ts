@@ -1,3 +1,4 @@
+export * from "./compaction-trigger.ts"
 export * from "./constants.ts"
 export * from "./handlers.ts"
 export * from "./records.ts"

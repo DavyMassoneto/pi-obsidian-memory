@@ -12,6 +12,8 @@ import type { E2eWorld } from "./e2e-world.ts"
 
 const TRIGGER_FILE_BYTES = 6000
 
+const TRIGGER_CYCLE = { compaction: { atContextTokens: 1, tailTokens: 200 }, observer: { chunkTokens: 300 } }
+
 export const TRIGGER_PROMPT = "Read a.txt, then b.txt, then reply DONE."
 
 const TIMELINE_ENTRY_SCHEMA = Type.Object({
@@ -29,16 +31,25 @@ function fileOf(topic: string): string {
   return line.repeat(Math.ceil(TRIGGER_FILE_BYTES / line.length))
 }
 
-export async function triggerWorld(): Promise<E2eWorld> {
-  const world = await configuredWorld({
-    session: "saved",
-    compactsSmallSessions: true,
-    tools: ["read"],
-    cycle: { compaction: { atContextTokens: 1, tailTokens: 200 }, observer: { chunkTokens: 300 } },
-  })
+async function withTriggerFiles(world: E2eWorld): Promise<E2eWorld> {
   await writeFile(join(world.folders.cwd, "a.txt"), fileOf("apples"))
   await writeFile(join(world.folders.cwd, "b.txt"), fileOf("bananas"))
   return world
+}
+
+export async function triggerWorld(): Promise<E2eWorld> {
+  return withTriggerFiles(
+    await configuredWorld({
+      session: "saved",
+      compactsSmallSessions: true,
+      tools: ["read"],
+      cycle: TRIGGER_CYCLE,
+    }),
+  )
+}
+
+export async function refusedCompactionWorld(): Promise<E2eWorld> {
+  return withTriggerFiles(await configuredWorld({ session: "saved", tools: ["read"], cycle: TRIGGER_CYCLE }))
 }
 
 export function timelineIn(file: string): Promise<TimelineEntry[]> {

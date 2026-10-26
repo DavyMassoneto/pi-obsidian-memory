@@ -9,6 +9,10 @@ export function compactionDue(request: CompactionDueRequest): boolean {
   return tokens >= request.atContextTokens && raw - request.tailTokens >= request.chunkTokens
 }
 
+export function compactionRetryDue(failedAtTokens: number, rawTokens: number, chunkTokens: number): boolean {
+  return rawTokens < failedAtTokens || rawTokens >= failedAtTokens + chunkTokens
+}
+
 export function retriedByPi(stopReason: string, errorMessage: string | null): boolean {
   if (stopReason !== "error" || !errorMessage) return false
   return RETRYABLE_ERROR.test(errorMessage)
