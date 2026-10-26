@@ -24,7 +24,6 @@ export async function loadingWorld(options: Partial<WorldOptions>): Promise<E2eW
     memory: "configured",
     tools: [],
     modelCache: "shared",
-    capture: "after-each-turn",
     ...options,
   })
   await world.pi.waitFor(statusSet(STATUS_LOADING.key), 0)

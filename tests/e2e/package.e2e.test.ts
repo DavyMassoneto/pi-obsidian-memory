@@ -19,7 +19,6 @@ test("installed through settings.json packages, pi lists the four memory command
     memory: "none",
     tools: [],
     modelCache: "fresh",
-    capture: "after-each-turn",
     installed: true,
   })
   const commands = await world.pi.commands()
@@ -39,7 +38,6 @@ test("installed, the six memory tools each run once on a Haiku turn, and pi writ
     memory: "configured",
     tools: [],
     modelCache: "shared",
-    capture: "at-session-end",
     installed: true,
   })
   const { globalVault } = world.folders

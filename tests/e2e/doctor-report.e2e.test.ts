@@ -19,7 +19,7 @@ import {
 } from "#test-helpers"
 
 test("one report names the broken note, the copies, the blank note, the temporary file and the crowded folder, and nothing changes on disk", async () => {
-  const world = await configuredWorld({ capture: "at-session-end" })
+  const world = await configuredWorld({})
   const { globalVault, projectVault } = world.folders
   await writeVaultFile(globalVault, "tools/Broken.md", "---\nid: nope\n---\nBody.")
   await writeVaultFile(globalVault, "Copy one.md", noteWithId(7, "Same id.", []))

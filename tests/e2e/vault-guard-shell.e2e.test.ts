@@ -17,7 +17,6 @@ const options: WorldOptions = {
   memory: "configured",
   tools: ["powershell"],
   modelCache: "shared",
-  capture: "at-session-end",
 }
 
 test("bash and powershell naming a vault path are refused with the vault refusal, and the same commands on another file run", async () => {

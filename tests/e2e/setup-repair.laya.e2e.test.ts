@@ -15,11 +15,11 @@ import {
 } from "#src/pi"
 import {
   agentModelStep,
-  captureModelStep,
   configuredWorld,
   DialogRequestSchema,
   modeStep,
   notifySettles,
+  observerModelStep,
   pressEscape,
   recordsOf,
   storedConfig,
@@ -54,7 +54,7 @@ test.each([
     `/${MEMORY_SETUP_COMMAND}`,
     [
       { method: "confirm", title: REPAIR_TITLE, answer: { confirmed: true } },
-      captureModelStep(pressEscape),
+      observerModelStep(pressEscape),
       agentModelStep(pressEscape),
       modeStep({ option: SETUP_ATTACH_OPTION }),
       vaultStep(SETUP_KEEP_VAULT_TITLE, { value: "" }),
