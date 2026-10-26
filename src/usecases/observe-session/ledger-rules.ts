@@ -9,6 +9,7 @@ export type {
   LedgerObservation,
   MapNote,
   MapVault,
+  MessageRecord,
   ObservationsRecorded,
   ObserverDraft,
   RecordPart,

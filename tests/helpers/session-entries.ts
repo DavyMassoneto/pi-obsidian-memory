@@ -1,8 +1,11 @@
 import type { SessionEntry, SessionMessageEntry } from "@earendil-works/pi-coding-agent"
 
 import type { AddedDetails, RegistryMessage } from "#src/pi"
+import type { ObservationsRecorded } from "#src/usecases"
 
 const STAMP = "2026-10-20T10:00:00.000Z"
+
+export const ENTRY_STAMP = STAMP
 
 export function userEntry(id: string, text: string): SessionEntry {
   return {
@@ -41,4 +44,79 @@ export function toolResultEntry(id: string, toolName: string, saved: AddedDetail
   let message: SessionMessageEntry["message"] = base
   if (saved) message = { ...base, details: { vault: saved.vault, path: saved.path } }
   return { type: "message", id, parentId: null, timestamp: STAMP, message }
+}
+
+export function userEntryAt(id: string, text: string, timestamp: number): SessionEntry {
+  return {
+    type: "message",
+    id,
+    parentId: null,
+    timestamp: STAMP,
+    message: { role: "user", content: text, timestamp },
+  }
+}
+
+export function assistantEntryAt(id: string, parts: RegistryMessage["content"], timestamp: number): SessionEntry {
+  return {
+    type: "message",
+    id,
+    parentId: null,
+    timestamp: STAMP,
+    message: { ...assistantMessage(parts, "stop"), timestamp },
+  }
+}
+
+export function systemEntry(id: string, text: string): SessionEntry {
+  return {
+    type: "message",
+    id,
+    parentId: null,
+    timestamp: STAMP,
+    message: { role: "system", content: text, timestamp: 1 },
+  }
+}
+
+export function bashEntry(id: string, command: string, output: string): SessionEntry {
+  const message: SessionMessageEntry["message"] = {
+    role: "bashExecution",
+    command,
+    output,
+    exitCode: 0,
+    cancelled: false,
+    truncated: false,
+    timestamp: 1,
+  }
+  return { type: "message", id, parentId: null, timestamp: STAMP, message }
+}
+
+export function customEntry(id: string, customType: string, data: Partial<ObservationsRecorded>): SessionEntry {
+  return { type: "custom", id, parentId: null, timestamp: STAMP, customType, data }
+}
+
+export function customMessageEntry(id: string, customType: string, text: string): SessionEntry {
+  return {
+    type: "custom_message",
+    id,
+    parentId: null,
+    timestamp: STAMP,
+    customType,
+    content: text,
+    display: false,
+  }
+}
+
+export function compactionEntry(id: string, firstKeptEntryId: string): SessionEntry {
+  return {
+    type: "compaction",
+    id,
+    parentId: null,
+    timestamp: STAMP,
+    summary: "summary",
+    firstKeptEntryId,
+    tokensBefore: 100,
+  }
+}
+
+export function branchSummaryEntry(id: string, summary: string): SessionEntry {
+  return { type: "branch_summary", id, parentId: null, timestamp: STAMP, fromId: "root", summary }
 }
