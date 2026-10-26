@@ -228,6 +228,7 @@ thing it offers to change is a blank note, after asking you.
 | "Refused: the shell-edit guard could not check this command" | Same: the shell-edit guard needs Jev |
 | "Memory observer failed: …" | The text after the colon names the cause, for example a model without a key. It tries again a minute later; `/memory-doctor` checks the observer model |
 | "… so pi compacted it on its own" | The observer had not covered the start of the session yet. Nothing to do: it catches up, and the next compaction uses its observations |
+| "Memory could not compact the session: …" | The text after the colon names the cause, for example "Nothing to compact (session too small)". Nothing was compacted, and a run the compaction interrupted goes on. Nothing to do: memory tries again once the conversation has grown |
 | `No API key found for "<provider>"` in `/memory-doctor` | Log in to that provider in pi (`/login`) or set its key |
 
 ## Known limits

@@ -271,7 +271,7 @@ All entries live in the pi session and on the branch. None of them reaches the L
 | `message`, role `user` | `message`. Parts are the text, with each image as an `omitted` part. `tokens = estimateTokens(message)` (`pi-api §5`). `localTime = localTimestamp(message.timestamp)`. |
 | `message`, role `assistant` | `message`. Parts are the text parts, and each tool call becomes a `toolCall` part `name(JSON args)`. Thinking blocks are left out (choice 8). `tokens` uses `estimateTokens`. |
 | `message`, role `toolResult` | `message` with `toolName` and the text parts. In phase 2, `saved = {vault, path}` when `toolName === "memory_add"` and the details pass `AddedDetailsSchema`. |
-| `message`, role `bashExecution` | `message` with one text part: command, then output. |
+| `message`, role `bashExecution` | `message` with one text part: command, then output. When `excludeFromContext` is set (the user ran it with `!!`), `other`: output hidden from the LLM is not observed either. |
 | `message`, role `system` / `custom` / `branchSummary` / `compactionSummary` | `other` (fixes `om §7.2`) |
 | `custom_message` of type `obsidian-memory-relevant` or `obsidian-memory-resume` | `other`. Our own injected messages are never observed (choice 14, `om §7.10`). |
 | any other `custom_message` | `custom-message`, with `tokens = textTokens(text)` |
@@ -508,7 +508,8 @@ The call is inside a try/catch, because a stale ctx throws after shutdown or rep
 **Trigger** (in `turnEndHandler`, after the observer tick; after `OM:src/hooks/compaction-trigger.ts:62-115`). It does nothing in any of these cases:
 
 - there is no config;
-- `runtime.compacting` is set;
+- `runtime.compaction.running` is set;
+- the last trigger attempt failed and `!compactionRetryDue(failedAtTokens, rawTokensSinceLastCompaction(records), chunkTokens)`: it re-arms only when the raw tokens since the last compaction drop below the count of the failed attempt or grow by at least `chunkTokens` past it. A completed compaction clears the mark;
 - `retriedByPi(event.message.stopReason, errorMessage)`: the stop reason is `error` and the message matches `RETRYABLE_ERROR`;
 - `!compactionDue(…)`.
 
@@ -522,7 +523,7 @@ When due:
 1. Set `compacting = true` and `resume = event.toolResults.length > 0`. pi's stop reason is `"toolUse"` (`pi-api §6`), so OM's string fallback is dropped.
 2. Call `ctx.compact({ onComplete, onError })`.
    - `onComplete`: set `compacting = false`; if `resume`, call `registrar.sendResume()` (`pi.sendMessage({customType: RESUME_TYPE, content: RESUME_PROMPT, display:false}, {triggerTurn:true})`, inside a try/catch).
-   - `onError`: set `compacting = false`.
+   - `onError`: set `compacting = false`. When the error is `Compaction cancelled` (Esc), stop there. Otherwise record the attempt's raw token count for `compactionRetryDue`, warn `Memory could not compact the session: <cause>` (with `. The run goes on.` when `resume` is set) and, if `resume`, call `registrar.sendResume()` as `onComplete` does.
 
 `ctx.compact()` aborts the run and never continues it (`pi-api §2`). The resume pattern is the one from `pi-api §3` and `OM:src/hooks/compaction-trigger.ts:89-102`.
 
