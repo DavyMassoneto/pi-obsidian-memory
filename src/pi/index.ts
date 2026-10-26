@@ -1,5 +1,6 @@
 export * from "./capture/index.ts"
 export * from "./change-report/index.ts"
+export * from "./completion/index.ts"
 export * from "./context/index.ts"
 export * from "./extension.ts"
 export * from "./memory-add/index.ts"

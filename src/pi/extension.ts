@@ -6,12 +6,11 @@ import {
   beforeCompactHandler,
   CaptureCadence,
   CaptureRuntime,
-  type CompletionFactory,
   flushOnShutdownHandler,
   messageEndHandler,
-  registryCompletion,
   turnEndHandler,
 } from "#src/pi/capture"
+import { type CompletionFactory, registryCompletion } from "#src/pi/completion"
 import type { MemoryPaths } from "#src/pi/context"
 import { memoryAddTool } from "#src/pi/memory-add"
 import { memoryArchiveTool } from "#src/pi/memory-archive"

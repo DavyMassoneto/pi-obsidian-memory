@@ -1,4 +1,4 @@
-import type { CompletionFactory } from "#src/pi/capture"
+import type { CompletionFactory } from "#src/pi/completion"
 import type { MemoryPaths } from "#src/pi/context"
 import type { MemorySessionKeeper } from "#src/pi/memory-session"
 import type { BoolQuestion, DecisionPrompt } from "#src/usecases"

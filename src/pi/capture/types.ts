@@ -1,9 +1,10 @@
 import type { MessageEndEvent, SessionBeforeCompactEvent, TurnEndEvent } from "@earendil-works/pi-coding-agent"
 import type { Static } from "typebox"
 
+import type { CompletionFactory } from "#src/pi/completion"
 import type { MemoryPaths, MemoryPiContext } from "#src/pi/context"
 import type { MemorySessionKeeper } from "#src/pi/memory-session"
-import type { CompletionPort, ExplicitSave, TranscriptMessage } from "#src/usecases"
+import type { ExplicitSave, TranscriptMessage } from "#src/usecases"
 import type { CursorSchema } from "./schemas.ts"
 
 export type CursorData = Static<typeof CursorSchema>
@@ -13,8 +14,6 @@ export interface ReviewableTranscript {
   explicitSaves: ExplicitSave[]
   lastEntryId: string | null
 }
-
-export type CompletionFactory = (ctx: MemoryPiContext) => CompletionPort
 
 export type CursorWriter = (data: CursorData) => void
 
@@ -30,11 +29,6 @@ export type CaptureKind = "review" | "flush"
 export interface PendingCapture {
   ctx: MemoryPiContext
   kind: CaptureKind
-}
-
-export interface TextPart {
-  type: string
-  text?: string
 }
 
 export type MessageEndHandler = (event: MessageEndEvent, ctx: MemoryPiContext) => Promise<void>
