@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { aConfig, DEFAULT_CADENCE, inspectConfigForRepair, parseConfig, proposeSetup } from "#test-helpers"
+import { aConfig, inspectConfigForRepair, parseConfig, proposeSetup } from "#test-helpers"
 
 test.each([
   { provider: "local", model: "text-embedding-3-small" },
@@ -62,13 +62,21 @@ test("old configuration is invalid at runtime and repair never invents a chat mo
   expect(parsed.succeeded).toBe(false)
   expect(parsed).not.toHaveProperty("output")
   if (parsed.succeeded) throw new Error("old config accepted")
-  for (const field of ["maxNotesPerFolder", "capture", "memoryAgent", "context", "embeddings", "decisionModel"]) {
+  for (const field of [
+    "maxNotesPerFolder",
+    "observer",
+    "compaction",
+    "memoryAgent",
+    "context",
+    "embeddings",
+    "decisionModel",
+  ]) {
     expect(parsed.problems.join(" ")).toContain(field)
   }
   expect(inspectConfigForRepair(text)).toMatchObject({
     ...old,
     limits: { ...old.limits, maxNotesPerFolder: 20 },
-    capture: { model: {}, ...DEFAULT_CADENCE },
+    observer: { model: {}, thinking: "low", chunkTokens: 10000, concurrency: 4 },
     memoryAgent: { model: {} },
   })
 })
@@ -100,25 +108,20 @@ test("repair never invents an observer model and drops an invalid thinking level
 test("repair retains independently valid nested siblings and names discarded unknown fields", () => {
   const text = JSON.stringify({
     ...aConfig(),
-    capture: { model: { provider: "keep", id: " ", apiKey: "discard-secret" }, when: "at-session-end", extra: 1 },
+    observer: { model: { provider: "keep", id: " ", apiKey: "discard-secret" }, thinking: "high", extra: 1 },
     memoryAgent: { model: { provider: false, id: "keep-id" } },
     limits: { maxBodyChars: 700, maxStatementChars: 0, maxNotesPerFolder: 31 },
     context: { budgetChars: 5678, extra: 1 },
   })
   const draft = inspectConfigForRepair(text)
-  expect(draft.capture).toEqual({
-    model: { provider: "keep" },
-    ...DEFAULT_CADENCE,
-    reviewEnabled: false,
-    flushOnCompact: false,
-  })
+  expect(draft.observer).toEqual({ model: { provider: "keep" }, thinking: "high", chunkTokens: 10000, concurrency: 4 })
   expect(draft.memoryAgent).toEqual({ model: { id: "keep-id" } })
   expect(draft.limits).toEqual({ maxBodyChars: 700, maxStatementChars: 100, maxNotesPerFolder: 31 })
   expect(draft.context).toEqual({ budgetChars: 5678 })
   expect(draft.problems).toEqual(
     expect.arrayContaining([
-      "capture.model.apiKey: not a known field",
-      "capture.extra: not a known field",
+      "observer.model.apiKey: not a known field",
+      "observer.extra: not a known field",
       "context.extra: not a known field",
     ]),
   )

@@ -130,7 +130,6 @@ async function chooseModels(ctx: MemoryPiContext, draft: ConfigRepairDraft): Pro
   if (!agent) return null
   return {
     ...draft,
-    capture: { ...draft.capture, model: observer },
     observer: { ...draft.observer, model: observer },
     memoryAgent: { model: agent },
   }

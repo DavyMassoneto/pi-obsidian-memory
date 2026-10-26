@@ -19,7 +19,15 @@ test("old config is refused without migration or partial settings while its exac
   expect(result).toMatchObject({ succeeded: false, reason: "invalid-config" })
   expect(result).not.toHaveProperty("output")
   if (result.succeeded) throw new Error("old config accepted")
-  for (const field of ["maxNotesPerFolder", "capture", "memoryAgent", "context", "embeddings", "decisionModel"]) {
+  for (const field of [
+    "maxNotesPerFolder",
+    "observer",
+    "compaction",
+    "memoryAgent",
+    "context",
+    "embeddings",
+    "decisionModel",
+  ]) {
     expect(result.problems.join(" ")).toContain(field)
   }
   expect(await readFile(path, "utf8")).toBe(text)

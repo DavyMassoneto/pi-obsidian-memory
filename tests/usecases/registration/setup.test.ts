@@ -89,7 +89,7 @@ test("malformed JSON requires replacement confirmation before any bootstrap", as
 test("strict commit refuses unresolved selected model and unknown fields without writes", async () => {
   const { root, context, config, request } = await registrationUsecaseFixture()
   for (const proposed of [
-    { ...config, capture: { ...config.capture, model: { provider: "", id: "" } } },
+    { ...config, observer: { ...config.observer, model: { provider: "", id: "" } } },
     { ...config, secret: "not-config" },
   ]) {
     expect(await setupMemory({ ...request, config: proposed }, context)).toMatchObject({

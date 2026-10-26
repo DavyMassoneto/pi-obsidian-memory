@@ -22,12 +22,7 @@ export const ThinkingLevelSchema = Type.Union([
   Type.Literal("xhigh"),
   Type.Literal("max"),
 ])
-export const CaptureWhenSchema = Type.Union([
-  Type.Literal("after-each-turn"),
-  Type.Literal("on-compaction"),
-  Type.Literal("at-session-end"),
-])
-export const LegacyCaptureSchema = Type.Object({ capture: Type.Object({ when: CaptureWhenSchema }) })
+export const LegacyConfigSchema = Type.Object({ capture: Type.Object({}) })
 export const LayaMaxTokensSchema = Type.Integer({ minimum: 1, maximum: 8192 })
 export const LayaHeadMaxTokensSchema = Type.Integer({ minimum: 1, maximum: 8191 })
 export const DecisionThresholdSchema = Type.Number({ minimum: 0, maximum: 1 })
@@ -77,14 +72,6 @@ export const ConfigFieldObservationSchema = Type.Union([
   Type.Object({ field: Type.Literal("/limits/maxStatementChars"), index: Type.Integer(), value: ConfigLimitSchema }),
   Type.Object({ field: Type.Literal("/limits/maxNotesPerFolder"), index: Type.Integer(), value: ConfigLimitSchema }),
   Type.Object({ field: Type.Literal("/context/budgetChars"), index: Type.Integer(), value: ConfigLimitSchema }),
-  Type.Object({ field: Type.Literal("/capture/nudgeInterval"), index: Type.Integer(), value: ConfigLimitSchema }),
-  Type.Object({ field: Type.Literal("/capture/nudgeToolCalls"), index: Type.Integer(), value: ConfigLimitSchema }),
-  Type.Object({ field: Type.Literal("/capture/flushMinTurns"), index: Type.Integer(), value: ConfigLimitSchema }),
-  Type.Object({ field: Type.Literal("/capture/reviewEnabled"), index: Type.Integer(), value: Type.Boolean() }),
-  Type.Object({ field: Type.Literal("/capture/flushOnCompact"), index: Type.Integer(), value: Type.Boolean() }),
-  Type.Object({ field: Type.Literal("/capture/flushOnShutdown"), index: Type.Integer(), value: Type.Boolean() }),
-  Type.Object({ field: Type.Literal("/capture/model/provider"), index: Type.Integer(), value: ChatModelPartSchema }),
-  Type.Object({ field: Type.Literal("/capture/model/id"), index: Type.Integer(), value: ChatModelPartSchema }),
   Type.Object({ field: Type.Literal("/observer/model/provider"), index: Type.Integer(), value: ChatModelPartSchema }),
   Type.Object({ field: Type.Literal("/observer/model/id"), index: Type.Integer(), value: ChatModelPartSchema }),
   Type.Object({ field: Type.Literal("/observer/thinking"), index: Type.Integer(), value: ThinkingLevelSchema }),
@@ -153,18 +140,6 @@ export const MemoryConfigSchema = Type.Object(
     projects: Type.Array(ProjectEntrySchema),
     limits: Type.Object(
       { maxBodyChars: ConfigLimitSchema, maxStatementChars: ConfigLimitSchema, maxNotesPerFolder: ConfigLimitSchema },
-      { additionalProperties: false },
-    ),
-    capture: Type.Object(
-      {
-        model: ChatModelReferenceSchema,
-        nudgeInterval: ConfigLimitSchema,
-        nudgeToolCalls: ConfigLimitSchema,
-        flushMinTurns: ConfigLimitSchema,
-        reviewEnabled: Type.Boolean(),
-        flushOnCompact: Type.Boolean(),
-        flushOnShutdown: Type.Boolean(),
-      },
       { additionalProperties: false },
     ),
     observer: Type.Object(

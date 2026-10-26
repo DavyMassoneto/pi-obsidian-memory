@@ -16,8 +16,8 @@ import {
 
 test("a config file that still says capture.when starts with memory on, no repair notice, and is left as it was", async () => {
   const world = await e2eWorld({ memory: "configured", tools: [], modelCache: "shared" })
-  const { capture, ...rest } = await storedConfig(world)
-  const legacy = JSON.stringify({ ...rest, capture: { model: capture.model, when: "at-session-end" } })
+  const { observer, compaction: _compaction, ...rest } = await storedConfig(world)
+  const legacy = JSON.stringify({ ...rest, capture: { model: observer.model, when: "at-session-end" } })
   await writeFile(world.folders.configPath, legacy)
   await world.restart()
   await world.pi.waitFor(statusCleared(STATUS_LOADING.key), 0)

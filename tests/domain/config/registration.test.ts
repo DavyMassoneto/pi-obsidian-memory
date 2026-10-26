@@ -76,7 +76,7 @@ test("setup changes only the global registration without mutating its input", ()
 
 test("setup completes a new draft but refuses incomplete repaired registrations instead of dropping them", () => {
   expect(
-    proposeSetup({ config: prepareSetupDefaults(productSettings().capture.model), vault: "C:/new-global" }),
+    proposeSetup({ config: prepareSetupDefaults(productSettings().observer.model), vault: "C:/new-global" }),
   ).toEqual({
     succeeded: true,
     output: {

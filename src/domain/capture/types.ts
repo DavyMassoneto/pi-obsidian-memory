@@ -8,33 +8,6 @@ import type {
   CaptureObservationSchema,
 } from "./schemas.ts"
 
-export interface CaptureCadenceSettings {
-  nudgeInterval: number
-  nudgeToolCalls: number
-  flushMinTurns: number
-  reviewEnabled: boolean
-  flushOnCompact: boolean
-  flushOnShutdown: boolean
-}
-
-export interface CaptureTally {
-  userMessages: number
-  turnsSinceReview: number
-  toolCallsSinceReview: number
-}
-
-export interface FinishedTurn {
-  toolCalls: number
-  reviewActive: boolean
-}
-
-export interface TurnOutcome {
-  tally: CaptureTally
-  review: boolean
-}
-
-export type FlushMoment = "compact" | "shutdown"
-
 export type CaptureDraft = Static<typeof CaptureDraftSchema>
 export type CaptureAction = Static<typeof CaptureActionSchema>
 export type CaptureInput = Static<typeof CaptureInputSchema>

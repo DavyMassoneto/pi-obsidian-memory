@@ -1,9 +1,7 @@
 import type { Static, TSchema } from "typebox"
 
-import type { CaptureCadenceSettings } from "#src/domain/capture"
 import type { Absent, Failed, Succeeded } from "#src/shared"
 import type {
-  CaptureWhenSchema,
   ChatModelReferenceSchema,
   ConfigFieldObservationSchema,
   MemoryConfigSchema,
@@ -16,8 +14,6 @@ export type MemoryConfig = Static<typeof MemoryConfigSchema>
 export type ProjectEntry = Static<typeof ProjectEntrySchema>
 
 export type ThinkingLevel = Static<typeof ThinkingLevelSchema>
-
-export type LegacyCaptureWhen = Static<typeof CaptureWhenSchema>
 
 export type ParseConfigResult = Succeeded<MemoryConfig> | Failed
 
@@ -83,10 +79,6 @@ export interface ConfigRegistrations {
   projects: Partial<ProjectEntry>[]
 }
 
-export interface CaptureFields extends Partial<CaptureCadenceSettings> {
-  model: Partial<ChatModelReference>
-}
-
 export interface ObserverFields extends Partial<Omit<MemoryConfig["observer"], "model">> {
   model: Partial<ChatModelReference>
 }
@@ -114,7 +106,6 @@ export interface DecisionFields {
 
 export interface ConfigFields extends ConfigRegistrations {
   limits: Partial<MemoryConfig["limits"]>
-  capture: CaptureFields
   observer: ObserverFields
   compaction: CompactionFields
   memoryAgent: MemoryAgentFields

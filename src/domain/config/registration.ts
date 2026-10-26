@@ -8,7 +8,6 @@ export function proposeSetup(request: SetupProposal, platform: PathPlatform): Pa
     global: { vault: request.vault },
     projects: request.config.projects,
     limits: request.config.limits,
-    capture: request.config.capture,
     observer: request.config.observer,
     compaction: request.config.compaction,
     memoryAgent: request.config.memoryAgent,

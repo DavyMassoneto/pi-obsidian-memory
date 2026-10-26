@@ -20,7 +20,6 @@ test("the doctor checks the observer and memory agent models", async () => {
     context,
     JSON.stringify({
       ...config,
-      capture: { ...config.capture, model: { provider: LOCAL_PROVIDER, id: "not-registered" } },
       observer: { ...config.observer, model: { provider: LOCAL_PROVIDER, id: LOCAL_MODEL_ID } },
       memoryAgent: { model: { provider: "anthropic", id: "claude-sonnet-4-5" } },
     }),

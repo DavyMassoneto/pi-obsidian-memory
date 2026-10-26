@@ -16,11 +16,8 @@ export function configRules(selection: ConfigRuleSelection): ConfigFieldRule[] {
   const keys = Object.keys(properties)
   const rules: ConfigFieldRule[] = [{ kind: "object", path: "", keys, required: keys }]
   rules.push(...objectRules("/global", properties.global), ...objectRules("/limits", properties.limits))
-  rules.push(...objectRules("/capture", properties.capture), ...objectRules("/observer", properties.observer))
-  rules.push(
-    ...objectRules("/compaction", properties.compaction),
-    ...objectRules("/memoryAgent", properties.memoryAgent),
-  )
+  rules.push(...objectRules("/observer", properties.observer), ...objectRules("/compaction", properties.compaction))
+  rules.push(...objectRules("/memoryAgent", properties.memoryAgent))
   rules.push(...objectRules("/context", properties.context))
   for (let index = 0; index < selection.projectCount; index++) {
     rules.push(...objectRules(`/projects/${index}`, ProjectEntrySchema))
@@ -41,9 +38,7 @@ function objectRules(path: string, schema: TObject): ConfigFieldRule[] {
   if (Array.isArray(schema.required)) required = schema.required
   const rules: ConfigFieldRule[] = [{ kind: "object", path, keys: Object.keys(schema.properties), required }]
   for (const [key, property] of Object.entries(schema.properties)) {
-    if (path === "/capture" && key === "model") {
-      rules.push(...objectRules(`${path}/model`, MemoryConfigSchema.properties.capture.properties.model))
-    } else if (path === "/observer" && key === "model") {
+    if (path === "/observer" && key === "model") {
       rules.push(...objectRules(`${path}/model`, MemoryConfigSchema.properties.observer.properties.model))
     } else if (path === "/memoryAgent" && key === "model") {
       rules.push(...objectRules(`${path}/model`, MemoryConfigSchema.properties.memoryAgent.properties.model))

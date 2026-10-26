@@ -53,8 +53,6 @@ function parseCount(text: string): SettingNumberResult {
 
 function nextConfig(config: MemoryConfig, change: SettingChange): NextConfig {
   switch (change.kind) {
-    case "captureModel":
-      return done({ ...config, capture: { ...config.capture, model: change.model } })
     case "agentModel":
       return done({ ...config, memoryAgent: { model: change.model } })
     case "observerModel":
@@ -63,9 +61,6 @@ function nextConfig(config: MemoryConfig, change: SettingChange): NextConfig {
       return done({ ...config, observer: withObserver(config.observer, change) })
     case "compactionCount":
       return done({ ...config, compaction: { ...config.compaction, [change.name]: change.value } })
-    case "captureCount":
-    case "captureSwitch":
-      return done({ ...config, capture: { ...config.capture, [change.name]: change.value } })
     case "embeddings":
       return done({ ...config, embeddings: change.embeddings })
     case "budgetChars":

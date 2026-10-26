@@ -42,6 +42,11 @@ export function volumeGuidRoot(drive: string): string | null {
   return null
 }
 
+export function legacyConfigText(capture: object): string {
+  const { observer: _observer, compaction: _compaction, ...rest } = aConfig()
+  return JSON.stringify({ ...rest, capture })
+}
+
 export function configTextWithDecisionModel(decisionModel: object): string {
   return JSON.stringify({ ...aConfig(), decisionModel })
 }
