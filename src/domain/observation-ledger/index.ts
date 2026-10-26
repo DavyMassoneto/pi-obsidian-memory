@@ -1,5 +1,6 @@
 export * from "./constants.ts"
 export * from "./records.ts"
 export * from "./schemas.ts"
+export * from "./serialize.ts"
 export * from "./tokens.ts"
 export * from "./types.ts"
