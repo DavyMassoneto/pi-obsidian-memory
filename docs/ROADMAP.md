@@ -68,24 +68,39 @@ Every milestone:
 - **Done when:** the labelled check group shows each question separating, and the guard refuses the edits and lets
   the allowed runs through in tests.
 
-### 4. Automatic capture (judgement still unproven)
+### 4. OM cycle (VISION 15)
 
-- **Goal:** memory grows from the conversation, without the user asking.
-- **Scope:**
-  - [ ] It follows the types and the Not memory list, and writes notes in English (VISION 7). Secrets are saved like any
-    note (VISION 11).
-- **Done when:**
-  - [ ] tasks, TODOs and session logs are not saved; a stated secret is saved as written.
-  - These judgement items (Not memory list, English, tasks and session logs not saved, secrets saved as written) need
-    a real model to prove; no test does.
+- **Goal:** the package observes, compacts and consolidates like OM, saving durable memory as vault notes, so that OM
+  can be uninstalled.
+- **Phase 1: observe and compact.** Released on its own. Until phase 2, the vault gets only what the user asks to
+  remember.
+  - [ ] The observer: the conversation is summarized into dated observations in the pi session.
+  - [ ] The compaction block: journey, memory map, observations and a verbatim tail.
+  - [ ] The memory map: the vault notes shown in the form of OM's map, with the instruction to use `memory_search`
+    and `memory_get`.
+  - [ ] The trigger and the resume after a compaction in the middle of a run.
+  - [ ] The current capture is removed.
+  - [ ] The settings of the observer and of compaction, in [config.md](config.md), written by `/memory-setup`.
+  - [ ] `/memory-doctor` and the README tell the user to uninstall OM.
+  - [ ] End-to-end scenarios E1 to E5.
+- **Phase 2: consolidate and import.** Released on its own.
+  - [ ] The consolidator: the older observations become vault notes, in the vault format.
+  - [ ] The journey, kept in the session.
+  - [ ] The import of what OM saved in `.memory/`, by command.
+  - [ ] The settings of the consolidator, in [config.md](config.md), written by `/memory-setup`.
+  - [ ] End-to-end scenarios E6 and E7.
+  - [ ] The judgement items, which need a real model to prove; no other test does: the notes follow the types and the
+    Not memory list, are in English (VISION 7), tasks, TODOs and session logs are not saved, and a stated secret is
+    saved as written (VISION 11).
 
 ## Where each VISION decision still lands
 
 | Decision | Pending |
 |---|---|
 | 1 Reuse | every milestone (checked first) |
-| 7 Language | 4: captured notes in English |
-| 11 Secrets | 4 proves a secret is saved as written |
+| 7 Language | 4, phase 2: consolidated notes in English |
+| 11 Secrets | 4, phase 2 proves a secret is saved as written |
+| 15 OM cycle | 4 |
 | 14 Platform | every milestone: lint, typecheck, `npm test` in CI on Windows, macOS, Linux; `test:e2e` on Windows |
 
 ## To do
@@ -101,7 +116,7 @@ Every milestone:
 - Hosts other than pi: VISION 14, not for now.
 - Searching past pi sessions: VISION, not for now.
 - The end-to-end suite on macOS and Linux: it needs the user's pi login, so it runs on Windows only.
-- Consolidation or an approval step: ruled out by the user (memory is written directly, with full detail).
+- An approval step: ruled out by the user (memory is written directly, with full detail).
 - Masking or blocking secrets: VISION 11 rules it out.
 - Checking links at the same moment as the read or write: a known limit in vault-format Writing.
 - `schemaVersion` and format migrations: only when the format first changes.
