@@ -1,6 +1,7 @@
 import type { Static } from "typebox"
 
 import type { ReadObservation } from "#src/domain/memory-agent"
+import type { NoteType } from "#src/domain/note"
 import type { LedgerObservationSchema, ObservationsRecordedSchema, ObserverDraftSchema } from "./schemas.ts"
 
 export type LedgerObservation = Static<typeof LedgerObservationSchema>
@@ -95,6 +96,31 @@ export interface CompactionDueRequest {
   atContextTokens: number
   tailTokens: number
   chunkTokens: number
+}
+
+export interface MapNote {
+  path: string
+  type: NoteType
+  dontForget: boolean
+}
+
+export interface MapVault {
+  vault: "global" | "project"
+  name: string
+  notes: MapNote[]
+  problems: string[]
+}
+
+export interface MapBudget {
+  remaining: number
+  stopped: boolean
+  omitted: number
+}
+
+export interface SummaryParts {
+  journey: string
+  map: string
+  observations: LedgerObservation[]
 }
 
 export interface FailedChunk {
