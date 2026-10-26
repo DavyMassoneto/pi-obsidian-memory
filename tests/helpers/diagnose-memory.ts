@@ -1,5 +1,11 @@
 import type { VaultContext } from "#src/services"
-import { type DiagnosedMemory, type MemoryOperationContext, resolveMemory } from "#src/usecases"
+import {
+  type DecisionProbe,
+  type DiagnosedMemory,
+  type EmbeddingProbe,
+  type MemoryOperationContext,
+  resolveMemory,
+} from "#src/usecases"
 import { noteWithId, searchFixture } from "./search-memory.ts"
 import { putCatalogFile } from "./vault-catalog.ts"
 
@@ -15,6 +21,26 @@ export async function putBrokenVault(vault: VaultContext, maxNotesPerFolder: num
   }
 }
 
+export function embeddingProbeWithoutCredentials(modelCachePath: string): EmbeddingProbe {
+  return {
+    modelCachePath,
+    async hasCredentials() {
+      return false
+    },
+  }
+}
+
+export function decisionProbeWithoutCredentials(): DecisionProbe {
+  return {
+    hasClassifier() {
+      return false
+    },
+    async hasCredentials() {
+      return false
+    },
+  }
+}
+
 const CLEAN_DIAGNOSIS = { invalid: [], blank: [], duplicateIds: [], temporaries: [], crowdedFolders: [] }
 
 export function diagnosedMemory(overrides: Partial<DiagnosedMemory>): DiagnosedMemory {
@@ -26,7 +52,7 @@ export function diagnosedMemory(overrides: Partial<DiagnosedMemory>): DiagnosedM
     decision: { provider: "typesafe", model: "jev-latest", status: "ready", detail: "model and API key found" },
     cutoffs: { gate: { value: 0.5, source: "typesafe" }, relevance: { value: 0.5, source: "typesafe" } },
     models: [
-      { role: "capture", check: { model: { provider: "p", id: "m" }, status: "ok" } },
+      { role: "observer", check: { model: { provider: "p", id: "m" }, status: "ok" } },
       { role: "memory agent", check: { model: { provider: "p", id: "m" }, status: "ok" } },
     ],
     ...overrides,

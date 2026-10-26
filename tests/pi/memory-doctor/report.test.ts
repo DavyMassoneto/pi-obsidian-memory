@@ -11,7 +11,7 @@ test("a clean vault says no problems were found, and the providers not in use ye
       "Global vault: no problems found.",
       "",
       "Models:",
-      "- capture p/m: ok",
+      "- observer p/m: ok",
       "- memory agent p/m: ok",
       "- embeddings local/Xenova/multilingual-e5-small: ready",
       "- decision model typesafe/jev-latest: ready (model and API key found)",
@@ -67,7 +67,7 @@ test("a model that is not registered or has no credentials shows its problem", (
     diagnosedMemory({
       models: [
         {
-          role: "capture",
+          role: "observer",
           check: {
             model: { provider: "p", id: "m" },
             status: "model-not-found",
@@ -82,7 +82,7 @@ test("a model that is not registered or has no credentials shows its problem", (
     }),
   )
 
-  expect(report).toContain("- capture p/m: Model p/m is not registered in pi")
+  expect(report).toContain("- observer p/m: Model p/m is not registered in pi")
   expect(report).toContain("- memory agent q/n: No API key")
 })
 
