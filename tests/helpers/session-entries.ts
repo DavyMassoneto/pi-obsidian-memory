@@ -1,7 +1,7 @@
 import type { SessionEntry, SessionMessageEntry } from "@earendil-works/pi-coding-agent"
 
 import type { AddedDetails, RegistryMessage } from "#src/pi"
-import type { ObservationsRecorded } from "#src/usecases"
+import type { ObservationsConsolidated, ObservationsRecorded } from "#src/usecases"
 
 const STAMP = "2026-10-20T10:00:00.000Z"
 
@@ -98,7 +98,11 @@ export function hiddenBashEntry(id: string, command: string, output: string): Se
   return bashEntryOf(id, command, output, true)
 }
 
-export function customEntry(id: string, customType: string, data: Partial<ObservationsRecorded>): SessionEntry {
+export function customEntry(
+  id: string,
+  customType: string,
+  data: Partial<ObservationsRecorded> | Partial<ObservationsConsolidated>,
+): SessionEntry {
   return { type: "custom", id, parentId: null, timestamp: STAMP, customType, data }
 }
 

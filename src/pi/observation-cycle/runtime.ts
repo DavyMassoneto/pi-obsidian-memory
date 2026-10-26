@@ -17,6 +17,7 @@ import {
   type SessionRecord,
 } from "#src/usecases"
 import { CompactionTrigger } from "./compaction-trigger.ts"
+import { Consolidation } from "./consolidation.ts"
 import { OBSERVER_FAILED, OBSERVER_RETRY_NOTICE, OBSERVER_UNEXPECTED } from "./constants.ts"
 import { tell } from "./notice.ts"
 import { recordsOf } from "./records.ts"
@@ -30,10 +31,12 @@ export class ObservationRuntime {
   #abort = new AbortController()
   #idle: IdleRelease[] = []
   readonly compaction: CompactionTrigger
+  readonly consolidation: Consolidation
 
   constructor(deps: ObservationCycleDeps) {
     this.#deps = deps
     this.compaction = new CompactionTrigger(() => deps.sendResume())
+    this.consolidation = new Consolidation(deps, () => this.#abort.signal)
   }
 
   reset(): void {
@@ -43,6 +46,7 @@ export class ObservationRuntime {
     this.#failed = []
     this.#told = new Set<string>()
     this.compaction.reset()
+    this.consolidation.reset()
     this.#releaseIdle()
   }
 
@@ -64,6 +68,7 @@ export class ObservationRuntime {
     const records = recordsOf(ctx.sessionManager.getBranch())
     const plan = this.#plan(records, settings, [], null)
     for (const range of plan) this.#start(ctx, records, range, [])
+    this.consolidation.start(ctx, settings)
   }
 
   async observeBeforeCut(ctx: MemoryPiContext, until: string, signal: AbortSignal): Promise<void> {

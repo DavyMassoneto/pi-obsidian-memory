@@ -50,6 +50,7 @@ export function registerExtension(
     sessions,
     completionOf,
     appendObservations: (data) => registrar.appendObservations(data),
+    appendConsolidated: (data) => registrar.appendConsolidated(data),
     sendResume: () => registrar.sendResume(),
   })
   registrar.onSessionStart(sessionStartHandler(paths, sessions, block, relevant, cycle))

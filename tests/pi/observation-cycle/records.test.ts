@@ -1,7 +1,7 @@
 import { expect, test } from "vitest"
 
 import { RELEVANT_MESSAGE_TYPE, recordsOf } from "#src/pi"
-import { localTimestamp, OBSERVATIONS_TYPE, RESUME_TYPE, textTokens } from "#src/usecases"
+import { CONSOLIDATED_TYPE, localTimestamp, OBSERVATIONS_TYPE, RESUME_TYPE, textTokens } from "#src/usecases"
 import {
   assistantEntryAt,
   bashEntry,
@@ -116,6 +116,31 @@ test("a valid observations entry becomes an observations record, and an invalid 
     { kind: "observations", id: "o1", data },
     { kind: "other", id: "o2" },
     { kind: "other", id: "o3" },
+  ])
+})
+
+test("a memory_add result carries its saved note, and a valid consolidated entry becomes a consolidated record", () => {
+  const saved = { vault: "project", path: "tools/Use pnpm.md" } as const
+  const data = { observationIds: ["2026-10-26T13:35:00"], journey: "### 2026-10-26 13:35\nThe user chose pnpm." }
+
+  const records = recordsOf([
+    toolResultEntry("t1", "memory_add", saved),
+    toolResultEntry("t2", "memory_add", null),
+    toolResultEntry("t3", "memory_get", saved),
+    customEntry("k1", CONSOLIDATED_TYPE, data),
+    customEntry("k2", CONSOLIDATED_TYPE, { observationIds: [] }),
+    customEntry("k3", "someone-else", data),
+  ])
+
+  expect(records.slice(0, 3)).toMatchObject([
+    { kind: "message", id: "t1", saved },
+    { kind: "message", id: "t2", saved: null },
+    { kind: "message", id: "t3", saved: null },
+  ])
+  expect(records.slice(3)).toEqual([
+    { kind: "consolidated", id: "k1", data },
+    { kind: "other", id: "k2" },
+    { kind: "other", id: "k3" },
   ])
 })
 

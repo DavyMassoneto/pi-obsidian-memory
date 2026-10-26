@@ -10,17 +10,22 @@ import {
 import { Value } from "typebox/value"
 
 import type { RegistryMessage } from "#src/pi/context"
+import { MEMORY_ADD_TOOL_NAME } from "#src/pi/memory-add"
 import { RELEVANT_MESSAGE_TYPE } from "#src/pi/relevant-memory"
 import {
+  CONSOLIDATED_TYPE,
   localTimestamp,
   type MessageRecord,
   OBSERVATIONS_TYPE,
+  ObservationsConsolidatedSchema,
   ObservationsRecordedSchema,
   RESUME_TYPE,
   type RecordPart,
+  type SavedNote,
   type SessionRecord,
   textTokens,
 } from "#src/usecases"
+import { AddedDetailsSchema } from "./schemas.ts"
 
 function otherRecord(entry: SessionEntry): SessionRecord {
   return { kind: "other", id: entry.id }
@@ -51,6 +56,12 @@ function assistantParts(content: RegistryMessage["content"]): RecordPart[] {
   })
 }
 
+function savedNoteOf(message: SessionMessageEntry["message"]): SavedNote | null {
+  if (message.role !== "toolResult" || message.toolName !== MEMORY_ADD_TOOL_NAME || message.isError) return null
+  if (!Value.Check(AddedDetailsSchema, message.details)) return null
+  return { vault: message.details.vault, path: message.details.path }
+}
+
 function sourceMessage(
   entry: SessionMessageEntry,
   role: MessageRecord["role"],
@@ -65,7 +76,7 @@ function sourceMessage(
     localTime: localTimestamp(entry.message.timestamp),
     tokens: estimateTokens(entry.message),
     parts,
-    saved: null,
+    saved: savedNoteOf(entry.message),
   }
 }
 
@@ -110,6 +121,9 @@ function branchSummaryRecordOf(entry: BranchSummaryEntry): SessionRecord {
 function customRecordOf(entry: CustomEntry): SessionRecord {
   if (entry.customType === OBSERVATIONS_TYPE && Value.Check(ObservationsRecordedSchema, entry.data)) {
     return { kind: "observations", id: entry.id, data: entry.data }
+  }
+  if (entry.customType === CONSOLIDATED_TYPE && Value.Check(ObservationsConsolidatedSchema, entry.data)) {
+    return { kind: "consolidated", id: entry.id, data: entry.data }
   }
   return otherRecord(entry)
 }

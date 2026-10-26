@@ -12,7 +12,7 @@ import type { AgentStartHandler, BeforeCompactHandler, TurnEndHandler } from "#s
 import type { SessionStartHandler } from "#src/pi/session-start"
 import type { ShellEditHandler } from "#src/pi/shell-edit-guard"
 import type { ToolCallHandler } from "#src/pi/vault-guard"
-import type { LocalModelAccess, ObservationsRecorded } from "#src/usecases"
+import type { LocalModelAccess, ObservationsConsolidated, ObservationsRecorded } from "#src/usecases"
 
 export interface ExtensionRegistrar {
   registerAddTool(tool: MemoryAddTool): void
@@ -29,6 +29,7 @@ export interface ExtensionRegistrar {
   onTurnEnd(handler: TurnEndHandler): void
   onAgentStart(handler: AgentStartHandler): void
   appendObservations(data: ObservationsRecorded): void
+  appendConsolidated(data: ObservationsConsolidated): void
   sendResume(): void
   commandNames(): string[]
   onBeforeCompact(handler: BeforeCompactHandler): void
