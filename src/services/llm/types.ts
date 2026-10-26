@@ -1,4 +1,12 @@
-import type { CaptureInput, CaptureResult, ChatModelReference, RetrievalInput, RetrievalResult } from "#src/domain"
+import type {
+  CaptureInput,
+  CaptureResult,
+  ChatModelReference,
+  ObserverDraft,
+  RetrievalInput,
+  RetrievalResult,
+  ThinkingLevel,
+} from "#src/domain"
 import type { Failed, Succeeded } from "#src/shared"
 
 export interface ModelStepContext {
@@ -9,6 +17,12 @@ export interface ModelStepContext {
 export interface CaptureRequest extends ModelStepContext, CaptureInput {}
 export interface RetrievalRequest extends ModelStepContext, RetrievalInput {}
 
+export interface ObserveRequest extends ModelStepContext {
+  thinking: ThinkingLevel
+  chunk: string
+  now: string
+}
+
 export interface PromptContent {
   system: string
   data: string
@@ -17,6 +31,7 @@ export interface PromptContent {
 export interface CompletionRequest extends PromptContent {
   signal: AbortSignal
   model: ChatModelReference
+  thinking?: ThinkingLevel
 }
 
 export interface CompletedResponse {
@@ -37,6 +52,7 @@ export interface ModelCallFailure extends Failed {
 export type CompletionResult = Succeeded<string> | Failed | ModelCallFailure
 export type CaptureStepResult = CaptureResult | ModelCallFailure
 export type RetrievalStepResult = RetrievalResult | ModelCallFailure
+export type ObserveStepResult = Succeeded<ObserverDraft[]> | Failed | ModelCallFailure
 export type DisposeCompletion = () => void
 
 export interface CompletionLifetime {
