@@ -1,19 +1,22 @@
-import type { PathPlatform } from "#src/domain/path-platform"
-import { COUNT_REASON, COUNT_TEXT, THRESHOLD_REASON, THRESHOLD_TEXT } from "./constants.ts"
-import { parseConfig } from "./parse.ts"
-import { repairDecision } from "./resources.ts"
 import type {
   ConfigCandidate,
-  DecisionChange,
   MemoryConfig,
   NextConfig,
   ParseConfigResult,
   ProjectReplacement,
-  SettingChange,
   SettingNumberKind,
   SettingNumberResult,
-  ThresholdChange,
-} from "./types.ts"
+} from "#src/domain/config"
+import {
+  COUNT_REASON,
+  COUNT_TEXT,
+  parseConfig,
+  repairDecision,
+  THRESHOLD_REASON,
+  THRESHOLD_TEXT,
+} from "#src/domain/config"
+import type { PathPlatform } from "#src/domain/path-platform"
+import type { DecisionChange, SettingChange, ThresholdChange } from "./types.ts"
 
 export function changeSetting(config: MemoryConfig, change: SettingChange, platform: PathPlatform): ParseConfigResult {
   const next = nextConfig(config, change)
