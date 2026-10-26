@@ -1,7 +1,18 @@
-import type { CoveredRange, Ledger, LedgerObservation, ObservationsRecord, SessionRecord } from "./types.ts"
+import type {
+  ConsolidatedRecord,
+  CoveredRange,
+  Ledger,
+  LedgerObservation,
+  ObservationsRecord,
+  SessionRecord,
+} from "./types.ts"
 
 function observationsRecordsOf(records: SessionRecord[]): ObservationsRecord[] {
   return records.filter((record) => record.kind === "observations")
+}
+
+function consolidatedRecordsOf(records: SessionRecord[]): ConsolidatedRecord[] {
+  return records.filter((record) => record.kind === "consolidated")
 }
 
 function firstOccurrences(observations: LedgerObservation[], kept: Set<string>): LedgerObservation[] {
@@ -25,5 +36,14 @@ export function ledgerOf(records: SessionRecord[]): Ledger {
     if (from < 0 || to < from) continue
     ranges.push({ from, to, observations: firstOccurrences(record.data.observations, kept) })
   }
-  return { ranges, used, consolidated: new Set<string>(), journey: "" }
+  const consolidated = new Set<string>()
+  let journey = ""
+  for (const record of consolidatedRecordsOf(records)) {
+    for (const id of record.data.observationIds) {
+      used.add(id)
+      consolidated.add(id)
+    }
+    journey = record.data.journey
+  }
+  return { ranges, used, consolidated, journey }
 }

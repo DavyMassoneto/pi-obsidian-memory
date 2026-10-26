@@ -1,5 +1,7 @@
 export const OBSERVATIONS_TYPE = "obsidian-memory-observations"
 
+export const CONSOLIDATED_TYPE = "obsidian-memory-consolidated"
+
 export const RESUME_TYPE = "obsidian-memory-resume"
 
 export const COMPACTION_DETAILS_TYPE = "obsidian-memory-compaction"

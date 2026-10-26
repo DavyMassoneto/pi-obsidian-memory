@@ -2,11 +2,18 @@ import type { Static } from "typebox"
 
 import type { ReadObservation } from "#src/domain/memory-agent"
 import type { NoteType } from "#src/domain/note"
-import type { LedgerObservationSchema, ObservationsRecordedSchema, ObserverDraftSchema } from "./schemas.ts"
+import type {
+  LedgerObservationSchema,
+  ObservationsConsolidatedSchema,
+  ObservationsRecordedSchema,
+  ObserverDraftSchema,
+} from "./schemas.ts"
 
 export type LedgerObservation = Static<typeof LedgerObservationSchema>
 
 export type ObservationsRecorded = Static<typeof ObservationsRecordedSchema>
+
+export type ObservationsConsolidated = Static<typeof ObservationsConsolidatedSchema>
 
 export type ObserverDraft = Static<typeof ObserverDraftSchema>
 
@@ -49,6 +56,12 @@ export interface ObservationsRecord {
   kind: "observations"
   id: string
   data: ObservationsRecorded
+}
+
+export interface ConsolidatedRecord {
+  kind: "consolidated"
+  id: string
+  data: ObservationsConsolidated
 }
 
 export interface CompactionRecord {
@@ -153,4 +166,4 @@ export interface ChunkPlanRequest {
 
 export type SourceRecord = MessageRecord | CustomMessageRecord | BranchSummaryRecord
 
-export type SessionRecord = SourceRecord | ObservationsRecord | CompactionRecord | OtherRecord
+export type SessionRecord = SourceRecord | ObservationsRecord | ConsolidatedRecord | CompactionRecord | OtherRecord

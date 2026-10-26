@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { ledgerOf } from "#src/domain"
-import { assistantRecord, observation, observationsRecord, userRecord } from "#test-helpers"
+import { activeObservations, ledgerOf } from "#src/domain"
+import { assistantRecord, consolidatedRecord, observation, observationsRecord, userRecord } from "#test-helpers"
 
 const first = observation("2026-10-26T13:35:00", "first")
 const second = observation("2026-10-26T13:36:00", "second")
@@ -57,6 +57,30 @@ describe("ledgerOf", () => {
     ]
 
     expect([...ledgerOf(records).used].sort()).toEqual([first.id, second.id, stray.id])
+  })
+
+  it("consolidated ids leave the active observations and the last journey wins", () => {
+    const records = [
+      userRecord("u1", "one", 1),
+      observationsRecord("o1", "u1", "u1", [first, second]),
+      consolidatedRecord("c1", [first.id], "older journey"),
+    ]
+    const partly = ledgerOf(records)
+
+    expect(activeObservations(partly)).toEqual([second])
+    expect(partly.journey).toBe("older journey")
+
+    const fully = ledgerOf([...records, consolidatedRecord("c2", [second.id, first.id], "newer journey")])
+
+    expect([...fully.consolidated].sort()).toEqual([first.id, second.id])
+    expect(activeObservations(fully)).toEqual([])
+    expect(fully.journey).toBe("newer journey")
+  })
+
+  it("a consolidated id stays used even when no recorded entry holds it", () => {
+    const records = [userRecord("u1", "one", 1), consolidatedRecord("c1", [first.id], "journey")]
+
+    expect([...ledgerOf(records).used]).toEqual([first.id])
   })
 
   it("nothing is consolidated and the journey is empty", () => {

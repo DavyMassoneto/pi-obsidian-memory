@@ -4,7 +4,9 @@ import {
   type ChunkRange,
   type CompactionDueRequest,
   type CompactionRecord,
+  type ConsolidatedRecord,
   type CustomMessageRecord,
+  type Ledger,
   type LedgerObservation,
   ledgerOf,
   type MapNote,
@@ -14,6 +16,7 @@ import {
   type ObserverDraft,
   type OtherRecord,
   type RecordPart,
+  type SavedNote,
   type SessionRecord,
 } from "#src/domain"
 
@@ -84,6 +87,24 @@ export function observationsRecord(
   observations: LedgerObservation[],
 ): ObservationsRecord {
   return { kind: "observations", id, data: { fromId, coversUpToId, observations } }
+}
+
+export function sizedObservation(id: string, tokens: number): LedgerObservation {
+  return { id, content: `observation ${id}`, tokens }
+}
+
+export function consolidatedRecord(id: string, observationIds: string[], journey: string): ConsolidatedRecord {
+  return { kind: "consolidated", id, data: { observationIds, journey } }
+}
+
+export function ledgerHolding(observations: LedgerObservation[], consolidatedIds: string[]): Ledger {
+  const records: SessionRecord[] = [userRecord("u1", "one", 1), observationsRecord("o1", "u1", "u1", observations)]
+  if (consolidatedIds.length > 0) records.push(consolidatedRecord("c1", consolidatedIds, "journey"))
+  return ledgerOf(records)
+}
+
+export function savedRecord(id: string, vault: SavedNote["vault"], path: string): MessageRecord {
+  return { ...toolResultRecord(id, "memory_add", `saved ${path}`, 1), saved: { vault, path } }
 }
 
 export function compactionRecord(id: string, firstKeptEntryId: string): CompactionRecord {

@@ -1,6 +1,6 @@
 import type { Ledger, LedgerObservation } from "./types.ts"
 
-function byId(left: LedgerObservation, right: LedgerObservation): number {
+export function byId(left: LedgerObservation, right: LedgerObservation): number {
   if (left.id < right.id) return -1
   if (left.id > right.id) return 1
   return 0

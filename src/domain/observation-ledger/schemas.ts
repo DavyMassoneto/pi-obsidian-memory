@@ -22,6 +22,13 @@ export const ObservationsRecordedSchema = Type.Object(
   { additionalProperties: false },
 )
 
+export const ObservationsConsolidatedSchema = Type.Object(
+  { observationIds: Type.Array(ObservationIdSchema, { minItems: 1 }), journey: Type.String() },
+  { additionalProperties: false },
+)
+
+export const JourneyReplySchema = Type.Object({ journey: Type.String() }, { additionalProperties: false })
+
 export const ObserverDraftSchema = Type.Object(
   {
     timestamp: Type.String({ pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$" }),
