@@ -23,6 +23,16 @@ describe("importParts", () => {
     expect(importParts("a short note\n\nwith a blank line\n", 1000)).toEqual(["a short note\n\nwith a blank line\n"])
   })
 
+  it("gives no empty part when text ends with a newline after a full part", () => {
+    expect(importParts(`${"x".repeat(64)}\n`, 16)).toEqual(["x".repeat(64)])
+    expect(importParts(`${"x".repeat(128)}\n`, 16)).toEqual(["x".repeat(64), "x".repeat(64)])
+  })
+
+  it("gives no part for text with only line breaks", () => {
+    expect(importParts("\n", 16)).toEqual([])
+    expect(importParts("\n\n\n", 16)).toEqual([])
+  })
+
   it("gives no part for empty text", () => {
     expect(importParts("", 16)).toEqual([])
   })

@@ -15,6 +15,7 @@ export function importParts(text: string, maxTokens: number): string[] {
   let size = 0
   for (const line of text.replace(/\r\n/g, "\n").split("\n")) {
     for (const piece of linePieces(line, maxChars)) {
+      if (piece.length === 0 && size >= maxChars) continue
       if (current.length > 0 && size + 1 + piece.length > maxChars) {
         parts.push(current.join("\n"))
         current = []
@@ -25,5 +26,5 @@ export function importParts(text: string, maxTokens: number): string[] {
     }
   }
   parts.push(current.join("\n"))
-  return parts
+  return parts.filter((part) => part.trim().length > 0)
 }
