@@ -2,6 +2,6 @@ export const NO_SESSION_NOTICE = "Memory is not ready in this session; try again
 
 export const STALE_SESSION_REASON = "stale-session"
 
-export const CAPTURE_BRANCH = "capture"
+export const CYCLE_BRANCH = "cycle"
 
 export const RETRIEVAL_BRANCH = "retrieval"

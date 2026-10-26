@@ -52,7 +52,7 @@ export async function captureMemory(
     context: { project: projectName, folder: context.workingFolder },
     explicitSaves,
     limits: { maxBodyChars: config.limits.maxBodyChars, maxStatementChars: config.limits.maxStatementChars },
-    model: config.capture.model,
+    model: run.model,
     signal: context.signal,
   }
   const report: CaptureReport = { reviewed: false, applied: [] }
