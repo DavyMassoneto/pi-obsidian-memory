@@ -72,7 +72,7 @@ export class ObservationRuntime {
     if (!settings) return
     const own = this.#abort.signal
     const attempted: string[] = []
-    await this.whenIdle()
+    await this.whenIdle(signal)
     while (!own.aborted && !signal.aborted) {
       const records = recordsOf(ctx.sessionManager.getBranch())
       const plan = this.#plan(records, settings, attempted, until)
@@ -81,14 +81,19 @@ export class ObservationRuntime {
         attempted.push(range.fromId)
         this.#start(ctx, records, range, [signal])
       }
-      await this.whenIdle()
+      await this.whenIdle(signal)
     }
   }
 
-  whenIdle(): Promise<void> {
-    if (this.#inFlight.length === 0) return Promise.resolve()
+  whenIdle(signal: AbortSignal): Promise<void> {
+    if (this.#inFlight.length === 0 || signal.aborted) return Promise.resolve()
     const idle = Promise.withResolvers<void>()
-    this.#idle.push(idle.resolve)
+    const release = () => {
+      signal.removeEventListener("abort", release)
+      idle.resolve()
+    }
+    signal.addEventListener("abort", release, { once: true })
+    this.#idle.push(release)
     return idle.promise
   }
 
