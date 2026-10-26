@@ -22,4 +22,17 @@ export const ObservationsRecordedSchema = Type.Object(
   { additionalProperties: false },
 )
 
+export const ObserverDraftSchema = Type.Object(
+  {
+    timestamp: Type.String({ pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$" }),
+    content: Type.String({ minLength: 1 }),
+  },
+  { additionalProperties: false },
+)
+
+export const ObserverReplySchema = Type.Object(
+  { observations: Type.Array(ObserverDraftSchema) },
+  { additionalProperties: false },
+)
+
 export const CompactionDetailsSchema = Type.Object({ type: Type.Literal(COMPACTION_DETAILS_TYPE) })

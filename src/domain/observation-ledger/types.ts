@@ -1,11 +1,13 @@
 import type { Static } from "typebox"
 
 import type { ReadObservation } from "#src/domain/memory-agent"
-import type { LedgerObservationSchema, ObservationsRecordedSchema } from "./schemas.ts"
+import type { LedgerObservationSchema, ObservationsRecordedSchema, ObserverDraftSchema } from "./schemas.ts"
 
 export type LedgerObservation = Static<typeof LedgerObservationSchema>
 
 export type ObservationsRecorded = Static<typeof ObservationsRecordedSchema>
+
+export type ObserverDraft = Static<typeof ObserverDraftSchema>
 
 export type SavedNote = Pick<ReadObservation, "vault" | "path">
 
