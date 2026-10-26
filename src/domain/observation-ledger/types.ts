@@ -77,6 +77,38 @@ export interface ChunkRange {
   coversUpToId: string
 }
 
+export interface ChunkSlice extends ChunkRange {
+  tokens: number
+}
+
+export interface FailedChunk {
+  fromId: string
+  failedAtMs: number
+}
+
+export interface IndexRange {
+  from: number
+  to: number
+}
+
+export interface Span {
+  from: number
+  to: number
+  closed: boolean
+}
+
+export interface ChunkPlanRequest {
+  records: SessionRecord[]
+  ledger: Ledger
+  inFlight: ChunkRange[]
+  failed: FailedChunk[]
+  attempted: string[]
+  chunkTokens: number
+  concurrency: number
+  nowMs: number
+  until: string | null
+}
+
 export type SourceRecord = MessageRecord | CustomMessageRecord | BranchSummaryRecord
 
 export type SessionRecord = SourceRecord | ObservationsRecord | CompactionRecord | OtherRecord
