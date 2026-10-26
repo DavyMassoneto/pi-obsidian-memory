@@ -13,9 +13,9 @@ import {
   SETUP_AGENT_MODEL_TITLE,
   SETUP_ATTACH_OPTION,
   SETUP_CANCELLED,
-  SETUP_CAPTURE_MODEL_TITLE,
   SETUP_DONE,
   SETUP_MODE_TITLE,
+  SETUP_OBSERVER_MODEL_TITLE,
   SETUP_VAULT_TITLE,
 } from "#src/pi"
 import { readConfig } from "#src/services"
@@ -51,7 +51,7 @@ export async function configureMemory(
   const setup = await world.pi.command(
     `/${MEMORY_SETUP_COMMAND}`,
     [
-      { method: "select", title: SETUP_CAPTURE_MODEL_TITLE, answer: { option: model } },
+      { method: "select", title: SETUP_OBSERVER_MODEL_TITLE, answer: { option: model } },
       { method: "select", title: SETUP_AGENT_MODEL_TITLE, answer: { option: model } },
       { method: "select", title: SETUP_MODE_TITLE, answer: { option: SETUP_ATTACH_OPTION } },
       { method: "input", title: SETUP_VAULT_TITLE, answer: { value: globalVault } },

@@ -3,15 +3,15 @@ import { expect, test } from "vitest"
 import { settingLines } from "#src/pi"
 import { aConfig, lineLabels } from "#test-helpers"
 
-test("the lines are in a fixed order, one per setting, then the global vault and the projects", () => {
+test("the screen lists the observer model, thinking, chunk, concurrency, threshold, tail and map lines with their values, then the memory agent and the rest", () => {
   expect(settingLines(aConfig()).map((line) => line.label.split(":")[0])).toEqual([
-    "Capture model",
-    "Review during the session",
-    "Review every",
-    "Review after tool calls",
-    "Flush at compaction",
-    "Flush at session end",
-    "Flush minimum user messages",
+    "Observer model",
+    "Observer thinking",
+    "Observe every",
+    "Observers at a time",
+    "Compact at",
+    "Verbatim tail",
+    "Memory map",
     "Memory agent model",
     "Decision model",
     "Gate cutoff",
@@ -32,12 +32,13 @@ test("each line shows its current value", () => {
   expect(lineLabels(config)).toContain("Context budget: 12000 characters")
   expect(lineLabels(config)).toContain("Max notes per folder: 20")
   expect(lineLabels(config)).toContain("Projects: 2")
-  expect(lineLabels(config)).toContain("Review during the session: on")
-  expect(lineLabels(config)).toContain("Review every: 10 turns")
-  expect(lineLabels(config)).toContain("Review after tool calls: 15")
-  expect(lineLabels(config)).toContain("Flush at compaction: on")
-  expect(lineLabels(config)).toContain("Flush at session end: on")
-  expect(lineLabels(config)).toContain("Flush minimum user messages: 6")
+  expect(lineLabels(config)).toContain("Observer model: test-chat/selected-chat")
+  expect(lineLabels(config)).toContain("Observer thinking: low")
+  expect(lineLabels(config)).toContain("Observe every: 10000 tokens")
+  expect(lineLabels(config)).toContain("Observers at a time: 4")
+  expect(lineLabels(config)).toContain("Compact at: 150000 context tokens")
+  expect(lineLabels(config)).toContain("Verbatim tail: 20000 tokens")
+  expect(lineLabels(config)).toContain("Memory map: 2000 tokens")
 })
 
 test("the cutoffs read 'not set' for Laya, show TypeSafe's values for Jev and 'set' when the config has one", () => {
