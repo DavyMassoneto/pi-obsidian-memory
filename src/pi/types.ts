@@ -1,10 +1,5 @@
-import type {
-  BeforeCompactHandler,
-  CompletionFactory,
-  CursorData,
-  MessageEndHandler,
-  TurnEndHandler,
-} from "#src/pi/capture"
+import type { BeforeCompactHandler, CursorData, MessageEndHandler, TurnEndHandler } from "#src/pi/capture"
+import type { CompletionFactory } from "#src/pi/completion"
 import type { MemoryCommand } from "#src/pi/context"
 import type { MemoryAddTool } from "#src/pi/memory-add"
 import type { MemoryArchiveTool } from "#src/pi/memory-archive"

@@ -1,11 +1,12 @@
 import type { SessionEntry } from "@earendil-works/pi-coding-agent"
 import { Value } from "typebox/value"
 
+import type { TextPart } from "#src/pi/completion"
 import { MEMORY_ADD_TOOL_NAME } from "#src/pi/memory-add"
 import type { ExplicitSave, TranscriptMessage } from "#src/usecases"
 import { CURSOR_TYPE } from "./constants.ts"
 import { AddedDetailsSchema, CursorSchema } from "./schemas.ts"
-import type { ReviewableTranscript, TextPart } from "./types.ts"
+import type { ReviewableTranscript } from "./types.ts"
 
 export function reviewableSince(entries: SessionEntry[]): ReviewableTranscript {
   const messages: TranscriptMessage[] = []
