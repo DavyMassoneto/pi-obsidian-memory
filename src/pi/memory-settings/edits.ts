@@ -1,8 +1,8 @@
 import { parseSettingNumber } from "#src/usecases"
-import { NONE_WORD } from "./constants.ts"
+import { NONE_WORD, THINKING_LEVELS } from "./constants.ts"
 import { chooseModel } from "./models.ts"
 import { saveChange } from "./save.ts"
-import type { LineEdit, ModelEditSpec, NumberEditSpec, SwitchEditSpec } from "./types.ts"
+import type { LineEdit, ModelEditSpec, NumberEditSpec, ThinkingEditSpec } from "./types.ts"
 
 export function modelEdit(spec: ModelEditSpec): LineEdit {
   return async (env) => {
@@ -17,14 +17,14 @@ export function modelEdit(spec: ModelEditSpec): LineEdit {
   }
 }
 
-export function switchEdit(spec: SwitchEditSpec): LineEdit {
+export function thinkingEdit(spec: ThinkingEditSpec): LineEdit {
   return async (env) => {
-    const value = !spec.current
-    let state = "off"
-    if (value) state = "on"
+    const answer = await env.ctx.ui.select(spec.title, THINKING_LEVELS)
+    const value = THINKING_LEVELS.find((level) => level === answer)
+    if (!value || value === spec.current) return
     await saveChange(env, {
-      change: { kind: "captureSwitch", name: spec.name, value },
-      what: `${spec.what} is now ${state}`,
+      change: { kind: "thinking", role: "observer", value },
+      what: `${spec.what} is now ${value}`,
       reload: false,
     })
   }

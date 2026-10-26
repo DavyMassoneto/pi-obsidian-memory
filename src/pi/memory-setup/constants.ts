@@ -14,8 +14,8 @@ export const SETUP_KEEP_VAULT_TITLE = "Vault folder (leave empty to keep the cur
 
 export const SETUP_VAULT_PLACEHOLDER = "Absolute folder path"
 
-export const SETUP_CAPTURE_MODEL_TITLE =
-  "Chat model for automatic capture (the model in use is the default and Escape keeps the one marked)"
+export const SETUP_OBSERVER_MODEL_TITLE =
+  "Chat model for the observer (it summarizes the conversation for compaction; the model in use is the default and Escape keeps the one marked)"
 
 export const SETUP_AGENT_MODEL_TITLE =
   "Chat model for the memory agent (a small model, it searches memory for each message; sorted by price; Escape keeps the current one)"

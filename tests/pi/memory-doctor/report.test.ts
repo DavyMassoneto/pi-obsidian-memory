@@ -62,6 +62,13 @@ test("a folder with no registered project says so", () => {
   )
 })
 
+test("the models section names the observer", () => {
+  const report = renderDoctorReport(diagnosedMemory({}))
+
+  expect(report).toContain("Models:\n- observer p/m: ok\n- memory agent p/m: ok")
+  expect(report).not.toContain("capture")
+})
+
 test("a model that is not registered or has no credentials shows its problem", () => {
   const report = renderDoctorReport(
     diagnosedMemory({

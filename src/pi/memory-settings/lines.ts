@@ -1,10 +1,10 @@
 import type { CutoffValue, MemoryConfig } from "#src/usecases"
 import { resolveCutoffs } from "#src/usecases"
-import { AGENT_MODEL_TITLE, CAPTURE_MODEL_TITLE } from "./constants.ts"
-import { modelEdit, numberEdit, switchEdit } from "./edits.ts"
+import { AGENT_MODEL_TITLE, OBSERVER_MODEL_TITLE, OBSERVER_THINKING_TITLE } from "./constants.ts"
+import { modelEdit, numberEdit, thinkingEdit } from "./edits.ts"
 import { projectsEdit } from "./projects.ts"
 import { decisionEdit, embeddingsEdit } from "./providers.ts"
-import type { CaptureCountName, CaptureSwitchName, NumberChange, SettingLine } from "./types.ts"
+import type { NumberChange, SettingLine } from "./types.ts"
 
 function cutoffText(cutoff: CutoffValue): string {
   if (typeof cutoff.value !== "number") return "not set"
@@ -16,13 +16,6 @@ function decisionText(config: MemoryConfig): string {
   const { decisionModel } = config
   if (decisionModel.provider === "laya") return `Laya (${decisionModel.endpoint})`
   return "Jev (TypeSafe)"
-}
-
-function captureSwitchLine(label: string, name: CaptureSwitchName, config: MemoryConfig): SettingLine {
-  const current = config.capture[name]
-  let state = "off"
-  if (current) state = "on"
-  return { label: `${label}: ${state}`, edit: switchEdit({ name, what: label.toLowerCase(), current }) }
 }
 
 function cutoffLine(label: string, which: "gate" | "relevance", config: MemoryConfig): SettingLine {
@@ -56,34 +49,61 @@ function countLine(label: string, unit: string, current: number, change: NumberC
   }
 }
 
-function captureCountLine(label: string, unit: string, name: CaptureCountName, config: MemoryConfig): SettingLine {
-  return countLine(label, unit, config.capture[name], (value) => ({ kind: "captureCount", name, value }))
-}
-
-function captureLines(config: MemoryConfig): SettingLine[] {
+function observerLines(config: MemoryConfig): SettingLine[] {
+  const { observer } = config
   return [
     {
-      label: `Capture model: ${config.capture.model.provider}/${config.capture.model.id}`,
+      label: `Observer model: ${observer.model.provider}/${observer.model.id}`,
       edit: modelEdit({
-        title: CAPTURE_MODEL_TITLE,
-        what: "capture model",
-        kind: "captureModel",
-        current: config.capture.model,
+        title: OBSERVER_MODEL_TITLE,
+        what: "observer model",
+        kind: "observerModel",
+        current: observer.model,
       }),
     },
-    captureSwitchLine("Review during the session", "reviewEnabled", config),
-    captureCountLine("Review every", " turns", "nudgeInterval", config),
-    captureCountLine("Review after tool calls", "", "nudgeToolCalls", config),
-    captureSwitchLine("Flush at compaction", "flushOnCompact", config),
-    captureSwitchLine("Flush at session end", "flushOnShutdown", config),
-    captureCountLine("Flush minimum user messages", "", "flushMinTurns", config),
+    {
+      label: `Observer thinking: ${observer.thinking}`,
+      edit: thinkingEdit({ title: OBSERVER_THINKING_TITLE, what: "observer thinking", current: observer.thinking }),
+    },
+    countLine("Observe every", " tokens", observer.chunkTokens, (value) => ({
+      kind: "observerCount",
+      name: "chunkTokens",
+      value,
+    })),
+    countLine("Observers at a time", "", observer.concurrency, (value) => ({
+      kind: "observerCount",
+      name: "concurrency",
+      value,
+    })),
+  ]
+}
+
+function compactionLines(config: MemoryConfig): SettingLine[] {
+  const { compaction } = config
+  return [
+    countLine("Compact at", " context tokens", compaction.atContextTokens, (value) => ({
+      kind: "compactionCount",
+      name: "atContextTokens",
+      value,
+    })),
+    countLine("Verbatim tail", " tokens", compaction.tailTokens, (value) => ({
+      kind: "compactionCount",
+      name: "tailTokens",
+      value,
+    })),
+    countLine("Memory map", " tokens", compaction.mapTokens, (value) => ({
+      kind: "compactionCount",
+      name: "mapTokens",
+      value,
+    })),
   ]
 }
 
 export function settingLines(config: MemoryConfig): SettingLine[] {
   const { limits } = config
   return [
-    ...captureLines(config),
+    ...observerLines(config),
+    ...compactionLines(config),
     {
       label: `Memory agent model: ${config.memoryAgent.model.provider}/${config.memoryAgent.model.id}`,
       edit: modelEdit({
