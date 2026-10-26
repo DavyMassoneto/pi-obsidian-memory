@@ -83,6 +83,20 @@ export interface ChunkSlice extends ChunkRange {
   tokens: number
 }
 
+export interface CutoffSnap {
+  firstKeptEntryId: string
+  firstKeptIndex: number
+  tail: number
+}
+
+export interface CompactionDueRequest {
+  contextTokens: number | null
+  records: SessionRecord[]
+  atContextTokens: number
+  tailTokens: number
+  chunkTokens: number
+}
+
 export interface FailedChunk {
   fromId: string
   failedAtMs: number
