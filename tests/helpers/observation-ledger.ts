@@ -6,6 +6,8 @@ import {
   type CustomMessageRecord,
   type LedgerObservation,
   ledgerOf,
+  type MapNote,
+  type MapVault,
   type MessageRecord,
   type ObservationsRecord,
   type OtherRecord,
@@ -88,6 +90,14 @@ export function compactionRecord(id: string, firstKeptEntryId: string): Compacti
 
 export function otherRecord(id: string): OtherRecord {
   return { kind: "other", id }
+}
+
+export function mapNote(path: string, type: MapNote["type"], dontForget: boolean): MapNote {
+  return { path, type, dontForget }
+}
+
+export function mapVault(vault: MapVault["vault"], name: string, notes: MapNote[], problems: string[]): MapVault {
+  return { vault, name, notes, problems }
 }
 
 export function chunkRange(fromId: string, coversUpToId: string): ChunkRange {
