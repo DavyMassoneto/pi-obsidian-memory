@@ -26,7 +26,7 @@ export function exportNameStep(answer: UiStep["answer"]): UiStep {
 }
 
 export async function exportableWorld(): Promise<E2eWorld> {
-  const world = await configuredWorld({ capture: "at-session-end" })
+  const world = await configuredWorld({})
   await writeVaultFile(world.folders.globalVault, "tools/Use pnpm.md", GLOBAL_NOTE)
   await writeVaultFile(world.folders.projectVault, "ci/CI runs on Jenkins.md", PROJECT_NOTE)
   return world

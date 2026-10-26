@@ -12,7 +12,7 @@ import {
 } from "#test-helpers"
 
 test("memory_search finds a note by meaning, with no word in common, through the real local model", async () => {
-  const world = await configuredWorld({ capture: "at-session-end" })
+  const world = await configuredWorld({})
   const { globalVault } = world.folders
   await writeVaultFile(globalVault, CAT_PATH, noteWithId(1, CAT_BODY, []))
   await writeVaultFile(globalVault, "tools/Use pnpm.md", noteWithId(2, "Always pnpm.", []))

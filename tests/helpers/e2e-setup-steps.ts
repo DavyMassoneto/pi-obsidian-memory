@@ -8,7 +8,7 @@ export const chooseE2eModel: UiAnswer = { option: E2E_MODEL_LABEL }
 
 export const pressEscape: UiAnswer = { cancelled: true }
 
-export function captureModelStep(answer: UiAnswer): UiStep {
+export function observerModelStep(answer: UiAnswer): UiStep {
   return { method: "select", title: SETUP_OBSERVER_MODEL_TITLE, answer }
 }
 
@@ -26,7 +26,7 @@ export function vaultStep(title: string, answer: UiAnswer): UiStep {
 
 export function firstSetupSteps(mode: string, vault: string): UiStep[] {
   return [
-    captureModelStep(chooseE2eModel),
+    observerModelStep(chooseE2eModel),
     agentModelStep(chooseE2eModel),
     modeStep({ option: mode }),
     vaultStep(SETUP_VAULT_TITLE, { value: vault }),

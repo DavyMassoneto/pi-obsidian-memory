@@ -8,7 +8,7 @@ import type { E2eWorld } from "./e2e-world.ts"
 export const DECISION_CUTOFFS = { gateThreshold: 0.2, relevanceThreshold: 0.5 }
 
 export async function worldOnLaya(decisionModel: MemoryConfig["decisionModel"]): Promise<E2eWorld> {
-  const world = await configuredWorld({ capture: "at-session-end" })
+  const world = await configuredWorld({})
   await rewriteConfig(world, { decisionModel })
   await world.restart()
   return world

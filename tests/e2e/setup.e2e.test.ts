@@ -15,7 +15,7 @@ import {
 } from "#test-helpers"
 
 test("a config file that still says capture.when starts with memory on, no repair notice, and is left as it was", async () => {
-  const world = await e2eWorld({ memory: "configured", tools: [], modelCache: "shared", capture: "after-each-turn" })
+  const world = await e2eWorld({ memory: "configured", tools: [], modelCache: "shared" })
   const { capture, ...rest } = await storedConfig(world)
   const legacy = JSON.stringify({ ...rest, capture: { model: capture.model, when: "at-session-end" } })
   await writeFile(world.folders.configPath, legacy)
