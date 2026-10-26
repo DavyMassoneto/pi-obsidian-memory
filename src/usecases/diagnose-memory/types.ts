@@ -28,7 +28,7 @@ export interface VaultReportFailure {
 }
 
 export interface ModelReport {
-  role: "capture" | "memory agent"
+  role: "observer" | "memory agent"
   check: ChatModelCheck
 }
 

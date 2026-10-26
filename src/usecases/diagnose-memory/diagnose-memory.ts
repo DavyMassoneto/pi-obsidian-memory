@@ -30,11 +30,11 @@ export async function diagnoseMemory<TModel>(
     }
     const vaults: DiagnosedMemory["vaults"] = []
     for (const target of targets) vaults.push(await reportVault(memory.output, target, context))
-    const { capture, memoryAgent } = memory.output.config
-    const checks = await checkChatModels([capture.model, memoryAgent.model], request.port)
+    const { observer, memoryAgent } = memory.output.config
+    const checks = await checkChatModels([observer.model, memoryAgent.model], request.port)
     const models: ModelReport[] = []
-    const [captureCheck, agentCheck] = checks
-    if (captureCheck) models.push({ role: "capture", check: captureCheck })
+    const [observerCheck, agentCheck] = checks
+    if (observerCheck) models.push({ role: "observer", check: observerCheck })
     if (agentCheck) models.push({ role: "memory agent", check: agentCheck })
     const embeddings = await checkEmbeddings(memory.output.config.embeddings, request.embeddings, context.signal)
     const decision = await checkDecision(memory.output.config.decisionModel, request.decision, context.signal)
