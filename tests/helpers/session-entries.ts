@@ -76,7 +76,7 @@ export function systemEntry(id: string, text: string): SessionEntry {
   }
 }
 
-export function bashEntry(id: string, command: string, output: string): SessionEntry {
+function bashEntryOf(id: string, command: string, output: string, excludeFromContext: boolean): SessionEntry {
   const message: SessionMessageEntry["message"] = {
     role: "bashExecution",
     command,
@@ -85,8 +85,17 @@ export function bashEntry(id: string, command: string, output: string): SessionE
     cancelled: false,
     truncated: false,
     timestamp: 1,
+    excludeFromContext,
   }
   return { type: "message", id, parentId: null, timestamp: STAMP, message }
+}
+
+export function bashEntry(id: string, command: string, output: string): SessionEntry {
+  return bashEntryOf(id, command, output, false)
+}
+
+export function hiddenBashEntry(id: string, command: string, output: string): SessionEntry {
+  return bashEntryOf(id, command, output, true)
 }
 
 export function customEntry(id: string, customType: string, data: Partial<ObservationsRecorded>): SessionEntry {
