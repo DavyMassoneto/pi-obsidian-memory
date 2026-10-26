@@ -2,6 +2,7 @@ import {
   type BranchSummaryRecord,
   type ChunkPlanRequest,
   type ChunkRange,
+  type CompactionDueRequest,
   type CompactionRecord,
   type CustomMessageRecord,
   type LedgerObservation,
@@ -10,6 +11,7 @@ import {
   type MapVault,
   type MessageRecord,
   type ObservationsRecord,
+  type ObserverDraft,
   type OtherRecord,
   type RecordPart,
   type SessionRecord,
@@ -113,6 +115,79 @@ export function conversation(count: number, tokens: number): SessionRecord[] {
   const records: SessionRecord[] = []
   for (let number = 1; number <= count; number++) records.push(turn(number, tokens))
   return records
+}
+
+export function observedAfterTwoAndFour(seen: LedgerObservation): SessionRecord[] {
+  return [
+    turn(1, 10),
+    turn(2, 10),
+    observationsRecord("o1", "r1", "r2", [seen]),
+    turn(3, 10),
+    turn(4, 10),
+    observationsRecord("o2", "r3", "r4", [seen]),
+    turn(5, 10),
+    turn(6, 10),
+  ]
+}
+
+export function recordsWithThreeChunks(
+  early: LedgerObservation,
+  middleLater: LedgerObservation,
+  middleEarlier: LedgerObservation,
+  late: LedgerObservation,
+): SessionRecord[] {
+  return [
+    turn(1, 10),
+    turn(2, 10),
+    observationsRecord("o1", "r1", "r2", [early]),
+    turn(3, 10),
+    turn(4, 10),
+    observationsRecord("o2", "r3", "r4", [middleLater, middleEarlier]),
+    turn(5, 10),
+    turn(6, 10),
+    observationsRecord("o3", "r5", "r6", [late]),
+  ]
+}
+
+export function lojaVault(): MapVault {
+  return mapVault(
+    "project",
+    "loja",
+    [
+      mapNote("search/Chose SQLite FTS5 over a vector DB.md", "decision", false),
+      mapNote("pnpm/Use pnpm, never npm.md", "rule", true),
+      mapNote("csv/CSV files use a semicolon separator.md", "rule", false),
+      mapNote("deploy/Deploy only with release.sh.md", "rule", false),
+    ],
+    [],
+  )
+}
+
+export function globalMemoryVault(): MapVault {
+  return mapVault(
+    "global",
+    "Global memory",
+    [
+      mapNote("windows/git is not on PATH in PowerShell.md", "lesson", false),
+      mapNote("profile/User talks in Brazilian Portuguese.md", "fact", true),
+    ],
+    [],
+  )
+}
+
+export function observerReply(observations: ObserverDraft[]): string {
+  return JSON.stringify({ observations })
+}
+
+export function compactionDueRequest(changes: Partial<CompactionDueRequest>): CompactionDueRequest {
+  return {
+    contextTokens: 50,
+    records: conversation(6, 10),
+    atContextTokens: 50,
+    tailTokens: 20,
+    chunkTokens: 30,
+    ...changes,
+  }
 }
 
 export function chunkPlan(records: SessionRecord[], changes: Partial<ChunkPlanRequest>): ChunkPlanRequest {
