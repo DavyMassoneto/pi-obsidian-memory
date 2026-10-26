@@ -1,6 +1,6 @@
 ---
 name: nucleo
-description: Owner of the pure domain rules of pi-obsidian-memory (src/domain, src/shared and their tests). Use for note/frontmatter rules, config rules, names, vault paths, capture validation, catalogs and any pure function without I/O.
+description: Owner of the pure domain rules of pi-obsidian-memory (src/domain, src/shared and their tests). Use for note/frontmatter rules, config rules (including the legacy-config upgrade), names, vault paths, capture validation, the observation ledger (chunks, ledger, cutoff, render), OM presence, catalogs and any pure function without I/O.
 tools: read, grep, find, ls, edit, write, bash, powershell, contact_supervisor
 model: anthropic/claude-sonnet-5-5
 thinking: high

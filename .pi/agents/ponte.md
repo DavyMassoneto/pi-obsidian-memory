@@ -1,6 +1,6 @@
 ---
 name: ponte
-description: Owner of the config, LLM, decision-model, clock and id services of pi-obsidian-memory (src/services/{config,llm,decision-model,clock,id} with their tests, plus the services barrel). Use for reading/writing/canonicalizing config, LLM completion and capture, the decision model (Jev/Laya) and its prompts.
+description: Owner of the config, LLM, decision-model, clock, id and observation-ledger services of pi-obsidian-memory (src/services/{config,llm,decision-model,clock,id,observation-ledger} with their tests, plus the services barrel). Use for reading/writing/canonicalizing config, LLM completion, observer and capture calls, the decision model (Jev/Laya) and its prompts, and the observation-ledger domain-rules seam.
 tools: read, grep, find, ls, edit, write, bash, powershell, contact_supervisor
 model: anthropic/claude-sonnet-5-5
 thinking: high
