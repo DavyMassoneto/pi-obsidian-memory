@@ -78,8 +78,8 @@ describe("mutations after a listing", () => {
   const identity = { vault: read.vault, path: read.path, id: read.id, expectedHash: read.hash }
 
   it("accepts a capture input carrying a listing", () => {
-    const { context, transcriptDelta, explicitSaves, limits } = captureRequest()
-    const input = { context, transcriptDelta, observations: [listed], explicitSaves, limits }
+    const { context, material, explicitSaves, limits } = captureRequest()
+    const input = { context, material, observations: [listed], explicitSaves, limits }
     expect(Value.Check(CaptureInputSchema, input)).toBe(true)
   })
 

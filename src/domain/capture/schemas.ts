@@ -77,10 +77,9 @@ export const CaptureObservationSchema = Type.Union([
 export const CaptureInputSchema = Type.Object(
   {
     context: AgentContextSchema,
-    transcriptDelta: Type.Array(
-      Type.Object({ role: Type.Enum(["user", "assistant"]), text: TextSchema }, { additionalProperties: false }),
-      { minItems: 1 },
-    ),
+    material: Type.Array(Type.Object({ label: TextSchema, text: TextSchema }, { additionalProperties: false }), {
+      minItems: 1,
+    }),
     observations: Type.Array(CaptureObservationSchema),
     explicitSaves: Type.Array(ReadObservationSchema),
     limits: Type.Object(

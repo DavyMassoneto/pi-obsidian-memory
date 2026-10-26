@@ -3,9 +3,9 @@ import {
   type CaptureObservation,
   type CompletionPort,
   captureStep,
+  type MaterialItem,
   type ReadObservation,
   refusalObservation,
-  type TranscriptMessage,
 } from "#src/services"
 import { type MemoryOperationContext, memoryOperationInterruption } from "#src/usecases/operation-context"
 import { resolveMemory } from "#src/usecases/resolve-memory"
@@ -66,14 +66,14 @@ export async function captureMemory(
 }
 
 async function reviewTranscript(
-  transcriptDelta: TranscriptMessage[],
+  material: MaterialItem[],
   base: CaptureBase,
   tools: ReviewTools,
 ): Promise<CaptureFailure | null> {
   const observations: CaptureObservation[] = []
   for (;;) {
     if (memoryOperationInterruption(tools.context)) return failureOf("interrupted", [INTERRUPTED], tools)
-    const step = await captureStep({ ...base, transcriptDelta, observations }, tools.complete)
+    const step = await captureStep({ ...base, material, observations }, tools.complete)
     if (!step.succeeded && "modelCall" in step) {
       if (memoryOperationInterruption(tools.context)) return failureOf("interrupted", [INTERRUPTED], tools)
       return failureOf("model-failed", step.problems, tools)

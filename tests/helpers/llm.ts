@@ -6,7 +6,7 @@ export function captureRequest(): CaptureRequest {
     signal: new AbortController().signal,
     context: { project: null, folder: "workspace" },
     observations: [],
-    transcriptDelta: [{ role: "user", text: "Remember my token: secret-123" }],
+    material: [{ label: "user", text: "Remember my token: secret-123" }],
     explicitSaves: [],
     limits: { maxBodyChars: 1000, maxStatementChars: 100 },
   }
@@ -18,8 +18,8 @@ export function retrievalRequest(): RetrievalRequest {
 }
 
 export function captureInputOf(overrides: Partial<CaptureRequest>) {
-  const { context, transcriptDelta, observations, explicitSaves, limits } = { ...captureRequest(), ...overrides }
-  return { context, transcriptDelta, observations, explicitSaves, limits }
+  const { context, material, observations, explicitSaves, limits } = { ...captureRequest(), ...overrides }
+  return { context, material, observations, explicitSaves, limits }
 }
 
 export function retrievalInputOf(overrides: Partial<RetrievalRequest>) {

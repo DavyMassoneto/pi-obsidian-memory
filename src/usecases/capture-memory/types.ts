@@ -4,9 +4,9 @@ import type {
   CaptureObservation,
   ChatModelReference,
   CompletionPort,
+  MaterialItem,
   MemoryScope,
   ReadObservation,
-  TranscriptMessage,
 } from "#src/services"
 import type { Failed, Succeeded } from "#src/shared"
 import type { ArchiveMemoryResult } from "#src/usecases/archive-memory"
@@ -15,7 +15,7 @@ import type { MemoryResolutionRefusal } from "#src/usecases/resolve-memory"
 import type { SucceedMemoryResult } from "#src/usecases/succeed-memory"
 import type { UpdateMemoryResult } from "#src/usecases/update-memory"
 
-export type { CompletionPort, CompletionRequest, TranscriptMessage } from "#src/services"
+export type { CompletionPort, CompletionRequest, MaterialItem } from "#src/services"
 
 export interface ExplicitSave {
   vault: MemoryScope
@@ -30,7 +30,7 @@ export interface UnreadableNote {
 
 export interface CaptureRun {
   model: ChatModelReference
-  messages: TranscriptMessage[]
+  messages: MaterialItem[]
   explicitSaves: ExplicitSave[]
 }
 

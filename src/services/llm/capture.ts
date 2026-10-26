@@ -4,8 +4,8 @@ import { CAPTURE_POLICY, DATA_POLICY } from "./constants.ts"
 import type { CaptureRequest, CaptureStepResult, CompletionPort } from "./types.ts"
 
 export async function captureStep(request: CaptureRequest, complete: CompletionPort): Promise<CaptureStepResult> {
-  const { context, transcriptDelta, observations, explicitSaves, limits } = request
-  const input = { context, transcriptDelta, observations, explicitSaves, limits }
+  const { context, material, observations, explicitSaves, limits } = request
+  const input = { context, material, observations, explicitSaves, limits }
   const problems = captureInputProblems(input)
   if (problems.length > 0) return modelCallFailure(`Invalid capture input: ${problems.join("; ")}`)
   const snapshot = structuredClone(input)
