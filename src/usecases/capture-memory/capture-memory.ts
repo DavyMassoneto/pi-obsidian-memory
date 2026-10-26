@@ -58,15 +58,15 @@ export async function captureMemory(
   }
   const report: CaptureReport = { reviewed: false, applied: [] }
   const tools: ReviewTools = { context, complete, report }
-  if (run.messages.length > 0) {
+  if (run.material.length > 0) {
     report.reviewed = true
-    const failure = await reviewTranscript(run.messages, base, tools)
+    const failure = await reviewMaterial(run.material, base, tools)
     if (failure) return failure
   }
   return { succeeded: true, output: report }
 }
 
-async function reviewTranscript(
+async function reviewMaterial(
   material: MaterialItem[],
   base: CaptureBase,
   tools: ReviewTools,

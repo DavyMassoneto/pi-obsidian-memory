@@ -30,9 +30,10 @@ export interface UnreadableNote {
 }
 
 export interface CaptureRun {
+  kind: "consolidate" | "import"
+  material: MaterialItem[]
   model: ChatModelReference
   thinking: ThinkingLevel
-  messages: MaterialItem[]
   explicitSaves: ExplicitSave[]
 }
 

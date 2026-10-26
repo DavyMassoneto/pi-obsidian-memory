@@ -11,14 +11,14 @@ import {
   writeRegistrationSnapshot,
 } from "#test-helpers"
 
-test("a valid config gives the observer and compaction settings", async () => {
+test("a valid config gives the consolidator settings too", async () => {
   const { context, config } = await memoryReadFixture()
   const custom = customizedSettings()
   await writeRegistrationSnapshot(context, JSON.stringify({ ...config, ...custom }))
 
   expect(await cycleSettings(context)).toEqual({
     succeeded: true,
-    output: { observer: custom.observer, compaction: custom.compaction },
+    output: { observer: custom.observer, compaction: custom.compaction, consolidator: custom.consolidator },
   })
   await expectRegistrationLeaseReleased(context)
 })

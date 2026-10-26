@@ -5,6 +5,6 @@ import type { CycleSettingsResult } from "./types.ts"
 export async function cycleSettings(context: MemoryOperationContext): Promise<CycleSettingsResult> {
   const resolved = await resolveMemory(context)
   if (!resolved.succeeded) return resolved
-  const { observer, compaction } = resolved.output.config
-  return { succeeded: true, output: { observer, compaction } }
+  const { observer, compaction, consolidator } = resolved.output.config
+  return { succeeded: true, output: { observer, compaction, consolidator } }
 }

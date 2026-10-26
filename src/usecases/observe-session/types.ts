@@ -5,6 +5,7 @@ import type { MemoryResolutionRefusal } from "#src/usecases/resolve-memory"
 export interface CycleSettings {
   observer: MemoryConfig["observer"]
   compaction: MemoryConfig["compaction"]
+  consolidator: MemoryConfig["consolidator"]
 }
 
 export type CycleSettingsResult = Succeeded<CycleSettings> | MemoryResolutionRefusal
