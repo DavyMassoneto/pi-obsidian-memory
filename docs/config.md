@@ -18,15 +18,13 @@ explicitly chosen available chat model's provider and id. They are not built-in 
     { "name": "loja", "folder": "D:/Projects/loja", "vault": "C:/Users/me/OneDrive/Obsidian/loja" }
   ],
   "limits": { "maxBodyChars": 1000, "maxStatementChars": 100, "maxNotesPerFolder": 20 },
-  "capture": {
+  "observer": {
     "model": { "provider": "selected-provider", "id": "selected-model" },
-    "nudgeInterval": 10,
-    "nudgeToolCalls": 15,
-    "flushMinTurns": 6,
-    "reviewEnabled": true,
-    "flushOnCompact": true,
-    "flushOnShutdown": true
+    "thinking": "low",
+    "chunkTokens": 10000,
+    "concurrency": 4
   },
+  "compaction": { "atContextTokens": 150000, "tailTokens": 20000, "mapTokens": 2000 },
   "memoryAgent": { "model": { "provider": "selected-provider", "id": "selected-model" } },
   "context": { "budgetChars": 12000 },
   "embeddings": { "provider": "local", "model": "Xenova/multilingual-e5-small" },
@@ -46,13 +44,13 @@ explicitly chosen available chat model's provider and id. They are not built-in 
 | `limits.maxBodyChars` | Positive integer | 1000 |
 | `limits.maxStatementChars` | Positive integer | 100 |
 | `limits.maxNotesPerFolder` | Positive integer; doctor reporting threshold | 20 |
-| `capture.model` | Exactly `{provider, id}`, both nonblank strings | The pi model in use when `/memory-setup` runs, or another chosen from the priced list; changed by re-running it |
-| `capture.nudgeInterval` | Positive integer: assistant turns between reviews | 10 |
-| `capture.nudgeToolCalls` | Positive integer: tool calls between reviews | 15 |
-| `capture.flushMinTurns` | Positive integer: user messages the session needs before a flush | 6 |
-| `capture.reviewEnabled` | Boolean: review during the session | true |
-| `capture.flushOnCompact` | Boolean: flush when the session compacts | true |
-| `capture.flushOnShutdown` | Boolean: flush when the session ends (not on `/reload`) | true |
+| `observer.model` | Exactly `{provider, id}`, both nonblank strings | The pi model in use when `/memory-setup` runs, or another chosen from the priced list; changed by re-running it |
+| `observer.thinking` | One of `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max` (pi's thinking levels) | `low` |
+| `observer.chunkTokens` | Positive integer: tokens of conversation in one observed chunk | 10000 |
+| `observer.concurrency` | Positive integer: observers that run at the same time | 4 |
+| `compaction.atContextTokens` | Positive integer: context tokens at which memory compacts the session | 150000 |
+| `compaction.tailTokens` | Positive integer: tokens of the latest conversation kept word for word | 20000 |
+| `compaction.mapTokens` | Positive integer: token budget of the memory map in the compaction block | 2000 |
 | `memoryAgent.model` | Exactly `{provider, id}`, both nonblank strings | Chosen in `/memory-setup` from pi's models sorted by price, cheapest first; changed by re-running it |
 | `context.budgetChars` | Positive integer; relevant-memory character budget | 12000 |
 | `embeddings` | One exact alternative below | Local multilingual E5 |
@@ -61,9 +59,9 @@ explicitly chosen available chat model's provider and id. They are not built-in 
 | `decisionModel.relevanceThreshold` | Optional number from 0 to 1: a note is kept when its probability is at least this | Jev 0.5; Laya none |
 
 The relevant-memory budget limits the notes loaded at session start and the notes added to each message; Don't forget
-notes are outside it. Capture runs
-with `capture.model`; the memory agent, with `memoryAgent.model`, searches and reads for each message and at session
-start. A chat reference is syntactically validated when the config is read; its availability is checked by
+notes are outside it. The observer runs
+with `observer.model` at `observer.thinking`; the memory agent, with `memoryAgent.model`, searches and reads for each
+message and at session start. A chat reference is syntactically validated when the config is read; its availability is checked by
 `/memory-doctor` and at use.
 
 Embeddings allow only these closed provider/model pairs, with no other fields:
@@ -83,30 +81,42 @@ Decision settings allow only:
 - Jev: `{"provider":"typesafe","model":"jev-latest"}` and optionally `gateThreshold` and `relevanceThreshold`. No
   endpoint or token-limit fields.
 
-### When capture runs
+### When the observer and compaction run
 
-The triggers and defaults follow [pi-hermes-memory](https://github.com/chandra447/pi-hermes-memory) (MIT), with the
-counters written again here.
+The cycle and its defaults follow pi-observational-memory (MIT). Observations live only in the pi session, in
+`obsidian-memory-observations` entries; nothing is written to the vaults. Until the next release, the vaults get only
+what the user asks to remember.
 
-- **Review.** Each assistant turn (`turn_end`) counts one turn, and each tool call in it counts one tool call. A review
-  starts when the turns reach `nudgeInterval` or the tool calls reach `nudgeToolCalls`, and only once the session has
-  at least 3 user messages. Both counters then start again. While a review runs, further turns are counted but start
-  no review and their tool calls are not counted.
-- **Flush.** At `session_before_compact`, and at `session_shutdown` except for `/reload`, capture reviews what is left,
-  once the session has at least `flushMinTurns` user messages. Reviews do not reset that total.
-- A review or flush reads only the messages after the last capture cursor. Shutdown waits for a review that is
-  running.
-- The counters live as long as the extension instance; pi creates a new one for each session, so they start at zero.
+- **Observer.** It runs at `agent_start` and at each `turn_end`. It cuts the conversation not observed yet into chunks
+  of about `observer.chunkTokens` tokens, breaking only where pi can cut, and starts up to `observer.concurrency`
+  observers at a time. At the live end of the session it waits for a full chunk. Each observer sends its chunk to
+  `observer.model` and saves the dated observations it returns. A failed chunk stays unobserved and is tried again
+  at the first `turn_end` or `agent_start` a minute or more later; the user is told `Memory observer failed: <cause>.
+  It tries again in a minute.` once per session for each cause. The extension's own hidden messages are not observed.
+- **Trigger.** After each `turn_end`, memory compacts the session when the context has at least
+  `compaction.atContextTokens` tokens and the conversation since the last compaction is longer than
+  `compaction.tailTokens` by at least `observer.chunkTokens`. Nothing is triggered while pi retries a failed turn.
+  When the turn ended with tool results, the run goes on after the compaction with a hidden message.
+- **Compaction.** Every compaction (this trigger, `/compact` and pi's own) first observes the history that would be
+  cut. It then keeps the latest conversation word for word: the cut is placed after a fully observed part, as close
+  as it can to `compaction.tailTokens` tokens. The older part is replaced by a block: a short intro, the memory map
+  and `## Observations`, one line per observation (`<id>  <text>`).
+- **Memory map.** It starts with `## Memory map` and tells the agent to read notes with `memory_get` and find more with
+  `memory_search`. Then `### project vault (<name>)` and `### global vault (<name>)`, each with one line per note not
+  archived, sorted by path: `` - `<path>` · <type> ``, plus ` · don't forget` when marked. It fits in
+  `compaction.mapTokens` tokens; the line `<N> more notes are not listed; memory_search finds them.` follows when
+  notes were left out. A vault that cannot be read gets `Could not read the <vault> vault: <problems>.`, and with no
+  notes the map says `The vaults hold no notes yet.`
+- **When it cannot.** With no fully observed part yet, pi compacts on its own and the user is told `Memory had no
+  observations for the start of this session yet, so pi compacted it on its own.` Any other failure says `Memory could
+  not build the compaction block, so pi compacted the session on its own: <cause>`. With no config or an invalid one,
+  nothing is observed and pi compacts on its own. Esc during a compaction stops it and its observers.
 
-**Old configs.** A file that still has `capture.when` is read as if it had the new fields, with no action by the user
-and no repair notice, and the file is not rewritten; the settings screen writes the new shape the next time it saves.
-The numbers take the defaults above, and:
-
-| `capture.when` | `reviewEnabled` | `flushOnCompact` | `flushOnShutdown` |
-|---|---|---|---|
-| `after-each-turn` | true | true | true |
-| `at-session-end` | false | false | true |
-| `on-compaction` | false | true | false |
+**Old configs.** A file that still has a `capture` group and no `observer` group is read as if it had the new groups,
+with no action by the user and no repair notice, and the file is not rewritten; the settings screen writes the new
+shape the next time it saves. `observer` gets `capture.model` and the defaults above (`thinking` `low`), `compaction`
+is added with the defaults above when it is missing, and every other `capture` key is dropped. Without a valid
+`capture.model`, the observer model is reported missing, and `/memory-setup` repairs it.
 
 ### Running the decision model
 
@@ -179,8 +189,8 @@ every key. Once the config is valid, it opens the settings screen.
 
 **First setup and repair:**
 
-- It asks for the capture model and the memory-agent model, each from a list of pi's available chat models with their
-  price per million input and output tokens. For capture, the model in use in pi comes first, marked, and is the
+- It asks for the observer model and the memory-agent model, each from a list of pi's available chat models with their
+  price per million input and output tokens. For the observer, the model in use in pi comes first, marked, and is the
   default (an empty answer or Escape takes it), as the original roadmap says. For the memory agent, a small
   configurable model, the list is sorted by price, cheapest first, and nothing is defaulted: with no answer nothing is
   written. On a repair the model already in the file comes first, marked as current, and an empty answer or Escape
@@ -189,14 +199,14 @@ every key. Once the config is valid, it opens the settings screen.
   folder or a file; attach refuses a missing folder or a file.
 
 **Settings screen (valid config):** one line per setting with its current value, opened with a select; Done or Escape
-leaves. Each choice is written at once and the screen shows the new value. The lines are: capture model, the review
-switch, the review turn and tool-call counts, the two flush switches, the flush minimum, memory-agent model, decision
-model (Jev, or Laya with its endpoint), gate cutoff, relevance cutoff (a number from 0 to 1, or `none`), embeddings
+leaves. Each choice is written at once and the screen shows the new value. The lines are: `Observer model`,
+`Observer thinking` (one of the seven levels), `Observe every` (chunk tokens), `Observers at a time`, `Compact at`
+(context tokens), `Verbatim tail` (tokens), `Memory map` (tokens), memory-agent model, decision model (Jev, or Laya with its endpoint), gate cutoff, relevance cutoff (a number from 0 to 1, or `none`), embeddings
 provider, context budget, the three limits, the global vault, and the projects (change
 their vault to an existing folder, or remove them from the memory; nothing is deleted). Switching between Jev and Laya
 clears the cutoffs. Choosing Jev or a remote embeddings provider shows its warning. A value the schema refuses is
-not written, and the reason is shown. Changes apply on the next use: capture, relevant memory and search read the config
-each time. Only the Don't forget notes and session-start notes already loaded into the conversation's memory block wait
+not written, and the reason is shown. Changes apply on the next use: the observer, compaction, relevant memory and
+search read the config each time. Only the Don't forget notes and session-start notes already loaded into the conversation's memory block wait
 for the next session or `/reload`, and the notice says so for the global vault and project changes.
 - An invalid config is repaired: every valid value is kept, and one list names each missing key and each value that
   could not be kept. A file that is not valid JSON is replaced only after the user confirms.
@@ -226,10 +236,11 @@ be read shows a warning naming the cause.
   fields at any level invalidate the entire file. Reading returns all actionable problems, not a partial config.
   Diagnostics are collected per field, not truncated to the schema library's error-count limit.
 - No file means memory is not configured. An old file containing only registration and the two original limits is
-  now invalid. There is no silent runtime migration and no runtime defaulting. Reading never changes file bytes.
+  now invalid. Apart from the old `capture` group (see Old configs), there is no silent runtime migration and no
+  runtime defaulting. Reading never changes file bytes.
 - Repair is separate from reading. `inspectConfigForRepair(text)` returns a draft, not permission to use any of its
   values at runtime. It keeps independently valid settings, including individual chat `provider`/`id`, limits,
-  schedule, budget and registration fields. Unknown fields are discarded and named. Invalid/missing fields are
+  observer and compaction settings, budget and registration fields. Unknown fields are discarded and named. Invalid/missing fields are
   reported even when a setup default can fill them.
 - Repair fills known non-chat defaults. A retained embedding provider gets its supported model when that model is
   absent/invalid; a retained `typesafe` decision provider gets `jev-latest` without Laya-only fields. Recognized but
@@ -237,7 +248,7 @@ be read shows a warning naming the cause.
   Registration conflicts retain every involved entry for correction, rather than choosing a first winner.
 - `prepareSetupDefaults(model)` is setup-only. An explicitly supplied valid selected chat model supplies both initial
   chat references; no production provider/id is hardcoded. Passing `null` leaves both unresolved. Repair never
-  invents the current chat model. `/memory-setup` offers pi's model in use as the capture default, asks for the memory-agent model, or
+  invents the current chat model. `/memory-setup` offers pi's model in use as the observer default, asks for the memory-agent model, or
   refuses if a model is unresolved.
 - Malformed JSON cannot be salvaged and is marked as requiring explicit replacement confirmation. Drafts carry
   problems and replacement metadata; these are not config keys. Setup proposals serialize only the complete settings
@@ -255,8 +266,8 @@ be read shows a warning naming the cause.
 
 ## Warnings
 
-`/memory-setup` shows one warning before writing, with a line for each that applies: capture and the memory agent
-send conversation and note content to the chosen chat model (always); TypeSafe receives user messages and candidate
+`/memory-setup` shows one warning before writing, with a line for each that applies: the observer and the memory
+agent send conversation and note content to the chosen chat models (always); TypeSafe receives user messages and candidate
 notes when Jev is selected; remote embeddings providers receive note content, **secrets included**, and queries.
 The warning is plain: nothing is asked, and setup continues. A remote provider already in the config is an explicit selection and is never replaced by a
 local provider; it is used without any question at runtime. The local model (~135 MB) is downloaded when needed,
