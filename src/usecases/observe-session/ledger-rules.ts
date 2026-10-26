@@ -21,6 +21,7 @@ export {
   COMPACTION_DETAILS_TYPE,
   CompactionDetailsSchema,
   compactionDue,
+  compactionRetryDue,
   idealCutId,
   isCutPoint,
   isSourceRecord,

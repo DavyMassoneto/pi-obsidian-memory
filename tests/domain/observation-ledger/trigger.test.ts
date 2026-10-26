@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { compactionDue, retriedByPi } from "#src/domain"
+import { compactionDue, compactionRetryDue, retriedByPi } from "#src/domain"
 import { compactionDueRequest } from "#test-helpers"
 
 describe("compactionDue", () => {
@@ -14,6 +14,17 @@ describe("compactionDue", () => {
   it("with no live context tokens the raw tokens since the last compaction decide", () => {
     expect(compactionDue(compactionDueRequest({ contextTokens: null, atContextTokens: 60 }))).toBe(true)
     expect(compactionDue(compactionDueRequest({ contextTokens: null, atContextTokens: 61 }))).toBe(false)
+  })
+})
+
+describe("compactionRetryDue", () => {
+  it("after a failed attempt at 100 raw tokens a retry waits until the count restarts or a whole chunk of 30 accumulated", () => {
+    expect(compactionRetryDue(100, 99, 30)).toBe(true)
+    expect(compactionRetryDue(100, 0, 30)).toBe(true)
+    expect(compactionRetryDue(100, 100, 30)).toBe(false)
+    expect(compactionRetryDue(100, 129, 30)).toBe(false)
+    expect(compactionRetryDue(100, 130, 30)).toBe(true)
+    expect(compactionRetryDue(100, 200, 30)).toBe(true)
   })
 })
 

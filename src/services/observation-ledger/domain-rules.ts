@@ -33,6 +33,7 @@ export {
   chunkText as observerChunkText,
   compactionDue,
   compactionObservations,
+  compactionRetryDue,
   idealCutId,
   isCutPoint,
   isSourceRecord,

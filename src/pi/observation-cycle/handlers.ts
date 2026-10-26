@@ -13,6 +13,7 @@ import {
   retriedByPi,
 } from "#src/usecases"
 import { COMPACTION_FAILED, COMPACTION_FALLBACK } from "./constants.ts"
+import { tell } from "./notice.ts"
 import { recordsOf } from "./records.ts"
 import type { ObservationRuntime } from "./runtime.ts"
 import type { AgentStartHandler, BeforeCompactHandler, TurnEndHandler } from "./types.ts"
@@ -35,7 +36,7 @@ export function beforeCompactHandler(runtime: ObservationRuntime): BeforeCompact
     try {
       return await buildCompaction(runtime, event, ctx)
     } catch (error) {
-      if (error instanceof Error) runtime.tell(ctx, `${COMPACTION_FAILED} ${error.message}`, "warning")
+      if (error instanceof Error) tell(ctx, `${COMPACTION_FAILED} ${error.message}`, "warning")
       return undefined
     }
   }
@@ -56,16 +57,13 @@ function contextTokens(ctx: MemoryPiContext): number | null {
 
 async function compactWhenDue(runtime: ObservationRuntime, event: TurnEndEvent, ctx: MemoryPiContext) {
   const settings = await runtime.settings(ctx)
-  if (!settings || runtime.compacting || retriedInPi(event)) return
+  if (!settings || runtime.compaction.running || retriedInPi(event)) return
   const { atContextTokens, tailTokens } = settings.compaction
-  const due = compactionDue({
-    contextTokens: contextTokens(ctx),
-    records: recordsOf(ctx.sessionManager.getBranch()),
-    atContextTokens,
-    tailTokens,
-    chunkTokens: settings.observer.chunkTokens,
-  })
-  if (due) runtime.compact(ctx, event.toolResults.length > 0)
+  const { chunkTokens } = settings.observer
+  const records = recordsOf(ctx.sessionManager.getBranch())
+  if (!runtime.compaction.retryDue(records, chunkTokens)) return
+  const due = compactionDue({ contextTokens: contextTokens(ctx), records, atContextTokens, tailTokens, chunkTokens })
+  if (due) runtime.compaction.run(ctx, event.toolResults.length > 0)
 }
 
 async function buildCompaction(
@@ -80,11 +78,10 @@ async function buildCompaction(
   if (event.signal.aborted) return { cancel: true }
   const result = await runtime.compactSession(ctx, event.signal)
   if (!result) return undefined
-  return compactionOutcome(runtime, event, ctx, result)
+  return compactionOutcome(event, ctx, result)
 }
 
 function compactionOutcome(
-  runtime: ObservationRuntime,
   event: SessionBeforeCompactEvent,
   ctx: MemoryPiContext,
   result: CompactSessionResult,
@@ -94,7 +91,7 @@ function compactionOutcome(
     const { tokensBefore } = event.preparation
     return { compaction: { summary, firstKeptEntryId, tokensBefore, details: { type: COMPACTION_DETAILS_TYPE } } }
   }
-  if (result.reason === "not-observed") runtime.tell(ctx, COMPACTION_FALLBACK, "warning")
-  else runtime.tell(ctx, `${COMPACTION_FAILED} ${result.problems.join("; ")}`, "warning")
+  if (result.reason === "not-observed") tell(ctx, COMPACTION_FALLBACK, "warning")
+  else tell(ctx, `${COMPACTION_FAILED} ${result.problems.join("; ")}`, "warning")
   return undefined
 }
