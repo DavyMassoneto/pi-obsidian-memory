@@ -10,6 +10,7 @@ import {
   customEntry,
   customMessageEntry,
   ENTRY_STAMP,
+  hiddenBashEntry,
   systemEntry,
   toolResultEntry,
   userEntryAt,
@@ -72,6 +73,15 @@ test("tool results keep their tool name and a shell execution is its command the
       tokens: 3,
       parts: [{ kind: "text", text: "ls\norders.ts" }],
     },
+  ])
+})
+
+test("a shell execution the user kept out of the model's context is not a source", () => {
+  const records = recordsOf([bashEntry("b1", "ls", "orders.ts"), hiddenBashEntry("b2", "cat .env", "SECRET=1")])
+
+  expect(records).toMatchObject([
+    { kind: "message", id: "b1", role: "bashExecution" },
+    { kind: "other", id: "b2" },
   ])
 })
 

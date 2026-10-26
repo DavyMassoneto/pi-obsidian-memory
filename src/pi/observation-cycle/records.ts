@@ -77,6 +77,7 @@ function messageRecordOf(entry: SessionMessageEntry): SessionRecord {
     return sourceMessage(entry, "toolResult", message.toolName, contentParts(message.content))
   }
   if (message.role === "bashExecution") {
+    if (message.excludeFromContext) return otherRecord(entry)
     const text = `${message.command}\n${message.output}`
     return sourceMessage(entry, "bashExecution", null, [{ kind: "text", text }])
   }
