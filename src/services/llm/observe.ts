@@ -1,5 +1,5 @@
 import { parseObserverReply } from "#src/domain"
-import { checkStep, completeStep, completionRequest } from "./complete.ts"
+import { checkStep, completeStep } from "./complete.ts"
 import {
   OBSERVER_DATA_BEGIN,
   OBSERVER_DATA_CLOSING,
@@ -8,7 +8,7 @@ import {
   OBSERVER_DATA_TIME_LABEL,
   OBSERVER_PROMPT,
 } from "./constants.ts"
-import type { CompletionPort, ObserveRequest, ObserveStepResult } from "./types.ts"
+import type { CompletionPort, CompletionRequest, ObserveRequest, ObserveStepResult } from "./types.ts"
 
 export function observerData(chunk: string, now: string): string {
   const minute = now.slice(0, 16).replace("T", " ")
@@ -20,11 +20,20 @@ export function observerData(chunk: string, now: string): string {
   ].join("\n\n")
 }
 
+export function observerRequest(request: ObserveRequest): CompletionRequest {
+  return {
+    model: { ...request.model },
+    signal: request.signal,
+    system: OBSERVER_PROMPT,
+    data: observerData(request.chunk, request.now),
+    thinking: request.thinking,
+  }
+}
+
 export async function observeStep(request: ObserveRequest, complete: CompletionPort): Promise<ObserveStepResult> {
   const refused = checkStep(request)
   if (refused) return refused
-  const prompt = { system: OBSERVER_PROMPT, data: observerData(request.chunk, request.now) }
-  const result = await completeStep({ ...completionRequest(request, prompt), thinking: request.thinking }, complete)
+  const result = await completeStep(observerRequest(request), complete)
   if (!result.succeeded) return result
   return parseObserverReply(result.output)
 }
