@@ -1,6 +1,8 @@
 import type { ChatModelSource, ModelAuthResult } from "#src/pi/context"
 import type { BlankFile, VaultReport } from "#src/usecases"
 
+export type CommandNames = () => string[]
+
 export interface BlankTarget {
   vault: VaultReport["vault"]
   blank: BlankFile

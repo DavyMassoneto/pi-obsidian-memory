@@ -22,6 +22,7 @@ export function diagnosedMemory(overrides: Partial<DiagnosedMemory>): DiagnosedM
     vaults: [{ vault: "global", diagnosis: CLEAN_DIAGNOSIS, blanks: [], unreadable: [] }],
     projectMissing: false,
     maxNotesPerFolder: 20,
+    omLoaded: false,
     embeddings: { provider: "local", model: "Xenova/multilingual-e5-small", status: "ready" },
     decision: { provider: "typesafe", model: "jev-latest", status: "ready", detail: "model and API key found" },
     cutoffs: { gate: { value: 0.5, source: "typesafe" }, relevance: { value: 0.5, source: "typesafe" } },
