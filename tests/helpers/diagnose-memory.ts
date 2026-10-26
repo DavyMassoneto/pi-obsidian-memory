@@ -1,11 +1,5 @@
 import type { VaultContext } from "#src/services"
-import {
-  type DecisionProbe,
-  type DiagnosedMemory,
-  type EmbeddingProbe,
-  type MemoryOperationContext,
-  resolveMemory,
-} from "#src/usecases"
+import { type DiagnosedMemory, type MemoryOperationContext, resolveMemory } from "#src/usecases"
 import { noteWithId, searchFixture } from "./search-memory.ts"
 import { putCatalogFile } from "./vault-catalog.ts"
 
@@ -18,26 +12,6 @@ export async function putBrokenVault(vault: VaultContext, maxNotesPerFolder: num
   await putCatalogFile(vault, "tools/Half.md.tmp-abc", "partial")
   for (let number = 1; number <= maxNotesPerFolder + 1; number++) {
     await putCatalogFile(vault, `crowded/Note ${number}.md`, noteWithId(10 + number, `Crowded ${number}.`, []))
-  }
-}
-
-export function embeddingProbeWithoutCredentials(modelCachePath: string): EmbeddingProbe {
-  return {
-    modelCachePath,
-    async hasCredentials() {
-      return false
-    },
-  }
-}
-
-export function decisionProbeWithoutCredentials(): DecisionProbe {
-  return {
-    hasClassifier() {
-      return false
-    },
-    async hasCredentials() {
-      return false
-    },
   }
 }
 

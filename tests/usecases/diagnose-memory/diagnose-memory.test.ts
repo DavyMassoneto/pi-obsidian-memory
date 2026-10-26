@@ -2,11 +2,9 @@ import { afterEach, expect, test, vi } from "vitest"
 
 import { diagnoseMemory } from "#src/usecases"
 import {
-  decisionProbeWithoutCredentials,
-  embeddingProbeWithoutCredentials,
   LOCAL_MODEL_ID,
   LOCAL_PROVIDER,
-  realChatModelPort,
+  realDiagnoseProbes,
   searchFixture,
   useTempFolder,
   writeRegistrationSnapshot,
@@ -27,11 +25,9 @@ test("the doctor checks the observer and memory agent models", async () => {
       memoryAgent: { model: { provider: "anthropic", id: "claude-sonnet-4-5" } },
     }),
   )
-  const port = await realChatModelPort()
-  const embeddings = embeddingProbeWithoutCredentials(await useTempFolder())
-  const decision = decisionProbeWithoutCredentials()
+  const probes = await realDiagnoseProbes(await useTempFolder())
 
-  const result = await diagnoseMemory({ port, embeddings, decision }, context)
+  const result = await diagnoseMemory(probes, context)
 
   expect(result).toMatchObject({
     succeeded: true,
