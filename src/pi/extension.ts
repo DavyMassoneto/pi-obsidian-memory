@@ -16,6 +16,7 @@ import { MemorySessionKeeper } from "#src/pi/memory-session"
 import { MEMORY_SETUP_COMMAND, memorySetupCommand } from "#src/pi/memory-setup"
 import { memorySucceedTool } from "#src/pi/memory-succeed"
 import { memoryUpdateTool } from "#src/pi/memory-update"
+import { agentStartHandler, ObservationRuntime, turnEndHandler } from "#src/pi/observation-cycle"
 import { memoryConfigPath, memoryIndexPath, memoryModelCachePath } from "#src/pi/paths"
 import { RelevantMemoryRuntime } from "#src/pi/relevant-memory"
 import { SemanticRuntime } from "#src/pi/semantic"
@@ -44,12 +45,21 @@ export function registerExtension(
   let completionOf: CompletionFactory = registryCompletion
   if (overrides?.completionOf) completionOf = overrides.completionOf
   const relevant = new RelevantMemoryRuntime({ paths, sessions, completionOf })
-  registrar.onSessionStart(sessionStartHandler(paths, sessions, block, relevant))
+  const cycle = new ObservationRuntime({
+    paths,
+    sessions,
+    completionOf,
+    appendObservations: (data) => registrar.appendObservations(data),
+  })
+  registrar.onSessionStart(sessionStartHandler(paths, sessions, block, relevant, cycle))
   registrar.onBeforeAgentStart(block.beforeAgentStart())
   registrar.onBeforeAgentStart(relevant.beforeAgentStart())
+  registrar.onTurnEnd(turnEndHandler(cycle))
+  registrar.onAgentStart(agentStartHandler(cycle))
   registrar.onToolCall(vaultGuardHandler(paths.configPath, homedir()))
   registrar.onShellToolCall(shellEditGuardHandler())
   registrar.onSessionShutdown(async () => {
+    cycle.stop()
     sessions.shutdown()
     await block.settled()
     block.clear()

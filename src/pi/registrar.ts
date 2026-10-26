@@ -1,5 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent"
 
+import { OBSERVATIONS_TYPE } from "#src/usecases"
 import type { ExtensionRegistrar } from "./types.ts"
 
 export function registrarFor(pi: ExtensionAPI): ExtensionRegistrar {
@@ -16,6 +17,8 @@ export function registrarFor(pi: ExtensionAPI): ExtensionRegistrar {
     onToolCall: (handler) => pi.on("tool_call", handler),
     onShellToolCall: (handler) => pi.on("tool_call", handler),
     onTurnEnd: (handler) => pi.on("turn_end", handler),
+    onAgentStart: (handler) => pi.on("agent_start", handler),
+    appendObservations: (data) => pi.appendEntry(OBSERVATIONS_TYPE, data),
     onBeforeCompact: (handler) => pi.on("session_before_compact", handler),
     onSessionShutdown: (handler) => pi.on("session_shutdown", handler),
   }
