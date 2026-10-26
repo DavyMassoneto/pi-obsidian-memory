@@ -49,6 +49,24 @@ test.each([
   expect(parseConfig(JSON.stringify({ ...aConfig(), ...fields }))).toEqual({ succeeded: false, problems })
 })
 
+test("a wrong observer model shape is reported on its own field", () => {
+  const config = aConfig()
+  const observer = (model: object) => ({ ...config.observer, model })
+
+  expect(parseConfig(JSON.stringify({ ...config, observer: observer({ provider: "p" }) }))).toEqual({
+    succeeded: false,
+    problems: ["observer.model: must have required properties id"],
+  })
+  expect(parseConfig(JSON.stringify({ ...config, observer: observer({ provider: "p", id: " " }) }))).toEqual({
+    succeeded: false,
+    problems: [expect.stringMatching(/^observer\.model\.id: /)],
+  })
+  expect(parseConfig(JSON.stringify({ ...config, observer: observer({ provider: "p", id: "i", extra: 1 }) }))).toEqual({
+    succeeded: false,
+    problems: ["observer.model.extra: not a known field"],
+  })
+})
+
 test("unknown keys are refused at each product setting level without discarding later diagnostics", () => {
   const config = aConfig()
   const result = parseConfig(

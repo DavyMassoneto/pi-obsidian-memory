@@ -141,3 +141,42 @@ test("closed choices name the accepted values rather than an opaque union failur
 test.each([null, false, 42, [], "text"])("refuses a malformed root %j without a partial output", (root) => {
   expect(parseConfig(JSON.stringify(root))).toEqual({ succeeded: false, problems: ["config: must be object"] })
 })
+
+test("a config without observer or compaction names each missing key", () => {
+  const { observer: _observer, compaction: _compaction, ...without } = aConfig()
+
+  expect(parseConfig(JSON.stringify(without))).toEqual({
+    succeeded: false,
+    problems: ["config: must have required properties observer", "config: must have required properties compaction"],
+  })
+  expect(parseConfig(JSON.stringify({ ...without, observer: {}, compaction: {} }))).toEqual({
+    succeeded: false,
+    problems: [
+      "observer: must have required properties model",
+      "observer: must have required properties thinking",
+      "observer: must have required properties chunkTokens",
+      "observer: must have required properties concurrency",
+      "compaction: must have required properties atContextTokens",
+      "compaction: must have required properties tailTokens",
+      "compaction: must have required properties mapTokens",
+    ],
+  })
+})
+
+test.each(["extreme", "", "LOW"])("a thinking level outside pi's list is refused: %j", (thinking) => {
+  const config = aConfig()
+
+  expect(parseConfig(JSON.stringify({ ...config, observer: { ...config.observer, thinking } }))).toEqual({
+    succeeded: false,
+    problems: ["observer.thinking: must be one of off, minimal, low, medium, high, xhigh, max"],
+  })
+})
+
+test.each(["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const)(
+  "the thinking level %s is accepted",
+  (thinking) => {
+    const config = { ...aConfig(), observer: { ...aConfig().observer, thinking } }
+
+    expect(parseConfig(JSON.stringify(config))).toEqual({ succeeded: true, output: config })
+  },
+)

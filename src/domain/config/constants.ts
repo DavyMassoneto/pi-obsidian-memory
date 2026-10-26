@@ -1,5 +1,5 @@
 import type { CaptureCadenceSettings } from "#src/domain/capture"
-import type { LegacyCaptureWhen } from "./types.ts"
+import type { LegacyCaptureWhen, MemoryConfig } from "./types.ts"
 
 export const THRESHOLD_TEXT = /^\d+(\.\d+)?$/
 
@@ -16,6 +16,18 @@ export const DEFAULT_CAPTURE_CADENCE: CaptureCadenceSettings = {
   reviewEnabled: true,
   flushOnCompact: true,
   flushOnShutdown: true,
+}
+
+export const DEFAULT_OBSERVER: Omit<MemoryConfig["observer"], "model"> = {
+  thinking: "low",
+  chunkTokens: 10000,
+  concurrency: 4,
+}
+
+export const DEFAULT_COMPACTION: MemoryConfig["compaction"] = {
+  atContextTokens: 150000,
+  tailTokens: 20000,
+  mapTokens: 2000,
 }
 
 export const LEGACY_CAPTURE_CADENCE: Record<LegacyCaptureWhen, CaptureCadenceSettings> = {

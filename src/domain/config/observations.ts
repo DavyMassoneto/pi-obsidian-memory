@@ -39,6 +39,8 @@ export function observedConfigFields(inspection: ConfigDocumentInspection): Conf
     limits: {},
     context: {},
     capture: { model: {} },
+    observer: { model: {} },
+    compaction: {},
     memoryAgent: { model: {} },
     embeddings: observedEmbeddingFields(inspection.observations),
     decisionModel: observedDecisionFields(inspection.observations),
@@ -72,8 +74,20 @@ function retainSettingField(fields: ConfigFields, observation: ConfigFieldObserv
   if (observation.field === "/capture/flushOnShutdown") fields.capture.flushOnShutdown = observation.value
   if (observation.field === "/capture/model/provider") fields.capture.model.provider = observation.value
   if (observation.field === "/capture/model/id") fields.capture.model.id = observation.value
+  retainCycleField(fields, observation)
   if (observation.field === "/memoryAgent/model/provider") fields.memoryAgent.model.provider = observation.value
   if (observation.field === "/memoryAgent/model/id") fields.memoryAgent.model.id = observation.value
+}
+
+function retainCycleField(fields: ConfigFields, observation: ConfigFieldObservation): void {
+  if (observation.field === "/observer/model/provider") fields.observer.model.provider = observation.value
+  if (observation.field === "/observer/model/id") fields.observer.model.id = observation.value
+  if (observation.field === "/observer/thinking") fields.observer.thinking = observation.value
+  if (observation.field === "/observer/chunkTokens") fields.observer.chunkTokens = observation.value
+  if (observation.field === "/observer/concurrency") fields.observer.concurrency = observation.value
+  if (observation.field === "/compaction/atContextTokens") fields.compaction.atContextTokens = observation.value
+  if (observation.field === "/compaction/tailTokens") fields.compaction.tailTokens = observation.value
+  if (observation.field === "/compaction/mapTokens") fields.compaction.mapTokens = observation.value
 }
 
 export function observedEmbeddingFields(observations: ConfigFieldObservation[]): EmbeddingFields {

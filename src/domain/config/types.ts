@@ -87,6 +87,12 @@ export interface CaptureFields extends Partial<CaptureCadenceSettings> {
   model: Partial<ChatModelReference>
 }
 
+export interface ObserverFields extends Partial<Omit<MemoryConfig["observer"], "model">> {
+  model: Partial<ChatModelReference>
+}
+
+export type CompactionFields = Partial<MemoryConfig["compaction"]>
+
 export interface MemoryAgentFields {
   model: Partial<ChatModelReference>
 }
@@ -109,6 +115,8 @@ export interface DecisionFields {
 export interface ConfigFields extends ConfigRegistrations {
   limits: Partial<MemoryConfig["limits"]>
   capture: CaptureFields
+  observer: ObserverFields
+  compaction: CompactionFields
   memoryAgent: MemoryAgentFields
   context: Partial<MemoryConfig["context"]>
   embeddings: EmbeddingFields

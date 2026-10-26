@@ -26,6 +26,18 @@ test("complete settings survive strict parsing, repair, setup and init without r
   })
 })
 
+test("a setup proposal keeps the observer and compaction groups", () => {
+  const { observer, compaction } = customizedSettings()
+  const draft = inspectConfigForRepair(JSON.stringify({ ...aConfig(), observer, compaction }))
+  const proposal = proposeSetup({ config: draft, vault: "C:/replacement" })
+
+  expect(proposal).toMatchObject({ succeeded: true, output: { observer, compaction } })
+  expect(proposeSetup({ config: prepareSetupDefaults(observer.model), vault: "C:/new" })).toMatchObject({
+    succeeded: true,
+    output: { observer: { ...productSettings().observer, model: observer.model } },
+  })
+})
+
 test.each(["relative/vault", "C:relative", "\\vault"])("requires an absolute vault: %s", (vault) => {
   expect(parseConfig(JSON.stringify({ ...aConfig(), global: { vault } })).succeeded).toBe(false)
 })
