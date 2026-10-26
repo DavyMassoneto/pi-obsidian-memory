@@ -44,6 +44,14 @@ test("the observation cycle listens to turn_end, agent_start and session_shutdow
   expect([...loaded.handlers.keys()]).toEqual(expect.arrayContaining(["turn_end", "agent_start", "session_shutdown"]))
 })
 
+test("the extension handles session_before_compact", async () => {
+  const agentDir = await useTempFolder()
+
+  const loaded = await loadWithRegistrar((registrar) => registerExtension(registrar, agentDir))
+
+  expect([...loaded.handlers.keys()]).toContain("session_before_compact")
+})
+
 test("a command reaches pi's command registration under its name", async () => {
   const loaded = await loadWithRegistrar((registrar) => {
     registrar.registerCommand("memory-x", { description: "d", handler: async () => undefined })
