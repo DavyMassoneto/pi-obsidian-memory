@@ -85,6 +85,24 @@ export const ConfigFieldObservationSchema = Type.Union([
   Type.Object({ field: Type.Literal("/compaction/tailTokens"), index: Type.Integer(), value: ConfigLimitSchema }),
   Type.Object({ field: Type.Literal("/compaction/mapTokens"), index: Type.Integer(), value: ConfigLimitSchema }),
   Type.Object({
+    field: Type.Literal("/consolidator/model/provider"),
+    index: Type.Integer(),
+    value: ChatModelPartSchema,
+  }),
+  Type.Object({ field: Type.Literal("/consolidator/model/id"), index: Type.Integer(), value: ChatModelPartSchema }),
+  Type.Object({ field: Type.Literal("/consolidator/thinking"), index: Type.Integer(), value: ThinkingLevelSchema }),
+  Type.Object({ field: Type.Literal("/consolidator/atPoolTokens"), index: Type.Integer(), value: ConfigLimitSchema }),
+  Type.Object({
+    field: Type.Literal("/consolidator/poolTargetTokens"),
+    index: Type.Integer(),
+    value: ConfigLimitSchema,
+  }),
+  Type.Object({
+    field: Type.Literal("/consolidator/journeyTokens"),
+    index: Type.Integer(),
+    value: ConfigLimitSchema,
+  }),
+  Type.Object({
     field: Type.Literal("/memoryAgent/model/provider"),
     index: Type.Integer(),
     value: ChatModelPartSchema,
@@ -153,6 +171,16 @@ export const MemoryConfigSchema = Type.Object(
     ),
     compaction: Type.Object(
       { atContextTokens: ConfigLimitSchema, tailTokens: ConfigLimitSchema, mapTokens: ConfigLimitSchema },
+      { additionalProperties: false },
+    ),
+    consolidator: Type.Object(
+      {
+        model: ChatModelReferenceSchema,
+        thinking: ThinkingLevelSchema,
+        atPoolTokens: ConfigLimitSchema,
+        poolTargetTokens: ConfigLimitSchema,
+        journeyTokens: ConfigLimitSchema,
+      },
       { additionalProperties: false },
     ),
     memoryAgent: Type.Object({ model: ChatModelReferenceSchema }, { additionalProperties: false }),

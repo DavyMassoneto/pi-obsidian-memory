@@ -43,7 +43,7 @@ export function volumeGuidRoot(drive: string): string | null {
 }
 
 export function legacyConfigText(capture: object): string {
-  const { observer: _observer, compaction: _compaction, ...rest } = aConfig()
+  const { observer: _observer, compaction: _compaction, consolidator: _consolidator, ...rest } = aConfig()
   return JSON.stringify({ ...rest, capture })
 }
 

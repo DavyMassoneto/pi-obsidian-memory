@@ -20,6 +20,23 @@ test.each([
       "compaction: must have required properties mapTokens",
     ],
   },
+  {
+    fields: { consolidator: {} },
+    problems: [
+      "consolidator: must have required properties model",
+      "consolidator: must have required properties thinking",
+      "consolidator: must have required properties atPoolTokens",
+      "consolidator: must have required properties poolTargetTokens",
+      "consolidator: must have required properties journeyTokens",
+    ],
+  },
+  {
+    fields: { consolidator: { ...aConfig().consolidator, model: {} } },
+    problems: [
+      "consolidator.model: must have required properties provider",
+      "consolidator.model: must have required properties id",
+    ],
+  },
   { fields: { memoryAgent: {} }, problems: ["memoryAgent: must have required properties model"] },
   {
     fields: { memoryAgent: { model: {} } },

@@ -11,6 +11,7 @@ test("an empty object names each missing root field once, in schema order, under
       "config: must have required properties limits",
       "config: must have required properties observer",
       "config: must have required properties compaction",
+      "config: must have required properties consolidator",
       "config: must have required properties memoryAgent",
       "config: must have required properties context",
       "config: must have required properties embeddings",

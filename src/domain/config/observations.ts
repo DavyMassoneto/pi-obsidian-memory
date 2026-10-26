@@ -40,6 +40,7 @@ export function observedConfigFields(inspection: ConfigDocumentInspection): Conf
     context: {},
     observer: { model: {} },
     compaction: {},
+    consolidator: { model: {} },
     memoryAgent: { model: {} },
     embeddings: observedEmbeddingFields(inspection.observations),
     decisionModel: observedDecisionFields(inspection.observations),
@@ -79,6 +80,18 @@ function retainCycleField(fields: ConfigFields, observation: ConfigFieldObservat
   if (observation.field === "/compaction/atContextTokens") fields.compaction.atContextTokens = observation.value
   if (observation.field === "/compaction/tailTokens") fields.compaction.tailTokens = observation.value
   if (observation.field === "/compaction/mapTokens") fields.compaction.mapTokens = observation.value
+  retainConsolidatorField(fields, observation)
+}
+
+function retainConsolidatorField(fields: ConfigFields, observation: ConfigFieldObservation): void {
+  if (observation.field === "/consolidator/model/provider") fields.consolidator.model.provider = observation.value
+  if (observation.field === "/consolidator/model/id") fields.consolidator.model.id = observation.value
+  if (observation.field === "/consolidator/thinking") fields.consolidator.thinking = observation.value
+  if (observation.field === "/consolidator/atPoolTokens") fields.consolidator.atPoolTokens = observation.value
+  if (observation.field === "/consolidator/poolTargetTokens") {
+    fields.consolidator.poolTargetTokens = observation.value
+  }
+  if (observation.field === "/consolidator/journeyTokens") fields.consolidator.journeyTokens = observation.value
 }
 
 export function observedEmbeddingFields(observations: ConfigFieldObservation[]): EmbeddingFields {

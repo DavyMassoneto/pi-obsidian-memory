@@ -17,6 +17,7 @@ export function configRules(selection: ConfigRuleSelection): ConfigFieldRule[] {
   const rules: ConfigFieldRule[] = [{ kind: "object", path: "", keys, required: keys }]
   rules.push(...objectRules("/global", properties.global), ...objectRules("/limits", properties.limits))
   rules.push(...objectRules("/observer", properties.observer), ...objectRules("/compaction", properties.compaction))
+  rules.push(...objectRules("/consolidator", properties.consolidator))
   rules.push(...objectRules("/memoryAgent", properties.memoryAgent))
   rules.push(...objectRules("/context", properties.context))
   for (let index = 0; index < selection.projectCount; index++) {
@@ -40,6 +41,8 @@ function objectRules(path: string, schema: TObject): ConfigFieldRule[] {
   for (const [key, property] of Object.entries(schema.properties)) {
     if (path === "/observer" && key === "model") {
       rules.push(...objectRules(`${path}/model`, MemoryConfigSchema.properties.observer.properties.model))
+    } else if (path === "/consolidator" && key === "model") {
+      rules.push(...objectRules(`${path}/model`, MemoryConfigSchema.properties.consolidator.properties.model))
     } else if (path === "/memoryAgent" && key === "model") {
       rules.push(...objectRules(`${path}/model`, MemoryConfigSchema.properties.memoryAgent.properties.model))
     } else {

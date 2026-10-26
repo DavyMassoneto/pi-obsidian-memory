@@ -10,6 +10,7 @@ test("setup alone can use the explicitly supplied model and null leaves both mod
     ...productSettings(),
     decisionModel: { provider: "typesafe", model: "jev-latest" },
     observer: { ...productSettings().observer, model: selected },
+    consolidator: { ...productSettings().consolidator, model: selected },
     memoryAgent: { model: selected },
     global: {},
     projects: [],
@@ -22,6 +23,19 @@ test("setup alone can use the explicitly supplied model and null leaves both mod
   expect(proposeSetup({ config: prepareSetupDefaults(null), vault: "C:/new" }).succeeded).toBe(false)
   selected.id = "changed-after-preparation"
   expect(defaults.observer.model.id).toBe("chosen-model")
+})
+
+test("setup defaults fill the consolidator model from the selected model", () => {
+  const selected = { provider: "chosen-provider", id: "chosen-model" }
+
+  expect(prepareSetupDefaults(selected).consolidator).toEqual({
+    model: selected,
+    thinking: "medium",
+    atPoolTokens: 15000,
+    poolTargetTokens: 10000,
+    journeyTokens: 1000,
+  })
+  expect(prepareSetupDefaults(null).consolidator.model).toEqual({})
 })
 
 test("setup defaults fill the observer model from the selected model and the observer and compaction numbers from OM's defaults", () => {

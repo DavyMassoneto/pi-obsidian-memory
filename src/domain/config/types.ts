@@ -85,6 +85,10 @@ export interface ObserverFields extends Partial<Omit<MemoryConfig["observer"], "
 
 export type CompactionFields = Partial<MemoryConfig["compaction"]>
 
+export interface ConsolidatorFields extends Partial<Omit<MemoryConfig["consolidator"], "model">> {
+  model: Partial<ChatModelReference>
+}
+
 export interface MemoryAgentFields {
   model: Partial<ChatModelReference>
 }
@@ -108,6 +112,7 @@ export interface ConfigFields extends ConfigRegistrations {
   limits: Partial<MemoryConfig["limits"]>
   observer: ObserverFields
   compaction: CompactionFields
+  consolidator: ConsolidatorFields
   memoryAgent: MemoryAgentFields
   context: Partial<MemoryConfig["context"]>
   embeddings: EmbeddingFields

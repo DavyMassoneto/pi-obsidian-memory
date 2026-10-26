@@ -172,6 +172,29 @@ test.each(["extreme", "", "LOW"])("a thinking level outside pi's list is refused
   })
 })
 
+test.each(["extreme", "", "LOW"])("a consolidator with a wrong thinking level is refused: %j", (thinking) => {
+  const config = aConfig()
+
+  expect(parseConfig(JSON.stringify({ ...config, consolidator: { ...config.consolidator, thinking } }))).toEqual({
+    succeeded: false,
+    problems: ["consolidator.thinking: must be one of off, minimal, low, medium, high, xhigh, max"],
+  })
+})
+
+test("a consolidator names each missing field and each unknown one", () => {
+  expect(parseConfig(JSON.stringify({ ...aConfig(), consolidator: { extra: 1 } }))).toEqual({
+    succeeded: false,
+    problems: [
+      "consolidator.extra: not a known field",
+      "consolidator: must have required properties model",
+      "consolidator: must have required properties thinking",
+      "consolidator: must have required properties atPoolTokens",
+      "consolidator: must have required properties poolTargetTokens",
+      "consolidator: must have required properties journeyTokens",
+    ],
+  })
+})
+
 test.each(["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const)(
   "the thinking level %s is accepted",
   (thinking) => {

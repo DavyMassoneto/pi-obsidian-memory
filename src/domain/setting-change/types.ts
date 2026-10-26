@@ -10,9 +10,14 @@ export interface ObserverModelChange {
   model: ChatModelReference
 }
 
+export interface ConsolidatorModelChange {
+  kind: "consolidatorModel"
+  model: ChatModelReference
+}
+
 export interface ThinkingChange {
   kind: "thinking"
-  role: "observer"
+  role: "observer" | "consolidator"
   value: ThinkingLevel
 }
 
@@ -25,6 +30,12 @@ export interface ObserverCountChange {
 export interface CompactionCountChange {
   kind: "compactionCount"
   name: keyof MemoryConfig["compaction"]
+  value: number
+}
+
+export interface ConsolidatorCountChange {
+  kind: "consolidatorCount"
+  name: "atPoolTokens" | "poolTargetTokens" | "journeyTokens"
   value: number
 }
 
@@ -76,9 +87,11 @@ export type DecisionChange = JevDecisionChange | LayaDecisionChange
 export type SettingChange =
   | AgentModelChange
   | ObserverModelChange
+  | ConsolidatorModelChange
   | ThinkingChange
   | ObserverCountChange
   | CompactionCountChange
+  | ConsolidatorCountChange
   | EmbeddingsChange
   | DecisionChange
   | ThresholdChange

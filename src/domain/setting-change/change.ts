@@ -17,6 +17,8 @@ import {
 } from "#src/domain/config"
 import type { PathPlatform } from "#src/domain/path-platform"
 import type {
+  ConsolidatorCountChange,
+  ConsolidatorModelChange,
   DecisionChange,
   ObserverCountChange,
   ObserverModelChange,
@@ -56,9 +58,13 @@ function nextConfig(config: MemoryConfig, change: SettingChange): NextConfig {
     case "agentModel":
       return done({ ...config, memoryAgent: { model: change.model } })
     case "observerModel":
-    case "thinking":
     case "observerCount":
       return done({ ...config, observer: withObserver(config.observer, change) })
+    case "consolidatorModel":
+    case "consolidatorCount":
+      return done({ ...config, consolidator: withConsolidator(config.consolidator, change) })
+    case "thinking":
+      return done(withThinking(config, change))
     case "compactionCount":
       return done({ ...config, compaction: { ...config.compaction, [change.name]: change.value } })
     case "embeddings":
@@ -85,11 +91,23 @@ function done(output: ConfigCandidate): NextConfig {
 
 function withObserver(
   observer: MemoryConfig["observer"],
-  change: ObserverModelChange | ThinkingChange | ObserverCountChange,
+  change: ObserverModelChange | ObserverCountChange,
 ): MemoryConfig["observer"] {
   if (change.kind === "observerModel") return { ...observer, model: change.model }
-  if (change.kind === "thinking") return { ...observer, thinking: change.value }
   return { ...observer, [change.name]: change.value }
+}
+
+function withConsolidator(
+  consolidator: MemoryConfig["consolidator"],
+  change: ConsolidatorModelChange | ConsolidatorCountChange,
+): MemoryConfig["consolidator"] {
+  if (change.kind === "consolidatorModel") return { ...consolidator, model: change.model }
+  return { ...consolidator, [change.name]: change.value }
+}
+
+function withThinking(config: MemoryConfig, change: ThinkingChange): ConfigCandidate {
+  if (change.role === "observer") return { ...config, observer: { ...config.observer, thinking: change.value } }
+  return { ...config, consolidator: { ...config.consolidator, thinking: change.value } }
 }
 
 function withDecision(config: MemoryConfig, change: DecisionChange): ConfigCandidate {

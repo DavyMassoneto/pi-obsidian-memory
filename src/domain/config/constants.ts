@@ -14,6 +14,13 @@ export const DEFAULT_OBSERVER: Omit<MemoryConfig["observer"], "model"> = {
   concurrency: 4,
 }
 
+export const DEFAULT_CONSOLIDATOR: Omit<MemoryConfig["consolidator"], "model"> = {
+  thinking: "medium",
+  atPoolTokens: 15000,
+  poolTargetTokens: 10000,
+  journeyTokens: 1000,
+}
+
 export const DEFAULT_COMPACTION: MemoryConfig["compaction"] = {
   atContextTokens: 150000,
   tailTokens: 20000,

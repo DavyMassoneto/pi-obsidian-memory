@@ -66,6 +66,7 @@ test("old configuration is invalid at runtime and repair never invents a chat mo
     "maxNotesPerFolder",
     "observer",
     "compaction",
+    "consolidator",
     "memoryAgent",
     "context",
     "embeddings",
@@ -77,6 +78,7 @@ test("old configuration is invalid at runtime and repair never invents a chat mo
     ...old,
     limits: { ...old.limits, maxNotesPerFolder: 20 },
     observer: { model: {}, thinking: "low", chunkTokens: 10000, concurrency: 4 },
+    consolidator: { model: {}, thinking: "medium", atPoolTokens: 15000, poolTargetTokens: 10000, journeyTokens: 1000 },
     memoryAgent: { model: {} },
   })
 })

@@ -10,6 +10,7 @@ export function proposeSetup(request: SetupProposal, platform: PathPlatform): Pa
     limits: request.config.limits,
     observer: request.config.observer,
     compaction: request.config.compaction,
+    consolidator: request.config.consolidator,
     memoryAgent: request.config.memoryAgent,
     context: request.config.context,
     embeddings: request.config.embeddings,
