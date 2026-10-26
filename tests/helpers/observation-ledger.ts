@@ -94,12 +94,14 @@ export function chunkRange(fromId: string, coversUpToId: string): ChunkRange {
   return { fromId, coversUpToId }
 }
 
+export function turn(number: number, tokens: number): MessageRecord {
+  if (number % 2 === 1) return userRecord(`r${number}`, `message ${number}`, tokens)
+  return assistantRecord(`r${number}`, `message ${number}`, tokens)
+}
+
 export function conversation(count: number, tokens: number): SessionRecord[] {
   const records: SessionRecord[] = []
-  for (let number = 1; number <= count; number++) {
-    if (number % 2 === 1) records.push(userRecord(`r${number}`, `message ${number}`, tokens))
-    else records.push(assistantRecord(`r${number}`, `message ${number}`, tokens))
-  }
+  for (let number = 1; number <= count; number++) records.push(turn(number, tokens))
   return records
 }
 
