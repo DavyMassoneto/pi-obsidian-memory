@@ -92,11 +92,14 @@ what the user asks to remember.
   observers at a time. At the live end of the session it waits for a full chunk. Each observer sends its chunk to
   `observer.model` and saves the dated observations it returns. A failed chunk stays unobserved and is tried again
   at the first `turn_end` or `agent_start` a minute or more later; the user is told `Memory observer failed: <cause>.
-  It tries again in a minute.` once per session for each cause. The extension's own hidden messages are not observed.
+  It tries again in a minute.` once per session for each cause. The extension's own hidden messages are not observed,
+  nor are shell commands the user ran with `!!` (their output is kept from the model).
 - **Trigger.** After each `turn_end`, memory compacts the session when the context has at least
   `compaction.atContextTokens` tokens and the conversation since the last compaction is longer than
   `compaction.tailTokens` by at least `observer.chunkTokens`. Nothing is triggered while pi retries a failed turn.
-  When the turn ended with tool results, the run goes on after the compaction with a hidden message.
+  When the turn ended with tool results, the run goes on after the compaction with a hidden message, even when the
+  compaction fails; only `Compaction cancelled` (Esc) leaves the run stopped. After a failed attempt the trigger waits
+  until the conversation since the last compaction gets shorter, or longer by at least `observer.chunkTokens`.
 - **Compaction.** Every compaction (this trigger, `/compact` and pi's own) first observes the history that would be
   cut. It then keeps the latest conversation word for word: the cut is placed after a fully observed part, as close
   as it can to `compaction.tailTokens` tokens. The older part is replaced by a block: a short intro, the memory map
@@ -108,8 +111,11 @@ what the user asks to remember.
   notes were left out. A vault that cannot be read gets `Could not read the <vault> vault: <problems>.`, and with no
   notes the map says `The vaults hold no notes yet.`
 - **When it cannot.** With no fully observed part yet, pi compacts on its own and the user is told `Memory had no
-  observations for the start of this session yet, so pi compacted it on its own.` Any other failure says `Memory could
-  not build the compaction block, so pi compacted the session on its own: <cause>`. With no config or an invalid one,
+  observations for the start of this session yet, so pi compacted it on its own.` When memory cannot build its block,
+  pi compacts on its own and the user is told `Memory could not build the compaction block, so pi compacted the session
+  on its own: <cause>`. When a compaction the trigger started fails, for example pi answers `Nothing to compact
+  (session too small)`, nothing is compacted and the user is told `Memory could not compact the session: <cause>`,
+  followed by `The run goes on.` when the run resumes. With no config or an invalid one,
   nothing is observed and pi compacts on its own. Esc during a compaction stops it and its observers.
 
 **Old configs.** A file that still has a `capture` group and no `observer` group is read as if it had the new groups,
