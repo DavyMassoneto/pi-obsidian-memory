@@ -9,4 +9,8 @@ export const COMPACTION_FALLBACK =
 
 export const COMPACTION_CANCELLED = "Compaction cancelled"
 
+export const COMPACTION_NOT_DONE = "Memory could not compact the session:"
+
+export const RUN_GOES_ON = "The run goes on."
+
 export const COMPACTION_FAILED = "Memory could not build the compaction block, so pi compacted the session on its own:"
