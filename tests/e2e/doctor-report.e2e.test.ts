@@ -4,7 +4,9 @@ import {
   BLANK_HEADING,
   COMPLETE_SKIPPED,
   DOCTOR_INVALID_HEADING,
+  DOCTOR_OM_LOADED,
   DUPLICATES_HEADING,
+  MODELS_HEADING,
   NO_PROBLEMS,
   TEMPORARIES_HEADING,
 } from "#src/pi"
@@ -43,6 +45,10 @@ test("one report names the broken note, the copies, the blank note, the temporar
     `Folders above ${maxNotesPerFolder} notes (consider splitting them):\n- crowded: 21 notes`,
   )
   expect(report?.message).toContain(`Project vault: ${NO_PROBLEMS}`)
+  const { observer, memoryAgent } = await storedConfig(world)
+  expect(report?.message).toContain(`${MODELS_HEADING}\n- observer ${observer.model.provider}/${observer.model.id}:`)
+  expect(report?.message).toContain(`- memory agent ${memoryAgent.model.provider}/${memoryAgent.model.id}:`)
+  expect(report?.message).not.toContain(DOCTOR_OM_LOADED)
   expect(skipped?.message).toBe(`${COMPLETE_SKIPPED} global/Blank.md`)
   expect(turn.notifications).toHaveLength(2)
   expect([await memoryReadTree(globalVault), await memoryReadTree(projectVault)]).toEqual(before)
