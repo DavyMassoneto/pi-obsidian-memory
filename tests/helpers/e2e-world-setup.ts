@@ -69,7 +69,8 @@ async function overrideCycleSettings(configPath: string, overrides: CycleOverrid
   if (!config.succeeded) throw new Error(config.problems.join("\n"))
   const observer = { ...config.output.observer, ...overrides.observer }
   const compaction = { ...config.output.compaction, ...overrides.compaction }
-  await writeFile(configPath, JSON.stringify({ ...config.output, observer, compaction }))
+  const consolidator = { ...config.output.consolidator, ...overrides.consolidator }
+  await writeFile(configPath, JSON.stringify({ ...config.output, observer, compaction, consolidator }))
 }
 
 function refuseFailures(step: string, world: ConfigurableWorld, turn: RpcTurn): void {

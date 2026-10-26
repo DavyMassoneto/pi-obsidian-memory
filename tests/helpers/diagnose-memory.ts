@@ -28,6 +28,7 @@ export function diagnosedMemory(overrides: Partial<DiagnosedMemory>): DiagnosedM
     cutoffs: { gate: { value: 0.5, source: "typesafe" }, relevance: { value: 0.5, source: "typesafe" } },
     models: [
       { role: "observer", check: { model: { provider: "p", id: "m" }, status: "ok" } },
+      { role: "consolidator", check: { model: { provider: "p", id: "m" }, status: "ok" } },
       { role: "memory agent", check: { model: { provider: "p", id: "m" }, status: "ok" } },
     ],
     ...overrides,

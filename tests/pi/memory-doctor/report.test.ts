@@ -12,6 +12,7 @@ test("a clean vault says no problems were found, and the providers not in use ye
       "",
       "Models:",
       "- observer p/m: ok",
+      "- consolidator p/m: ok",
       "- memory agent p/m: ok",
       "- embeddings local/Xenova/multilingual-e5-small: ready",
       "- decision model typesafe/jev-latest: ready (model and API key found)",
@@ -62,10 +63,10 @@ test("a folder with no registered project says so", () => {
   )
 })
 
-test("the models section names the observer", () => {
+test("the models section names the consolidator", () => {
   const report = renderDoctorReport(diagnosedMemory({}))
 
-  expect(report).toContain("Models:\n- observer p/m: ok\n- memory agent p/m: ok")
+  expect(report).toContain("Models:\n- observer p/m: ok\n- consolidator p/m: ok\n- memory agent p/m: ok")
   expect(report).not.toContain("capture")
 })
 

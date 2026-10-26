@@ -13,10 +13,14 @@ import type { DiagnosedMemory, DiagnoseMemoryRequest, DiagnoseMemoryResult, Mode
 import { reportVault } from "./vault.ts"
 
 async function modelReportsOf<TModel>(config: MemoryConfig, port: ChatModelPort<TModel>): Promise<ModelReport[]> {
-  const checks = await checkChatModels([config.observer.model, config.memoryAgent.model], port)
+  const checks = await checkChatModels(
+    [config.observer.model, config.consolidator.model, config.memoryAgent.model],
+    port,
+  )
   const models: ModelReport[] = []
-  const [observerCheck, agentCheck] = checks
+  const [observerCheck, consolidatorCheck, agentCheck] = checks
   if (observerCheck) models.push({ role: "observer", check: observerCheck })
+  if (consolidatorCheck) models.push({ role: "consolidator", check: consolidatorCheck })
   if (agentCheck) models.push({ role: "memory agent", check: agentCheck })
   return models
 }

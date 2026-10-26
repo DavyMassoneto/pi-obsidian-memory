@@ -3,6 +3,7 @@ import type { MemoryConfig } from "#src/domain"
 export interface CycleOverrides {
   observer?: Partial<MemoryConfig["observer"]>
   compaction?: Partial<MemoryConfig["compaction"]>
+  consolidator?: Partial<MemoryConfig["consolidator"]>
 }
 
 export interface CompactionSettings {

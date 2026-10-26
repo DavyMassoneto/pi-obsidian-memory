@@ -3,7 +3,7 @@ import { expect, test } from "vitest"
 import { settingLines } from "#src/pi"
 import { aConfig, lineLabels } from "#test-helpers"
 
-test("the screen lists the observer model, thinking, chunk, concurrency, threshold, tail and map lines with their values, then the memory agent and the rest", () => {
+test("the screen lists the observer, compaction and consolidator lines, then the memory agent and the rest", () => {
   expect(settingLines(aConfig()).map((line) => line.label.split(":")[0])).toEqual([
     "Observer model",
     "Observer thinking",
@@ -12,6 +12,11 @@ test("the screen lists the observer model, thinking, chunk, concurrency, thresho
     "Compact at",
     "Verbatim tail",
     "Memory map",
+    "Consolidator model",
+    "Consolidator thinking",
+    "Consolidate at",
+    "Pool after consolidating",
+    "Journey size",
     "Memory agent model",
     "Decision model",
     "Gate cutoff",
@@ -23,6 +28,19 @@ test("the screen lists the observer model, thinking, chunk, concurrency, thresho
     "Max notes per folder",
     "Global vault",
     "Projects",
+  ])
+})
+
+test("the consolidator lines follow the compaction lines", () => {
+  const labels = lineLabels(aConfig())
+  const compactionEnd = labels.indexOf("Memory map: 2000 tokens")
+
+  expect(labels.slice(compactionEnd + 1, compactionEnd + 6)).toEqual([
+    "Consolidator model: test-chat/selected-chat",
+    "Consolidator thinking: medium",
+    "Consolidate at: 15000 pool tokens",
+    "Pool after consolidating: 10000 tokens",
+    "Journey size: 1000 tokens",
   ])
 })
 

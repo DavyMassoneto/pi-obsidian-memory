@@ -25,6 +25,10 @@ export async function prepareMemorySetup(
       draft = {
         ...repair,
         observer: { ...repair.observer, model: { ...defaults.observer.model, ...repair.observer.model } },
+        consolidator: {
+          ...repair.consolidator,
+          model: { ...defaults.consolidator.model, ...repair.consolidator.model },
+        },
         memoryAgent: { model: { ...defaults.memoryAgent.model, ...repair.memoryAgent.model } },
       }
     }

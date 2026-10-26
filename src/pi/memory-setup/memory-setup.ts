@@ -113,7 +113,8 @@ function modelResolved(model: ConfigRepairDraft["observer"]["model"]): boolean {
 
 function noModelToChoose(ctx: MemoryPiContext, draft: ConfigRepairDraft): boolean {
   if (ctx.modelRegistry.getAvailable().length > 0) return false
-  if (modelResolved(draft.observer.model) && modelResolved(draft.memoryAgent.model)) return false
+  const resolved = [draft.observer.model, draft.consolidator.model, draft.memoryAgent.model].every(modelResolved)
+  if (resolved) return false
   ctx.ui.notify(SETUP_NO_MODEL, "error")
   return true
 }
@@ -131,6 +132,7 @@ async function chooseModels(ctx: MemoryPiContext, draft: ConfigRepairDraft): Pro
   return {
     ...draft,
     observer: { ...draft.observer, model: observer },
+    consolidator: { ...draft.consolidator, model: observer },
     memoryAgent: { model: agent },
   }
 }

@@ -14,9 +14,9 @@ test("the disclosure is a title and one line for each chosen item, with no quest
   expect(text).not.toContain("?")
 })
 
-test("the chat models line names the observer and the memory agent", () => {
+test("the chat models line names the observer, the consolidator and the memory agent", () => {
   expect(disclosureText(["chat-models"]).split("\n")[1]).toBe(
-    "The observer and the memory agent send conversation and note content to the chat models you chose.",
+    "The observer, the consolidator and the memory agent send conversation and note content to the chat models you chose.",
   )
 })
 

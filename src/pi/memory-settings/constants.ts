@@ -11,7 +11,7 @@ export const PRICE_DECIMALS = 4
 export const DISCLOSURE_TITLE = "Before setup: what leaves this machine"
 
 export const CHAT_MODELS_DISCLOSURE =
-  "The observer and the memory agent send conversation and note content to the chat models you chose."
+  "The observer, the consolidator and the memory agent send conversation and note content to the chat models you chose."
 
 export const JEV_DISCLOSURE = "TypeSafe (Jev) receives your messages and candidate notes."
 
@@ -31,6 +31,11 @@ export const OBSERVER_MODEL_TITLE =
   "Chat model for the observer (it summarizes the conversation into observations; Escape keeps the current one)"
 
 export const OBSERVER_THINKING_TITLE = "Observer thinking level (Escape keeps the current one)"
+
+export const CONSOLIDATOR_MODEL_TITLE =
+  "Chat model for the consolidator (it folds the oldest observations into notes; Escape keeps the current one)"
+
+export const CONSOLIDATOR_THINKING_TITLE = "Consolidator thinking level (Escape keeps the current one)"
 
 export const THINKING_LEVELS: ObserverThinking[] = ["off", "minimal", "low", "medium", "high", "xhigh", "max"]
 

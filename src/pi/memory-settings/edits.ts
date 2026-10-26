@@ -23,7 +23,7 @@ export function thinkingEdit(spec: ThinkingEditSpec): LineEdit {
     const value = THINKING_LEVELS.find((level) => level === answer)
     if (!value || value === spec.current) return
     await saveChange(env, {
-      change: { kind: "thinking", role: "observer", value },
+      change: { kind: "thinking", role: spec.role, value },
       what: `${spec.what} is now ${value}`,
       reload: false,
     })

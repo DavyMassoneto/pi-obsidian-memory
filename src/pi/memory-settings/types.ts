@@ -50,6 +50,7 @@ export type ObserverThinking = MemoryConfig["observer"]["thinking"]
 export interface ThinkingEditSpec {
   title: string
   what: string
+  role: "observer" | "consolidator"
   current: ObserverThinking
 }
 
@@ -61,7 +62,7 @@ export interface EmbeddingChoice {
 export interface ModelEditSpec {
   title: string
   what: string
-  kind: "observerModel" | "agentModel"
+  kind: "observerModel" | "consolidatorModel" | "agentModel"
   current: CurrentModel
 }
 

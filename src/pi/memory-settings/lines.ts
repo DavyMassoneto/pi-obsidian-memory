@@ -1,6 +1,12 @@
 import type { CutoffValue, MemoryConfig } from "#src/usecases"
 import { resolveCutoffs } from "#src/usecases"
-import { AGENT_MODEL_TITLE, OBSERVER_MODEL_TITLE, OBSERVER_THINKING_TITLE } from "./constants.ts"
+import {
+  AGENT_MODEL_TITLE,
+  CONSOLIDATOR_MODEL_TITLE,
+  CONSOLIDATOR_THINKING_TITLE,
+  OBSERVER_MODEL_TITLE,
+  OBSERVER_THINKING_TITLE,
+} from "./constants.ts"
 import { modelEdit, numberEdit, thinkingEdit } from "./edits.ts"
 import { projectsEdit } from "./projects.ts"
 import { decisionEdit, embeddingsEdit } from "./providers.ts"
@@ -63,7 +69,12 @@ function observerLines(config: MemoryConfig): SettingLine[] {
     },
     {
       label: `Observer thinking: ${observer.thinking}`,
-      edit: thinkingEdit({ title: OBSERVER_THINKING_TITLE, what: "observer thinking", current: observer.thinking }),
+      edit: thinkingEdit({
+        title: OBSERVER_THINKING_TITLE,
+        what: "observer thinking",
+        role: "observer",
+        current: observer.thinking,
+      }),
     },
     countLine("Observe every", " tokens", observer.chunkTokens, (value) => ({
       kind: "observerCount",
@@ -99,11 +110,51 @@ function compactionLines(config: MemoryConfig): SettingLine[] {
   ]
 }
 
+function consolidatorLines(config: MemoryConfig): SettingLine[] {
+  const { consolidator } = config
+  return [
+    {
+      label: `Consolidator model: ${consolidator.model.provider}/${consolidator.model.id}`,
+      edit: modelEdit({
+        title: CONSOLIDATOR_MODEL_TITLE,
+        what: "consolidator model",
+        kind: "consolidatorModel",
+        current: consolidator.model,
+      }),
+    },
+    {
+      label: `Consolidator thinking: ${consolidator.thinking}`,
+      edit: thinkingEdit({
+        title: CONSOLIDATOR_THINKING_TITLE,
+        what: "consolidator thinking",
+        role: "consolidator",
+        current: consolidator.thinking,
+      }),
+    },
+    countLine("Consolidate at", " pool tokens", consolidator.atPoolTokens, (value) => ({
+      kind: "consolidatorCount",
+      name: "atPoolTokens",
+      value,
+    })),
+    countLine("Pool after consolidating", " tokens", consolidator.poolTargetTokens, (value) => ({
+      kind: "consolidatorCount",
+      name: "poolTargetTokens",
+      value,
+    })),
+    countLine("Journey size", " tokens", consolidator.journeyTokens, (value) => ({
+      kind: "consolidatorCount",
+      name: "journeyTokens",
+      value,
+    })),
+  ]
+}
+
 export function settingLines(config: MemoryConfig): SettingLine[] {
   const { limits } = config
   return [
     ...observerLines(config),
     ...compactionLines(config),
+    ...consolidatorLines(config),
     {
       label: `Memory agent model: ${config.memoryAgent.model.provider}/${config.memoryAgent.model.id}`,
       edit: modelEdit({

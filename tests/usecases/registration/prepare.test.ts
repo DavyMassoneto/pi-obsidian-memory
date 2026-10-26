@@ -31,6 +31,45 @@ test("setup preparation proposes the selected model for the observer and the mem
   await expectRegistrationLeaseReleased(context)
 })
 
+test("the selected model is proposed for the consolidator too", async () => {
+  const { root, context } = await registrationUsecaseFixture()
+  const selectedModel = { provider: "chosen", id: "chat" }
+  const result = await prepareMemorySetup({ selectedModel }, context)
+  expect(result).toMatchObject({
+    succeeded: true,
+    output: {
+      draft: {
+        consolidator: {
+          model: selectedModel,
+          thinking: "medium",
+          atPoolTokens: 15000,
+          poolTargetTokens: 10000,
+          journeyTokens: 1000,
+        },
+      },
+    },
+  })
+  expect(await readdir(root)).toEqual([])
+  await expectRegistrationLeaseReleased(context)
+})
+
+test("a consolidator model with a missing part takes the selection for that part only", async () => {
+  const { context, config } = await registrationUsecaseFixture()
+  await writeRegistrationSnapshot(
+    context,
+    JSON.stringify({
+      ...config,
+      ...customizedSettings(),
+      consolidator: { ...customizedSettings().consolidator, model: { provider: "kept", id: 7 } },
+    }),
+  )
+  const result = await prepareMemorySetup({ selectedModel: { provider: "chosen", id: "chosen-id" } }, context)
+  expect(result).toMatchObject({
+    succeeded: true,
+    output: { draft: { consolidator: { model: { provider: "kept", id: "chosen-id" }, thinking: "high" } } },
+  })
+})
+
 test("prepare owns the submitted model and config path before admission yields", async () => {
   const { root, context } = await registrationUsecaseFixture()
   const original = { ...context }
