@@ -10,7 +10,7 @@ import { BLANK_NOTE_TYPES, CONSOLIDATED_TYPE, ObservationsConsolidatedSchema } f
 import { configuredWorld } from "./e2e-config.ts"
 import { entriesIn } from "./e2e-observation-cycle.ts"
 import { restartMemory, statusStates } from "./e2e-relevant-notes.ts"
-import { localToday, vaultNotes, writeVaultFile } from "./e2e-vault.ts"
+import { localToday, type VaultNote, vaultNotes, writeVaultFile } from "./e2e-vault.ts"
 import type { E2eWorld } from "./e2e-world.ts"
 import { noteWithId } from "./search-memory.ts"
 
@@ -44,6 +44,50 @@ export const RULE_CONVERSATION = [
     "files still inside it, so the task is finished from my side and there is nothing left to do about it. " +
     "Reply with only OK and do not call any tool.",
 ]
+
+export const STATED_SECRET = "tk_live_9f3KxQ27vLm8"
+
+const PORTUGUESE_WORD = /(^|[^\p{L}])(é|não|sempre|nunca|neste|projeto|comando|feito|usar|para)($|[^\p{L}])/iu
+
+export const PORTUGUESE_CONVERSATION = [
+  `Para sua informação: neste projeto o deploy de produção é sempre feito com o comando make deploy-prod, nunca à mão, e o token de deploy é ${STATED_SECRET}. Responda apenas OK e não chame nenhuma ferramenta.`,
+  "Uma atualização só para você acompanhar. Estou revisando a lista de arquivos da pasta de relatórios: são quarenta e " +
+    "um arquivos em seis subpastas, e o mais novo foi gravado na terça à tarde. Ainda não mexi em nada, estou só " +
+    "contando o que tem dentro. Responda apenas OK e não chame nenhuma ferramenta.",
+  "Outra atualização. A contagem terminou: são quarenta e um arquivos e o maior tem uns três megabytes. Nada mais no " +
+    "repositório aponta para a pasta pelo nome antigo, então vou seguir depois do almoço. Responda apenas OK e não " +
+    "chame nenhuma ferramenta.",
+  "Mais uma atualização. Depois do almoço olhei a pasta de novo e a contagem não mudou, então vou começar agora. Vou " +
+    "conferir o resultado com uma listagem do diretório e te digo o que aparecer. Responda apenas OK e não chame " +
+    "nenhuma ferramenta.",
+  "Última atualização por enquanto. Terminei: a listagem mostra os quarenta e um arquivos no lugar certo, então da " +
+    "minha parte não falta mais nada. Responda apenas OK e não chame nenhuma ferramenta.",
+]
+
+export const NEXT_TURN_PROMPT = "Responda apenas OK e não chame nenhuma ferramenta."
+
+export async function waitForNoteMentioning(world: E2eWorld, text: string): Promise<VaultNote[]> {
+  const deadline = Date.now() + CONSOLIDATION_WAIT_MS
+  let found = await notesMentioning(world, text)
+  while (found.length === 0) {
+    if (Date.now() >= deadline) throw new Error(`no note mentions ${text} after ${CONSOLIDATION_WAIT_MS} ms`)
+    await delay(POLL_MS)
+    found = await notesMentioning(world, text)
+  }
+  return found
+}
+
+async function notesMentioning(world: E2eWorld, text: string): Promise<VaultNote[]> {
+  const vaults = [world.folders.globalVault, world.folders.projectVault]
+  const notes = (await Promise.all(vaults.map((vault) => vaultNotes(vault)))).flat()
+  return notes.filter((note) => note.text.includes(text))
+}
+
+export function expectEnglishNote(note: VaultNote): void {
+  expect(note.text).toMatch(savedTodayNoteShape())
+  expect(note.text).toMatch(ENGLISH_WORD)
+  expect(`${note.path}\n${note.text}`).not.toMatch(PORTUGUESE_WORD)
+}
 
 const CONSOLIDATED_ENTRY_SCHEMA = Type.Object({
   type: Type.Literal("custom"),

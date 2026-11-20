@@ -8,15 +8,21 @@ import {
   consolidatedEntriesIn,
   consolidationWorld,
   ExtensionErrorSchema,
+  expectEnglishNote,
   expectRuleNote,
+  NEXT_TURN_PROMPT,
   noteMentioning,
   noticesStarting,
+  PORTUGUESE_CONVERSATION,
   RULE_CONVERSATION,
   recordsOf,
+  STATED_SECRET,
   TASK_MARKER,
   vaultNotes,
   waitForConsolidationIdle,
   waitForConsolidations,
+  waitForNoteMentioning,
+  waitForObservations,
   waitForRuleNote,
 } from "#test-helpers"
 
@@ -47,6 +53,21 @@ test("a stated project rule becomes a note in the existing folder, the task does
   await waitForConsolidationIdle(world)
   expect(await noteMentioning(world, TASK_MARKER)).toEqual([])
   expect((await vaultNotes(world.folders.globalVault)).length).toBe(0)
+  expect(world.pi.unexpected).toEqual([])
+  expect(recordsOf(ExtensionErrorSchema, world.pi.lines)).toEqual([])
+})
+
+test("a rule and a secret stated in Portuguese become English notes that keep the secret as written", async () => {
+  const world = await consolidationWorld()
+  const file = await world.pi.sessionFile()
+
+  for (const message of PORTUGUESE_CONVERSATION) await world.pi.prompt(message, [])
+  await waitForObservations(file, 1)
+  await world.pi.prompt(NEXT_TURN_PROMPT, [])
+  const withSecret = await waitForNoteMentioning(world, STATED_SECRET)
+  await waitForConsolidationIdle(world)
+
+  for (const note of withSecret) expectEnglishNote(note)
   expect(world.pi.unexpected).toEqual([])
   expect(recordsOf(ExtensionErrorSchema, world.pi.lines)).toEqual([])
 })
