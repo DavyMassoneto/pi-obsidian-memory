@@ -1,6 +1,6 @@
 import { CaptureActionSchema, captureInputProblems, parseCaptureAction } from "#src/domain"
 import { checkStep, completeStep, completionRequest, modelCallFailure } from "./complete.ts"
-import { CONSOLIDATION_POLICY, DATA_POLICY } from "./constants.ts"
+import { CAPTURE_POLICIES, DATA_POLICY } from "./constants.ts"
 import type { CaptureRequest, CaptureStepResult, CompletionPort } from "./types.ts"
 
 export async function captureStep(request: CaptureRequest, complete: CompletionPort): Promise<CaptureStepResult> {
@@ -12,7 +12,7 @@ export async function captureStep(request: CaptureRequest, complete: CompletionP
   const data = JSON.stringify(snapshot)
   const refused = checkStep(request)
   if (refused) return refused
-  const system = `${DATA_POLICY}\n${CONSOLIDATION_POLICY}\nAction schema: ${JSON.stringify(CaptureActionSchema)}`
+  const system = `${DATA_POLICY}\n${CAPTURE_POLICIES[request.kind]}\nAction schema: ${JSON.stringify(CaptureActionSchema)}`
   const result = await completeStep(
     { ...completionRequest(request, { system, data }), thinking: request.thinking },
     complete,

@@ -1,6 +1,7 @@
 import type {
   CaptureAction,
   CaptureInput,
+  CaptureKind,
   CaptureObservation,
   ChatModelReference,
   CompletionPort,
@@ -30,7 +31,7 @@ export interface UnreadableNote {
 }
 
 export interface CaptureRun {
-  kind: "consolidate" | "import"
+  kind: CaptureKind
   material: MaterialItem[]
   model: ChatModelReference
   thinking: ThinkingLevel
@@ -65,13 +66,17 @@ export type WriteAction = Exclude<CaptureAction, NonWriteActions>
 
 export type FinishedWrite = UpdateMemoryResult | ArchiveMemoryResult | SucceedMemoryResult
 
-export interface CaptureBase {
-  context: CaptureInput["context"]
-  explicitSaves: ReadObservation[]
-  limits: CaptureInput["limits"]
+export interface StepSettings {
+  kind: CaptureKind
   model: ChatModelReference
   thinking: ThinkingLevel
   signal: AbortSignal
+}
+
+export interface CaptureBase extends StepSettings {
+  context: CaptureInput["context"]
+  explicitSaves: ReadObservation[]
+  limits: CaptureInput["limits"]
 }
 
 export interface ReviewTools {

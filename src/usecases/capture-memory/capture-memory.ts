@@ -20,6 +20,7 @@ import type {
   CaptureRun,
   NextStep,
   ReviewTools,
+  StepSettings,
   WriteAction,
 } from "./types.ts"
 
@@ -49,12 +50,10 @@ export async function captureMemory(
   let projectName: string | null = null
   if (project) projectName = project.vault.name
   const base: CaptureBase = {
+    ...stepSettings(run, context),
     context: { project: projectName, folder: context.workingFolder },
     explicitSaves,
     limits: { maxBodyChars: config.limits.maxBodyChars, maxStatementChars: config.limits.maxStatementChars },
-    model: run.model,
-    thinking: run.thinking,
-    signal: context.signal,
   }
   const report: CaptureReport = { reviewed: false, applied: [] }
   const tools: ReviewTools = { context, complete, report }
@@ -64,6 +63,10 @@ export async function captureMemory(
     if (failure) return failure
   }
   return { succeeded: true, output: report }
+}
+
+function stepSettings(run: CaptureRun, context: MemoryOperationContext): StepSettings {
+  return { kind: run.kind, model: run.model, thinking: run.thinking, signal: context.signal }
 }
 
 async function reviewMaterial(

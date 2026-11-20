@@ -18,6 +18,7 @@ export function journeyRequestOf(overrides: Partial<JourneyRequest>): JourneyReq
 
 export function captureRequest(): CaptureRequest {
   return {
+    kind: "consolidate",
     model: { provider: "synthetic", id: "fixed-model" },
     thinking: "off",
     signal: new AbortController().signal,

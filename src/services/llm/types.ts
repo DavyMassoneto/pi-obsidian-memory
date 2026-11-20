@@ -15,7 +15,10 @@ export interface ModelStepContext {
   model: ChatModelReference
 }
 
+export type CaptureKind = "consolidate" | "import"
+
 export interface CaptureRequest extends ModelStepContext, CaptureInput {
+  kind: CaptureKind
   thinking: ThinkingLevel
 }
 export interface RetrievalRequest extends ModelStepContext, RetrievalInput {}
