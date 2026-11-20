@@ -114,11 +114,15 @@ export async function waitForConsolidationIdle(world: E2eWorld): Promise<void> {
   }
 }
 
-export async function expectRuleNote(world: E2eWorld): Promise<void> {
+export function savedTodayNoteShape(): RegExp {
   const types = BLANK_NOTE_TYPES.join("|")
-  const frontmatter = new RegExp(
+  return new RegExp(
     `^---\\nid: [0-9A-HJKMNP-TV-Z]{26}\\ntype: (${types})\\ncreated: ${localToday()}\\nupdated: ${localToday()}\\n(dontForget: true\\n)?---\\n\\n[^\\n]+\\n$`,
   )
+}
+
+export async function expectRuleNote(world: E2eWorld): Promise<void> {
+  const frontmatter = savedTodayNoteShape()
   const saved = (await vaultNotes(world.folders.projectVault)).filter((note) => note.text.includes(RULE_TEXT))
   expect(saved.length).toBeGreaterThan(0)
   for (const note of saved) {
