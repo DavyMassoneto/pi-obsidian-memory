@@ -25,6 +25,13 @@ explicitly chosen available chat model's provider and id. They are not built-in 
     "concurrency": 4
   },
   "compaction": { "atContextTokens": 150000, "tailTokens": 20000, "mapTokens": 2000 },
+  "consolidator": {
+    "model": { "provider": "selected-provider", "id": "selected-model" },
+    "thinking": "medium",
+    "atPoolTokens": 15000,
+    "poolTargetTokens": 10000,
+    "journeyTokens": 1000
+  },
   "memoryAgent": { "model": { "provider": "selected-provider", "id": "selected-model" } },
   "context": { "budgetChars": 12000 },
   "embeddings": { "provider": "local", "model": "Xenova/multilingual-e5-small" },
@@ -51,6 +58,11 @@ explicitly chosen available chat model's provider and id. They are not built-in 
 | `compaction.atContextTokens` | Positive integer: context tokens at which memory compacts the session | 150000 |
 | `compaction.tailTokens` | Positive integer: tokens of the latest conversation kept word for word | 20000 |
 | `compaction.mapTokens` | Positive integer: token budget of the memory map in the compaction block | 2000 |
+| `consolidator.model` | Exactly `{provider, id}`, both nonblank strings | The model chosen for the observer in `/memory-setup`; changed in the settings screen |
+| `consolidator.thinking` | One of pi's thinking levels, as for the observer | `medium` |
+| `consolidator.atPoolTokens` | Positive integer: tokens of observations in the session at which the consolidator runs | 15000 |
+| `consolidator.poolTargetTokens` | Positive integer: tokens of the newest observations left in the session after it runs | 10000 |
+| `consolidator.journeyTokens` | Positive integer: size of the journey; the oldest segments are shortened past it | 1000 |
 | `memoryAgent.model` | Exactly `{provider, id}`, both nonblank strings | Chosen in `/memory-setup` from pi's models sorted by price, cheapest first; changed by re-running it |
 | `context.budgetChars` | Positive integer; relevant-memory character budget | 12000 |
 | `embeddings` | One exact alternative below | Local multilingual E5 |
@@ -60,7 +72,8 @@ explicitly chosen available chat model's provider and id. They are not built-in 
 
 The relevant-memory budget limits the notes loaded at session start and the notes added to each message; Don't forget
 notes are outside it. The observer runs
-with `observer.model` at `observer.thinking`; the memory agent, with `memoryAgent.model`, searches and reads for each
+with `observer.model` at `observer.thinking`, and the consolidator with `consolidator.model` at
+`consolidator.thinking`; the memory agent, with `memoryAgent.model`, searches and reads for each
 message and at session start. A chat reference is syntactically validated when the config is read; its availability is checked by
 `/memory-doctor` and at use.
 
@@ -81,11 +94,11 @@ Decision settings allow only:
 - Jev: `{"provider":"typesafe","model":"jev-latest"}` and optionally `gateThreshold` and `relevanceThreshold`. No
   endpoint or token-limit fields.
 
-### When the observer and compaction run
+### When the observer, compaction and the consolidator run
 
 The cycle and its defaults follow pi-observational-memory (MIT). Observations live only in the pi session, in
-`obsidian-memory-observations` entries; nothing is written to the vaults. Until the next release, the vaults get only
-what the user asks to remember.
+`obsidian-memory-observations` entries. The consolidator turns the oldest ones into vault notes; the journey and the
+record of what was consolidated stay in the session, in `obsidian-memory-consolidated` entries.
 
 - **Observer.** It runs at `agent_start` and at each `turn_end`. It cuts the conversation not observed yet into chunks
   of about `observer.chunkTokens` tokens, breaking only where pi can cut, and starts up to `observer.concurrency`
@@ -118,11 +131,35 @@ what the user asks to remember.
   followed by `The run goes on.` when the run resumes. With no config or an invalid one,
   nothing is observed and pi compacts on its own. Esc during a compaction stops it and its observers.
 
+- **Consolidator.** It runs at `agent_start` and at each `turn_end`, after the observers, one run at a time. When the
+  observations of the session not consolidated yet hold `consolidator.atPoolTokens` tokens or more, it keeps the
+  newest ones up to `consolidator.poolTargetTokens` tokens (the newest observation is always kept) and takes all the
+  older ones. `consolidator.model` reviews them and adds, updates, archives or succeeds notes in the global or the
+  project vault, through the same rules as the memory tools, with no approval step; what it is unsure of is not
+  saved. Then it writes the journey: one dated segment of two to five sentences for this batch, descriptive and in
+  the past tense, with the oldest segments shortened once the journey passes `consolidator.journeyTokens`. The
+  session records the consolidated observations and the journey; from then on the compaction block opens with the
+  journey and leaves those observations out. The status line shows `memory: consolidating` while it runs, and the
+  user is told `Memory consolidated: <n> change(s) to the vaults.` when a note changed. A failed run is tried again
+  at the first `turn_end` or `agent_start` a minute or more later; the user is told `Memory consolidation failed:
+  <cause>. It tries again in a minute.` once per cause. Compaction does not wait for the consolidator.
+- **Import.** `/memory-import` reads what pi-observational-memory saved in the `.memory` folder of the registered
+  project: `.memory/*.md` and `.memory/<session>/*.md`, `JOURNEY.md` included. It skips `INDEX.md`, folders whose
+  name starts with a dot (`.runs`) and files that are not `.md`. Each file is split into parts of at most
+  `observer.chunkTokens` tokens, and `consolidator.model` reviews each part through the consolidation rules, told
+  that the file belongs to the registered project. It only reads `.memory`, and it does not change the session
+  journey. It stops at the first model failure and says which parts were done. The user is told `Imported <files>
+  file(s) from <folder>/.memory: <n> change(s) to the vaults.`; with no `.memory` files, `No pi-observational-memory
+  files were found in <folder>/.memory.`; in a folder with no project vault, `This folder has no project vault. Run
+  /memory-init first, then /memory-import again.`
+
 **Old configs.** A file that still has a `capture` group and no `observer` group is read as if it had the new groups,
 with no action by the user and no repair notice, and the file is not rewritten; the settings screen writes the new
 shape the next time it saves. `observer` gets `capture.model` and the defaults above (`thinking` `low`), `compaction`
 is added with the defaults above when it is missing, and every other `capture` key is dropped. Without a valid
-`capture.model`, the observer model is reported missing, and `/memory-setup` repairs it.
+`capture.model`, the observer model is reported missing, and `/memory-setup` repairs it. In the same way, a file
+with an `observer` group and no `consolidator` group is read with `consolidator` holding the observer's model and
+the defaults above.
 
 ### Running the decision model
 
@@ -195,7 +232,7 @@ every key. Once the config is valid, it opens the settings screen.
 
 **First setup and repair:**
 
-- It asks for the observer model and the memory-agent model, each from a list of pi's available chat models with their
+- It asks for the model of the observer and the consolidator (one question fills both) and the memory-agent model, each from a list of pi's available chat models with their
   price per million input and output tokens. For the observer, the model in use in pi comes first, marked, and is the
   default (an empty answer or Escape takes it), as the original roadmap says. For the memory agent, a small
   configurable model, the list is sorted by price, cheapest first, and nothing is defaulted: with no answer nothing is
@@ -207,7 +244,8 @@ every key. Once the config is valid, it opens the settings screen.
 **Settings screen (valid config):** one line per setting with its current value, opened with a select; Done or Escape
 leaves. Each choice is written at once and the screen shows the new value. The lines are: `Observer model`,
 `Observer thinking` (one of the seven levels), `Observe every` (chunk tokens), `Observers at a time`, `Compact at`
-(context tokens), `Verbatim tail` (tokens), `Memory map` (tokens), memory-agent model, decision model (Jev, or Laya with its endpoint), gate cutoff, relevance cutoff (a number from 0 to 1, or `none`), embeddings
+(context tokens), `Verbatim tail` (tokens), `Memory map` (tokens), `Consolidator model`, `Consolidator thinking`,
+`Consolidate at` (pool tokens), `Pool after consolidating` (tokens), `Journey size` (tokens), memory-agent model, decision model (Jev, or Laya with its endpoint), gate cutoff, relevance cutoff (a number from 0 to 1, or `none`), embeddings
 provider, context budget, the three limits, the global vault, and the projects (change
 their vault to an existing folder, or remove them from the memory; nothing is deleted). Switching between Jev and Laya
 clears the cutoffs. Choosing Jev or a remote embeddings provider shows its warning. A value the schema refuses is
@@ -272,7 +310,7 @@ be read shows a warning naming the cause.
 
 ## Warnings
 
-`/memory-setup` shows one warning before writing, with a line for each that applies: the observer and the memory
+`/memory-setup` shows one warning before writing, with a line for each that applies: the observer, the consolidator and the memory
 agent send conversation and note content to the chosen chat models (always); TypeSafe receives user messages and candidate
 notes when Jev is selected; remote embeddings providers receive note content, **secrets included**, and queries.
 The warning is plain: nothing is asked, and setup continues. A remote provider already in the config is an explicit selection and is never replaced by a

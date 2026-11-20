@@ -64,15 +64,15 @@ Then restart pi. To try it for one run without installing: `pi -e npm:pi-obsidia
 
 1. **Create the global vault.** Run `/memory-setup` in pi. It asks:
    - where the global vault goes: a new folder, or an existing folder (an Obsidian vault you already have works);
-   - which chat model runs the observer, which turns the conversation into observations for compaction; the model in
-     use is the default;
+   - which chat model runs the observer and the consolidator: they turn the conversation into observations and the
+     oldest observations into notes; the model in use is the default;
    - which chat model runs the memory agent; the list is sorted by price, cheapest first.
 
    It shows what each choice sends where, then writes the config and the vault.
 2. **Give each project its own vault.** Open pi in the project folder and run `/memory-init`. A folder without a
    project vault uses the global vault only.
-3. **Use pi as usual.** Say "remember that …" to save something. Until the next release, nothing else is saved to the
-   vaults.
+3. **Use pi as usual.** Say "remember that …" to save something at once. The rest is saved on its own as the session
+   grows.
 
 Run `/memory-setup` again at any time to open the settings screen. Both commands need pi's interactive mode.
 
@@ -85,8 +85,11 @@ keeps only one compaction, so uninstall pi-observational-memory:
 2. Run `pi remove <source>` with that source.
 3. Restart pi.
 
-`/memory-doctor` warns while it is still loaded. Its files in `.memory/` are left as they are. Importing them into the
-vaults arrives with the next release.
+`/memory-doctor` warns while it is still loaded.
+
+To bring what it saved into the vaults, run `/memory-import` in each project, after `/memory-init`. It reads the topic
+files and the journey in `.memory/`, saves what is durable memory as notes, and tells you how many files it read and
+how many changes it made. The files in `.memory/` are left as they are.
 
 ## How it works
 
@@ -124,9 +127,13 @@ is in [docs/vault-format.md](docs/vault-format.md).
    tokens by default) and writes dated observations into the pi session. When the context reaches 150,000 tokens,
    memory compacts the session: the older part is replaced by a block with the memory map (the names of the notes in
    both vaults) and the observations, and the last 20,000 tokens are kept word for word. `/compact` and pi's own
-   compactions use the same block. A run that was compacted while it used tools goes on by itself. Observations stay
-   in the session: until the next release, only what you ask pi to remember is saved to the vaults. The cycle follows
-   pi-observational-memory.
+   compactions use the same block. A run that was compacted while it used tools goes on by itself.
+4. **Consolidation.** When the observations kept in the session pass 15,000 tokens, the consolidator turns the oldest
+   ones into notes, in the background, until about 10,000 tokens of observations remain: it adds, updates, archives or
+   replaces notes in the global or the project vault. It never asks you anything: what it is unsure of is not saved.
+   Tasks, progress and history are not memory. They go to the journey, a short dated account of the session that stays
+   in the session and opens each compaction block. Observations already consolidated leave the block. The cycle
+   follows pi-observational-memory.
 
 You change notes in Obsidian whenever you want. pi must read a note before changing it, and a note you edited since
 then is never overwritten.
@@ -152,6 +159,7 @@ The bundled skill `obsidian-memory` teaches the agent where notes go and how to 
 | `/memory-init` | Gives the current project its own vault |
 | `/memory-doctor` | Checks the vaults, the config, the models and the keys, and says what is wrong |
 | `/memory-export` | Saves both vaults to a new `.zip` |
+| `/memory-import` | Saves what pi-observational-memory wrote in `.memory/` as notes |
 
 ### Guards
 
@@ -183,6 +191,11 @@ All settings are changed in the `/memory-setup` screen, or by asking pi. You nev
 | `compaction.atContextTokens` | 150,000 | Context tokens at which memory compacts the session |
 | `compaction.tailTokens` | 20,000 | Tokens of the latest conversation kept word for word after a compaction |
 | `compaction.mapTokens` | 2,000 | Tokens of the memory map in the compaction block |
+| Consolidator model | the observer model at setup | Chat model that turns the oldest observations into notes |
+| `consolidator.thinking` | medium | Thinking level of the consolidator model |
+| `consolidator.atPoolTokens` | 15,000 | Tokens of observations in the session at which the consolidator runs |
+| `consolidator.poolTargetTokens` | 10,000 | Tokens of observations left in the session after it runs |
+| `consolidator.journeyTokens` | 1,000 | Size of the journey; older parts are shortened past this |
 | Memory agent model | chosen at setup | Chat model that searches and reads notes for each message |
 | `context.budgetChars` | 12,000 | Characters of relevant notes added at session start and to each message (Don't forget notes do not count) |
 | `limits.maxStatementChars` | 100 | Longest note name |
@@ -207,8 +220,8 @@ folder (OneDrive, iCloud, Dropbox).
 
 ## Privacy
 
-- The observer and the memory agent send conversation and note content to the chat models you choose.
-- Observations are kept in the pi session file, like the conversation.
+- The observer, the consolidator and the memory agent send conversation and note content to the chat models you choose.
+- Observations and the journey are kept in the pi session file, like the conversation.
 - Jev sends your messages, candidate notes and shell commands to TypeSafe.
 - Search by meaning runs on your machine by default; OpenAI or Google receive note content and queries only if you
   choose them.
@@ -227,6 +240,7 @@ thing it offers to change is a blank note, after asking you.
 | No relevant notes are ever added | Check that `TYPESAFE_API_KEY` is set, then run `/memory-doctor` |
 | "Refused: the shell-edit guard could not check this command" | Same: the shell-edit guard needs Jev |
 | "Memory observer failed: …" | The text after the colon names the cause, for example a model without a key. It tries again a minute later; `/memory-doctor` checks the observer model |
+| "Memory consolidation failed: …" | The text after the colon names the cause. It tries again a minute later; `/memory-doctor` checks the consolidator model |
 | "… so pi compacted it on its own" | The observer had not covered the start of the session yet. Nothing to do: it catches up, and the next compaction uses its observations |
 | "Memory could not compact the session: …" | The text after the colon names the cause, for example "Nothing to compact (session too small)". Nothing was compacted, and a run the compaction interrupted goes on. Nothing to do: memory tries again once the conversation has grown |
 | `No API key found for "<provider>"` in `/memory-doctor` | Log in to that provider in pi (`/login`) or set its key |
@@ -236,7 +250,9 @@ thing it offers to change is a blank note, after asking you.
 - Paths are compared ignoring case on Windows and macOS and with case on Linux, whatever the volume.
 - The vault guard does not see a vault path the shell builds indirectly (variables, globs, scripts), tools of other
   extensions, or foreground subagents.
-- Until the next release, observations are not turned into notes: the vaults get only what you ask pi to remember.
+- How well the consolidator judges what to save is checked only by end-to-end scenarios: a stated rule is saved, a
+  task is not, and a rule and a secret stated in Portuguese become English notes that keep the secret as written.
+- Consolidation starts at the end of a turn. Observations made after the last turn wait for the next one.
 - With pi-observational-memory also installed, only one of the two compactions is kept (see
   [Coming from pi-observational-memory](#coming-from-pi-observational-memory)).
 

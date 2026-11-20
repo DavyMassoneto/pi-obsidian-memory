@@ -4,7 +4,7 @@ How memory is organized inside a vault (global or project). Decided with the use
 
 The format and resource operations below exist today, and so does the synchronizer, which runs at session start and
 before each search. Setup and init write the templates to `_templates/`. Don't forget notes are injected at session
-start. The commands are `/memory-setup`, `/memory-init`, `/memory-doctor` and `/memory-export`. The pi tools today are
+start. The commands are `/memory-setup`, `/memory-init`, `/memory-doctor`, `/memory-export` and `/memory-import`. The pi tools today are
 `memory_add`, `memory_search`, `memory_get`, `memory_update`, `memory_archive` and `memory_succeed`; see [ROADMAP.md](ROADMAP.md).
 
 ## Layout

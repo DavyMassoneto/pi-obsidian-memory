@@ -23,10 +23,11 @@ history.
    own: Obsidian notes. Before building anything, check whether pi-hermes-memory already
    does it, and reuse only what is needed. The same rule holds for pi-observational-memory (OM; MIT, Amos
    Blomqvist): its copyright notice is kept where we copy a substantial portion of its code.
-7. **Language.** Notes are stored in English. The user can talk in any language. Missing: proof that the consolidator
-   writes English notes (judgement tested with a real model).
+7. **Language.** Notes are stored in English. The user can talk in any language. Proven by the consolidation end-to-end
+   scenario: a rule stated in Portuguese is saved as an English note.
 11. **Secrets.** The vault is the user's own vault: secrets are saved like any other memory,
-    with no masking or blocking. Missing: proof that the consolidator saves a stated secret as written.
+    with no masking or blocking. Proven by the consolidation end-to-end scenario: a stated secret is saved with its
+    exact string.
 12. **Vault access only through the memory system.** The LLM never reads or writes vault files directly: the extension
     blocks pi's file tools on vault paths, and the LLM uses the memory tools, which bring search with embeddings.
     The user edits the vault freely in Obsidian. Missing: a Jev guard that refuses shell commands which create or
