@@ -1,6 +1,7 @@
 export * from "./change-report/index.ts"
 export * from "./completion/index.ts"
 export * from "./context/index.ts"
+export * from "./entry-parts.ts"
 export * from "./extension.ts"
 export * from "./memory-add/index.ts"
 export * from "./memory-archive/index.ts"

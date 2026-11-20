@@ -11,3 +11,13 @@ export interface ShellEditContext {
 }
 
 export type ShellEditHandler = (event: ToolCallEvent, ctx: ShellEditContext) => Promise<ToolCallEventResult | undefined>
+
+export type ShellEditEnabled = () => boolean
+
+export type ShellEditDecision = "check" | "pass"
+
+export interface SessionKeyFlags {
+  shellEditGuard?: boolean
+}
+
+export type SessionKeyPayload = SessionKeyFlags | string | number | null | undefined

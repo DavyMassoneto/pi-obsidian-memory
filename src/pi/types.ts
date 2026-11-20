@@ -8,9 +8,14 @@ import type { MemorySearchTool } from "#src/pi/memory-search"
 import type { MemorySessionKeeper, SessionShutdownHandler } from "#src/pi/memory-session"
 import type { MemorySucceedTool } from "#src/pi/memory-succeed"
 import type { MemoryUpdateTool } from "#src/pi/memory-update"
-import type { AgentStartHandler, BeforeCompactHandler, TurnEndHandler } from "#src/pi/observation-cycle"
+import type {
+  AgentStartHandler,
+  BeforeCompactHandler,
+  ObservationRuntime,
+  TurnEndHandler,
+} from "#src/pi/observation-cycle"
 import type { SessionStartHandler } from "#src/pi/session-start"
-import type { ShellEditHandler } from "#src/pi/shell-edit-guard"
+import type { SessionKeyPayload, ShellEditHandler } from "#src/pi/shell-edit-guard"
 import type { ToolCallHandler } from "#src/pi/vault-guard"
 import type { LocalModelAccess, ObservationsConsolidated, ObservationsRecorded } from "#src/usecases"
 
@@ -26,6 +31,7 @@ export interface ExtensionRegistrar {
   onBeforeAgentStart(handler: BeforeAgentStartHandler): void
   onToolCall(handler: ToolCallHandler): void
   onShellToolCall(handler: ShellEditHandler): void
+  onSessionKey(handler: SessionKeyHandler): void
   onTurnEnd(handler: TurnEndHandler): void
   onAgentStart(handler: AgentStartHandler): void
   appendObservations(data: ObservationsRecorded): void
@@ -46,4 +52,27 @@ export interface CommandDeps {
 export interface ExtensionOverrides {
   completionOf?: CompletionFactory
   localModel?: LocalModelAccess
+}
+
+export interface ToolDeps {
+  paths: MemoryPaths
+  sessions: MemorySessionKeeper
+}
+
+export interface OptionalDeps {
+  configPath: string
+  cycle: ObservationRuntime
+}
+
+export type SessionKeyHandler = (payload: SessionKeyPayload) => void
+
+export type EntryMode = "full" | "read-only"
+
+export interface EntryParts {
+  tools: readonly string[]
+  commands: readonly string[]
+  injection: boolean
+  vaultGuard: boolean
+  shellEditGuard: boolean
+  cycle: boolean
 }

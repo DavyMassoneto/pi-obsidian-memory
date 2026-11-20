@@ -171,6 +171,33 @@ The bundled skill `obsidian-memory` teaches the agent where notes go and how to 
   hardlink. If so, the call is refused and the agent is told to use `edit` or `write`. When Jev cannot answer, the
   call is refused.
 
+### Read-only entry
+
+A second entry, `src/pi/read-only-extension.ts`, is not in the package manifest, so it is never loaded by default. Load
+it by path, for example `pi -e <package folder>/src/pi/read-only-extension.ts`, in a session that should read memory
+but never change it. It registers:
+
+- the tools `memory_search` and `memory_get`;
+- no `/memory-*` command;
+- the injection of memory into the prompt (session start and each message);
+- the vault guard.
+
+It does not register the other four memory tools, the observation cycle (no observer, no memory compaction, no
+consolidator: pi compacts such a session on its own) or the shell-edit guard.
+
+### Shell-edit guard key
+
+Another extension can turn the shell-edit guard off for one session. It emits an event on the pi event bus:
+
+- **Channel:** `pi-obsidian-memory:session-key`.
+- **Payload:** `{ shellEditGuard: boolean }`.
+- **Default:** the guard is on. Only a payload with `shellEditGuard: false` turns it off; `shellEditGuard: true` turns it
+  back on. The last payload wins.
+- **Malformed payload:** anything else (no payload, `null`, an object without the key, `"false"`, `0`) leaves the guard on,
+  or turns it on again.
+
+The key affects only the shell-edit guard. The vault guard does not change.
+
 ### Dashboard
 
 Each vault gets a `Memory.base` file: an Obsidian view of all notes, the Don't forget notes and the archive. Your edits
@@ -255,6 +282,18 @@ thing it offers to change is a blank note, after asking you.
 - Consolidation starts at the end of a turn. Observations made after the last turn wait for the next one.
 - With pi-observational-memory also installed, only one of the two compactions is kept (see
   [Coming from pi-observational-memory](#coming-from-pi-observational-memory)).
+- **Index lock.** The search index is shared by every pi session of the same agent folder. Opening, reading and writing
+  it wait for a lock while another live process holds it. The wait is synchronous and Esc does not stop it. It ends when
+  the other process releases the lock; to end a wait that does not finish, close the pi session that holds the lock or
+  end its process. The system then releases the lock: a process that dies never leaves it held, and a reused process ID
+  blocks nobody.
+- **Process without the lock.** A process that runs the memory without the lock does not see it. A collision with it
+  still returns "unavailable" at once instead of waiting.
+- **Index corrupted again.** If the index becomes corrupt again while one process keeps a connection to it open and
+  another process recovers it, the recovery can fail or be lost. On Windows the swap fails with `EPERM`, and the second
+  process's operation returns without that vault. On Linux and macOS the swap succeeds, and the first process writes to
+  the old file, already unnamed, and loses those writes until it opens the index again (POSIX `rename` semantics, not
+  measured here). The index is rebuilt from the notes, so no note is lost.
 
 ## Development
 

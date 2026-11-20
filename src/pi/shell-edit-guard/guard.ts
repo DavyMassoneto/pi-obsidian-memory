@@ -3,12 +3,13 @@ import { isToolCallEventType, type ToolCallEvent } from "@earendil-works/pi-codi
 import { JEV_MISSING } from "#src/pi/relevant-memory"
 import { checkShellEdit, type ShellEditJevSource } from "#src/usecases"
 import { shellEditClassifierPrompt } from "./prompt.ts"
-import type { ShellEditContext, ShellEditHandler } from "./types.ts"
+import { shellEditDecision } from "./session-key.ts"
+import type { ShellEditContext, ShellEditEnabled, ShellEditHandler } from "./types.ts"
 
-export function shellEditGuardHandler(): ShellEditHandler {
+export function shellEditGuardHandler(isEnabled: ShellEditEnabled): ShellEditHandler {
   return async (event, ctx) => {
     const command = shellCommandOf(event)
-    if (typeof command !== "string") return undefined
+    if (typeof command !== "string" || shellEditDecision(isEnabled(), command) === "pass") return undefined
     const result = await checkShellEdit({ command, cwd: ctx.cwd }, { jev: jevSourceOf(ctx), signal: signalOf(ctx) })
     if (result.succeeded) return undefined
     return { block: true, reason: result.problems.join(" ") }
