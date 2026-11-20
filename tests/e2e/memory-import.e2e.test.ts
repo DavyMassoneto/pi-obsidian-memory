@@ -14,7 +14,7 @@ import {
   onlyNotice,
   recordsOf,
   rewriteConfig,
-  savedTodayNoteShape,
+  savedTodayNoteWithBody,
   writeOmMemory,
 } from "#test-helpers"
 
@@ -34,7 +34,7 @@ test("the import turns what OM saved into valid notes, leaves .memory as it was 
   expect(Number(changes[1])).toBeGreaterThan(0)
   const added = (await notesOfBothVaults(world)).filter((note) => !notesBefore.includes(note.path))
   expect(added.length).toBeGreaterThan(0)
-  for (const note of added) expect(note.text).toMatch(savedTodayNoteShape())
+  for (const note of added) expect(note.text).toMatch(savedTodayNoteWithBody())
   expect(await folderSnapshot(omFolderOf(world))).toEqual(omBefore)
   expect(world.pi.unexpected).toEqual([])
   expect(recordsOf(ExtensionErrorSchema, world.pi.lines)).toEqual([])

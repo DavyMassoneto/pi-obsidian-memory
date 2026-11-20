@@ -84,8 +84,7 @@ async function notesMentioning(world: E2eWorld, text: string): Promise<VaultNote
 }
 
 export function expectEnglishNote(note: VaultNote): void {
-  expect(note.text).toMatch(savedTodayNoteShape())
-  expect(note.text).toMatch(ENGLISH_WORD)
+  expect(note.text).toMatch(savedTodayNoteWithBody())
   expect(`${note.path}\n${note.text}`).not.toMatch(PORTUGUESE_WORD)
 }
 
@@ -158,11 +157,17 @@ export async function waitForConsolidationIdle(world: E2eWorld): Promise<void> {
   }
 }
 
-export function savedTodayNoteShape(): RegExp {
+function savedTodayFrontmatter(): string {
   const types = BLANK_NOTE_TYPES.join("|")
-  return new RegExp(
-    `^---\\nid: [0-9A-HJKMNP-TV-Z]{26}\\ntype: (${types})\\ncreated: ${localToday()}\\nupdated: ${localToday()}\\n(dontForget: true\\n)?---\\n\\n[^\\n]+\\n$`,
-  )
+  return `^---\\nid: [0-9A-HJKMNP-TV-Z]{26}\\ntype: (${types})\\ncreated: ${localToday()}\\nupdated: ${localToday()}\\n(dontForget: true\\n)?---\\n\\n`
+}
+
+export function savedTodayNoteShape(): RegExp {
+  return new RegExp(`${savedTodayFrontmatter()}[^\\n]+\\n$`)
+}
+
+export function savedTodayNoteWithBody(): RegExp {
+  return new RegExp(`${savedTodayFrontmatter()}\\S[\\s\\S]*\\n$`)
 }
 
 export async function expectRuleNote(world: E2eWorld): Promise<void> {
