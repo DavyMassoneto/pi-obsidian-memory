@@ -16,7 +16,8 @@ const IMPORTED_MATERIAL = `Review only material: a memory file that pi-observati
 for durable memory. What the file says about a project is about the registered project, under whatever name the file uses.`
 
 const MEMORY_RULES = ` Write notes in English,
-without translating or masking secret strings. Global memory describes the user; project memory describes
+without translating or masking secret strings. A secret the user stated (a token, a key, a password) is a fact to
+save, with its exact string. Global memory describes the user; project memory describes
 this project. A global note states the user's rule or fact in general terms: never a project's name, paths,
 files, commits or examples. New detail on the same point updates its existing note; a point no longer true is archived
 or succeeded. Never delete. Search for the same point first; inspect explicitSaves to avoid saving it twice.
