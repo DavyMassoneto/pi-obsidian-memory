@@ -1,6 +1,12 @@
 import type { MemoryPiContext } from "#src/pi/context"
 import { compactionRetryDue, rawTokensSinceLastCompaction, type SessionRecord } from "#src/usecases"
-import { COMPACTION_CANCELLED, COMPACTION_NOT_DONE, RUN_GOES_ON } from "./constants.ts"
+import {
+  COMPACTION_CANCELLED,
+  COMPACTION_DONE,
+  COMPACTION_NOT_DONE,
+  COMPACTION_STARTED,
+  RUN_GOES_ON,
+} from "./constants.ts"
 import { tell } from "./notice.ts"
 import { recordsOf } from "./records.ts"
 import type { SendResume } from "./types.ts"
@@ -31,10 +37,12 @@ export class CompactionTrigger {
   run(ctx: MemoryPiContext, resume: boolean): void {
     const attemptedAtTokens = rawTokensSinceLastCompaction(recordsOf(ctx.sessionManager.getBranch()))
     this.#running = true
+    tell(ctx, COMPACTION_STARTED, "info")
     ctx.compact({
       onComplete: () => {
         this.#running = false
         this.#failedAtTokens = null
+        tell(ctx, COMPACTION_DONE, "info")
         if (resume) this.#resume()
       },
       onError: (error) => {

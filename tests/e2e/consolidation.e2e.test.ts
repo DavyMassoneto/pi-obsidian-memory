@@ -1,7 +1,7 @@
 import { expect, test } from "vitest"
 
 import { JOURNEY_HEADING, OBSERVATION_SEPARATOR } from "#src/domain"
-import { CONSOLIDATION_SAVED } from "#src/pi"
+import { CONSOLIDATION_SAVED, CONSOLIDATOR_STARTED } from "#src/pi"
 import {
   CONSOLIDATION_WAIT_MS,
   compactionsIn,
@@ -37,6 +37,7 @@ test("a stated project rule becomes a note in the existing folder, the task does
 
   await expectRuleNote(world)
   expect(await noteMentioning(world, TASK_MARKER)).toEqual([])
+  expect(noticesStarting(world, CONSOLIDATOR_STARTED).length).toBeGreaterThan(0)
   expect(noticesStarting(world, CONSOLIDATION_SAVED).length).toBeGreaterThan(0)
   const entries = await consolidatedEntriesIn(file)
   expect(entries.some((entry) => entry.data.journey.trim().length > 0)).toBe(true)

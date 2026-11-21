@@ -103,13 +103,17 @@ record of what was consolidated stay in the session, in `obsidian-memory-consoli
 - **Observer.** It runs at `agent_start` and at each `turn_end`. It cuts the conversation not observed yet into chunks
   of about `observer.chunkTokens` tokens, breaking only where pi can cut, and starts up to `observer.concurrency`
   observers at a time. At the live end of the session it waits for a full chunk. Each observer sends its chunk to
-  `observer.model` and saves the dated observations it returns. A failed chunk stays unobserved and is tried again
+  `observer.model` and saves the dated observations it returns. The user is told `Memory observer started: <n>
+  chunk(s).` when observers start and `Memory observer saved <n> observation(s).` when each one ends; notices that
+  arrive together are shown as one, a line each. A failed chunk stays unobserved and is tried again
   at the first `turn_end` or `agent_start` a minute or more later; the user is told `Memory observer failed: <cause>.
   It tries again in a minute.` once per session for each cause. The extension's own hidden messages are not observed,
   nor are shell commands the user ran with `!!` (their output is kept from the model).
 - **Trigger.** After each `turn_end`, memory compacts the session when the context has at least
   `compaction.atContextTokens` tokens and the conversation since the last compaction is longer than
   `compaction.tailTokens` by at least `observer.chunkTokens`. Nothing is triggered while pi retries a failed turn.
+  The user is told `Memory is compacting the session: the context reached its limit.` when it starts and `Memory
+  compacted the session.` when it ends.
   When the turn ended with tool results, the run goes on after the compaction with a hidden message, even when the
   compaction fails; only `Compaction cancelled` (Esc) leaves the run stopped. After a failed attempt the trigger waits
   until the conversation since the last compaction gets shorter, or longer by at least `observer.chunkTokens`.
@@ -139,8 +143,9 @@ record of what was consolidated stay in the session, in `obsidian-memory-consoli
   saved. Then it writes the journey: one dated segment of two to five sentences for this batch, descriptive and in
   the past tense, with the oldest segments shortened once the journey passes `consolidator.journeyTokens`. The
   session records the consolidated observations and the journey; from then on the compaction block opens with the
-  journey and leaves those observations out. The status line shows `memory: consolidating` while it runs, and the
-  user is told `Memory consolidated: <n> change(s) to the vaults.` when a note changed. A failed run is tried again
+  journey and leaves those observations out. The status line shows `memory: consolidating` while it runs. The user
+  is told `Memory consolidator started: <n> observation(s), about <t> tokens.` when it starts and `Memory
+  consolidated: <n> observation(s), <m> change(s) to the vaults.` when it ends. A failed run is tried again
   at the first `turn_end` or `agent_start` a minute or more later; the user is told `Memory consolidation failed:
   <cause>. It tries again in a minute.` once per cause. Compaction does not wait for the consolidator.
 - **Import.** `/memory-import` reads what pi-observational-memory saved in the `.memory` folder of the registered

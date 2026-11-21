@@ -13,10 +13,16 @@ import {
   savedNotesIn,
   selectPromotion,
 } from "#src/usecases"
-import { CONSOLIDATION_FAILED, CONSOLIDATION_SAVED, OBSERVER_RETRY_NOTICE, OBSERVER_UNEXPECTED } from "./constants.ts"
-import { tell } from "./notice.ts"
+import { CONSOLIDATION_FAILED, OBSERVER_RETRY_NOTICE, OBSERVER_UNEXPECTED } from "./constants.ts"
+import { consolidatedNotice, consolidatorStartedNotice, type NoticeQueue, tell } from "./notice.ts"
 import { recordsOf } from "./records.ts"
 import type { CancelSignal, ObservationCycleDeps, Promotion } from "./types.ts"
+
+function tokensOf(observations: LedgerObservation[]): number {
+  let total = 0
+  for (const observation of observations) total += observation.tokens
+  return total
+}
 
 export class Consolidation {
   #deps: ObservationCycleDeps
@@ -24,10 +30,12 @@ export class Consolidation {
   #running = false
   #failedAtMs: number | null = null
   #told = new Set<string>()
+  #notices: NoticeQueue
 
-  constructor(deps: ObservationCycleDeps, cancel: CancelSignal) {
+  constructor(deps: ObservationCycleDeps, cancel: CancelSignal, notices: NoticeQueue) {
     this.#deps = deps
     this.#cancel = cancel
+    this.#notices = notices
   }
 
   reset(): void {
@@ -46,6 +54,7 @@ export class Consolidation {
     if (promoted.length === 0) return
     this.#running = true
     this.#showStatus(ctx, true)
+    tell(ctx, consolidatorStartedNotice(promoted.length, tokensOf(promoted)), "info")
     void this.#run(ctx, { records, ledger, promoted })
   }
 
@@ -94,7 +103,7 @@ export class Consolidation {
     const data = consolidatedData(promoted, ledger, consolidated.journey)
     if (data) this.#deps.appendConsolidated(data)
     const changes = consolidated.applied.filter((write) => write.status === "applied").length
-    if (changes > 0) tell(ctx, `${CONSOLIDATION_SAVED} ${changes} change(s) to the vaults.`, "info")
+    this.#notices.add(ctx, consolidatedNotice(promoted.length, changes))
   }
 
   #showStatus(ctx: MemoryPiContext, active: boolean): void {

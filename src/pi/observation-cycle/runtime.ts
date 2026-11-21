@@ -19,7 +19,7 @@ import {
 import { CompactionTrigger } from "./compaction-trigger.ts"
 import { Consolidation } from "./consolidation.ts"
 import { OBSERVER_FAILED, OBSERVER_RETRY_NOTICE, OBSERVER_UNEXPECTED } from "./constants.ts"
-import { tell } from "./notice.ts"
+import { NoticeQueue, observerSavedNotice, observerStartedNotice, tell } from "./notice.ts"
 import { recordsOf } from "./records.ts"
 import type { IdleRelease, ObservationCycleDeps } from "./types.ts"
 
@@ -30,13 +30,14 @@ export class ObservationRuntime {
   #told = new Set<string>()
   #abort = new AbortController()
   #idle: IdleRelease[] = []
+  #notices = new NoticeQueue()
   readonly compaction: CompactionTrigger
   readonly consolidation: Consolidation
 
   constructor(deps: ObservationCycleDeps) {
     this.#deps = deps
     this.compaction = new CompactionTrigger(() => deps.sendResume())
-    this.consolidation = new Consolidation(deps, () => this.#abort.signal)
+    this.consolidation = new Consolidation(deps, () => this.#abort.signal, this.#notices)
   }
 
   reset(): void {
@@ -45,6 +46,7 @@ export class ObservationRuntime {
     this.#inFlight = []
     this.#failed = []
     this.#told = new Set<string>()
+    this.#notices.clear()
     this.compaction.reset()
     this.consolidation.reset()
     this.#releaseIdle()
@@ -52,6 +54,7 @@ export class ObservationRuntime {
 
   stop(): void {
     this.#abort.abort()
+    this.#notices.clear()
   }
 
   async settings(ctx: MemoryPiContext): Promise<CycleSettings | null> {
@@ -68,6 +71,7 @@ export class ObservationRuntime {
     const records = recordsOf(ctx.sessionManager.getBranch())
     const plan = this.#plan(records, settings, [], null)
     for (const range of plan) this.#start(ctx, records, range, [])
+    this.#tellStarted(ctx, plan)
     this.consolidation.start(ctx, settings)
   }
 
@@ -85,6 +89,7 @@ export class ObservationRuntime {
         attempted.push(range.fromId)
         this.#start(ctx, records, range, [signal])
       }
+      this.#tellStarted(ctx, plan)
       await this.whenIdle(signal)
     }
   }
@@ -120,6 +125,10 @@ export class ObservationRuntime {
       nowMs: nowMs(),
       until,
     })
+  }
+
+  #tellStarted(ctx: MemoryPiContext, plan: ChunkRange[]): void {
+    if (plan.length > 0) tell(ctx, observerStartedNotice(plan.length), "info")
   }
 
   #start(ctx: MemoryPiContext, records: SessionRecord[], range: ChunkRange, signals: AbortSignal[]): void {
@@ -162,6 +171,7 @@ export class ObservationRuntime {
   #commit(ctx: MemoryPiContext, range: ChunkRange, drafts: ObserverDraft[]): void {
     const { used } = ledgerOf(recordsOf(ctx.sessionManager.getBranch()))
     this.#deps.appendObservations(recordedData(range, assignObservationIds(drafts, used)))
+    this.#notices.add(ctx, observerSavedNotice(drafts.length))
   }
 
   #reportFailure(ctx: MemoryPiContext, range: ChunkRange, problems: string[]): void {

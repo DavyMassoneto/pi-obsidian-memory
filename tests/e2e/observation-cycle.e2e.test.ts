@@ -1,6 +1,7 @@
 import { expect, test } from "vitest"
 
 import { SUMMARY_LEAD } from "#src/domain"
+import { OBSERVER_SAVED, OBSERVER_STARTED } from "#src/pi"
 import { COMPACTION_DETAILS_TYPE } from "#src/usecases"
 import {
   CYCLE_FACTS,
@@ -8,6 +9,7 @@ import {
   compactionsIn,
   cycleWorld,
   ExtensionErrorSchema,
+  noticesStarting,
   OBSERVATION_LINE,
   observationEntriesIn,
   recordsOf,
@@ -25,6 +27,8 @@ test("observations are kept in the session, and a compaction builds the block fr
   for (const fact of CYCLE_FACTS) await world.pi.prompt(fact, [])
   const file = await world.pi.sessionFile()
   await waitForObservations(file, 1)
+  expect(noticesStarting(world, OBSERVER_STARTED).length).toBeGreaterThan(0)
+  expect(noticesStarting(world, OBSERVER_SAVED).length).toBeGreaterThan(0)
 
   await world.pi.compact()
 

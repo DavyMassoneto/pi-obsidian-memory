@@ -89,6 +89,7 @@ Every milestone:
   - [x] The import of what OM saved in `.memory/`, by command.
   - [x] The settings of the consolidator, in [config.md](config.md), written by `/memory-setup`.
   - [x] End-to-end scenarios E6 and E7.
+  - [x] Notices when the observer, the consolidator and the triggered compaction start and end.
   - [x] The judgement items a real model proves in E6: a stated rule becomes a note of a closed type in the existing
     folder, the task and its progress are not saved, a rule stated in Portuguese is saved in English (VISION 7), and a
     stated secret is saved as written (VISION 11).

@@ -1,10 +1,12 @@
 import { expect, test } from "vitest"
 
+import { COMPACTION_DONE, COMPACTION_STARTED } from "#src/pi"
 import {
   compactionsIn,
   ExtensionErrorSchema,
   isResume,
   NotifySchema,
+  noticesStarting,
   recordsOf,
   refusedCompactionWorld,
   TRIGGER_PROMPT,
@@ -29,6 +31,8 @@ test("crossing the threshold mid-run compacts between turns and resumes the run 
   expect(resumes.length).toBeGreaterThan(0)
   for (const resume of resumes) expect(resume.display).toBe(false)
   expect(timeline.findIndex(isResume)).toBeGreaterThan(firstCompaction)
+  expect(noticesStarting(world, COMPACTION_STARTED).length).toBeGreaterThan(0)
+  expect(noticesStarting(world, COMPACTION_DONE).length).toBeGreaterThan(0)
   expect(world.pi.unexpected).toEqual([])
   expect(recordsOf(ExtensionErrorSchema, world.pi.lines)).toEqual([])
 })

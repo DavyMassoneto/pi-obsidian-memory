@@ -63,8 +63,8 @@ export function statusStates(world: E2eWorld, key: string): (string | undefined)
 
 export function noticesStarting(world: E2eWorld, prefix: string): string[] {
   return recordsOf(NotifySchema, world.pi.lines)
-    .map((notice) => notice.message)
-    .filter((message) => message.startsWith(prefix))
+    .flatMap((notice) => notice.message.split("\n"))
+    .filter((line) => line.startsWith(prefix))
 }
 
 export async function messageTwiceOnLaya(settings: MemoryConfig["decisionModel"]): Promise<E2eWorld> {

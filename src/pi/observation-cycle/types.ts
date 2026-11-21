@@ -6,7 +6,7 @@ import type {
 } from "@earendil-works/pi-coding-agent"
 
 import type { CompletionFactory } from "#src/pi/completion"
-import type { MemoryPaths, MemoryPiContext } from "#src/pi/context"
+import type { MemoryPaths, MemoryPiContext, NotifyLevel } from "#src/pi/context"
 import type { MemorySessionKeeper } from "#src/pi/memory-session"
 import type {
   Ledger,
@@ -32,6 +32,17 @@ export type AppendConsolidated = (data: ObservationsConsolidated) => void
 export type SendResume = () => void
 
 export type IdleRelease = () => void
+
+export type NoticeTimer = ReturnType<typeof setTimeout>
+
+export interface NoticeUi {
+  notify(message: string, type?: NotifyLevel): void
+}
+
+export interface NoticeTarget {
+  hasUI: boolean
+  ui: NoticeUi
+}
 
 export type CancelSignal = () => AbortSignal
 
