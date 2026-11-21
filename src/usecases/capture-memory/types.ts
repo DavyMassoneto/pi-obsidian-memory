@@ -1,14 +1,15 @@
 import type {
   CaptureAction,
+  CaptureCadenceSettings,
+  CaptureDecision,
   CaptureInput,
-  CaptureKind,
   CaptureObservation,
+  CaptureRejected,
   ChatModelReference,
   CompletionPort,
-  MaterialItem,
   MemoryScope,
   ReadObservation,
-  ThinkingLevel,
+  TranscriptMessage,
 } from "#src/services"
 import type { Failed, Succeeded } from "#src/shared"
 import type { ArchiveMemoryResult } from "#src/usecases/archive-memory"
@@ -17,12 +18,25 @@ import type { MemoryResolutionRefusal } from "#src/usecases/resolve-memory"
 import type { SucceedMemoryResult } from "#src/usecases/succeed-memory"
 import type { UpdateMemoryResult } from "#src/usecases/update-memory"
 
-export type { CompletionPort, CompletionRequest, MaterialItem } from "#src/services"
+export type {
+  CaptureCadenceSettings,
+  CaptureLogEntry,
+  CaptureTally,
+  CompletionPort,
+  CompletionRequest,
+  FinishedTurn,
+  FlushMoment,
+  TranscriptMessage,
+  TurnOutcome,
+} from "#src/services"
+export { appendCaptureLog, captureLogPath, EMPTY_TALLY, shouldFlush, tallyTurn, tallyUserMessage } from "#src/services"
 
 export interface ExplicitSave {
   vault: MemoryScope
   path: string
 }
+
+export type CaptureSettingsResult = Succeeded<CaptureCadenceSettings> | MemoryResolutionRefusal
 
 export interface UnreadableNote {
   kind: "unreadable"
@@ -31,10 +45,7 @@ export interface UnreadableNote {
 }
 
 export interface CaptureRun {
-  kind: CaptureKind
-  material: MaterialItem[]
-  model: ChatModelReference
-  thinking: ThinkingLevel
+  messages: TranscriptMessage[]
   explicitSaves: ExplicitSave[]
 }
 
@@ -49,6 +60,9 @@ export interface AppliedWrite {
 export interface CaptureReport {
   reviewed: boolean
   applied: AppliedWrite[]
+  decisions: CaptureDecision[]
+  model: ChatModelReference | null
+  project: string | null
 }
 
 export interface CaptureFailure extends Failed {
@@ -66,17 +80,12 @@ export type WriteAction = Exclude<CaptureAction, NonWriteActions>
 
 export type FinishedWrite = UpdateMemoryResult | ArchiveMemoryResult | SucceedMemoryResult
 
-export interface StepSettings {
-  kind: CaptureKind
-  model: ChatModelReference
-  thinking: ThinkingLevel
-  signal: AbortSignal
-}
-
-export interface CaptureBase extends StepSettings {
+export interface CaptureBase {
   context: CaptureInput["context"]
   explicitSaves: ReadObservation[]
   limits: CaptureInput["limits"]
+  model: ChatModelReference
+  signal: AbortSignal
 }
 
 export interface ReviewTools {
@@ -84,6 +93,8 @@ export interface ReviewTools {
   complete: CompletionPort
   report: CaptureReport
 }
+
+export type RejectedStep = CaptureRejected
 
 export type NextStep = "continue" | "stop"
 

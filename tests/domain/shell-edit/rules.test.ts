@@ -17,7 +17,6 @@ test("a question fires when its answer is at or above its own cutoff", () => {
     in_place: 0.4,
     inline_code: 0.3,
     script_writes: 0.6,
-    copy_download: 0.5,
     hardlink: 0.2,
   }
   const scores = {
@@ -25,7 +24,6 @@ test("a question fires when its answer is at or above its own cutoff", () => {
     in_place: 0.39,
     inline_code: 0.31,
     script_writes: 0.59,
-    copy_download: 0,
     hardlink: 0.2,
   }
   expect(firedQuestions(scores, cutoffs)).toEqual(["redirection", "inline_code", "hardlink"])
@@ -37,7 +35,6 @@ test("no answer at or above its cutoff fires nothing", () => {
     in_place: 0.5,
     inline_code: 0.5,
     script_writes: 0.5,
-    copy_download: 0.5,
     hardlink: 0.5,
   }
   const scores = {
@@ -45,7 +42,6 @@ test("no answer at or above its cutoff fires nothing", () => {
     in_place: 0,
     inline_code: 0.1,
     script_writes: 0.2,
-    copy_download: 0.3,
     hardlink: 0.4,
   }
   expect(firedQuestions(scores, cutoffs)).toEqual([])
@@ -69,7 +65,6 @@ test("every question names the state path it looks at", () => {
     in_place: "`command`",
     inline_code: "`command`",
     script_writes: "`scripts[*].text`",
-    copy_download: "`command`",
     hardlink: "`command`",
   }
   expect(SHELL_EDIT_QUESTION_NAMES).toEqual(Object.keys(statePathByQuestion))

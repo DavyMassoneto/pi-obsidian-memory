@@ -43,7 +43,7 @@ export function dontForgetText(number: number, body: string): string {
 }
 
 export function relevantWorld(): Promise<E2eWorld> {
-  return configuredWorld({ session: "saved" })
+  return configuredWorld({ capture: "at-session-end", session: "saved" })
 }
 
 export async function restartMemory(world: E2eWorld): Promise<void> {

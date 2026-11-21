@@ -20,12 +20,12 @@ import {
   SETUP_AGENT_MODEL_TITLE,
   SETUP_ATTACH_OPTION,
   SETUP_CANCELLED,
+  SETUP_CAPTURE_MODEL_TITLE,
   SETUP_CREATE_OPTION,
   SETUP_DONE,
   SETUP_KEEP_VAULT_TITLE,
   SETUP_MODE_TITLE,
   SETUP_NO_MODEL,
-  SETUP_OBSERVER_MODEL_TITLE,
   SETUP_VAULT_PLACEHOLDER,
   SETUP_VAULT_TITLE,
 } from "./constants.ts"
@@ -107,14 +107,13 @@ async function prepareSetup(ctx: MemoryPiContext, registration: RegistrationCont
   return preparation.output
 }
 
-function modelResolved(model: ConfigRepairDraft["observer"]["model"]): boolean {
+function modelResolved(model: ConfigRepairDraft["capture"]["model"]): boolean {
   return typeof model.provider === "string" && typeof model.id === "string"
 }
 
 function noModelToChoose(ctx: MemoryPiContext, draft: ConfigRepairDraft): boolean {
   if (ctx.modelRegistry.getAvailable().length > 0) return false
-  const resolved = [draft.observer.model, draft.consolidator.model, draft.memoryAgent.model].every(modelResolved)
-  if (resolved) return false
+  if (modelResolved(draft.capture.model) && modelResolved(draft.memoryAgent.model)) return false
   ctx.ui.notify(SETUP_NO_MODEL, "error")
   return true
 }
@@ -125,16 +124,11 @@ function inUseOf(ctx: MemoryPiContext): CurrentModel {
 }
 
 async function chooseModels(ctx: MemoryPiContext, draft: ConfigRepairDraft): Promise<ConfigRepairDraft | null> {
-  const observer = await chooseModel(ctx, SETUP_OBSERVER_MODEL_TITLE, draft.observer.model, inUseOf(ctx))
-  if (!observer) return null
+  const capture = await chooseModel(ctx, SETUP_CAPTURE_MODEL_TITLE, draft.capture.model, inUseOf(ctx))
+  if (!capture) return null
   const agent = await chooseModel(ctx, SETUP_AGENT_MODEL_TITLE, draft.memoryAgent.model, {})
   if (!agent) return null
-  return {
-    ...draft,
-    observer: { ...draft.observer, model: observer },
-    consolidator: { ...draft.consolidator, model: observer },
-    memoryAgent: { model: agent },
-  }
+  return { ...draft, capture: { ...draft.capture, model: capture }, memoryAgent: { model: agent } }
 }
 
 async function confirmRepair(ctx: MemoryPiContext, draft: ConfigRepairDraft): Promise<boolean> {

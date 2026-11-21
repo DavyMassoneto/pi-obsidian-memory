@@ -3,21 +3,44 @@ import { Value } from "typebox/value"
 import { checkAgentVault, checkReadAction, hasReadIdentity, type MemoryIdentity } from "#src/domain/memory-agent"
 import { checkNoteText } from "#src/domain/note"
 import { checkMemoryFolder, checkVaultPath, joinVaultPath } from "#src/domain/vault-path"
-import { CaptureActionSchema } from "./schemas.ts"
-import type { CaptureAction, CaptureAdd, CaptureDraft, CaptureInput, CaptureResult } from "./types.ts"
+import { SCOPE_REASON_REQUIRED } from "./constants.ts"
+import { CaptureActionSchema, ProposalShapeSchema } from "./schemas.ts"
+import type { CaptureAction, CaptureAdd, CaptureDraft, CaptureInput, CaptureResult, ProposedAction } from "./types.ts"
 
 export function parseCaptureAction(text: string, input: CaptureInput): CaptureResult {
   try {
     const action = JSON.parse(text)
+    const proposed = summarize(action)
+    const missing = missingScopeReason(proposed)
+    if (missing.length > 0) return { succeeded: false, problems: missing, proposed }
     if (!Value.Check(CaptureActionSchema, action)) {
-      return { succeeded: false, problems: ["Invalid capture action"] }
+      return { succeeded: false, problems: ["Invalid capture action"], proposed }
     }
     const problems = checkCaptureAction(action, input)
-    if (problems.length > 0) return { succeeded: false, problems }
+    if (problems.length > 0) return { succeeded: false, problems, proposed }
     return { succeeded: true, output: action }
   } catch {
     return { succeeded: false, problems: ["Invalid capture JSON"] }
   }
+}
+
+function missingScopeReason(proposed: ProposedAction | undefined): string[] {
+  if (!proposed) return []
+  const { action, scopeReason } = proposed
+  if (action !== "add" && action !== "update" && action !== "succeed") return []
+  if (scopeReason && scopeReason.trim() !== "") return []
+  return [SCOPE_REASON_REQUIRED]
+}
+
+function summarize(parsed: ReturnType<typeof JSON.parse>): ProposedAction | undefined {
+  if (!Value.Check(ProposalShapeSchema, parsed)) return undefined
+  const action = parsed
+  const proposed: ProposedAction = { action: action.action }
+  if (action.vault) proposed.vault = action.vault
+  if (action.path) proposed.title = action.path
+  else if (action.note?.statement) proposed.title = action.note.statement
+  if (action.scopeReason) proposed.scopeReason = action.scopeReason
+  return proposed
 }
 
 function checkCaptureAction(action: CaptureAction, input: CaptureInput): string[] {

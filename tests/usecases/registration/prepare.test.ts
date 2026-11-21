@@ -12,7 +12,7 @@ import {
   writeRegistrationSnapshot,
 } from "#test-helpers"
 
-test("setup preparation proposes the selected model for the observer and the memory agent", async () => {
+test("missing config preparation supplies selected models without creating anything", async () => {
   const { root, context } = await registrationUsecaseFixture()
   const selectedModel = { provider: "chosen", id: "chat" }
   const result = await prepareMemorySetup({ selectedModel }, context)
@@ -21,53 +21,11 @@ test("setup preparation proposes the selected model for the observer and the mem
     output: {
       snapshot: { state: "missing", hash: null },
       selectedModel,
-      draft: {
-        observer: { model: selectedModel, thinking: "low", chunkTokens: 10000, concurrency: 4 },
-        memoryAgent: { model: selectedModel },
-      },
+      draft: { capture: { model: selectedModel }, memoryAgent: { model: selectedModel } },
     },
   })
   expect(await readdir(root)).toEqual([])
   await expectRegistrationLeaseReleased(context)
-})
-
-test("the selected model is proposed for the consolidator too", async () => {
-  const { root, context } = await registrationUsecaseFixture()
-  const selectedModel = { provider: "chosen", id: "chat" }
-  const result = await prepareMemorySetup({ selectedModel }, context)
-  expect(result).toMatchObject({
-    succeeded: true,
-    output: {
-      draft: {
-        consolidator: {
-          model: selectedModel,
-          thinking: "medium",
-          atPoolTokens: 15000,
-          poolTargetTokens: 10000,
-          journeyTokens: 1000,
-        },
-      },
-    },
-  })
-  expect(await readdir(root)).toEqual([])
-  await expectRegistrationLeaseReleased(context)
-})
-
-test("a consolidator model with a missing part takes the selection for that part only", async () => {
-  const { context, config } = await registrationUsecaseFixture()
-  await writeRegistrationSnapshot(
-    context,
-    JSON.stringify({
-      ...config,
-      ...customizedSettings(),
-      consolidator: { ...customizedSettings().consolidator, model: { provider: "kept", id: 7 } },
-    }),
-  )
-  const result = await prepareMemorySetup({ selectedModel: { provider: "chosen", id: "chosen-id" } }, context)
-  expect(result).toMatchObject({
-    succeeded: true,
-    output: { draft: { consolidator: { model: { provider: "kept", id: "chosen-id" }, thinking: "high" } } },
-  })
 })
 
 test("prepare owns the submitted model and config path before admission yields", async () => {
@@ -89,7 +47,7 @@ test("prepare owns the submitted model and config path before admission yields",
       snapshot: { state: "missing", hash: null },
       selectedModel: { provider: "submitted", id: "submitted-id" },
       draft: {
-        observer: { model: { provider: "submitted", id: "submitted-id" } },
+        capture: { model: { provider: "submitted", id: "submitted-id" } },
         memoryAgent: { model: { provider: "submitted", id: "submitted-id" } },
       },
     },
@@ -103,7 +61,7 @@ test("no selected model remains unresolved rather than inventing one", async () 
   const { root, context } = await registrationUsecaseFixture()
   expect(await prepareMemorySetup({ selectedModel: null }, context)).toMatchObject({
     succeeded: true,
-    output: { draft: { observer: { model: {} }, memoryAgent: { model: {} } } },
+    output: { draft: { capture: { model: {} }, memoryAgent: { model: {} } } },
   })
   expect(await readdir(root)).toEqual([])
 })
@@ -113,7 +71,7 @@ test("invalid nested fields keep valid siblings and use selection only for missi
   const text = JSON.stringify({
     ...config,
     ...customizedSettings(),
-    observer: { model: { provider: "kept", id: 7 }, thinking: "high", chunkTokens: 5000, concurrency: 2 },
+    capture: { model: { provider: "retained", id: 42 }, when: "at-session-end" },
     memoryAgent: { model: { provider: false, id: "retained-id" } },
     limits: { maxBodyChars: 321, maxStatementChars: -1, maxNotesPerFolder: 9 },
     unknown: "discard me",
@@ -125,7 +83,7 @@ test("invalid nested fields keep valid siblings and use selection only for missi
     succeeded: true,
     output: {
       draft: {
-        observer: { model: { provider: "kept", id: "chosen-id" }, thinking: "high", chunkTokens: 5000, concurrency: 2 },
+        capture: { model: { provider: "retained", id: "chosen-id" }, reviewEnabled: false, flushOnCompact: false },
         memoryAgent: { model: { provider: "chosen", id: "retained-id" } },
         limits: { maxBodyChars: 321, maxStatementChars: 100, maxNotesPerFolder: 9 },
         embeddings: customizedSettings().embeddings,
@@ -151,7 +109,7 @@ test("valid settings survive a different selection and malformed JSON stays a re
   const before = await registrationDiskTree(root)
   expect(await prepareMemorySetup({ selectedModel: null }, context)).toMatchObject({
     succeeded: true,
-    output: { draft: { replacementRequired: true, observer: { model: {} } } },
+    output: { draft: { replacementRequired: true, capture: { model: {} } } },
   })
   expect(await readFile(context.configPath, "utf8")).toBe("{malformed")
   expect(await registrationDiskTree(root)).toEqual(before)

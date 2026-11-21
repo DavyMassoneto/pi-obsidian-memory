@@ -14,6 +14,7 @@ const worldOptions: WorldOptions = {
   memory: "configured",
   tools: ["grep", "find", "ls"],
   modelCache: "shared",
+  capture: "at-session-end",
 }
 
 test("read, write, edit, grep, find and ls on the global or the project vault are refused and both vaults are unchanged", async () => {

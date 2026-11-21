@@ -5,9 +5,7 @@ export function emptyConfigFields(): ConfigFields {
     global: {},
     projects: [],
     limits: {},
-    observer: { model: {} },
-    compaction: {},
-    consolidator: { model: {} },
+    capture: { model: {} },
     memoryAgent: { model: {} },
     context: {},
     embeddings: {},
@@ -18,19 +16,14 @@ export function emptyConfigFields(): ConfigFields {
 export function productSettings(): Omit<MemoryConfig, "global" | "projects"> {
   return {
     limits: { maxBodyChars: 1000, maxStatementChars: 100, maxNotesPerFolder: 20 },
-    observer: {
+    capture: {
       model: { provider: "test-chat", id: "selected-chat" },
-      thinking: "low",
-      chunkTokens: 10000,
-      concurrency: 4,
-    },
-    compaction: { atContextTokens: 150000, tailTokens: 20000, mapTokens: 2000 },
-    consolidator: {
-      model: { provider: "test-chat", id: "selected-chat" },
-      thinking: "medium",
-      atPoolTokens: 15000,
-      poolTargetTokens: 10000,
-      journeyTokens: 1000,
+      nudgeInterval: 10,
+      nudgeToolCalls: 15,
+      flushMinTurns: 6,
+      reviewEnabled: true,
+      flushOnCompact: true,
+      flushOnShutdown: true,
     },
     memoryAgent: { model: { provider: "test-chat", id: "selected-chat" } },
     context: { budgetChars: 12000 },
@@ -48,19 +41,14 @@ export function productSettings(): Omit<MemoryConfig, "global" | "projects"> {
 export function customizedSettings(): Omit<MemoryConfig, "global" | "projects"> {
   return {
     limits: { maxBodyChars: 2000, maxStatementChars: 200, maxNotesPerFolder: 30 },
-    observer: {
-      model: { provider: "observer-provider", id: "observer-id" },
-      thinking: "high",
-      chunkTokens: 5000,
-      concurrency: 2,
-    },
-    compaction: { atContextTokens: 90000, tailTokens: 8000, mapTokens: 1200 },
-    consolidator: {
-      model: { provider: "consolidator-provider", id: "consolidator-id" },
-      thinking: "high",
-      atPoolTokens: 9000,
-      poolTargetTokens: 6000,
-      journeyTokens: 500,
+    capture: {
+      model: { provider: "capture-provider", id: "capture-id" },
+      nudgeInterval: 4,
+      nudgeToolCalls: 7,
+      flushMinTurns: 2,
+      reviewEnabled: false,
+      flushOnCompact: true,
+      flushOnShutdown: false,
     },
     memoryAgent: { model: { provider: "memory-provider", id: "memory-id" } },
     context: { budgetChars: 4321 },

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { aConfig, inspectConfigForRepair, parseConfig, proposeSetup } from "#test-helpers"
+import { aConfig, DEFAULT_CADENCE, inspectConfigForRepair, parseConfig, proposeSetup } from "#test-helpers"
 
 test.each([
   { provider: "local", model: "text-embedding-3-small" },
@@ -62,68 +62,39 @@ test("old configuration is invalid at runtime and repair never invents a chat mo
   expect(parsed.succeeded).toBe(false)
   expect(parsed).not.toHaveProperty("output")
   if (parsed.succeeded) throw new Error("old config accepted")
-  for (const field of [
-    "maxNotesPerFolder",
-    "observer",
-    "compaction",
-    "consolidator",
-    "memoryAgent",
-    "context",
-    "embeddings",
-    "decisionModel",
-  ]) {
+  for (const field of ["maxNotesPerFolder", "capture", "memoryAgent", "context", "embeddings", "decisionModel"]) {
     expect(parsed.problems.join(" ")).toContain(field)
   }
   expect(inspectConfigForRepair(text)).toMatchObject({
     ...old,
     limits: { ...old.limits, maxNotesPerFolder: 20 },
-    observer: { model: {}, thinking: "low", chunkTokens: 10000, concurrency: 4 },
-    consolidator: { model: {}, thinking: "medium", atPoolTokens: 15000, poolTargetTokens: 10000, journeyTokens: 1000 },
+    capture: { model: {}, ...DEFAULT_CADENCE },
     memoryAgent: { model: {} },
   })
-})
-
-test("repair keeps a valid observer model and thinking level and fills missing numbers with defaults", () => {
-  const { observer: _observer, compaction: _compaction, ...rest } = aConfig()
-  const observer = { model: { provider: "keep-provider", id: "keep-id" }, thinking: "high" }
-  const draft = inspectConfigForRepair(JSON.stringify({ ...rest, observer, compaction: { tailTokens: 777 } }))
-
-  expect(draft.observer).toEqual({ ...observer, chunkTokens: 10000, concurrency: 4 })
-  expect(draft.compaction).toEqual({ atContextTokens: 150000, tailTokens: 777, mapTokens: 2000 })
-  expect(draft.problems).toEqual([
-    "observer: must have required properties chunkTokens",
-    "observer: must have required properties concurrency",
-    "compaction: must have required properties atContextTokens",
-    "compaction: must have required properties mapTokens",
-  ])
-})
-
-test("repair never invents an observer model and drops an invalid thinking level for the default", () => {
-  const config = aConfig()
-  const draft = inspectConfigForRepair(
-    JSON.stringify({ ...config, observer: { ...config.observer, model: {}, thinking: "extreme" } }),
-  )
-
-  expect(draft.observer).toEqual({ ...config.observer, model: {}, thinking: "low" })
 })
 
 test("repair retains independently valid nested siblings and names discarded unknown fields", () => {
   const text = JSON.stringify({
     ...aConfig(),
-    observer: { model: { provider: "keep", id: " ", apiKey: "discard-secret" }, thinking: "high", extra: 1 },
+    capture: { model: { provider: "keep", id: " ", apiKey: "discard-secret" }, when: "at-session-end", extra: 1 },
     memoryAgent: { model: { provider: false, id: "keep-id" } },
     limits: { maxBodyChars: 700, maxStatementChars: 0, maxNotesPerFolder: 31 },
     context: { budgetChars: 5678, extra: 1 },
   })
   const draft = inspectConfigForRepair(text)
-  expect(draft.observer).toEqual({ model: { provider: "keep" }, thinking: "high", chunkTokens: 10000, concurrency: 4 })
+  expect(draft.capture).toEqual({
+    model: { provider: "keep" },
+    ...DEFAULT_CADENCE,
+    reviewEnabled: false,
+    flushOnCompact: false,
+  })
   expect(draft.memoryAgent).toEqual({ model: { id: "keep-id" } })
   expect(draft.limits).toEqual({ maxBodyChars: 700, maxStatementChars: 100, maxNotesPerFolder: 31 })
   expect(draft.context).toEqual({ budgetChars: 5678 })
   expect(draft.problems).toEqual(
     expect.arrayContaining([
-      "observer.model.apiKey: not a known field",
-      "observer.extra: not a known field",
+      "capture.model.apiKey: not a known field",
+      "capture.extra: not a known field",
       "context.extra: not a known field",
     ]),
   )

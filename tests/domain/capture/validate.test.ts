@@ -3,6 +3,11 @@ import { describe, expect, it } from "vitest"
 import { parseCaptureAction } from "#src/domain"
 import { captureRequest, memoryDraft, readObservation } from "#test-helpers"
 
+function reasonFor(action: string) {
+  if (action === "archive") return {}
+  return { scopeReason: "test reason" }
+}
+
 describe("parseCaptureAction", () => {
   it.each([
     "TODO: rotate key",
@@ -15,18 +20,23 @@ describe("parseCaptureAction", () => {
     "Tasks: ship release",
     "TODO-abc123",
   ])("preserves literal task-like reference values without classifying semantics: %s", (body) => {
-    const action = { action: "add", vault: "global", note: { ...memoryDraft(), type: "reference", body } }
+    const action = {
+      action: "add",
+      vault: "global",
+      scopeReason: "test reason",
+      note: { ...memoryDraft(), type: "reference", body },
+    }
     expect(parseCaptureAction(JSON.stringify(action), captureRequest())).toEqual({ succeeded: true, output: action })
   })
 
   it("preserves a rule about TODO comments", () => {
     const note = { ...memoryDraft(), type: "rule", statement: "TODO comments require issue links" }
-    const action = { action: "add", vault: "global", note }
+    const action = { action: "add", vault: "global", scopeReason: "test reason", note }
     expect(parseCaptureAction(JSON.stringify(action), captureRequest())).toEqual({ succeeded: true, output: action })
   })
 
   it.each(["task", "todo"])("rejects unsupported note type %s", (type) => {
-    const action = { action: "add", vault: "global", note: { ...memoryDraft(), type } }
+    const action = { action: "add", vault: "global", scopeReason: "test reason", note: { ...memoryDraft(), type } }
     expect(parseCaptureAction(JSON.stringify(action), captureRequest()).succeeded).toBe(false)
   })
 
@@ -35,7 +45,14 @@ describe("parseCaptureAction", () => {
     const copy = { ...original, path: "profile/Copied token.md", statement: "Copied token", hash: "b".repeat(64) }
     const input = { ...captureRequest(), observations: [original, copy] }
     for (const read of input.observations) {
-      const proposal = { action, vault: read.vault, path: read.path, id: read.id, expectedHash: read.hash }
+      const proposal = {
+        action,
+        vault: read.vault,
+        path: read.path,
+        id: read.id,
+        expectedHash: read.hash,
+        ...reasonFor(action),
+      }
       if (action === "archive") {
         expect(parseCaptureAction(JSON.stringify(proposal), input)).toEqual({ succeeded: true, output: proposal })
         continue
@@ -47,7 +64,14 @@ describe("parseCaptureAction", () => {
 
   it.each(["archive", "succeed", "update"])("requires exact latest read for %s", (action) => {
     const read = readObservation()
-    const proposal = { action, vault: read.vault, path: read.path, id: read.id, expectedHash: read.hash }
+    const proposal = {
+      action,
+      vault: read.vault,
+      path: read.path,
+      id: read.id,
+      expectedHash: read.hash,
+      ...reasonFor(action),
+    }
     const request = { ...captureRequest(), observations: [read, { ...read, hash: "b".repeat(64) }] }
     if (action === "archive") {
       expect(parseCaptureAction(JSON.stringify(proposal), request).succeeded).toBe(false)
@@ -60,7 +84,14 @@ describe("parseCaptureAction", () => {
   it.each(["archive", "succeed"])("accepts a read-authorized %s intention without executing it", (action) => {
     const read = readObservation()
     const input = { ...captureRequest(), observations: [read] }
-    const proposal = { action, vault: read.vault, path: read.path, id: read.id, expectedHash: read.hash }
+    const proposal = {
+      action,
+      vault: read.vault,
+      path: read.path,
+      id: read.id,
+      expectedHash: read.hash,
+      ...reasonFor(action),
+    }
     if (action === "archive") {
       expect(parseCaptureAction(JSON.stringify(proposal), input)).toEqual({ succeeded: true, output: proposal })
     } else {
@@ -70,7 +101,7 @@ describe("parseCaptureAction", () => {
   })
 
   it("only proposes project notes when a project is registered", () => {
-    const action = { action: "add", vault: "project", note: memoryDraft() }
+    const action = { action: "add", vault: "project", scopeReason: "test reason", note: memoryDraft() }
     const text = JSON.stringify(action)
     expect(parseCaptureAction(text, captureRequest()).succeeded).toBe(false)
     const input = { ...captureRequest(), context: { project: "Synthetic project", folder: "workspace" } }
@@ -84,6 +115,7 @@ describe("parseCaptureAction", () => {
       operation: "update" as const,
       status: "applied" as const,
       vault: read.vault,
+      scopeReason: "test reason",
       path: read.path,
       detail: "Updated",
     }
@@ -101,6 +133,7 @@ describe("parseCaptureAction", () => {
     const action = {
       action: "update",
       vault: read.vault,
+      scopeReason: "test reason",
       path: read.path,
       id: read.id,
       expectedHash: read.hash,
@@ -114,6 +147,7 @@ describe("parseCaptureAction", () => {
     const action = {
       action: "add",
       vault: "global",
+      scopeReason: "test reason",
       note: { ...memoryDraft(), statement: "Use strict mode", body: "Enabled." },
     }
     expect(parseCaptureAction(JSON.stringify(action), input)).toEqual({ succeeded: true, output: action })
@@ -121,18 +155,18 @@ describe("parseCaptureAction", () => {
 
   it("does not add an explicitly saved point again", () => {
     const input = { ...captureRequest(), explicitSaves: [readObservation()] }
-    const action = { action: "add", vault: "global", note: memoryDraft() }
+    const action = { action: "add", vault: "global", scopeReason: "test reason", note: memoryDraft() }
     expect(parseCaptureAction(JSON.stringify(action), input).succeeded).toBe(false)
   })
 
   it.each(["", "../escape", "archive", "_templates", ".hidden", "C:/vault"])("rejects unsafe folder %s", (folder) => {
-    const action = { action: "add", vault: "global", note: { ...memoryDraft(), folder } }
+    const action = { action: "add", vault: "global", scopeReason: "test reason", note: { ...memoryDraft(), folder } }
     expect(parseCaptureAction(JSON.stringify(action), captureRequest()).succeeded).toBe(false)
   })
 
   it("keeps detailed secret strings in reference notes", () => {
     const note = { ...memoryDraft(), body: "password: abC-!\n  line two  \n", type: "reference" }
-    const action = { action: "add", vault: "global", note }
+    const action = { action: "add", vault: "global", scopeReason: "test reason", note }
     expect(parseCaptureAction(JSON.stringify(action), captureRequest())).toEqual({ succeeded: true, output: action })
   })
 
@@ -143,9 +177,27 @@ describe("parseCaptureAction", () => {
 
   it("reports all configured text limits without truncation", () => {
     const input = { ...captureRequest(), limits: { maxBodyChars: 1, maxStatementChars: 1 } }
-    const action = { action: "add", vault: "global", note: memoryDraft() }
+    const action = { action: "add", vault: "global", scopeReason: "test reason", note: memoryDraft() }
     const result = parseCaptureAction(JSON.stringify(action), input)
     expect(result.succeeded).toBe(false)
     if (!result.succeeded) expect(result.problems).toHaveLength(2)
+  })
+})
+
+describe("scopeReason", () => {
+  it.each(["add", "update", "succeed"])("rejects %s without scopeReason with a clear problem", (kind) => {
+    const read = readObservation()
+    const input = { ...captureRequest(), observations: [read] }
+    const base = { action: kind, vault: "global", note: memoryDraft() }
+    let action: object = base
+    if (kind !== "add") action = { ...base, path: read.path, id: read.id, expectedHash: read.hash }
+    const result = parseCaptureAction(JSON.stringify(action), input)
+    if (result.succeeded) throw new Error("expected rejection")
+    expect(result.problems.join(" ")).toContain("scopeReason is required")
+  })
+
+  it("rejects a blank scopeReason", () => {
+    const action = { action: "add", vault: "global", scopeReason: "  ", note: memoryDraft() }
+    expect(parseCaptureAction(JSON.stringify(action), captureRequest()).succeeded).toBe(false)
   })
 })

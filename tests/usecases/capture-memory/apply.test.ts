@@ -11,7 +11,7 @@ const draft = { folder: "tools", statement: "Use pnpm", body: "Always pnpm.", ty
 test("an add saves the note and reports it applied with its path", async () => {
   const { context, vault } = await captureFixture()
 
-  const applied = await applyWrite({ action: "add", vault: "global", note: draft }, context)
+  const applied = await applyWrite({ action: "add", vault: "global", scopeReason: "test reason", note: draft }, context)
 
   expect(applied).toEqual({
     operation: "add",
@@ -27,7 +27,7 @@ test("an add of a name that exists is refused with the reason", async () => {
   const { context, vault } = await captureFixture()
   await putCatalogFile(vault, "tools/Use pnpm.md", noteWithId(1, "Already.", []))
 
-  const applied = await applyWrite({ action: "add", vault: "global", note: draft }, context)
+  const applied = await applyWrite({ action: "add", vault: "global", scopeReason: "test reason", note: draft }, context)
 
   expect(applied).toMatchObject({ operation: "add", status: "refused", path: "tools/Use pnpm.md" })
   expect(applied.detail).not.toBe("")
@@ -40,7 +40,15 @@ test("an update, an archive and a succession of a note that was never read are r
   const id = "01JABCDE7XKQ2M9V3RTN8WPZ01"
 
   const update = await applyWrite(
-    { action: "update", vault: "global", path: "tools/Use pnpm.md", id, expectedHash: hash, note: draft },
+    {
+      action: "update",
+      vault: "global",
+      scopeReason: "test reason",
+      path: "tools/Use pnpm.md",
+      id,
+      expectedHash: hash,
+      note: draft,
+    },
     context,
   )
   const archive = await applyWrite(
@@ -48,7 +56,15 @@ test("an update, an archive and a succession of a note that was never read are r
     context,
   )
   const succeed = await applyWrite(
-    { action: "succeed", vault: "global", path: "tools/Use pnpm.md", id, expectedHash: hash, note: draft },
+    {
+      action: "succeed",
+      vault: "global",
+      scopeReason: "test reason",
+      path: "tools/Use pnpm.md",
+      id,
+      expectedHash: hash,
+      note: draft,
+    },
     context,
   )
 
@@ -67,7 +83,15 @@ test("a change is a conflict when its hash is not the hash of the read it is bas
   const id = "01JABCDE7XKQ2M9V3RTN8WPZ01"
 
   const applied = await applyWrite(
-    { action: "update", vault: "global", path: "tools/Use pnpm.md", id, expectedHash: "b".repeat(64), note: draft },
+    {
+      action: "update",
+      vault: "global",
+      scopeReason: "test reason",
+      path: "tools/Use pnpm.md",
+      id,
+      expectedHash: "b".repeat(64),
+      note: draft,
+    },
     context,
   )
 
@@ -108,6 +132,7 @@ test("a read made by the main session does not let capture change the note", asy
     {
       action: "update",
       vault: "global",
+      scopeReason: "test reason",
       path: "tools/Use pnpm.md",
       id: "01JABCDE7XKQ2M9V3RTN8WPZ01",
       expectedHash: delivered.output.file.rawHash,

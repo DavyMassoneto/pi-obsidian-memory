@@ -8,13 +8,15 @@ describe("captureInputProblems", () => {
     expect(captureInputProblems(inputOf({}))).toEqual([])
   })
 
-  it("capture input needs at least one material item with a label and a text", () => {
-    expect(captureInputProblems(inputOf({ material: [] }))).toEqual(["material: must not have fewer than 1 items"])
-    expect(captureInputProblems(inputOf({ material: [{ label: "", text: "a" }] }))).toEqual([
-      "material.0.label: must not have fewer than 1 characters",
+  it("names the transcript when it has no message", () => {
+    expect(captureInputProblems(inputOf({ transcriptDelta: [] }))).toEqual([
+      "transcriptDelta: must not have fewer than 1 items",
     ])
-    expect(captureInputProblems(inputOf({ material: [{ label: "user", text: "" }] }))).toEqual([
-      "material.0.text: must not have fewer than 1 characters",
+  })
+
+  it("names the field of a message without text", () => {
+    expect(captureInputProblems(inputOf({ transcriptDelta: [{ role: "user", text: "" }] }))).toEqual([
+      "transcriptDelta.0.text: must not have fewer than 1 characters",
     ])
   })
 
@@ -23,10 +25,10 @@ describe("captureInputProblems", () => {
     expect(captureInputProblems(inputOf({ explicitSaves }))).toEqual([])
   })
 
-  it("accepts a note body of more than 16000 characters, a path of more than 1024 and more than 100 items", () => {
+  it("accepts a note body of more than 16000 characters, a path of more than 1024 and more than 100 messages", () => {
     const explicitSaves = [{ ...readObservation(), body: "x".repeat(16001), path: `${"p".repeat(1025)}.md` }]
-    const material = Array.from({ length: 101 }, () => ({ label: "user", text: "y".repeat(16001) }))
-    expect(captureInputProblems(inputOf({ explicitSaves, material }))).toEqual([])
+    const transcriptDelta = Array.from({ length: 101 }, () => ({ role: "user" as const, text: "y".repeat(16001) }))
+    expect(captureInputProblems(inputOf({ explicitSaves, transcriptDelta }))).toEqual([])
   })
 
   it("accepts more than 20 problems and a problem of more than 16000 characters in a refused observation", () => {

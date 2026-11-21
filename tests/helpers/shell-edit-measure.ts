@@ -108,7 +108,6 @@ export function measuredCutoffs(measures: QuestionMeasure[]): ShellEditScores {
     in_place: cutoffOf(measures, "in_place"),
     inline_code: cutoffOf(measures, "inline_code"),
     script_writes: cutoffOf(measures, "script_writes"),
-    copy_download: cutoffOf(measures, "copy_download"),
     hardlink: cutoffOf(measures, "hardlink"),
   }
 }

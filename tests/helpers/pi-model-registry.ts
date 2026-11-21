@@ -5,16 +5,9 @@ import { ModelRegistry, ModelRuntime } from "@earendil-works/pi-coding-agent"
 import { vi } from "vitest"
 
 import type { ChatModelPort } from "#src/services"
-import type { DecisionProbe, EmbeddingProbe } from "#src/usecases"
 import { useTempFolder } from "./temp-folder.ts"
 
 type RegistryModel = NonNullable<ReturnType<ModelRegistry["find"]>>
-
-export interface RealDiagnoseProbes {
-  port: ChatModelPort<RegistryModel>
-  embeddings: EmbeddingProbe
-  decision: DecisionProbe
-}
 
 export const LOCAL_PROVIDER = "local-llm"
 export const LOCAL_MODEL_ID = "local-model"
@@ -39,7 +32,7 @@ const LOCAL_MODELS = {
   },
 }
 
-async function realModelRegistry(): Promise<ModelRegistry> {
+export async function realChatModelPort(): Promise<ChatModelPort<RegistryModel>> {
   for (const name of ANTHROPIC_ENV_VARIABLES) vi.stubEnv(name, "")
   const folder = await useTempFolder()
   const authPath = join(folder, "auth.json")
@@ -47,34 +40,10 @@ async function realModelRegistry(): Promise<ModelRegistry> {
   await writeFile(authPath, "{}")
   await writeFile(modelsPath, JSON.stringify(LOCAL_MODELS))
   const runtime = await ModelRuntime.create({ authPath, modelsPath })
-  return new ModelRegistry(runtime)
-}
-
-async function hasApiKey(registry: ModelRegistry, provider: string): Promise<boolean> {
-  const key = await registry.getApiKeyForProvider(provider)
-  return typeof key === "string" && key !== ""
-}
-
-function chatPortOf(registry: ModelRegistry): ChatModelPort<RegistryModel> {
+  const registry = new ModelRegistry(runtime)
   return {
     find: (provider, id) => registry.find(provider, id),
     auth: (model) => registry.getApiKeyAndHeaders(model),
     configured: (model) => registry.hasConfiguredAuth(model),
-  }
-}
-
-export async function realChatModelPort(): Promise<ChatModelPort<RegistryModel>> {
-  return chatPortOf(await realModelRegistry())
-}
-
-export async function realDiagnoseProbes(modelCachePath: string): Promise<RealDiagnoseProbes> {
-  const registry = await realModelRegistry()
-  return {
-    port: chatPortOf(registry),
-    embeddings: { modelCachePath, hasCredentials: (provider) => hasApiKey(registry, provider) },
-    decision: {
-      hasClassifier: (provider, model) => typeof registry.findOfType("classifier", provider, model) === "object",
-      hasCredentials: (provider) => hasApiKey(registry, provider),
-    },
   }
 }

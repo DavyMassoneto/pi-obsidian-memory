@@ -30,7 +30,6 @@ export type ShellEditQuestionName =
   | "in_place"
   | "inline_code"
   | "script_writes"
-  | "copy_download"
   | "hardlink"
 
 export interface ShellEditCriteria {
@@ -49,7 +48,6 @@ export interface ShellEditQuestions {
   in_place: ShellEditQuestion
   inline_code: ShellEditQuestion
   script_writes: ShellEditQuestion
-  copy_download: ShellEditQuestion
   hardlink: ShellEditQuestion
 }
 
@@ -58,7 +56,6 @@ export interface ShellEditScores {
   in_place: number
   inline_code: number
   script_writes: number
-  copy_download: number
   hardlink: number
 }
 

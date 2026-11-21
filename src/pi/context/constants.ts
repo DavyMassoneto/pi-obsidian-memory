@@ -2,8 +2,4 @@ export const STATUS_LOADING = { key: "obsidian-memory-loading", text: "memory: l
 
 export const STATUS_SEARCHING = { key: "obsidian-memory-searching", text: "memory: searching" }
 
-export const STATUS_OBSERVING = { key: "obsidian-memory-observing", text: "memory: observing" }
-
-export const STATUS_CONSOLIDATING = { key: "obsidian-memory-consolidating", text: "memory: consolidating" }
-
-export const STATUS_IMPORTING = { key: "obsidian-memory-importing", text: "memory: importing" }
+export const STATUS_CAPTURING = { key: "obsidian-memory-capturing", text: "memory: capturing" }

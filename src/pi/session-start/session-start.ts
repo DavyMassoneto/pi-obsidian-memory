@@ -1,7 +1,6 @@
 import type { MemoryPaths } from "#src/pi/context"
 import type { MemoryBlock } from "#src/pi/memory-block"
 import type { MemorySessionKeeper } from "#src/pi/memory-session"
-import type { ObservationRuntime } from "#src/pi/observation-cycle"
 import { hostPathPlatform } from "#src/pi/paths"
 import type { RelevantMemoryRuntime } from "#src/pi/relevant-memory"
 import { checkMemoryConfig } from "#src/usecases"
@@ -13,12 +12,10 @@ export function sessionStartHandler(
   sessions: MemorySessionKeeper,
   block: MemoryBlock,
   relevant: RelevantMemoryRuntime,
-  cycle: ObservationRuntime,
 ): SessionStartHandler {
   return async (event, ctx) => {
     const session = sessions.start(ctx)
     relevant.reset()
-    cycle.reset()
     relevant.restore(ctx)
     const result = await checkMemoryConfig({
       configPath: paths.configPath,

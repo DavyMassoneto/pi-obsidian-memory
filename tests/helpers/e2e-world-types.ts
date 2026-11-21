@@ -1,10 +1,4 @@
-import type { MemoryConfig } from "#src/domain"
-
-export interface CycleOverrides {
-  observer?: Partial<MemoryConfig["observer"]>
-  compaction?: Partial<MemoryConfig["compaction"]>
-  consolidator?: Partial<MemoryConfig["consolidator"]>
-}
+import type { CaptureCadenceSettings } from "#src/domain"
 
 export interface CompactionSettings {
   keepRecentTokens: number
@@ -19,6 +13,7 @@ export interface WorldOptions {
   memory: "none" | "configured"
   tools: string[]
   modelCache: "fresh" | "shared"
+  capture: "after-each-turn" | "on-compaction" | "at-session-end"
   credentials?: "pi-login" | "none"
   startIn?: "project" | "subfolder"
   session?: "in-memory" | "saved"
@@ -26,7 +21,7 @@ export interface WorldOptions {
   offlineNpm?: true
   installed?: true
   compactsSmallSessions?: true
-  cycle?: CycleOverrides
+  captureSettings?: Partial<CaptureCadenceSettings>
 }
 
 export interface WorldFolders {

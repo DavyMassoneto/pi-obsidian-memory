@@ -1,40 +1,25 @@
 import { expect, test } from "vitest"
 
-import { aConfig, parseConfig } from "#test-helpers"
+import { aConfig, DEFAULT_CADENCE, parseConfig } from "#test-helpers"
 
 test.each([
   {
-    fields: { observer: {} },
+    fields: { capture: {} },
     problems: [
-      "observer: must have required properties model",
-      "observer: must have required properties thinking",
-      "observer: must have required properties chunkTokens",
-      "observer: must have required properties concurrency",
+      "capture: must have required properties model",
+      "capture: must have required properties nudgeInterval",
+      "capture: must have required properties nudgeToolCalls",
+      "capture: must have required properties flushMinTurns",
+      "capture: must have required properties reviewEnabled",
+      "capture: must have required properties flushOnCompact",
+      "capture: must have required properties flushOnShutdown",
     ],
   },
   {
-    fields: { compaction: {} },
+    fields: { capture: { model: {}, ...DEFAULT_CADENCE } },
     problems: [
-      "compaction: must have required properties atContextTokens",
-      "compaction: must have required properties tailTokens",
-      "compaction: must have required properties mapTokens",
-    ],
-  },
-  {
-    fields: { consolidator: {} },
-    problems: [
-      "consolidator: must have required properties model",
-      "consolidator: must have required properties thinking",
-      "consolidator: must have required properties atPoolTokens",
-      "consolidator: must have required properties poolTargetTokens",
-      "consolidator: must have required properties journeyTokens",
-    ],
-  },
-  {
-    fields: { consolidator: { ...aConfig().consolidator, model: {} } },
-    problems: [
-      "consolidator.model: must have required properties provider",
-      "consolidator.model: must have required properties id",
+      "capture.model: must have required properties provider",
+      "capture.model: must have required properties id",
     ],
   },
   { fields: { memoryAgent: {} }, problems: ["memoryAgent: must have required properties model"] },
@@ -64,30 +49,12 @@ test.each([
   expect(parseConfig(JSON.stringify({ ...aConfig(), ...fields }))).toEqual({ succeeded: false, problems })
 })
 
-test("a wrong observer model shape is reported on its own field", () => {
-  const config = aConfig()
-  const observer = (model: object) => ({ ...config.observer, model })
-
-  expect(parseConfig(JSON.stringify({ ...config, observer: observer({ provider: "p" }) }))).toEqual({
-    succeeded: false,
-    problems: ["observer.model: must have required properties id"],
-  })
-  expect(parseConfig(JSON.stringify({ ...config, observer: observer({ provider: "p", id: " " }) }))).toEqual({
-    succeeded: false,
-    problems: [expect.stringMatching(/^observer\.model\.id: /)],
-  })
-  expect(parseConfig(JSON.stringify({ ...config, observer: observer({ provider: "p", id: "i", extra: 1 }) }))).toEqual({
-    succeeded: false,
-    problems: ["observer.model.extra: not a known field"],
-  })
-})
-
 test("unknown keys are refused at each product setting level without discarding later diagnostics", () => {
   const config = aConfig()
   const result = parseConfig(
     JSON.stringify({
       ...config,
-      observer: { ...config.observer, extra: "discard", model: { ...config.observer.model, extra: "discard" } },
+      capture: { ...config.capture, extra: "discard", model: { ...config.capture.model, extra: "discard" } },
       memoryAgent: {
         ...config.memoryAgent,
         extra: "discard",
@@ -103,8 +70,8 @@ test("unknown keys are refused at each product setting level without discarding 
     succeeded: false,
     problems: [
       "limits.extra: not a known field",
-      "observer.extra: not a known field",
-      "observer.model.extra: not a known field",
+      "capture.extra: not a known field",
+      "capture.model.extra: not a known field",
       "memoryAgent.extra: not a known field",
       "memoryAgent.model.extra: not a known field",
       "context.extra: not a known field",

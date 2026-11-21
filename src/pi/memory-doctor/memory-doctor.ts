@@ -9,7 +9,6 @@ import {
   diagnoseMemory,
   type EmbeddingProbe,
   type MemoryOperationContext,
-  omLoaded,
   type VaultReport,
 } from "#src/usecases"
 import {
@@ -22,20 +21,19 @@ import {
   MEMORY_DOCTOR_DESCRIPTION,
 } from "./constants.ts"
 import { renderDoctorReport } from "./report.ts"
-import type { BlankTarget, CommandNames, DoctorModelPort } from "./types.ts"
+import type { BlankTarget, DoctorModelPort } from "./types.ts"
 
 export function memoryDoctorCommand(
   paths: MemoryPaths,
   sessions: MemorySessionKeeper,
   modelCachePath: string,
-  commandNames: CommandNames,
 ): MemoryCommand {
   return {
     description: MEMORY_DOCTOR_DESCRIPTION,
     async handler(_args, ctx) {
       if (!ctx.hasUI) return
       const { registration } = sessions.registrationFlow(ctx, paths)
-      await runMemoryDoctor(ctx, registration, modelCachePath, commandNames)
+      await runMemoryDoctor(ctx, registration, modelCachePath)
     },
   }
 }
@@ -44,7 +42,6 @@ async function runMemoryDoctor(
   ctx: MemoryPiContext,
   context: MemoryOperationContext,
   modelCachePath: string,
-  commandNames: CommandNames,
 ): Promise<void> {
   const port: DoctorModelPort = {
     find: (provider, id) => ctx.modelRegistry.find(provider, id),
@@ -52,12 +49,7 @@ async function runMemoryDoctor(
     auth: (model) => ctx.modelRegistry.getApiKeyAndHeaders(model),
   }
   const diagnosed = await diagnoseMemory(
-    {
-      port,
-      embeddings: embeddingProbeOf(ctx, modelCachePath),
-      decision: decisionProbeOf(ctx),
-      omLoaded: omLoaded(commandNames()),
-    },
+    { port, embeddings: embeddingProbeOf(ctx, modelCachePath), decision: decisionProbeOf(ctx) },
     context,
   )
   if (!diagnosed.succeeded) {
@@ -80,7 +72,6 @@ function levelOf(diagnosed: DiagnosedMemory): "info" | "warning" {
     ]
     if (found.some((items) => items.length > 0) || report.unreadable.length > 0) return "warning"
   }
-  if (diagnosed.omLoaded) return "warning"
   if (diagnosed.models.some((report) => report.check.status !== "ok")) return "warning"
   if (diagnosed.embeddings.status !== "ready") return "warning"
   if ("problem" in diagnosed.decision) return "warning"

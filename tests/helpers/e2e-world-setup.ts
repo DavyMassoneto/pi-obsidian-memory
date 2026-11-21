@@ -1,25 +1,30 @@
 import { writeFile } from "node:fs/promises"
 
+import type { CaptureCadenceSettings } from "#src/domain"
 import {
+  DONE_LABEL,
   INIT_CANCELLED,
   INIT_DONE,
   INIT_NAME_TITLE,
   INIT_VAULT_TITLE,
   MEMORY_INIT_COMMAND,
   MEMORY_SETUP_COMMAND,
+  SETTINGS_TITLE,
   SETUP_AGENT_MODEL_TITLE,
   SETUP_ATTACH_OPTION,
   SETUP_CANCELLED,
+  SETUP_CAPTURE_MODEL_TITLE,
   SETUP_DONE,
   SETUP_MODE_TITLE,
-  SETUP_OBSERVER_MODEL_TITLE,
   SETUP_VAULT_TITLE,
 } from "#src/pi"
 import { readConfig } from "#src/services"
 import { E2E_MODEL, E2E_PROJECT_NAME, E2E_PROVIDER } from "./e2e-paths.ts"
+import type { UiStep } from "./e2e-protocol.ts"
 import { notifySettles, type RpcTurn } from "./e2e-records.ts"
 import type { RpcPi } from "./e2e-rpc.ts"
-import type { CycleOverrides, WorldOptions } from "./e2e-world-types.ts"
+import { dialogTitled, nth } from "./e2e-turns.ts"
+import type { WorldOptions } from "./e2e-world-types.ts"
 import { testPlatform } from "./test-platform.ts"
 
 export interface VaultFolders {
@@ -37,13 +42,16 @@ export interface ConfigurableWorld {
   restart(): Promise<void>
 }
 
-export async function configureMemory(world: ConfigurableWorld, options: Pick<WorldOptions, "cycle">): Promise<void> {
+export async function configureMemory(
+  world: ConfigurableWorld,
+  options: Pick<WorldOptions, "capture" | "captureSettings">,
+): Promise<void> {
   const model = `${E2E_PROVIDER}/${E2E_MODEL}`
   const { globalVault, projectVault } = world.folders
   const setup = await world.pi.command(
     `/${MEMORY_SETUP_COMMAND}`,
     [
-      { method: "select", title: SETUP_OBSERVER_MODEL_TITLE, answer: { option: model } },
+      { method: "select", title: SETUP_CAPTURE_MODEL_TITLE, answer: { option: model } },
       { method: "select", title: SETUP_AGENT_MODEL_TITLE, answer: { option: model } },
       { method: "select", title: SETUP_MODE_TITLE, answer: { option: SETUP_ATTACH_OPTION } },
       { method: "input", title: SETUP_VAULT_TITLE, answer: { value: globalVault } },
@@ -60,17 +68,33 @@ export async function configureMemory(world: ConfigurableWorld, options: Pick<Wo
     notifySettles([INIT_DONE, INIT_CANCELLED]),
   )
   refuseFailures("init", world, init)
-  if (options.cycle) await overrideCycleSettings(world.folders.configPath, options.cycle)
+  const switches = SWITCHES_OFF[options.capture]
+  if (switches.length > 0) {
+    const steps = switches.map(
+      (line): UiStep => ({ method: "select", title: SETTINGS_TITLE, answer: { option: line } }),
+    )
+    const settings = await world.pi.command(
+      `/${MEMORY_SETUP_COMMAND}`,
+      [...steps, { method: "select", title: SETTINGS_TITLE, answer: { value: DONE_LABEL } }],
+      nth(dialogTitled(SETTINGS_TITLE), switches.length + 1),
+    )
+    refuseFailures("capture setting", world, settings)
+  }
+  if (options.captureSettings) await overrideCaptureSettings(world.folders.configPath, options.captureSettings)
   await world.restart()
 }
 
-async function overrideCycleSettings(configPath: string, overrides: CycleOverrides): Promise<void> {
+const SWITCHES_OFF: Record<WorldOptions["capture"], string[]> = {
+  "after-each-turn": [],
+  "at-session-end": ["Review during the session:", "Flush at compaction:"],
+  "on-compaction": ["Review during the session:", "Flush at session end:"],
+}
+
+async function overrideCaptureSettings(configPath: string, overrides: Partial<CaptureCadenceSettings>): Promise<void> {
   const config = await readConfig(configPath, testPlatform())
   if (!config.succeeded) throw new Error(config.problems.join("\n"))
-  const observer = { ...config.output.observer, ...overrides.observer }
-  const compaction = { ...config.output.compaction, ...overrides.compaction }
-  const consolidator = { ...config.output.consolidator, ...overrides.consolidator }
-  await writeFile(configPath, JSON.stringify({ ...config.output, observer, compaction, consolidator }))
+  const capture = { ...config.output.capture, ...overrides }
+  await writeFile(configPath, JSON.stringify({ ...config.output, capture }))
 }
 
 function refuseFailures(step: string, world: ConfigurableWorld, turn: RpcTurn): void {

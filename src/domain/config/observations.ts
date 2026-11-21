@@ -38,9 +38,7 @@ export function observedConfigFields(inspection: ConfigDocumentInspection): Conf
     projects: Array.from({ length: inspection.projectCount }, () => ({})),
     limits: {},
     context: {},
-    observer: { model: {} },
-    compaction: {},
-    consolidator: { model: {} },
+    capture: { model: {} },
     memoryAgent: { model: {} },
     embeddings: observedEmbeddingFields(inspection.observations),
     decisionModel: observedDecisionFields(inspection.observations),
@@ -66,32 +64,16 @@ function retainSettingField(fields: ConfigFields, observation: ConfigFieldObserv
   if (observation.field === "/limits/maxStatementChars") fields.limits.maxStatementChars = observation.value
   if (observation.field === "/limits/maxNotesPerFolder") fields.limits.maxNotesPerFolder = observation.value
   if (observation.field === "/context/budgetChars") fields.context.budgetChars = observation.value
-  retainCycleField(fields, observation)
+  if (observation.field === "/capture/nudgeInterval") fields.capture.nudgeInterval = observation.value
+  if (observation.field === "/capture/nudgeToolCalls") fields.capture.nudgeToolCalls = observation.value
+  if (observation.field === "/capture/flushMinTurns") fields.capture.flushMinTurns = observation.value
+  if (observation.field === "/capture/reviewEnabled") fields.capture.reviewEnabled = observation.value
+  if (observation.field === "/capture/flushOnCompact") fields.capture.flushOnCompact = observation.value
+  if (observation.field === "/capture/flushOnShutdown") fields.capture.flushOnShutdown = observation.value
+  if (observation.field === "/capture/model/provider") fields.capture.model.provider = observation.value
+  if (observation.field === "/capture/model/id") fields.capture.model.id = observation.value
   if (observation.field === "/memoryAgent/model/provider") fields.memoryAgent.model.provider = observation.value
   if (observation.field === "/memoryAgent/model/id") fields.memoryAgent.model.id = observation.value
-}
-
-function retainCycleField(fields: ConfigFields, observation: ConfigFieldObservation): void {
-  if (observation.field === "/observer/model/provider") fields.observer.model.provider = observation.value
-  if (observation.field === "/observer/model/id") fields.observer.model.id = observation.value
-  if (observation.field === "/observer/thinking") fields.observer.thinking = observation.value
-  if (observation.field === "/observer/chunkTokens") fields.observer.chunkTokens = observation.value
-  if (observation.field === "/observer/concurrency") fields.observer.concurrency = observation.value
-  if (observation.field === "/compaction/atContextTokens") fields.compaction.atContextTokens = observation.value
-  if (observation.field === "/compaction/tailTokens") fields.compaction.tailTokens = observation.value
-  if (observation.field === "/compaction/mapTokens") fields.compaction.mapTokens = observation.value
-  retainConsolidatorField(fields, observation)
-}
-
-function retainConsolidatorField(fields: ConfigFields, observation: ConfigFieldObservation): void {
-  if (observation.field === "/consolidator/model/provider") fields.consolidator.model.provider = observation.value
-  if (observation.field === "/consolidator/model/id") fields.consolidator.model.id = observation.value
-  if (observation.field === "/consolidator/thinking") fields.consolidator.thinking = observation.value
-  if (observation.field === "/consolidator/atPoolTokens") fields.consolidator.atPoolTokens = observation.value
-  if (observation.field === "/consolidator/poolTargetTokens") {
-    fields.consolidator.poolTargetTokens = observation.value
-  }
-  if (observation.field === "/consolidator/journeyTokens") fields.consolidator.journeyTokens = observation.value
 }
 
 export function observedEmbeddingFields(observations: ConfigFieldObservation[]): EmbeddingFields {

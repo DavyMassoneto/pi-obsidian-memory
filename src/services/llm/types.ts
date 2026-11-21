@@ -1,13 +1,4 @@
-import type {
-  CaptureInput,
-  CaptureResult,
-  ChatModelReference,
-  MaterialItem,
-  ObserverDraft,
-  RetrievalInput,
-  RetrievalResult,
-  ThinkingLevel,
-} from "#src/domain"
+import type { CaptureInput, CaptureResult, ChatModelReference, RetrievalInput, RetrievalResult } from "#src/domain"
 import type { Failed, Succeeded } from "#src/shared"
 
 export interface ModelStepContext {
@@ -15,27 +6,8 @@ export interface ModelStepContext {
   model: ChatModelReference
 }
 
-export type CaptureKind = "consolidate" | "import"
-
-export interface CaptureRequest extends ModelStepContext, CaptureInput {
-  kind: CaptureKind
-  thinking: ThinkingLevel
-}
+export interface CaptureRequest extends ModelStepContext, CaptureInput {}
 export interface RetrievalRequest extends ModelStepContext, RetrievalInput {}
-
-export interface ObserveRequest extends ModelStepContext {
-  thinking: ThinkingLevel
-  chunk: string
-  now: string
-}
-
-export interface JourneyRequest extends ModelStepContext {
-  thinking: ThinkingLevel
-  journey: string
-  material: MaterialItem[]
-  targetTokens: number
-  now: string
-}
 
 export interface PromptContent {
   system: string
@@ -45,7 +17,6 @@ export interface PromptContent {
 export interface CompletionRequest extends PromptContent {
   signal: AbortSignal
   model: ChatModelReference
-  thinking?: ThinkingLevel
 }
 
 export interface CompletedResponse {
@@ -66,8 +37,6 @@ export interface ModelCallFailure extends Failed {
 export type CompletionResult = Succeeded<string> | Failed | ModelCallFailure
 export type CaptureStepResult = CaptureResult | ModelCallFailure
 export type RetrievalStepResult = RetrievalResult | ModelCallFailure
-export type JourneyStepResult = Succeeded<string> | Failed | ModelCallFailure
-export type ObserveStepResult = Succeeded<ObserverDraft[]> | Failed | ModelCallFailure
 export type DisposeCompletion = () => void
 
 export interface CompletionLifetime {
@@ -82,10 +51,12 @@ export type {
   CaptureDraft,
   CaptureInput,
   CaptureObservation,
+  CaptureRejected,
   CaptureResult,
   ChatModelReference,
   MemoryIdentity,
   MemoryObservation,
+  ProposedAction,
   ReadObservation,
   RetrievalAction,
   RetrievalInput,

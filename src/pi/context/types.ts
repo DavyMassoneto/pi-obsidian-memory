@@ -43,12 +43,6 @@ export type RegistryOptions = Parameters<ModelRegistry["complete"]>[2]
 
 export type RegistryMessage = Awaited<ReturnType<ModelRegistry["complete"]>>
 
-export type RegistryStreamOptions = Parameters<ModelRegistry["streamSimple"]>[2]
-
-export interface RegistryStream {
-  result(): Promise<RegistryMessage>
-}
-
 export type ClassifierModelRef = Parameters<ModelRegistry["classify"]>[0]
 
 export type ClassifierPrompt = Parameters<ModelRegistry["classify"]>[1]
@@ -77,21 +71,11 @@ export interface AvailableModels {
   findOfType(type: "classifier", provider: string, modelId: string): ClassifierModelRef | undefined
   classify(model: ClassifierModelRef, prompt: ClassifierPrompt, options: ClassifierOptions): Promise<ClassifierOutcome>
   complete(model: ChatModelSource, context: RegistryContext, options: RegistryOptions): Promise<RegistryMessage>
-  streamSimple(model: ChatModelSource, context: RegistryContext, options: RegistryStreamOptions): RegistryStream
 }
 
 export interface SessionIdSource {
   getSessionId(): string
   getBranch(): SessionEntry[]
-}
-
-export interface ContextTokens {
-  tokens: number | null
-}
-
-export interface CompactRequest {
-  onComplete(): void
-  onError(error: Error): void
 }
 
 export interface MemoryPiContext {
@@ -101,8 +85,6 @@ export interface MemoryPiContext {
   model: ChatModelSource | undefined
   modelRegistry: AvailableModels
   sessionManager: SessionIdSource
-  compact(options: CompactRequest): void
-  getContextUsage(): ContextTokens | undefined
 }
 
 export interface MemoryPaths {

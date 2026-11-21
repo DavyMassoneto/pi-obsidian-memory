@@ -18,14 +18,13 @@ import { putCatalogFile } from "./vault-catalog.ts"
 export async function denySynchronizationRead(path: string) {
   const systemRoot = process.env.SystemRoot
   if (typeof systemRoot !== "string") throw new Error("SystemRoot required for Windows read denial")
-  const { USERDOMAIN, USERNAME } = process.env
-  if (typeof USERDOMAIN !== "string" || typeof USERNAME !== "string") {
-    throw new Error("USERDOMAIN and USERNAME required for Windows read denial")
-  }
-  const user = `${USERDOMAIN}\\${USERNAME}`
   const executable = join(systemRoot, "System32", "icacls.exe")
   const command = promisify(execFile)
   const options = { cwd: dirname(path), env: { SystemRoot: systemRoot }, windowsHide: true }
+  const identity = await command(join(systemRoot, "System32", "whoami.exe"), ["/user", "/fo", "csv", "/nh"], options)
+  const sid = /S-\d+(?:-\d+)+/.exec(identity.stdout)
+  if (!sid) throw new Error("Windows user SID required for read denial")
+  const user = `*${sid[0]}`
   const restore = async () => {
     await command(executable, [path, "/remove:d", user], options)
   }

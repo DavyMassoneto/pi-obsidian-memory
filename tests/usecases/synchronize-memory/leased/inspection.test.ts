@@ -1,4 +1,4 @@
-import { rm } from "node:fs/promises"
+import { readFile, rm } from "node:fs/promises"
 import { join } from "node:path"
 
 import { expect, test } from "vitest"
@@ -14,6 +14,23 @@ import {
   synchronizedIndexPath,
   validFrontmatterLines,
 } from "#test-helpers"
+
+test.skipIf(process.platform !== "win32")(
+  "temporary read denial can be restored without changing the note",
+  async () => {
+    const { vault } = await memoryReadFixture()
+    const content = noteText(validFrontmatterLines(), "memory original")
+    await putCatalogFile(vault, "Note.md", content)
+    const path = join(vault.path, "Note.md")
+    const restore = await denySynchronizationRead(path)
+    try {
+      await restore()
+      expect(await readFile(path, "utf8")).toBe(content)
+    } finally {
+      await restore()
+    }
+  },
+)
 
 test.skipIf(process.platform !== "win32")(
   "on Windows: unchanged unreadable notes are reused; changed unreadable notes retain cached rows",

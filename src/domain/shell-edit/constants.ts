@@ -53,7 +53,6 @@ export const SHELL_EDIT_QUESTION_NAMES: readonly ShellEditQuestionName[] = [
   "in_place",
   "inline_code",
   "script_writes",
-  "copy_download",
   "hardlink",
 ]
 
@@ -61,16 +60,16 @@ export const SHELL_EDIT_QUESTIONS: ShellEditQuestions = {
   redirection: {
     type: "bool",
     instructions:
-      "Does `command` write output into a file through a redirection (`>` or `>>`) or a file-writing cmdlet (`tee`, `Out-File`, `Set-Content`, `Add-Content`)?",
-    criteria: { true: "`command` sends output into a file", false: "`command` writes no output into any file" },
+      "Does `command` write output into a file through a redirection (`>` or `>>`) or a file-writing cmdlet (`tee`, `Out-File`, `Set-Content`, `Add-Content`), not counting a downloader or copier that saves its own output file (`Invoke-WebRequest -OutFile`, `Invoke-RestMethod -OutFile`, `curl -o` or `-O`, `wget -O`, `Start-BitsTransfer`, `Copy-Item`, `cp`)?",
+    criteria: { true: "`command` sends output into a file", false: "`command` writes no output into any file through a redirection or file-writing cmdlet, including a downloader saving its own output file and patch application or restoring through git" },
   },
   in_place: {
     type: "bool",
     instructions:
-      "Does `command` change an existing file in place, for example with `sed -i`, `perl -pi`, or text read from a file, changed with `-replace` and written back to it, rather than through a linter, formatter, test runner, build, git or a package manager?",
+      "Does `command` change an existing file in place, for example with `sed -i`, `perl -pi`, or text read from a file, changed with `-replace` and written back to it, rather than through a linter, formatter, test runner, build, git or a package manager, and not counting a downloader that saves its own output file (`Invoke-WebRequest -OutFile`, `Invoke-RestMethod -OutFile`, `curl -o` or `-O`, `wget -O`, `Start-BitsTransfer`), and not counting patch application or restoring through git (`git apply`, `git am`, `git checkout -- <file>`, `git restore`)?",
     criteria: {
       true: "`command` rewrites an existing file in place",
-      false: "`command` leaves existing files' contents as they are",
+      false: "`command` leaves existing files' contents as they are, including a downloader saving its own output file and patch application or restoring through git",
     },
   },
   inline_code: {
@@ -91,15 +90,6 @@ export const SHELL_EDIT_QUESTIONS: ShellEditQuestions = {
       false: "no script's own code creates or writes a file",
     },
   },
-  copy_download: {
-    type: "bool",
-    instructions:
-      "Does `command` create a file by copying or downloading content (`cp`, `Copy-Item`, `curl -o`, `Invoke-WebRequest -OutFile`), other than through git or a package manager?",
-    criteria: {
-      true: "`command` creates a file by copying or downloading",
-      false: "`command` copies and downloads no file",
-    },
-  },
   hardlink: {
     type: "bool",
     instructions:
@@ -113,7 +103,6 @@ export const SHELL_EDIT_CUTOFFS: ShellEditScores = {
   in_place: 0.5,
   inline_code: 0.5,
   script_writes: 0.5,
-  copy_download: 0.5,
   hardlink: 0.5,
 }
 
@@ -122,4 +111,4 @@ export const SHELL_EDIT_REFUSED = "Refused by the shell-edit guard"
 export const SHELL_EDIT_UNCHECKED = "Refused: the shell-edit guard could not check this command"
 
 export const SHELL_EDIT_GUIDANCE =
-  "The shell never creates or changes files: use the edit or write tool. Deleting, moving and renaming files, linters, formatters, git, npm and test runners stay allowed."
+  "The shell never creates or changes files: use the edit or write tool. Deleting, moving, renaming and copying files, downloading from a URL, linters, formatters, git, npm and test runners stay allowed."

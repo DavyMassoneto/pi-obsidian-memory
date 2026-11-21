@@ -23,7 +23,6 @@ export function shellEditClassifierPrompt(prompt: ShellEditPrompt): ClassifierPr
       in_place: questionOf(questions.in_place),
       inline_code: questionOf(questions.inline_code),
       script_writes: questionOf(questions.script_writes),
-      copy_download: questionOf(questions.copy_download),
       hardlink: questionOf(questions.hardlink),
     },
   }

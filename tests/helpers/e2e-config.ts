@@ -53,6 +53,7 @@ export async function noMemoryWorld(options: Partial<WorldOptions>): Promise<E2e
     memory: "none",
     tools: [],
     modelCache: "shared",
+    capture: "after-each-turn",
     ...options,
   })
   await world.pi.waitFor(notifySettles([NO_MEMORY_NOTICE]), 0)
@@ -64,6 +65,7 @@ export async function configuredWorld(options: Partial<WorldOptions>): Promise<E
     memory: "configured",
     tools: [],
     modelCache: "shared",
+    capture: "after-each-turn",
     ...options,
   })
   await world.pi.waitFor(statusCleared(STATUS_LOADING.key), 0)

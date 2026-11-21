@@ -17,16 +17,31 @@ export const CaptureDraftSchema = Type.Object(
   { additionalProperties: false },
 )
 
+export const ScopeReasonSchema = Type.String({
+  minLength: 1,
+  description:
+    "Required. One sentence: why this vault (global or project) is right for this note, based on the note's content.",
+})
+
+export const ProposalShapeSchema = Type.Object({
+  action: Type.String(),
+  vault: Type.Optional(Type.String()),
+  path: Type.Optional(Type.String()),
+  scopeReason: Type.Optional(Type.String()),
+  note: Type.Optional(Type.Object({ folder: Type.Optional(Type.String()), statement: Type.Optional(Type.String()) })),
+})
+
 export const CaptureActionSchema = Type.Union([
   ReadActionSchema,
   Type.Object(
-    { action: Type.Literal("add"), vault: VaultSchema, note: CaptureDraftSchema },
+    { action: Type.Literal("add"), vault: VaultSchema, scopeReason: ScopeReasonSchema, note: CaptureDraftSchema },
     { additionalProperties: false },
   ),
   Type.Object(
     {
       action: Type.Enum(["update", "succeed"]),
       vault: VaultSchema,
+      scopeReason: ScopeReasonSchema,
       path: PathSchema,
       id: NoteIdSchema,
       expectedHash: HashSchema,
@@ -77,9 +92,10 @@ export const CaptureObservationSchema = Type.Union([
 export const CaptureInputSchema = Type.Object(
   {
     context: AgentContextSchema,
-    material: Type.Array(Type.Object({ label: TextSchema, text: TextSchema }, { additionalProperties: false }), {
-      minItems: 1,
-    }),
+    transcriptDelta: Type.Array(
+      Type.Object({ role: Type.Enum(["user", "assistant"]), text: TextSchema }, { additionalProperties: false }),
+      { minItems: 1 },
+    ),
     observations: Type.Array(CaptureObservationSchema),
     explicitSaves: Type.Array(ReadObservationSchema),
     limits: Type.Object(
