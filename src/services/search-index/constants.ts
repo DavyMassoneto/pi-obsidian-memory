@@ -25,11 +25,17 @@ export const CatalogNoteValidator = Compile(CatalogNoteSchema)
 
 export const SQLITE_PRIMARY_CODE_MASK = 0xff
 
+export const SQLITE_BUSY = 5
+
 export const SQLITE_ERROR = 1
 
 export const SQLITE_CORRUPT = 11
 
 export const SQLITE_NOTADB = 26
+
+export const INDEX_LOCK_EXTENSION = ".lock"
+
+export const INDEX_LOCK_TIMEOUT_MS = 2147483647
 
 export const REBUILD_SCHEMA_SQL = `
   DROP TABLE IF EXISTS notes_fts;
@@ -100,3 +106,5 @@ export const REBUILD_SCHEMA_SQL = `
   END;
   PRAGMA user_version = ${INDEX_SCHEMA_VERSION};
 `
+
+export const HELD_INDEX_LOCKS = new Set<string>()

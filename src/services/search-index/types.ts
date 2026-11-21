@@ -111,3 +111,22 @@ export type IndexWriteResult = Done | SearchIndexRefusal
 export type SchemaResult = Succeeded<boolean> | SearchIndexRefusal
 
 export type IndexWork = () => IndexWriteResult
+
+export interface IndexLock {
+  release(): void
+}
+
+export type IndexLockResult = Succeeded<IndexLock> | SearchIndexRefusal
+
+export interface HeldIndex extends SearchIndex {
+  inventoryHeld(): InventoryResult
+  vectorsHeld(): VectorCacheResult
+}
+
+export interface HeldOpenedIndex extends Succeeded<HeldIndex> {
+  rebuilt: boolean
+}
+
+export type HeldOpenResult = HeldOpenedIndex | SearchIndexRefusal
+
+export type LockedWork<Result> = () => Result
