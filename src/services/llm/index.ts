@@ -1,6 +1,5 @@
 export * from "./capture.ts"
 export * from "./check-chat-models.ts"
-export * from "./complete.ts"
 export * from "./constants.ts"
 export * from "./domain-rules.ts"
 export * from "./journey.ts"

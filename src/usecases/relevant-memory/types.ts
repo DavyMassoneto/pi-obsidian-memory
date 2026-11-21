@@ -26,8 +26,6 @@ export interface JevRefusal {
 
 export type JevSource = (model: string) => Promise<JevAccess | JevRefusal>
 
-export type LoadedNoteTest = (note: ReadObservation) => boolean
-
 export interface LoadedStore {
   all(): ReadObservation[]
   has(note: ReadObservation): boolean
