@@ -45,6 +45,7 @@ pnpm-debug.log*
 
 # Local memory data created while testing (vaults, indexes, models)
 /.local/
+/.memory/
 *.sqlite
 *.sqlite-*
 *.db
