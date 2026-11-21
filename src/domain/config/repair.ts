@@ -27,7 +27,9 @@ function repairConfigInspection(inspection: ConfigInspection, parsed: ParseConfi
   draft.global = fields.global
   draft.projects = fields.projects
   draft.limits = { ...draft.limits, ...fields.limits }
-  draft.capture = { ...draft.capture, ...fields.capture }
+  draft.observer = { ...draft.observer, ...fields.observer }
+  draft.compaction = { ...draft.compaction, ...fields.compaction }
+  draft.consolidator = { ...draft.consolidator, ...fields.consolidator }
   draft.memoryAgent = fields.memoryAgent
   draft.context = { ...draft.context, ...fields.context }
   draft.embeddings = repairEmbeddings(fields.embeddings)

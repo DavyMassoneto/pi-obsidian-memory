@@ -9,7 +9,6 @@ test.each(["MD", "mD", "Md"])("updates an exact read receipt with a %s extension
   const action = {
     action: "update",
     vault: read.vault,
-    scopeReason: "test reason",
     path: read.path,
     id: read.id,
     expectedHash: read.hash,
@@ -24,7 +23,6 @@ test("uppercase updates retain exact basename, folder, extension identity and la
   const action = {
     action: "update",
     vault: read.vault,
-    scopeReason: "test reason",
     path: read.path,
     id: read.id,
     expectedHash: read.hash,

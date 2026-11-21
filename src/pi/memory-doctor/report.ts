@@ -15,6 +15,7 @@ import {
   CUTOFFS_HINT,
   DOCTOR_INVALID_HEADING,
   DOCTOR_NO_PROJECT_VAULT,
+  DOCTOR_OM_LOADED,
   DOCTOR_TITLE,
   DUPLICATES_HEADING,
   MODELS_HEADING,
@@ -29,6 +30,7 @@ export function renderDoctorReport(diagnosed: DiagnosedMemory): string {
   if (diagnosed.projectMissing) lines.push(DOCTOR_NO_PROJECT_VAULT, "")
   lines.push(MODELS_HEADING, ...diagnosed.models.map(renderModel), renderEmbeddings(diagnosed.embeddings))
   lines.push(renderDecision(diagnosed.decision), renderCutoffs(diagnosed.cutoffs))
+  if (diagnosed.omLoaded) lines.push("", DOCTOR_OM_LOADED)
   return lines.join("\n")
 }
 

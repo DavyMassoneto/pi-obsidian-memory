@@ -24,7 +24,11 @@ export async function prepareMemorySetup(
       const repair = snapshot.output.repair
       draft = {
         ...repair,
-        capture: { ...repair.capture, model: { ...defaults.capture.model, ...repair.capture.model } },
+        observer: { ...repair.observer, model: { ...defaults.observer.model, ...repair.observer.model } },
+        consolidator: {
+          ...repair.consolidator,
+          model: { ...defaults.consolidator.model, ...repair.consolidator.model },
+        },
         memoryAgent: { model: { ...defaults.memoryAgent.model, ...repair.memoryAgent.model } },
       }
     }

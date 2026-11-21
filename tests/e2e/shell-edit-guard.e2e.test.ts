@@ -20,7 +20,6 @@ const options: WorldOptions = {
   memory: "none",
   tools: ["bash"],
   modelCache: "fresh",
-  capture: "after-each-turn",
 }
 
 const SHELL_COMMANDS: LabelledShellCommand[] = [

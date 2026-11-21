@@ -11,7 +11,8 @@ test("a clean vault says no problems were found, and the providers not in use ye
       "Global vault: no problems found.",
       "",
       "Models:",
-      "- capture p/m: ok",
+      "- observer p/m: ok",
+      "- consolidator p/m: ok",
       "- memory agent p/m: ok",
       "- embeddings local/Xenova/multilingual-e5-small: ready",
       "- decision model typesafe/jev-latest: ready (model and API key found)",
@@ -62,12 +63,31 @@ test("a folder with no registered project says so", () => {
   )
 })
 
+test("the models section names the consolidator", () => {
+  const report = renderDoctorReport(diagnosedMemory({}))
+
+  expect(report).toContain("Models:\n- observer p/m: ok\n- consolidator p/m: ok\n- memory agent p/m: ok")
+  expect(report).not.toContain("capture")
+})
+
+test("with OM loaded the report says to uninstall it with pi remove", () => {
+  const report = renderDoctorReport(diagnosedMemory({ omLoaded: true }))
+
+  expect(report).toContain(
+    'pi-observational-memory is also loaded: it compacts sessions too and only one compaction is kept. Uninstall it: run "pi list" to see its source, then "pi remove <source>".',
+  )
+})
+
+test("without OM the report has no such line", () => {
+  expect(renderDoctorReport(diagnosedMemory({ omLoaded: false }))).not.toContain("pi-observational-memory")
+})
+
 test("a model that is not registered or has no credentials shows its problem", () => {
   const report = renderDoctorReport(
     diagnosedMemory({
       models: [
         {
-          role: "capture",
+          role: "observer",
           check: {
             model: { provider: "p", id: "m" },
             status: "model-not-found",
@@ -82,7 +102,7 @@ test("a model that is not registered or has no credentials shows its problem", (
     }),
   )
 
-  expect(report).toContain("- capture p/m: Model p/m is not registered in pi")
+  expect(report).toContain("- observer p/m: Model p/m is not registered in pi")
   expect(report).toContain("- memory agent q/n: No API key")
 })
 

@@ -32,6 +32,7 @@ export interface ShellEditJevAnswers {
   in_place?: ShellEditJevAnswer
   inline_code?: ShellEditJevAnswer
   script_writes?: ShellEditJevAnswer
+  copy_download?: ShellEditJevAnswer
   hardlink?: ShellEditJevAnswer
 }
 

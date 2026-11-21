@@ -8,48 +8,12 @@ import type {
   CaptureObservationSchema,
 } from "./schemas.ts"
 
-export interface CaptureCadenceSettings {
-  nudgeInterval: number
-  nudgeToolCalls: number
-  flushMinTurns: number
-  reviewEnabled: boolean
-  flushOnCompact: boolean
-  flushOnShutdown: boolean
-}
-
-export interface CaptureTally {
-  userMessages: number
-  turnsSinceReview: number
-  toolCallsSinceReview: number
-}
-
-export interface FinishedTurn {
-  toolCalls: number
-  reviewActive: boolean
-}
-
-export interface TurnOutcome {
-  tally: CaptureTally
-  review: boolean
-}
-
-export type FlushMoment = "compact" | "shutdown"
-
 export type CaptureDraft = Static<typeof CaptureDraftSchema>
 export type CaptureAction = Static<typeof CaptureActionSchema>
 export type CaptureInput = Static<typeof CaptureInputSchema>
 export type CaptureObservation = Static<typeof CaptureObservationSchema>
-export interface ProposedAction {
-  action: string
-  vault?: string
-  title?: string
-  scopeReason?: string
-}
-export interface CaptureRejected extends Failed {
-  proposed?: ProposedAction | undefined
-}
-export type CaptureResult = Succeeded<CaptureAction> | CaptureRejected
-export type TranscriptMessage = CaptureInput["transcriptDelta"][number]
+export type CaptureResult = Succeeded<CaptureAction> | Failed
+export type MaterialItem = CaptureInput["material"][number]
 
 export interface AddDiscriminant {
   action: "add"

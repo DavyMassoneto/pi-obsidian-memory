@@ -7,6 +7,7 @@ export interface DiagnoseMemoryRequest<TModel> {
   port: ChatModelPort<TModel>
   embeddings: EmbeddingProbe
   decision: DecisionProbe
+  omLoaded: boolean
 }
 
 export interface BlankFile {
@@ -28,7 +29,7 @@ export interface VaultReportFailure {
 }
 
 export interface ModelReport {
-  role: "capture" | "memory agent"
+  role: "observer" | "consolidator" | "memory agent"
   check: ChatModelCheck
 }
 
@@ -40,6 +41,7 @@ export interface DiagnosedMemory {
   embeddings: EmbeddingReport
   decision: DecisionReport
   cutoffs: CutoffReport
+  omLoaded: boolean
 }
 
 export type DiagnoseMemoryResult = Succeeded<DiagnosedMemory> | MemoryResolutionRefusal

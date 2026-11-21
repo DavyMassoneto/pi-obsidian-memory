@@ -1,20 +1,19 @@
 import type { Static, TSchema } from "typebox"
 
-import type { CaptureCadenceSettings } from "#src/domain/capture"
 import type { Absent, Failed, Succeeded } from "#src/shared"
 import type {
-  CaptureWhenSchema,
   ChatModelReferenceSchema,
   ConfigFieldObservationSchema,
   MemoryConfigSchema,
   ProjectEntrySchema,
+  ThinkingLevelSchema,
 } from "./schemas.ts"
 
 export type MemoryConfig = Static<typeof MemoryConfigSchema>
 
 export type ProjectEntry = Static<typeof ProjectEntrySchema>
 
-export type LegacyCaptureWhen = Static<typeof CaptureWhenSchema>
+export type ThinkingLevel = Static<typeof ThinkingLevelSchema>
 
 export type ParseConfigResult = Succeeded<MemoryConfig> | Failed
 
@@ -80,7 +79,13 @@ export interface ConfigRegistrations {
   projects: Partial<ProjectEntry>[]
 }
 
-export interface CaptureFields extends Partial<CaptureCadenceSettings> {
+export interface ObserverFields extends Partial<Omit<MemoryConfig["observer"], "model">> {
+  model: Partial<ChatModelReference>
+}
+
+export type CompactionFields = Partial<MemoryConfig["compaction"]>
+
+export interface ConsolidatorFields extends Partial<Omit<MemoryConfig["consolidator"], "model">> {
   model: Partial<ChatModelReference>
 }
 
@@ -105,7 +110,9 @@ export interface DecisionFields {
 
 export interface ConfigFields extends ConfigRegistrations {
   limits: Partial<MemoryConfig["limits"]>
-  capture: CaptureFields
+  observer: ObserverFields
+  compaction: CompactionFields
+  consolidator: ConsolidatorFields
   memoryAgent: MemoryAgentFields
   context: Partial<MemoryConfig["context"]>
   embeddings: EmbeddingFields
@@ -145,86 +152,6 @@ export interface VaultRegistration {
 }
 
 export type SetupDisclosure = "chat-models" | "jev" | "remote-embeddings"
-
-export interface CaptureModelChange {
-  kind: "captureModel"
-  model: ChatModelReference
-}
-
-export interface AgentModelChange {
-  kind: "agentModel"
-  model: ChatModelReference
-}
-
-export interface CaptureCountChange {
-  kind: "captureCount"
-  name: "nudgeInterval" | "nudgeToolCalls" | "flushMinTurns"
-  value: number
-}
-
-export interface CaptureSwitchChange {
-  kind: "captureSwitch"
-  name: "reviewEnabled" | "flushOnCompact" | "flushOnShutdown"
-  value: boolean
-}
-
-export interface EmbeddingsChange {
-  kind: "embeddings"
-  embeddings: MemoryConfig["embeddings"]
-}
-
-export interface JevDecisionChange {
-  kind: "decision"
-  provider: "typesafe"
-}
-
-export interface LayaDecisionChange {
-  kind: "decision"
-  provider: "laya"
-  endpoint: string
-}
-
-export interface ThresholdChange {
-  kind: "gateThreshold" | "relevanceThreshold"
-  value: number | null
-}
-
-export interface BudgetChange {
-  kind: "budgetChars"
-  value: number
-}
-
-export interface LimitChange {
-  kind: "limit"
-  name: keyof MemoryConfig["limits"]
-  value: number
-}
-
-export interface ProjectVaultChange {
-  kind: "projectVault"
-  name: string
-  vault: string
-}
-
-export interface RemoveProjectChange {
-  kind: "removeProject"
-  name: string
-}
-
-export type DecisionChange = JevDecisionChange | LayaDecisionChange
-
-export type SettingChange =
-  | CaptureModelChange
-  | AgentModelChange
-  | CaptureCountChange
-  | CaptureSwitchChange
-  | EmbeddingsChange
-  | DecisionChange
-  | ThresholdChange
-  | BudgetChange
-  | LimitChange
-  | ProjectVaultChange
-  | RemoveProjectChange
 
 export type SettingNumberKind = "threshold" | "count"
 

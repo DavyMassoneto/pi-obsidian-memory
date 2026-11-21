@@ -25,6 +25,7 @@ export async function askShellEdit(call: ShellEditAskCall): Promise<ShellEditAsk
     in_place: answers.in_place.probability,
     inline_code: answers.inline_code.probability,
     script_writes: answers.script_writes.probability,
+    copy_download: answers.copy_download.probability,
     hardlink: answers.hardlink.probability,
   }
   return { succeeded: true, output: { scores, reportedModel: outcome.model } }

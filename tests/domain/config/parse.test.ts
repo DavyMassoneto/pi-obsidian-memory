@@ -81,7 +81,7 @@ test("strict settings report every independent missing, wrong and unknown nested
   const result = parseConfig(
     JSON.stringify({
       ...aConfig(),
-      capture: { model: { provider: "", apiKey: "secret" }, when: "never", extra: 1 },
+      observer: { model: { provider: "", apiKey: "secret" }, thinking: "extreme", extra: 1 },
       memoryAgent: { model: { id: false }, extra: 1 },
       context: { budgetChars: 0, extra: 1 },
       limits: { maxBodyChars: 0, maxStatementChars: -1, maxNotesPerFolder: 1.5 },
@@ -90,11 +90,11 @@ test("strict settings report every independent missing, wrong and unknown nested
   expect(result.succeeded).toBe(false)
   if (result.succeeded) throw new Error("invalid config accepted")
   for (const field of [
-    "capture.model.provider",
-    "capture.model: must have required properties id",
-    "capture.model.apiKey",
-    "capture.when",
-    "capture.extra",
+    "observer.model.provider",
+    "observer.model: must have required properties id",
+    "observer.model.apiKey",
+    "observer.thinking",
+    "observer.extra",
     "memoryAgent.model: must have required properties provider",
     "memoryAgent.model.id",
     "memoryAgent.extra",
@@ -141,3 +141,65 @@ test("closed choices name the accepted values rather than an opaque union failur
 test.each([null, false, 42, [], "text"])("refuses a malformed root %j without a partial output", (root) => {
   expect(parseConfig(JSON.stringify(root))).toEqual({ succeeded: false, problems: ["config: must be object"] })
 })
+
+test("a config without observer or compaction names each missing key", () => {
+  const { observer: _observer, compaction: _compaction, ...without } = aConfig()
+
+  expect(parseConfig(JSON.stringify(without))).toEqual({
+    succeeded: false,
+    problems: ["config: must have required properties observer", "config: must have required properties compaction"],
+  })
+  expect(parseConfig(JSON.stringify({ ...without, observer: {}, compaction: {} }))).toEqual({
+    succeeded: false,
+    problems: [
+      "observer: must have required properties model",
+      "observer: must have required properties thinking",
+      "observer: must have required properties chunkTokens",
+      "observer: must have required properties concurrency",
+      "compaction: must have required properties atContextTokens",
+      "compaction: must have required properties tailTokens",
+      "compaction: must have required properties mapTokens",
+    ],
+  })
+})
+
+test.each(["extreme", "", "LOW"])("a thinking level outside pi's list is refused: %j", (thinking) => {
+  const config = aConfig()
+
+  expect(parseConfig(JSON.stringify({ ...config, observer: { ...config.observer, thinking } }))).toEqual({
+    succeeded: false,
+    problems: ["observer.thinking: must be one of off, minimal, low, medium, high, xhigh, max"],
+  })
+})
+
+test.each(["extreme", "", "LOW"])("a consolidator with a wrong thinking level is refused: %j", (thinking) => {
+  const config = aConfig()
+
+  expect(parseConfig(JSON.stringify({ ...config, consolidator: { ...config.consolidator, thinking } }))).toEqual({
+    succeeded: false,
+    problems: ["consolidator.thinking: must be one of off, minimal, low, medium, high, xhigh, max"],
+  })
+})
+
+test("a consolidator names each missing field and each unknown one", () => {
+  expect(parseConfig(JSON.stringify({ ...aConfig(), consolidator: { extra: 1 } }))).toEqual({
+    succeeded: false,
+    problems: [
+      "consolidator.extra: not a known field",
+      "consolidator: must have required properties model",
+      "consolidator: must have required properties thinking",
+      "consolidator: must have required properties atPoolTokens",
+      "consolidator: must have required properties poolTargetTokens",
+      "consolidator: must have required properties journeyTokens",
+    ],
+  })
+})
+
+test.each(["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const)(
+  "the thinking level %s is accepted",
+  (thinking) => {
+    const config = { ...aConfig(), observer: { ...aConfig().observer, thinking } }
+
+    expect(parseConfig(JSON.stringify(config))).toEqual({ succeeded: true, output: config })
+  },
+)

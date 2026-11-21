@@ -3,15 +3,14 @@ import {
   type CaptureObservation,
   type CompletionPort,
   captureStep,
+  type MaterialItem,
   type ReadObservation,
   refusalObservation,
-  type TranscriptMessage,
 } from "#src/services"
 import { type MemoryOperationContext, memoryOperationInterruption } from "#src/usecases/operation-context"
 import { resolveMemory } from "#src/usecases/resolve-memory"
 import { applyWrite } from "./apply.ts"
 import { INTERRUPTED } from "./constants.ts"
-import { acceptedDecision, rejectedDecision } from "./decisions.ts"
 import { observeGet, observeList, observeRead, observeSearch } from "./observe.ts"
 import type {
   CaptureBase,
@@ -21,6 +20,7 @@ import type {
   CaptureRun,
   NextStep,
   ReviewTools,
+  StepSettings,
   WriteAction,
 } from "./types.ts"
 
@@ -36,7 +36,7 @@ export async function captureMemory(
         succeeded: false,
         reason: "interrupted",
         problems: [INTERRUPTED],
-        report: { reviewed: false, applied: [], decisions: [], model: null, project: null },
+        report: { reviewed: false, applied: [] },
       }
     }
     return resolved
@@ -50,38 +50,40 @@ export async function captureMemory(
   let projectName: string | null = null
   if (project) projectName = project.vault.name
   const base: CaptureBase = {
+    ...stepSettings(run, context),
     context: { project: projectName, folder: context.workingFolder },
     explicitSaves,
     limits: { maxBodyChars: config.limits.maxBodyChars, maxStatementChars: config.limits.maxStatementChars },
-    model: config.capture.model,
-    signal: context.signal,
   }
-  const report = newReport(base)
+  const report: CaptureReport = { reviewed: false, applied: [] }
   const tools: ReviewTools = { context, complete, report }
-  if (run.messages.length > 0) {
+  if (run.material.length > 0) {
     report.reviewed = true
-    const failure = await reviewTranscript(run.messages, base, tools)
+    const failure = await reviewMaterial(run.material, base, tools)
     if (failure) return failure
   }
   return { succeeded: true, output: report }
 }
 
-async function reviewTranscript(
-  transcriptDelta: TranscriptMessage[],
+function stepSettings(run: CaptureRun, context: MemoryOperationContext): StepSettings {
+  return { kind: run.kind, model: run.model, thinking: run.thinking, signal: context.signal }
+}
+
+async function reviewMaterial(
+  material: MaterialItem[],
   base: CaptureBase,
   tools: ReviewTools,
 ): Promise<CaptureFailure | null> {
   const observations: CaptureObservation[] = []
   for (;;) {
     if (memoryOperationInterruption(tools.context)) return failureOf("interrupted", [INTERRUPTED], tools)
-    const step = await captureStep({ ...base, transcriptDelta, observations }, tools.complete)
+    const step = await captureStep({ ...base, material, observations }, tools.complete)
     if (!step.succeeded && "modelCall" in step) {
       if (memoryOperationInterruption(tools.context)) return failureOf("interrupted", [INTERRUPTED], tools)
       return failureOf("model-failed", step.problems, tools)
     }
     if (!step.succeeded) {
       observations.push(refusalObservation(step.problems))
-      tools.report.decisions.push(rejectedDecision(step))
       continue
     }
     if ((await act(step.output, observations, tools)) === "stop") return endOfReview(tools)
@@ -110,13 +112,8 @@ async function act(action: CaptureAction, observations: CaptureObservation[], to
 
 async function write(action: WriteAction, observations: CaptureObservation[], tools: ReviewTools): Promise<void> {
   const applied = await applyWrite(action, tools.context)
-  tools.report.decisions.push(acceptedDecision(action, applied))
   tools.report.applied.push(applied)
   observations.push({ kind: "write", ...applied })
-}
-
-function newReport(base: CaptureBase): CaptureReport {
-  return { reviewed: false, applied: [], decisions: [], model: base.model, project: base.context.project }
 }
 
 function failureOf(reason: CaptureFailure["reason"], problems: string[], tools: ReviewTools): CaptureFailure {

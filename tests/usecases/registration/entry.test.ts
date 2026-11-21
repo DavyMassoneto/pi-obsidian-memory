@@ -93,8 +93,8 @@ test("setup owns every nested submitted config value across the canonicalization
   const original = structuredClone(submitted)
   const pending = setupMemory({ ...request, config: submitted }, context)
   await Promise.resolve()
-  submitted.capture.model.id = ""
-  submitted.capture.reviewEnabled = false
+  submitted.observer.model.id = ""
+  submitted.observer.thinking = "max"
   submitted.memoryAgent.model.provider = "changed"
   submitted.limits.maxBodyChars = 1
   submitted.context.budgetChars = 1
@@ -115,7 +115,7 @@ test("setup ignores an invalid model mutation after exactly one promise checkpoi
   const original = structuredClone(request.config)
   const pending = setupMemory(request, context)
   await Promise.resolve()
-  request.config.capture.model.id = ""
+  request.config.observer.model.id = ""
   const result = await pending
   expect(result).toEqual({
     succeeded: true,
@@ -154,8 +154,8 @@ test("setup preserves submitted unknown keys instead of losing them during captu
   const { root, context, config, request } = await registrationUsecaseFixture()
   for (const submitted of [
     { ...config, unexpected: true },
-    { ...config, capture: { ...config.capture, unexpected: true } },
-    { ...config, capture: { ...config.capture, model: { ...config.capture.model, unexpected: true } } },
+    { ...config, observer: { ...config.observer, unexpected: true } },
+    { ...config, observer: { ...config.observer, model: { ...config.observer.model, unexpected: true } } },
     { ...config, projects: [{ name: "P", folder: context.workingFolder, vault: join(root, "p"), unexpected: true }] },
   ]) {
     const pending = setupMemory({ ...request, config: submitted }, context)

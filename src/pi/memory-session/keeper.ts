@@ -2,7 +2,7 @@ import type { MemoryPaths, MemoryPiContext } from "#src/pi/context"
 import { hostPathPlatform } from "#src/pi/paths"
 import type { SemanticRuntime } from "#src/pi/semantic"
 import { createMemorySession, LoadedMemory, type MemoryOperationContext, type MemorySession } from "#src/usecases"
-import { CAPTURE_BRANCH, RETRIEVAL_BRANCH, STALE_SESSION_REASON } from "./constants.ts"
+import { CYCLE_BRANCH, RETRIEVAL_BRANCH, STALE_SESSION_REASON } from "./constants.ts"
 import type { ReadOutcome, ReadRun, RegistrationFlow } from "./types.ts"
 
 export class MemorySessionKeeper {
@@ -63,8 +63,8 @@ export class MemorySessionKeeper {
     return this.#loaded
   }
 
-  captureOperation(workingFolder: string, paths: MemoryPaths): MemoryOperationContext | null {
-    return this.#siblingOperation(CAPTURE_BRANCH, workingFolder, paths)
+  cycleOperation(workingFolder: string, paths: MemoryPaths): MemoryOperationContext | null {
+    return this.#siblingOperation(CYCLE_BRANCH, workingFolder, paths)
   }
 
   retrievalOperation(workingFolder: string, paths: MemoryPaths): MemoryOperationContext | null {

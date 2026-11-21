@@ -1,12 +1,30 @@
-import type { CaptureDraft, CaptureRequest, ReadObservation, RetrievalRequest } from "#src/services"
+import type { CaptureDraft, CaptureRequest, JourneyRequest, ReadObservation, RetrievalRequest } from "#src/services"
 
-export function captureRequest(): CaptureRequest {
+export function journeyRequestOf(overrides: Partial<JourneyRequest>): JourneyRequest {
   return {
     model: { provider: "synthetic", id: "fixed-model" },
     signal: new AbortController().signal,
+    thinking: "medium",
+    journey: "### 2026-10-26 12:00\nThe work began.",
+    material: [
+      { label: "0001", text: "User asked for <b>bold</b> output" },
+      { label: "0002", text: "completed: wrote src/a.ts" },
+    ],
+    targetTokens: 1000,
+    now: "2026-10-26T13:35:07",
+    ...overrides,
+  }
+}
+
+export function captureRequest(): CaptureRequest {
+  return {
+    kind: "consolidate",
+    model: { provider: "synthetic", id: "fixed-model" },
+    thinking: "off",
+    signal: new AbortController().signal,
     context: { project: null, folder: "workspace" },
     observations: [],
-    transcriptDelta: [{ role: "user", text: "Remember my token: secret-123" }],
+    material: [{ label: "user", text: "Remember my token: secret-123" }],
     explicitSaves: [],
     limits: { maxBodyChars: 1000, maxStatementChars: 100 },
   }
@@ -18,8 +36,8 @@ export function retrievalRequest(): RetrievalRequest {
 }
 
 export function captureInputOf(overrides: Partial<CaptureRequest>) {
-  const { context, transcriptDelta, observations, explicitSaves, limits } = { ...captureRequest(), ...overrides }
-  return { context, transcriptDelta, observations, explicitSaves, limits }
+  const { context, material, observations, explicitSaves, limits } = { ...captureRequest(), ...overrides }
+  return { context, material, observations, explicitSaves, limits }
 }
 
 export function retrievalInputOf(overrides: Partial<RetrievalRequest>) {

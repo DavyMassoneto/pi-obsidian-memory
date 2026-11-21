@@ -45,22 +45,13 @@ export interface Saving {
   reload: boolean
 }
 
-export interface SwitchDiscriminant {
-  kind: "captureSwitch"
-}
+export type ObserverThinking = MemoryConfig["observer"]["thinking"]
 
-export interface CountDiscriminant {
-  kind: "captureCount"
-}
-
-export type CaptureCountName = Extract<SettingChange, CountDiscriminant>["name"]
-
-export type CaptureSwitchName = Extract<SettingChange, SwitchDiscriminant>["name"]
-
-export interface SwitchEditSpec {
-  name: CaptureSwitchName
+export interface ThinkingEditSpec {
+  title: string
   what: string
-  current: boolean
+  role: "observer" | "consolidator"
+  current: ObserverThinking
 }
 
 export interface EmbeddingChoice {
@@ -71,7 +62,7 @@ export interface EmbeddingChoice {
 export interface ModelEditSpec {
   title: string
   what: string
-  kind: "captureModel" | "agentModel"
+  kind: "observerModel" | "consolidatorModel" | "agentModel"
   current: CurrentModel
 }
 

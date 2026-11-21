@@ -1,6 +1,6 @@
 import { expect, test } from "vitest"
 
-import { aConfig, parseConfig } from "#test-helpers"
+import { aConfig, inspectConfigForRepair, legacyConfigText, parseConfig } from "#test-helpers"
 
 test("text that is not JSON is refused as a single problem carrying the parser message", () => {
   const result = parseConfig("{")
@@ -11,6 +11,16 @@ test("text that is not JSON is refused as a single problem carrying the parser m
 
 test("a valid document returns the parsed config unchanged", () => {
   expect(parseConfig(JSON.stringify(aConfig()))).toEqual({ succeeded: true, output: aConfig() })
+})
+
+test("reading an old capture config is valid and does not change the text", () => {
+  const text = legacyConfigText({ model: aConfig().observer.model, when: "after-each-turn" })
+  const before = text
+
+  expect(parseConfig(text)).toEqual({ succeeded: true, output: aConfig() })
+  expect(inspectConfigForRepair(text)).toMatchObject({ replacementRequired: false, problems: [] })
+  expect(text).toBe(before)
+  expect(JSON.parse(text)).toHaveProperty("capture")
 })
 
 test("projects that is not an array is refused and no project is inspected", () => {

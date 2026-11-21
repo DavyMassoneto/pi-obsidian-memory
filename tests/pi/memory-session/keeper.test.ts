@@ -8,8 +8,8 @@ test("a tool call has no operation context before a session started", () => {
   expect(new MemorySessionKeeper().currentOperation("work", paths, undefined)).toBeNull()
 })
 
-test("a capture operation has no context before a session started", () => {
-  expect(new MemorySessionKeeper().captureOperation("work", paths)).toBeNull()
+test("the cycle operation runs on its own branch of the session", () => {
+  expect(new MemorySessionKeeper().cycleOperation("work", paths)).toBeNull()
 })
 
 test("a retrieval operation has no context before a session started", () => {

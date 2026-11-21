@@ -68,10 +68,11 @@ The memory block at session start, and the relevant notes added to a message, ar
   - A folder path returns its index. `""` is the vault root.
   - Paths under `archive/` can be read.
 - To place a note, read the root index and walk down the folder indexes with `memory_get`.
+- After a compaction, the summary lists the memory map: the notes in each vault, by path, type and Don't forget mark. It shows which notes exist, not what they say. Read a note with `memory_get`, passing the vault named in its heading and its path.
 
 ## Saving
 
-- Memory is captured, updated and retired automatically by a background review of the conversation; you don't need to save anything for it.
+- Durable memory is saved automatically: in the background, the oldest observations of the session are consolidated into notes. The observations and the journey in a compaction summary are not notes; they stay in the session.
 - Use `memory_add` only when the user explicitly asks you to remember something. Never save on your own initiative, and never nudge the user to save.
 - Choose the vault, the folder and the type as described above. Ask when unsure.
 - A name already taken (in any case) is refused with the existing note. If it is the same point, read it with `memory_get` and, only if the user asked for a change, use `memory_update`; otherwise choose a statement that says what is new.
@@ -97,5 +98,6 @@ Use these only when the user explicitly asks. Always read the note with `memory_
 
 - With no global vault registered there is no memory: tell the user to run `/memory-setup`.
 - A folder not registered as a project has global memory only: the user can run `/memory-init` to register it.
+- Memory that pi-observational-memory saved in a project's `.memory/` folder is brought into the vaults by the user with `/memory-import`.
 - Notes listed under Needs fixing, blank notes and duplicate ids: suggest the user run `/memory-doctor`.
 - A copy of the memory as a zip: the user can run `/memory-export`.

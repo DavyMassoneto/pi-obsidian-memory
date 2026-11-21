@@ -40,16 +40,14 @@ describe("refused observation", () => {
   })
 
   it("puts no cap on how many observations a capture input carries", () => {
-    const { context, transcriptDelta, explicitSaves, limits } = captureRequest()
+    const { context, material, explicitSaves, limits } = captureRequest()
     const observations = Array.from({ length: 50 }, () => refused)
-    expect(Value.Check(CaptureInputSchema, { context, transcriptDelta, observations, explicitSaves, limits })).toBe(
-      true,
-    )
+    expect(Value.Check(CaptureInputSchema, { context, material, observations, explicitSaves, limits })).toBe(true)
   })
 
   it("is accepted inside a capture input", () => {
-    const { context, transcriptDelta, explicitSaves, limits } = captureRequest()
-    const input = { context, transcriptDelta, observations: [refused], explicitSaves, limits }
+    const { context, material, explicitSaves, limits } = captureRequest()
+    const input = { context, material, observations: [refused], explicitSaves, limits }
     expect(Value.Check(CaptureInputSchema, input)).toBe(true)
   })
 
@@ -67,7 +65,6 @@ describe("refused observation", () => {
     const proposal = {
       action: "update",
       vault: read.vault,
-      scopeReason: "test reason",
       path: read.path,
       id: read.id,
       expectedHash: read.hash,

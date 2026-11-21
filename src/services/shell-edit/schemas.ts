@@ -17,6 +17,7 @@ export const ShellEditAnswersSchema = Type.Object({
     in_place: BoolAnswerSchema,
     inline_code: BoolAnswerSchema,
     script_writes: BoolAnswerSchema,
+    copy_download: BoolAnswerSchema,
     hardlink: BoolAnswerSchema,
   }),
 })
