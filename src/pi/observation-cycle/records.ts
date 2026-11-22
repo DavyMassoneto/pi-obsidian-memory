@@ -14,16 +14,26 @@ import { MEMORY_ADD_TOOL_NAME } from "#src/pi/memory-add"
 import { RELEVANT_MESSAGE_TYPE } from "#src/pi/relevant-memory"
 import {
   CONSOLIDATED_TYPE,
+  CONSOLIDATION_META_TYPE,
+  ConsolidationMetaSchema,
   localTimestamp,
   type MessageRecord,
+  NOTE_WRITTEN_TYPE,
+  NoteWrittenSchema,
   OBSERVATIONS_TYPE,
   ObservationsConsolidatedSchema,
   ObservationsRecordedSchema,
+  ObservationsRectifiedSchema,
+  RECTIFIED_TYPE,
+  RECTIFY_FAILED_TYPE,
   RESUME_TYPE,
   type RecordPart,
+  RectifyFailedSchema,
   type SavedNote,
   type SessionRecord,
   textTokens,
+  USER_WORDS_TYPE,
+  UserWordsSchema,
 } from "#src/usecases"
 import { AddedDetailsSchema } from "./schemas.ts"
 
@@ -124,6 +134,25 @@ function customRecordOf(entry: CustomEntry): SessionRecord {
   }
   if (entry.customType === CONSOLIDATED_TYPE && Value.Check(ObservationsConsolidatedSchema, entry.data)) {
     return { kind: "consolidated", id: entry.id, data: entry.data }
+  }
+  if (entry.customType === RECTIFIED_TYPE && Value.Check(ObservationsRectifiedSchema, entry.data)) {
+    return { kind: "rectified", id: entry.id, data: entry.data }
+  }
+  return companionRecordOf(entry)
+}
+
+function companionRecordOf(entry: CustomEntry): SessionRecord {
+  if (entry.customType === USER_WORDS_TYPE && Value.Check(UserWordsSchema, entry.data)) {
+    return { kind: "user-words", id: entry.id, data: entry.data }
+  }
+  if (entry.customType === CONSOLIDATION_META_TYPE && Value.Check(ConsolidationMetaSchema, entry.data)) {
+    return { kind: "consolidation-meta", id: entry.id, data: entry.data }
+  }
+  if (entry.customType === NOTE_WRITTEN_TYPE && Value.Check(NoteWrittenSchema, entry.data)) {
+    return { kind: "note-written", id: entry.id, data: entry.data }
+  }
+  if (entry.customType === RECTIFY_FAILED_TYPE && Value.Check(RectifyFailedSchema, entry.data)) {
+    return { kind: "rectify-failed", id: entry.id, data: entry.data }
   }
   return otherRecord(entry)
 }

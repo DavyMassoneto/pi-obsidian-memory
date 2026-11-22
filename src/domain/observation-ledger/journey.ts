@@ -1,10 +1,11 @@
 import { Value } from "typebox/value"
 
+import type { ConsolidationMeta } from "#src/domain/observation-ledger/origin"
 import { describeSchemaErrors } from "#src/domain/validation"
 import type { Failed, Succeeded } from "#src/shared"
 import { activeObservations } from "./pool.ts"
 import { JourneyReplySchema } from "./schemas.ts"
-import type { Ledger, LedgerObservation, ObservationsConsolidated } from "./types.ts"
+import type { ConsolidationWrite, Ledger, LedgerObservation, SavedNote } from "./types.ts"
 
 export function parseJourneyReply(text: string): Succeeded<string> | Failed {
   try {
@@ -25,9 +26,19 @@ export function consolidatedData(
   promoted: LedgerObservation[],
   ledger: Ledger,
   journey: string,
-): ObservationsConsolidated | null {
+  told: LedgerObservation[],
+  notes: SavedNote[],
+): ConsolidationWrite {
   const active = new Set(activeObservations(ledger).map((observation) => observation.id))
   const observationIds = promoted.map((observation) => observation.id).filter((id) => active.has(id))
-  if (observationIds.length === 0) return null
-  return { observationIds, journey }
+  const materialIds = told
+    .filter((observation) => observation.origin === "material")
+    .map((observation) => observation.id)
+  if (observationIds.length === 0 && materialIds.length === 0) return { consolidated: null, meta: null }
+  const meta: ConsolidationMeta = { observationIds }
+  if (materialIds.length > 0) meta.materialIds = materialIds
+  if (notes.length > 0) meta.notes = notes
+  if (observationIds.length === 0) return { consolidated: null, meta: { ...meta, journey } }
+  if (materialIds.length === 0 && notes.length === 0) return { consolidated: { observationIds, journey }, meta: null }
+  return { consolidated: { observationIds, journey }, meta }
 }

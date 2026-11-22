@@ -10,6 +10,7 @@ export function journeyData(request: JourneyRequest): string {
     journeyTokens: request.targetTokens,
     journeyWords: Math.round(request.targetTokens * WORDS_PER_TOKEN),
     material: request.material,
+    corrections: request.corrections,
   })
 }
 

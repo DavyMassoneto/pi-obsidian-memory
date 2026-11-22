@@ -1,7 +1,8 @@
+import { Value } from "typebox/value"
 import { describe, expect, it } from "vitest"
 
 import { assignObservationIds, recordedData } from "#src/domain"
-import { chunkRange, observation } from "#test-helpers"
+import { chunkRange, observation, RecordedByOlderVersionsSchema } from "#test-helpers"
 
 describe("assignObservationIds", () => {
   it("a minute timestamp becomes a second-resolution id, and collisions get the first free suffix", () => {
@@ -37,6 +38,14 @@ describe("assignObservationIds", () => {
     expect(assignObservationIds(drafts, new Set())).toEqual([
       { id: "2026-10-26T13:35:00", content: "abcde", tokens: 2 },
     ])
+  })
+
+  it("an observation is recorded in the shape every version reads: id, content and tokens, nothing else", () => {
+    const drafts = [{ timestamp: "2026-10-26 13:35", content: "User forbade commits." }]
+    const recorded = assignObservationIds(drafts, new Set())
+
+    expect(recorded).toEqual([{ id: "2026-10-26T13:35:00", content: "User forbade commits.", tokens: 6 }])
+    expect(Value.Check(RecordedByOlderVersionsSchema, recordedData(chunkRange("u1", "a3"), recorded))).toBe(true)
   })
 })
 

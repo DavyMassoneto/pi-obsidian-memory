@@ -28,6 +28,7 @@ import { entryParts } from "./entry-parts.ts"
 import { registrarFor } from "./registrar.ts"
 import type {
   CommandDeps,
+  CycleMemoryDeps,
   EntryParts,
   ExtensionOverrides,
   ExtensionRegistrar,
@@ -59,14 +60,7 @@ export function registerExtension(
     parts.commands,
   )
   const relevant = new RelevantMemoryRuntime({ paths, sessions, completionOf })
-  const cycle = new ObservationRuntime({
-    paths,
-    sessions,
-    completionOf,
-    appendObservations: (data) => registrar.appendObservations(data),
-    appendConsolidated: (data) => registrar.appendConsolidated(data),
-    sendResume: () => registrar.sendResume(),
-  })
+  const cycle = cycleFor(registrar, { paths, sessions, completionOf })
   registrar.onSessionStart(sessionStartHandler(paths, sessions, block, relevant, cycle))
   registrar.onBeforeAgentStart(block.beforeAgentStart())
   registrar.onBeforeAgentStart(relevant.beforeAgentStart())
@@ -77,6 +71,17 @@ export function registerExtension(
     await block.settled()
     block.clear()
     await semantic.shutdown()
+  })
+}
+
+function cycleFor(registrar: ExtensionRegistrar, memory: CycleMemoryDeps): ObservationRuntime {
+  return new ObservationRuntime({
+    ...memory,
+    appendObservations: (data) => registrar.appendObservations(data),
+    appendConsolidated: (data) => registrar.appendConsolidated(data),
+    appendRectified: (data) => registrar.appendRectified(data),
+    appendCompanion: (record) => registrar.appendCompanion(record),
+    sendResume: () => registrar.sendResume(),
   })
 }
 

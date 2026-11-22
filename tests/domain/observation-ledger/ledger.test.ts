@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest"
 
 import { activeObservations, ledgerOf } from "#src/domain"
-import { assistantRecord, consolidatedRecord, observation, observationsRecord, userRecord } from "#test-helpers"
+import {
+  assistantRecord,
+  consolidatedRecord,
+  observation,
+  observationsRecord,
+  unchecked,
+  userRecord,
+} from "#test-helpers"
 
 const first = observation("2026-10-26T13:35:00", "first")
 const second = observation("2026-10-26T13:36:00", "second")
@@ -18,8 +25,8 @@ describe("ledgerOf", () => {
     ]
 
     expect(ledgerOf(records).ranges).toEqual([
-      { from: 0, to: 1, observations: [first] },
-      { from: 3, to: 4, observations: [second] },
+      { from: 0, to: 1, observations: unchecked([first]) },
+      { from: 3, to: 4, observations: unchecked([second]) },
     ])
   })
 
@@ -43,8 +50,8 @@ describe("ledgerOf", () => {
     ]
 
     expect(ledgerOf(records).ranges).toEqual([
-      { from: 0, to: 0, observations: [first] },
-      { from: 1, to: 1, observations: [second] },
+      { from: 0, to: 0, observations: unchecked([first]) },
+      { from: 1, to: 1, observations: unchecked([second]) },
     ])
   })
 
@@ -67,7 +74,7 @@ describe("ledgerOf", () => {
     ]
     const partly = ledgerOf(records)
 
-    expect(activeObservations(partly)).toEqual([second])
+    expect(activeObservations(partly)).toEqual(unchecked([second]))
     expect(partly.journey).toBe("older journey")
 
     const fully = ledgerOf([...records, consolidatedRecord("c2", [second.id, first.id], "newer journey")])

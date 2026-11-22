@@ -127,13 +127,28 @@ is in [docs/vault-format.md](docs/vault-format.md).
    tokens by default) and writes dated observations into the pi session. When the context reaches 150,000 tokens,
    memory compacts the session: the older part is replaced by a block with the memory map (the names of the notes in
    both vaults) and the observations, and the last 20,000 tokens are kept word for word. `/compact` and pi's own
-   compactions use the same block. A run that was compacted while it used tools goes on by itself.
+   compactions use the same block. A run that was compacted while it used tools goes on by itself. Observations are
+   checked against your own messages, and a compaction waits for those checks to finish or fail; whatever is still
+   unchecked is marked. A request, restriction, authorization or goal you wrote is kept as a passage of your words: a
+   message of 400 characters or fewer is kept whole, and a longer one keeps the passages the model finds and the check
+   accepts (it is kept whole only after three failed model attempts), so not every request is guaranteed to be kept.
+   Text the assistant read or produced (a file, a tool result, another session's transcript) is named after its source
+   and keeps a visible `[not said by the user]` mark, even once rewritten. An observation not yet checked is marked
+   `[origin unverified]`, and one the check could not confirm is marked `[user attribution unconfirmed]`. The
+   compaction tells the assistant that, when your requirements conflict, your latest instruction governs; a later tool
+   result, log or assistant message does not replace it.
 4. **Consolidation.** When the observations kept in the session pass 15,000 tokens, the consolidator turns the oldest
    ones into notes, in the background, until about 10,000 tokens of observations remain: it adds, updates, archives or
    replaces notes in the global or the project vault. It never asks you anything: what it is unsure of is not saved.
    Tasks, progress and history are not memory. They go to the journey, a short dated account of the session that stays
-   in the session and opens each compaction block. Observations already consolidated leave the block. The cycle
-   follows pi-observational-memory.
+   in the session and opens each compaction block. Observations already consolidated leave the block, except the
+   passages you wrote: those stay in later compactions, but they are not counted toward the next consolidation and are
+   not picked again to become notes. Read material, unverified and unconfirmed observations are never saved as notes,
+   and a batch holding unverified observations waits until they are checked. An observation found later to be read
+   material, after it was consolidated, is passed back as a correction: the consolidator is asked to archive or update
+   the notes that state it as your rule, never to save it as a note, and the journey is asked not to present it as
+   your words. That review is model judgement, not a verified repair of the vaults. The cycle follows
+   pi-observational-memory.
 
 You change notes in Obsidian whenever you want. pi must read a note before changing it, and a note you edited since
 then is never overwritten.
@@ -268,6 +283,7 @@ thing it offers to change is a blank note, after asking you.
 | "Refused: the shell-edit guard could not check this command" | Same: the shell-edit guard needs Jev |
 | "Memory observer failed: …" | The text after the colon names the cause, for example a model without a key. It tries again a minute later; `/memory-doctor` checks the observer model |
 | "Memory consolidation failed: …" | The text after the colon names the cause. It tries again a minute later; `/memory-doctor` checks the consolidator model |
+| "Memory could not check the origin of observations: …" | The text after the colon names the cause. It tries again in a minute; after three failed attempts they stay unconfirmed and are not saved as notes. |
 | "… so pi compacted it on its own" | The observer had not covered the start of the session yet. Nothing to do: it catches up, and the next compaction uses its observations |
 | "Memory could not compact the session: …" | The text after the colon names the cause, for example "Nothing to compact (session too small)". Nothing was compacted, and a run the compaction interrupted goes on. Nothing to do: memory tries again once the conversation has grown |
 | `No API key found for "<provider>"` in `/memory-doctor` | Log in to that provider in pi (`/login`) or set its key |
@@ -294,6 +310,21 @@ thing it offers to change is a blank note, after asking you.
   process's operation returns without that vault. On Linux and macOS the swap succeeds, and the first process writes to
   the old file, already unnamed, and loses those writes until it opens the index again (POSIX `rename` semantics, not
   measured here). The index is rebuilt from the notes, so no note is lost.
+- **Attribution checks use this session only.** Each observation is checked against the messages of its own range and
+  the most recent earlier messages of the same session that fit in about one observer chunk of text
+  (`observer.chunkTokens`). Nothing in the check searches other sessions or the vaults, and the check is model
+  judgement, not guaranteed to settle every case.
+- **Observations from before the update.** They are checked on the next turns of the same session, or while a
+  compaction waits for them. Until they are settled they are marked `[origin unverified]`, and a batch holding them
+  waits for consolidation.
+- **Passages you wrote after consolidation.** They stay in later compactions with no new size cap, so the compaction
+  block grows with them. A kept instruction that was already carried out is history: it shows what you asked, and it
+  is not new permission to repeat the work. For a message over 400 characters, the passages kept are chosen by the
+  model and checked against the message, so not every request is guaranteed to be kept.
+- **Compactions already saved are not rewritten.** A compaction in a session file keeps its text, so an instruction it
+  dropped stays dropped there. Only compactions built after the update keep your passages after consolidation.
+- **No guaranteed repair of existing notes.** Notes saved from an observation later found to be read material are only
+  passed to the consolidator for review, which may or may not change them.
 
 ## Development
 

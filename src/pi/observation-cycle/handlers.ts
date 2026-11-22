@@ -75,6 +75,7 @@ async function buildCompaction(
   if (!settings) return undefined
   const until = idealCutId(recordsOf(ctx.sessionManager.getBranch()), settings.compaction.tailTokens)
   if (typeof until === "string") await runtime.observeBeforeCut(ctx, until, event.signal)
+  await runtime.rectification.runUntil(ctx, settings, event.signal)
   if (event.signal.aborted) return { cancel: true }
   const result = await runtime.compactSession(ctx, event.signal)
   if (!result) return undefined

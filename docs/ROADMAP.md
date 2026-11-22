@@ -94,6 +94,22 @@ Every milestone:
     folder, the task and its progress are not saved, a rule stated in Portuguese is saved in English (VISION 7), and a
     stated secret is saved as written (VISION 11).
 
+### User passages kept after consolidation (pending release)
+
+Diagnosed: once a passage you wrote is consolidated, it leaves the compaction block, so later compactions drop your
+scoped instructions. Target: passages checked against your message stay in later compactions after their ordinary
+consolidation, kept in a separate view apart from the consolidation pool: they are neither counted toward it nor
+picked again for notes. Tradeoffs: retained passages get no new size cap, so the compaction block grows; a completed
+instruction is history, not new permission; passages of messages over 400 characters are still chosen by the model.
+
+- [x] Offline authorship and citation tests pass: kept passages must appear in your message, and read material is
+  marked as not said by the user.
+- [x] Offline: passages kept after consolidation stay in later compactions, and are not counted in the pool or picked
+  again for notes.
+- [ ] E2E `tests/e2e/observation-origin.e2e.test.ts`, which asserts behaviour after consolidation, passes in CI on
+  Windows. Pending until CI passes it.
+- [ ] Release, once the E2E is green in CI.
+
 ## Where each VISION decision still lands
 
 | Decision | Pending |

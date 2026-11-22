@@ -12,7 +12,14 @@ describe("journeyData", () => {
       journeyTokens: 1000,
       journeyWords: 750,
       material: request.material,
+      corrections: [],
     })
+  })
+
+  it("carries the observations the journey was written from before they were found to be read material", () => {
+    const corrections = [{ label: "2026-10-26T13:35:00", text: "User said to put the bot in production." }]
+
+    expect(JSON.parse(journeyData(journeyRequestOf({ corrections }))).corrections).toEqual(corrections)
   })
 
   it("rounds the word count of an odd token target", () => {

@@ -56,7 +56,9 @@ export async function captureMemory(
     limits: { maxBodyChars: config.limits.maxBodyChars, maxStatementChars: config.limits.maxStatementChars },
   }
   const report: CaptureReport = { reviewed: false, applied: [] }
-  const tools: ReviewTools = { context, complete, report }
+  let onApplied: ReviewTools["onApplied"] = null
+  if (run.onApplied) onApplied = run.onApplied
+  const tools: ReviewTools = { context, complete, report, onApplied }
   if (run.material.length > 0) {
     report.reviewed = true
     const failure = await reviewMaterial(run.material, base, tools)
@@ -113,6 +115,7 @@ async function act(action: CaptureAction, observations: CaptureObservation[], to
 async function write(action: WriteAction, observations: CaptureObservation[], tools: ReviewTools): Promise<void> {
   const applied = await applyWrite(action, tools.context)
   tools.report.applied.push(applied)
+  if (tools.onApplied) tools.onApplied(applied)
   observations.push({ kind: "write", ...applied })
 }
 

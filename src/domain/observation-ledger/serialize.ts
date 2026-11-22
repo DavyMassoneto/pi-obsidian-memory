@@ -23,6 +23,10 @@ function labelOf(record: SourceRecord): string {
   return "Tool result"
 }
 
+export function recordText(record: SourceRecord): string {
+  return bodyOf(record)
+}
+
 function bodyOf(record: SourceRecord): string {
   if (record.kind !== "message") return record.text
   return record.parts

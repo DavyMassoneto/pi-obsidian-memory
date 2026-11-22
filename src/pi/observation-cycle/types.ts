@@ -9,10 +9,15 @@ import type { CompletionFactory } from "#src/pi/completion"
 import type { MemoryPaths, MemoryPiContext, NotifyLevel } from "#src/pi/context"
 import type { MemorySessionKeeper } from "#src/pi/memory-session"
 import type {
+  CompletionPort,
+  CycleCompanion,
+  CycleSettings,
   Ledger,
   LedgerObservation,
+  MemoryOperationContext,
   ObservationsConsolidated,
   ObservationsRecorded,
+  ObservationsRectified,
   SessionRecord,
 } from "#src/usecases"
 
@@ -28,6 +33,8 @@ export type BeforeCompactHandler = (
 export type AppendObservations = (data: ObservationsRecorded) => void
 
 export type AppendConsolidated = (data: ObservationsConsolidated) => void
+
+export type AppendRectified = (data: ObservationsRectified) => void
 
 export type SendResume = () => void
 
@@ -46,10 +53,22 @@ export interface NoticeTarget {
 
 export type CancelSignal = () => AbortSignal
 
+export type AfterVerified = (ctx: MemoryPiContext, settings: CycleSettings) => void
+
+export type RectificationWork = (context: MemoryOperationContext, complete: CompletionPort) => Promise<string[]>
+
+export interface RectificationJob {
+  recordId: string | null
+  work: RectificationWork
+}
+
+export type AppendCompanion = (record: CycleCompanion) => void
+
 export interface Promotion {
   records: SessionRecord[]
   ledger: Ledger
   promoted: LedgerObservation[]
+  corrections: LedgerObservation[]
 }
 
 export interface ObservationCycleDeps {
@@ -58,5 +77,7 @@ export interface ObservationCycleDeps {
   completionOf: CompletionFactory
   appendObservations: AppendObservations
   appendConsolidated: AppendConsolidated
+  appendRectified: AppendRectified
+  appendCompanion: AppendCompanion
   sendResume: SendResume
 }

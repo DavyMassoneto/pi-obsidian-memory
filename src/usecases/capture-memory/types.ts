@@ -36,6 +36,7 @@ export interface CaptureRun {
   model: ChatModelReference
   thinking: ThinkingLevel
   explicitSaves: ExplicitSave[]
+  onApplied?: AppliedListener
 }
 
 export interface AppliedWrite {
@@ -79,10 +80,13 @@ export interface CaptureBase extends StepSettings {
   limits: CaptureInput["limits"]
 }
 
+export type AppliedListener = (write: AppliedWrite) => void
+
 export interface ReviewTools {
   context: MemoryOperationContext
   complete: CompletionPort
   report: CaptureReport
+  onApplied: AppliedListener | null
 }
 
 export type NextStep = "continue" | "stop"

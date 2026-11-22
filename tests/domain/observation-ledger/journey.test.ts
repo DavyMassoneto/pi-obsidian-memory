@@ -1,7 +1,8 @@
+import { Value } from "typebox/value"
 import { describe, expect, it } from "vitest"
 
 import { consolidatedData, parseJourneyReply } from "#src/domain"
-import { ledgerHolding, sizedObservation } from "#test-helpers"
+import { ConsolidatedByOlderVersionsSchema, ledgerHolding, sizedObservation, withOrigin } from "#test-helpers"
 
 const first = sizedObservation("2026-10-26T13:00:00", 10)
 const second = sizedObservation("2026-10-26T13:10:00", 10)
@@ -12,17 +13,50 @@ describe("consolidatedData", () => {
   it("consolidated data keeps only ids still active", () => {
     const ledger = ledgerHolding([first, second, third], [first.id])
 
-    expect(consolidatedData([first, second, third, unknown], ledger, "the journey")).toEqual({
-      observationIds: [second.id, third.id],
-      journey: "the journey",
+    expect(consolidatedData([first, second, third, unknown], ledger, "the journey", [], [])).toEqual({
+      consolidated: { observationIds: [second.id, third.id], journey: "the journey" },
+      meta: null,
     })
   })
 
-  it("is null when none of the promoted observations is active any more", () => {
+  it("records which observations the journey was written knowing to be read material", () => {
+    const ledger = ledgerHolding([first, second, third], [first.id])
+    const told = [withOrigin(first, "material"), withOrigin(second, "material"), withOrigin(third, "user")]
+
+    expect(consolidatedData([second, third], ledger, "the journey", told, [])).toEqual({
+      consolidated: { observationIds: [second.id, third.id], journey: "the journey" },
+      meta: { observationIds: [second.id, third.id], materialIds: [first.id, second.id] },
+    })
+  })
+
+  it("writes nothing when none of the promoted observations is active any more", () => {
+    const ledger = ledgerHolding([first, second], [first.id])
+    const nothing = { consolidated: null, meta: null }
+
+    expect(consolidatedData([first, unknown], ledger, "the journey", [], [])).toEqual(nothing)
+    expect(consolidatedData([], ledger, "the journey", [], [])).toEqual(nothing)
+  })
+
+  it("records the notes the batch changed beside the plain record, which stays in the shape older versions read", () => {
+    const ledger = ledgerHolding([first, second], [])
+    const notes = [{ vault: "global" as const, path: "rules/Never commit.md" }]
+
+    const written = consolidatedData([first], ledger, "the journey", [], notes)
+
+    expect(written).toEqual({
+      consolidated: { observationIds: [first.id], journey: "the journey" },
+      meta: { observationIds: [first.id], notes },
+    })
+    expect(Value.Check(ConsolidatedByOlderVersionsSchema, written.consolidated)).toBe(true)
+  })
+
+  it("a run that only took corrections into account writes no plain record: its journey goes in the companion record", () => {
     const ledger = ledgerHolding([first, second], [first.id])
 
-    expect(consolidatedData([first, unknown], ledger, "the journey")).toBeNull()
-    expect(consolidatedData([], ledger, "the journey")).toBeNull()
+    expect(consolidatedData([], ledger, "the journey", [withOrigin(first, "material")], [])).toEqual({
+      consolidated: null,
+      meta: { observationIds: [], journey: "the journey", materialIds: [first.id] },
+    })
   })
 })
 

@@ -21,6 +21,7 @@ export async function compactSession(
     journey: ledger.journey,
     map: renderMemoryMap(vaults.output, mapTokens),
     observations: compactionObservations(ledger, snap.firstKeptIndex),
+    corrections: ledger.corrections,
   })
   return { succeeded: true, output: { summary, firstKeptEntryId: snap.firstKeptEntryId } }
 }

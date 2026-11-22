@@ -1,12 +1,18 @@
 import type {
+  AttributionCheck,
   CaptureInput,
   CaptureResult,
   ChatModelReference,
+  CheckedObservation,
   MaterialItem,
   ObserverDraft,
+  RectifiedObservation,
+  Repair,
   RetrievalInput,
   RetrievalResult,
   ThinkingLevel,
+  UserWords,
+  UserWordsCheck,
 } from "#src/domain"
 import type { Failed, Succeeded } from "#src/shared"
 
@@ -29,10 +35,27 @@ export interface ObserveRequest extends ModelStepContext {
   now: string
 }
 
+export interface UserWordsRequest extends ModelStepContext {
+  thinking: ThinkingLevel
+  check: UserWordsCheck
+}
+
+export interface RepairRequest extends ModelStepContext {
+  thinking: ThinkingLevel
+  chunk: string
+  observations: CheckedObservation[]
+}
+
+export interface AttributionRequest extends ModelStepContext {
+  thinking: ThinkingLevel
+  check: AttributionCheck
+}
+
 export interface JourneyRequest extends ModelStepContext {
   thinking: ThinkingLevel
   journey: string
   material: MaterialItem[]
+  corrections: MaterialItem[]
   targetTokens: number
   now: string
 }
@@ -68,6 +91,9 @@ export type CaptureStepResult = CaptureResult | ModelCallFailure
 export type RetrievalStepResult = RetrievalResult | ModelCallFailure
 export type JourneyStepResult = Succeeded<string> | Failed | ModelCallFailure
 export type ObserveStepResult = Succeeded<ObserverDraft[]> | Failed | ModelCallFailure
+export type UserWordsStepResult = Succeeded<UserWords> | Failed | ModelCallFailure
+export type AttributionStepResult = Succeeded<RectifiedObservation[]> | Failed | ModelCallFailure
+export type RepairStepResult = Succeeded<Repair[]> | Failed | ModelCallFailure
 export type DisposeCompletion = () => void
 
 export interface CompletionLifetime {

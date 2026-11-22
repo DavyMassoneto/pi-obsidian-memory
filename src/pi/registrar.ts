@@ -2,7 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent"
 import { Value } from "typebox/value"
 
 import { SESSION_KEY_CHANNEL, SessionKeyFlagsSchema } from "#src/pi/shell-edit-guard"
-import { CONSOLIDATED_TYPE, OBSERVATIONS_TYPE, RESUME_PROMPT, RESUME_TYPE } from "#src/usecases"
+import { CONSOLIDATED_TYPE, OBSERVATIONS_TYPE, RECTIFIED_TYPE, RESUME_PROMPT, RESUME_TYPE } from "#src/usecases"
 import type { ExtensionRegistrar } from "./types.ts"
 
 export function registrarFor(pi: ExtensionAPI): ExtensionRegistrar {
@@ -29,6 +29,8 @@ export function registrarFor(pi: ExtensionAPI): ExtensionRegistrar {
     commandNames: () => pi.getCommands().map((command) => command.name),
     appendObservations: (data) => pi.appendEntry(OBSERVATIONS_TYPE, data),
     appendConsolidated: (data) => pi.appendEntry(CONSOLIDATED_TYPE, data),
+    appendRectified: (data) => pi.appendEntry(RECTIFIED_TYPE, data),
+    appendCompanion: (record) => pi.appendEntry(record.type, record.data),
     sendResume: () =>
       pi.sendMessage({ customType: RESUME_TYPE, content: RESUME_PROMPT, display: false }, { triggerTurn: true }),
     onBeforeCompact: (handler) => pi.on("session_before_compact", handler),

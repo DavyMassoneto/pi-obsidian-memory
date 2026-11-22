@@ -10,6 +10,7 @@ export function journeyRequestOf(overrides: Partial<JourneyRequest>): JourneyReq
       { label: "0001", text: "User asked for <b>bold</b> output" },
       { label: "0002", text: "completed: wrote src/a.ts" },
     ],
+    corrections: [],
     targetTokens: 1000,
     now: "2026-10-26T13:35:07",
     ...overrides,

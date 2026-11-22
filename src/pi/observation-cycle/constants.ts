@@ -4,6 +4,16 @@ export const CONSOLIDATION_FAILED = "Memory consolidation failed:"
 
 export const CONSOLIDATION_SAVED = "Memory consolidated:"
 
+export const RECTIFICATION_FAILED = "Memory could not check the origin of observations:"
+
+export const UNCHECKED_LEAD = "Memory could not check the origin of"
+
+export const UNCHECKED_TAIL = "after 3 attempts: they stay marked as unconfirmed and are not saved as notes."
+
+export const CONSOLIDATOR_CORRECTING = "correcting what it wrote from"
+
+export const RECTIFIED_LEAD = "Memory checked the origin of"
+
 export const OBSERVER_STARTED = "Memory observer started:"
 
 export const OBSERVER_SAVED = "Memory observer saved"

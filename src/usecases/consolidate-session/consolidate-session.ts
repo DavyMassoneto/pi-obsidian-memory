@@ -1,8 +1,29 @@
-import { type CompletionPort, journeyStep, localTimestamp, nowMs } from "#src/services"
+import {
+  type CompletionPort,
+  captureMaterial,
+  correctionMaterial,
+  journeyMaterial,
+  journeyStep,
+  localTimestamp,
+  nowMs,
+} from "#src/services"
 import { captureMemory } from "#src/usecases/capture-memory"
 import { cycleSettings } from "#src/usecases/observe-session"
 import { type MemoryOperationContext, memoryOperationInterruption } from "#src/usecases/operation-context"
-import type { ConsolidateSessionRequest, ConsolidateSessionResult } from "./types.ts"
+import { changedNotes } from "./notes.ts"
+import type { ConsolidateSessionRequest, ConsolidateSessionResult, ConsolidationCapture } from "./types.ts"
+
+function captureOf(request: ConsolidateSessionRequest): ConsolidationCapture {
+  return {
+    kind: "consolidate",
+    material: [
+      ...captureMaterial(request.observations),
+      ...correctionMaterial(request.corrections, request.correctionNotes),
+    ],
+    explicitSaves: [...request.saved, ...request.correctionNotes, ...request.owedNotes],
+    onApplied: request.onApplied,
+  }
+}
 
 export async function consolidateSession(
   request: ConsolidateSessionRequest,
@@ -12,12 +33,7 @@ export async function consolidateSession(
   const settings = await cycleSettings(context)
   if (!settings.succeeded) return settings
   const { model, thinking, journeyTokens } = settings.output.consolidator
-  const material = request.observations.map((observation) => ({ label: observation.id, text: observation.content }))
-  const captured = await captureMemory(
-    { kind: "consolidate", material, model, thinking, explicitSaves: request.saved },
-    context,
-    complete,
-  )
+  const captured = await captureMemory({ ...captureOf(request), model, thinking }, context, complete)
   if (!captured.succeeded) return captured
   const journey = await journeyStep(
     {
@@ -25,7 +41,8 @@ export async function consolidateSession(
       model,
       thinking,
       journey: request.journey,
-      material,
+      material: journeyMaterial(request.observations),
+      corrections: request.corrections.map((observation) => ({ label: observation.id, text: observation.content })),
       targetTokens: journeyTokens,
       now: localTimestamp(nowMs()),
     },
@@ -38,5 +55,7 @@ export async function consolidateSession(
     }
     return { succeeded: false, reason: "model-failed", problems: journey.problems, report }
   }
-  return { succeeded: true, output: { applied: captured.output.applied, journey: journey.output } }
+  const { applied } = captured.output
+  const notes = changedNotes(applied, request.owedNotes)
+  return { succeeded: true, output: { applied, notes, journey: journey.output } }
 }

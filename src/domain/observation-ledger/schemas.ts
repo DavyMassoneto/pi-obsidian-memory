@@ -1,8 +1,7 @@
 import Type from "typebox"
 
+import { ObservationIdSchema } from "#src/domain/observation-ledger/origin"
 import { COMPACTION_DETAILS_TYPE } from "./constants.ts"
-
-export const ObservationIdSchema = Type.String({ pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?$" })
 
 export const LedgerObservationSchema = Type.Object(
   {

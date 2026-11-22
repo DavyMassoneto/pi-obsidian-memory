@@ -21,6 +21,7 @@ import { Consolidation } from "./consolidation.ts"
 import { OBSERVER_FAILED, OBSERVER_RETRY_NOTICE, OBSERVER_UNEXPECTED } from "./constants.ts"
 import { NoticeQueue, observerSavedNotice, observerStartedNotice, tell } from "./notice.ts"
 import { recordsOf } from "./records.ts"
+import { Rectification } from "./rectification.ts"
 import type { IdleRelease, ObservationCycleDeps } from "./types.ts"
 
 export class ObservationRuntime {
@@ -33,11 +34,18 @@ export class ObservationRuntime {
   #notices = new NoticeQueue()
   readonly compaction: CompactionTrigger
   readonly consolidation: Consolidation
+  readonly rectification: Rectification
 
   constructor(deps: ObservationCycleDeps) {
     this.#deps = deps
     this.compaction = new CompactionTrigger(() => deps.sendResume())
     this.consolidation = new Consolidation(deps, () => this.#abort.signal, this.#notices)
+    this.rectification = new Rectification(
+      deps,
+      () => this.#abort.signal,
+      this.#notices,
+      (ctx, settings) => this.consolidation.start(ctx, settings),
+    )
   }
 
   reset(): void {
@@ -49,6 +57,7 @@ export class ObservationRuntime {
     this.#notices.clear()
     this.compaction.reset()
     this.consolidation.reset()
+    this.rectification.reset()
     this.#releaseIdle()
   }
 
@@ -68,6 +77,7 @@ export class ObservationRuntime {
   async tick(ctx: MemoryPiContext): Promise<void> {
     const settings = await this.settings(ctx)
     if (!settings) return
+    void this.rectification.run(ctx, settings)
     const records = recordsOf(ctx.sessionManager.getBranch())
     const plan = this.#plan(records, settings, [], null)
     for (const range of plan) this.#start(ctx, records, range, [])
@@ -142,6 +152,7 @@ export class ObservationRuntime {
     const inFlight = this.#inFlight
     const problems = await this.#attempt(ctx, records, range, signal)
     if (!signal.aborted && problems.length > 0) this.#reportFailure(ctx, range, problems)
+    if (!signal.aborted && problems.length === 0) await this.#rectify(ctx)
     const index = inFlight.indexOf(range)
     if (index >= 0) inFlight.splice(index, 1)
     this.#showStatus(ctx)
@@ -166,6 +177,11 @@ export class ObservationRuntime {
       if (error instanceof Error) return [error.message]
       return [OBSERVER_UNEXPECTED]
     }
+  }
+
+  async #rectify(ctx: MemoryPiContext): Promise<void> {
+    const settings = await this.settings(ctx)
+    if (settings) void this.rectification.run(ctx, settings)
   }
 
   #commit(ctx: MemoryPiContext, range: ChunkRange, drafts: ObserverDraft[]): void {

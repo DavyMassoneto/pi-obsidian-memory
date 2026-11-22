@@ -7,6 +7,7 @@ import {
 import {
   EMPTY_MAP_LINE,
   JOURNEY_BULLET,
+  JOURNEY_CORRECTIONS_LEAD,
   JOURNEY_HEADING,
   MAP_BULLET,
   MAP_HEADING,
@@ -17,8 +18,9 @@ import {
   SUMMARY_CLOSING,
   SUMMARY_LEAD,
 } from "./constants.ts"
+import { presentedContent } from "./origin.ts"
 import { textTokens } from "./tokens.ts"
-import type { MapBudget, MapNote, MapVault, SummaryParts } from "./types.ts"
+import type { LedgerObservation, MapBudget, MapNote, MapVault, SummaryParts } from "./types.ts"
 
 function noteLine(note: MapNote): string {
   const parts = [`\`${note.path}\``, note.type]
@@ -94,14 +96,24 @@ function introOf(parts: SummaryParts, journey: string): string {
   return [SUMMARY_LEAD, bullets.join("\n"), SUMMARY_CLOSING].join("\n\n")
 }
 
+function observationLine(item: LedgerObservation): string {
+  return `${item.id}${OBSERVATION_SEPARATOR}${presentedContent(item)}`
+}
+
+function journeySection(journey: string, corrections: LedgerObservation[]): string {
+  const section = `${JOURNEY_HEADING}\n${journey}`
+  if (corrections.length === 0) return section
+  return [section, [JOURNEY_CORRECTIONS_LEAD, ...corrections.map(observationLine)].join("\n")].join("\n\n")
+}
+
 export function renderCompactionSummary(parts: SummaryParts): string {
   const journey = parts.journey.trim()
   if (journey.length === 0 && parts.map.length === 0 && parts.observations.length === 0) return ""
   const sections = [introOf(parts, journey)]
-  if (journey.length > 0) sections.push(`${JOURNEY_HEADING}\n${journey}`)
+  if (journey.length > 0) sections.push(journeySection(journey, parts.corrections))
   if (parts.map.length > 0) sections.push(parts.map)
   if (parts.observations.length > 0) {
-    const lines = parts.observations.map((item) => `${item.id}${OBSERVATION_SEPARATOR}${item.content}`)
+    const lines = parts.observations.map(observationLine)
     sections.push(`${OBSERVATIONS_HEADING}\n${lines.join("\n")}`)
   }
   return sections.join("\n\n")

@@ -3,13 +3,34 @@ import type { Static } from "typebox"
 import type { ReadObservation } from "#src/domain/memory-agent"
 import type { NoteType } from "#src/domain/note"
 import type {
+  ConsolidationMeta,
+  ConsolidationMetaRecord,
+  NoteWrittenRecord,
+  ObservationOrigin,
+  RectifiedRecord,
+  RectifyFailedRecord,
+  UserWordsRecord,
+} from "#src/domain/observation-ledger/origin"
+import type {
   LedgerObservationSchema,
   ObservationsConsolidatedSchema,
   ObservationsRecordedSchema,
   ObserverDraftSchema,
 } from "./schemas.ts"
 
-export type LedgerObservation = Static<typeof LedgerObservationSchema>
+export type StoredObservation = Static<typeof LedgerObservationSchema>
+
+export interface LedgerObservation extends StoredObservation {
+  origin?: ObservationOrigin
+  sources?: string[]
+  userWords?: string[]
+  userEntryIndex?: number
+}
+
+export interface ConsolidationWrite {
+  consolidated: ObservationsConsolidated | null
+  meta: ConsolidationMeta | null
+}
 
 export type ObservationsRecorded = Static<typeof ObservationsRecordedSchema>
 
@@ -86,6 +107,8 @@ export interface Ledger {
   used: ReadonlySet<string>
   consolidated: ReadonlySet<string>
   journey: string
+  corrections: LedgerObservation[]
+  correctionNotes: SavedNote[]
 }
 
 export interface ChunkRange {
@@ -134,6 +157,7 @@ export interface SummaryParts {
   journey: string
   map: string
   observations: LedgerObservation[]
+  corrections: LedgerObservation[]
 }
 
 export interface FailedChunk {
@@ -166,4 +190,14 @@ export interface ChunkPlanRequest {
 
 export type SourceRecord = MessageRecord | CustomMessageRecord | BranchSummaryRecord
 
-export type SessionRecord = SourceRecord | ObservationsRecord | ConsolidatedRecord | CompactionRecord | OtherRecord
+export type SessionRecord =
+  | SourceRecord
+  | ObservationsRecord
+  | ConsolidatedRecord
+  | RectifiedRecord
+  | UserWordsRecord
+  | ConsolidationMetaRecord
+  | NoteWrittenRecord
+  | RectifyFailedRecord
+  | CompactionRecord
+  | OtherRecord

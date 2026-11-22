@@ -9,6 +9,8 @@ import {
   type NoticeTarget,
   observerSavedNotice,
   observerStartedNotice,
+  rectifiedNotice,
+  uncheckedNotice,
 } from "#src/pi"
 
 interface Told {
@@ -23,8 +25,23 @@ function target(hasUI: boolean, told: Told[]): NoticeTarget {
 test("each notice names what the cycle did, with its counts", () => {
   expect(observerStartedNotice(2)).toBe("Memory observer started: 2 chunk(s).")
   expect(observerSavedNotice(7)).toBe("Memory observer saved 7 observation(s).")
-  expect(consolidatorStartedNotice(12, 5400)).toBe("Memory consolidator started: 12 observation(s), about 5400 tokens.")
+  expect(consolidatorStartedNotice(12, 5400, 0)).toBe(
+    "Memory consolidator started: 12 observation(s), about 5400 tokens.",
+  )
+  expect(consolidatorStartedNotice(0, 0, 5)).toBe(
+    "Memory consolidator started: correcting what it wrote from 5 earlier observation(s) that were not the user's.",
+  )
   expect(consolidatedNotice(12, 3)).toBe("Memory consolidated: 12 observation(s), 3 change(s) to the vaults.")
+  expect(rectifiedNotice(9, 7, 0)).toBe(
+    "Memory checked the origin of 9 observation(s): 7 came from material the assistant read, not from the user.",
+  )
+  expect(rectifiedNotice(6, 0, 6)).toBe("6 observation(s) remain unconfirmed and are not saved as notes.")
+  expect(rectifiedNotice(4, 1, 2)).toBe(
+    "Memory checked the origin of 2 observation(s): 1 came from material the assistant read, not from the user. 2 observation(s) remain unconfirmed and are not saved as notes.",
+  )
+  expect(uncheckedNotice(6)).toBe(
+    "Memory could not check the origin of 6 observation(s) after 3 attempts: they stay marked as unconfirmed and are not saved as notes.",
+  )
 })
 
 test("notices queued in the same tick reach the user as one notice, a line each, in order", async () => {

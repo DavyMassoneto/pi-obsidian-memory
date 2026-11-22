@@ -17,7 +17,13 @@ import type {
 import type { SessionStartHandler } from "#src/pi/session-start"
 import type { SessionKeyPayload, ShellEditHandler } from "#src/pi/shell-edit-guard"
 import type { ToolCallHandler } from "#src/pi/vault-guard"
-import type { LocalModelAccess, ObservationsConsolidated, ObservationsRecorded } from "#src/usecases"
+import type {
+  CycleCompanion,
+  LocalModelAccess,
+  ObservationsConsolidated,
+  ObservationsRecorded,
+  ObservationsRectified,
+} from "#src/usecases"
 
 export interface ExtensionRegistrar {
   registerAddTool(tool: MemoryAddTool): void
@@ -36,6 +42,8 @@ export interface ExtensionRegistrar {
   onAgentStart(handler: AgentStartHandler): void
   appendObservations(data: ObservationsRecorded): void
   appendConsolidated(data: ObservationsConsolidated): void
+  appendRectified(data: ObservationsRectified): void
+  appendCompanion(record: CycleCompanion): void
   sendResume(): void
   commandNames(): string[]
   onBeforeCompact(handler: BeforeCompactHandler): void
@@ -47,6 +55,12 @@ export interface CommandDeps {
   sessions: MemorySessionKeeper
   completionOf: CompletionFactory
   modelCachePath: string
+}
+
+export interface CycleMemoryDeps {
+  paths: MemoryPaths
+  sessions: MemorySessionKeeper
+  completionOf: CompletionFactory
 }
 
 export interface ExtensionOverrides {

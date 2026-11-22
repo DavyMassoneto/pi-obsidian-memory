@@ -1,10 +1,18 @@
 import { readFile } from "node:fs/promises"
 import { setTimeout as delay } from "node:timers/promises"
 
+import { parseSessionEntries } from "@earendil-works/pi-coding-agent"
 import Type, { type Static, type TSchema } from "typebox"
 
-import { RELEVANT_MESSAGE_TYPE } from "#src/pi"
-import { OBSERVATIONS_TYPE, ObservationsRecordedSchema, RESUME_TYPE } from "#src/usecases"
+import { type LedgerObservation, ledgerOf } from "#src/domain"
+import { recordsOf as observationRecordsOf, RELEVANT_MESSAGE_TYPE } from "#src/pi"
+import {
+  OBSERVATIONS_TYPE,
+  ObservationsRecordedSchema,
+  ObservationsRectifiedSchema,
+  RECTIFIED_TYPE,
+  RESUME_TYPE,
+} from "#src/usecases"
 import { configuredWorld } from "./e2e-config.ts"
 import { folderSnapshot } from "./e2e-folder-snapshot.ts"
 import { recordsOf } from "./e2e-records.ts"
@@ -51,6 +59,12 @@ const OBSERVATIONS_ENTRY_SCHEMA = Type.Object({
   customType: Type.Literal(OBSERVATIONS_TYPE),
   id: Type.String(),
   data: ObservationsRecordedSchema,
+})
+
+const RECTIFIED_ENTRY_SCHEMA = Type.Object({
+  type: Type.Literal("custom"),
+  customType: Type.Literal(RECTIFIED_TYPE),
+  data: ObservationsRectifiedSchema,
 })
 
 const COMPACTION_ENTRY_SCHEMA = Type.Object({
@@ -111,6 +125,24 @@ export async function entriesIn<Schema extends TSchema>(file: string, schema: Sc
 
 export function observationEntriesIn(file: string): Promise<ObservationsEntry[]> {
   return entriesIn(file, OBSERVATIONS_ENTRY_SCHEMA)
+}
+
+export function rectificationsIn(file: string): Promise<Static<typeof RECTIFIED_ENTRY_SCHEMA>[]> {
+  return entriesIn(file, RECTIFIED_ENTRY_SCHEMA)
+}
+
+export async function observationsBeforeCut(file: string, firstKeptEntryId: string): Promise<LedgerObservation[]> {
+  const entries = parseSessionEntries(await readFile(file, "utf8")).filter((entry) => entry.type !== "session")
+  const records = observationRecordsOf(entries)
+  const firstKeptIndex = records.findIndex((record) => record.id === firstKeptEntryId)
+  if (firstKeptIndex < 0) throw new Error(`compaction cut ${firstKeptEntryId} is missing from ${file}`)
+  return ledgerOf(records)
+    .ranges.filter(({ to }) => to < firstKeptIndex)
+    .flatMap(({ observations }) => observations)
+}
+
+export function isUserWordsObservation(observation: LedgerObservation): boolean {
+  return observation.origin === "user" && typeof observation.userEntryIndex === "number"
 }
 
 export function compactionsIn(file: string): Promise<CompactionEntry[]> {

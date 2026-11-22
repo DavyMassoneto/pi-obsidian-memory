@@ -10,9 +10,11 @@ import {
   ExtensionErrorSchema,
   expectEnglishNote,
   expectRuleNote,
+  isUserWordsObservation,
   NEXT_TURN_PROMPT,
   noteMentioning,
   noticesStarting,
+  observationsBeforeCut,
   PORTUGUESE_CONVERSATION,
   RULE_CONVERSATION,
   recordsOf,
@@ -50,7 +52,21 @@ test("a stated project rule becomes a note in the existing folder, the task does
   if (!compaction) throw new Error("the session has no compaction entry")
   expect(compaction.fromHook).toBe(true)
   expect(compaction.summary).toContain(JOURNEY_HEADING)
-  for (const id of tombstoned) expect(compaction.summary).not.toContain(`\n${id}${OBSERVATION_SEPARATOR}`)
+  const beforeCut = await observationsBeforeCut(file, compaction.firstKeptEntryId)
+  const promotedBeforeCut = beforeCut.filter(({ id }) => tombstoned.includes(id))
+  const retainedQuotes = promotedBeforeCut.filter(isUserWordsObservation)
+  expect(retainedQuotes.length, "tombstoned UserWords before the cut").toBeGreaterThan(0)
+  expect(promotedBeforeCut.length, "also tombstoned ordinary observations before the cut").toBeGreaterThan(
+    retainedQuotes.length,
+  )
+  const retainedById = new Map(retainedQuotes.map(({ id, content }) => [id, content]))
+  const lines = compaction.summary.split("\n")
+  for (const id of tombstoned) {
+    const prefix = `${id}${OBSERVATION_SEPARATOR}`
+    const quote = retainedById.get(id)
+    if (typeof quote === "string") expect(lines).toContain(`${prefix}${quote}`)
+    else expect(lines.some((line) => line.startsWith(prefix))).toBe(false)
+  }
   await waitForConsolidationIdle(world)
   expect(await noteMentioning(world, TASK_MARKER)).toEqual([])
   expect((await vaultNotes(world.folders.globalVault)).length).toBe(0)
