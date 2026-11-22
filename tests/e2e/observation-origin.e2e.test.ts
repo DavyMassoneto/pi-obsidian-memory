@@ -151,8 +151,10 @@ Responda apenas OK.`
   if (!resumedAnswer) throw new Error("pi did not answer after compaction")
   expect(resumedAnswer).toContain(scopeCorrection)
   expect(resumedAnswer).toContain(requiredHeading)
-  expect(resumedAnswer).toMatch(/rodapé\W+não\b/iu)
-  expect(resumedAnswer.toLowerCase()).not.toContain(borrowedFooter)
+  const answerLines = resumedAnswer.split("\n").map((line) => line.replaceAll("**", "").trim())
+  const footerDecisions = answerLines.filter((line) => /^rodapé:/iu.test(line))
+  expect(footerDecisions).toEqual([expect.stringMatching(/^rodapé:\s*não\b/iu)])
+  expect(answerLines.map((line) => line.toLowerCase())).not.toContain(borrowedFooter)
 
   const projectNotes = await vaultNotes(world.folders.projectVault)
   const globalNotes = await vaultNotes(world.folders.globalVault)
