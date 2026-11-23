@@ -11,10 +11,10 @@ import type {
 import { AttributionReplySchema } from "#src/domain/observation-ledger/origin"
 import { describeSchemaErrors } from "#src/domain/validation"
 import type { Failed, Succeeded } from "#src/shared"
-import { MIN_EVIDENCE_LETTERS, QUOTED_PASSAGE } from "./constants.ts"
+import { materialSources } from "./material-sources.ts"
 import { rectifiedOrigins, settledObservation } from "./rectify.ts"
 import type { ObservationsRecord, SessionRecord } from "./types.ts"
-import { comparable, containsUserQuote, earlierThatFit, spacedEvenly, usersBetween } from "./user-messages.ts"
+import { containsUserQuote, earlierThatFit, spacedEvenly, usersBetween } from "./user-messages.ts"
 
 function checkOf(
   records: SessionRecord[],
@@ -34,6 +34,7 @@ function checkOf(
     coversUpToId,
     userEntryIds: inRange.map((message) => message.id),
     userMessages: [...earlier, ...inRange],
+    materialSources: materialSources(records, record.data, maxChars),
     observations,
   }
 }
@@ -53,63 +54,22 @@ export function attributionChecks(records: SessionRecord[], maxChars: number): A
   return checks
 }
 
-function supportedOrigin(
-  id: string,
-  verdict: AttributionVerdict,
-  check: AttributionCheck,
-): RectifiedObservation | null {
+function supportedOrigin(id: string, verdict: AttributionVerdict, check: AttributionCheck): RectifiedObservation {
   const { supportedBy, quote } = verdict
-  if (typeof supportedBy !== "string") return null
+  if (typeof supportedBy !== "string" || typeof quote !== "string") return { id, origin: "unconfirmed" }
   const message = check.userMessages.find((candidate) => candidate.id === supportedBy)
-  if (!message || typeof quote !== "string" || !containsUserQuote(message.text, quote)) {
+  if (!message || !containsUserQuote(message.text, quote)) {
     return { id, origin: "unconfirmed" }
   }
   const evidence = { id, supportedBy, quote: spacedEvenly(quote) }
   if (verdict.partial) return { ...evidence, origin: "partial", quotes: wordsWritten(message, verdict) }
   if (check.userEntryIds.includes(supportedBy)) return { ...evidence, origin: "user" }
-  const inRange = check.userMessages.findLast(
-    (candidate) => check.userEntryIds.includes(candidate.id) && containsUserQuote(candidate.text, quote),
-  )
-  if (inRange) return { ...evidence, supportedBy: inRange.id, origin: "user" }
   return { ...evidence, origin: "restated" }
 }
 
-function quotedPassages(content: string): string[] {
-  const passages: string[] = []
-  for (const match of content.matchAll(QUOTED_PASSAGE)) {
-    for (const passage of match.slice(1)) {
-      if (typeof passage === "string" && comparable(passage).length >= MIN_EVIDENCE_LETTERS) passages.push(passage)
-    }
-  }
-  return passages
-}
-
-function quotedEvidence(
-  observation: CheckedObservation,
-  check: AttributionCheck,
-  anywhere: boolean,
-): RectifiedObservation | null {
-  const quotes: string[] = []
-  let supportedBy: string | null = null
-  const messages = check.userMessages.filter((message) => anywhere || check.userEntryIds.includes(message.id))
-  for (const passage of quotedPassages(observation.content)) {
-    const message = messages.findLast((candidate) => containsUserQuote(candidate.text, passage))
-    if (!message) continue
-    supportedBy = message.id
-    quotes.push(spacedEvenly(passage))
-  }
-  const quote = quotes.at(-1)
-  if (typeof supportedBy !== "string" || typeof quote !== "string") return null
-  return { id: observation.id, origin: "partial", supportedBy, quote, quotes }
-}
-
-function reportsSomeone(verdict: AttributionVerdict): boolean {
-  return verdict.actor === "user" || verdict.actor === "other"
-}
-
-function pointedOrigin(observation: CheckedObservation, verdict: AttributionVerdict): RectifiedObservation {
-  if (reportsSomeone(verdict)) return { id: observation.id, origin: "material" }
-  return { id: observation.id, origin: "mention" }
+function hasUserEvidence(verdict: AttributionVerdict): boolean {
+  if (verdict.partial || typeof verdict.supportedBy === "string" || typeof verdict.quote === "string") return true
+  return Array.isArray(verdict.moreQuotes) && verdict.moreQuotes.length > 0
 }
 
 function verdictOrigin(
@@ -117,21 +77,23 @@ function verdictOrigin(
   verdicts: AttributionVerdict[],
   check: AttributionCheck,
 ): RectifiedObservation {
-  const verdict = verdicts.find((candidate) => candidate.id === observation.id)
-  if (!verdict) return { id: observation.id, origin: "unconfirmed" }
-  const supported = supportedOrigin(observation.id, verdict, check)
-  if (supported && supported.origin !== "unconfirmed") return supported
-  const quoted = quotedEvidence(observation, check, reportsSomeone(verdict))
-  if (quoted) return quoted
-  if (supported) return supported
-  return pointedOrigin(observation, verdict)
+  const { id } = observation
+  const matching = verdicts.filter((candidate) => candidate.id === id)
+  const [verdict] = matching
+  if (!verdict || matching.length !== 1 || verdict.actor === "unknown") return { id, origin: "unconfirmed" }
+  if (hasUserEvidence(verdict)) {
+    if (verdict.actor === "user") return supportedOrigin(id, verdict, check)
+    return { id, origin: "unconfirmed" }
+  }
+  if (verdict.actor === "none") return { id, origin: "mention" }
+  return { id, origin: "material" }
 }
 
 function wordsWritten(message: UserMessageText, verdict: AttributionVerdict): string[] {
   const quotes: string[] = []
   if (typeof verdict.quote === "string") quotes.push(verdict.quote)
   if (verdict.moreQuotes) quotes.push(...verdict.moreQuotes)
-  return quotes.filter((quote) => containsUserQuote(message.text, quote)).map(spacedEvenly)
+  return [...new Set(quotes.filter((quote) => containsUserQuote(message.text, quote)).map(spacedEvenly))]
 }
 
 export function closedOrigins(observations: RectifiedObservation[]): RectifiedObservation[] {

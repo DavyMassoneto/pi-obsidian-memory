@@ -1,4 +1,5 @@
 import type { NotifyLevel } from "#src/pi/context"
+import type { ObservationsRectified } from "#src/usecases"
 import {
   CONSOLIDATION_SAVED,
   CONSOLIDATOR_CORRECTING,
@@ -44,11 +45,22 @@ export function rectifiedNotice(total: number, material: number, unconfirmed: nu
   const checked = total - unconfirmed
   if (checked > 0) {
     lines.push(
-      `${RECTIFIED_LEAD} ${checked} observation(s): ${material} came from material the assistant read, not from the user.`,
+      `${RECTIFIED_LEAD} ${checked} observation(s): ${material} came from material the assistant read or produced, not from the user.`,
     )
   }
   if (unconfirmed > 0) lines.push(`${unconfirmed} observation(s) remain unconfirmed and are not saved as notes.`)
   return lines.join(" ")
+}
+
+export function rectificationOutcomeNotice(
+  observations: readonly Pick<ObservationsRectified["observations"][number], "origin" | "content">[],
+): string {
+  const settled = observations.filter(
+    (observation) => observation.origin !== "material" || typeof observation.content === "string",
+  )
+  const material = settled.filter((observation) => observation.origin === "material").length
+  const unconfirmed = settled.filter((observation) => observation.origin === "unconfirmed").length
+  return rectifiedNotice(settled.length, material, unconfirmed)
 }
 
 export function uncheckedNotice(observations: number): string {

@@ -35,7 +35,7 @@ describe("presentedContent", () => {
     expect(captureMaterial([earlier])).toEqual([{ label: said.id, text: `${ORIGIN_MARKS.restated} ${said.content}` }])
   })
 
-  it("a statement only partly the user's shows first the words the user really wrote, verbatim, and then the recorded wording under the unconfirmed mark; durable notes receive only the user's words", () => {
+  it("a partially supported observation keeps exact user words separate from the marked, non-promotable interpretation", () => {
     const partial: LedgerObservation = {
       ...said,
       origin: "partial",
@@ -69,7 +69,7 @@ describe("material for the consolidator", () => {
   const read = withOrigin(observation("2026-10-26T13:36:00", "User ordered a deploy."), "material")
   const open = withOrigin(observation("2026-10-26T13:37:00", "User prefers pnpm."), "unverified")
   const named = withOrigin(
-    observation("2026-10-26T13:37:30", "Test prompt p1.txt has the user ask for a deploy."),
+    observation("2026-10-26T13:37:30", "The assistant read the test prompt for the user."),
     "mention",
   )
   const plain = observation("2026-10-26T13:38:00", "Build passed.")

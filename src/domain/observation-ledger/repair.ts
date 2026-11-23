@@ -3,6 +3,7 @@ import { Value } from "typebox/value"
 import type {
   AttributionCheck,
   CheckedObservation,
+  MaterialSource,
   RectifiedObservation,
   Repair,
   RepairCheck,
@@ -10,11 +11,9 @@ import type {
 import { RepairReplySchema } from "#src/domain/observation-ledger/origin"
 import { describeSchemaErrors } from "#src/domain/validation"
 import type { Failed, Succeeded } from "#src/shared"
-import { isSourceRecord } from "./records.ts"
 import { rectificationKey, rectifiedOrigins } from "./rectify.ts"
-import { recordText } from "./serialize.ts"
-import type { SessionRecord, SourceRecord } from "./types.ts"
-import { containsWords, spacedEvenly } from "./user-messages.ts"
+import type { SessionRecord } from "./types.ts"
+import { containsUserQuote as containsSourceQuote, spacedEvenly } from "./user-messages.ts"
 
 export function falseAttributions(check: AttributionCheck, observations: RectifiedObservation[]): CheckedObservation[] {
   const falseIds = observations
@@ -23,36 +22,23 @@ export function falseAttributions(check: AttributionCheck, observations: Rectifi
   return check.observations.filter((observation) => falseIds.includes(observation.id))
 }
 
-function readSources(records: SessionRecord[], check: AttributionCheck): SourceRecord[] {
-  const from = records.findIndex((record) => record.id === check.fromId)
-  const to = records.findIndex((record) => record.id === check.coversUpToId)
-  const sources: SourceRecord[] = []
-  for (const record of records.slice(from, to + 1)) {
-    if (!isSourceRecord(record)) continue
-    if (record.kind === "message" && record.role === "user") continue
-    sources.push(record)
-  }
-  return sources
-}
-
-function repairedOne(item: RectifiedObservation, repairs: Repair[], sources: SourceRecord[]): RectifiedObservation {
+function repairedOne(item: RectifiedObservation, repairs: Repair[], sources: MaterialSource[]): RectifiedObservation {
   const repair = repairs.find((candidate) => candidate.id === item.id)
   if (item.origin !== "material" || typeof item.content === "string" || !repair) return item
   const { sourceId, quote } = repair
   if (typeof sourceId !== "string" || typeof quote !== "string") return item
   const source = sources.find((candidate) => candidate.id === sourceId)
-  if (!source || !containsWords(recordText(source), quote)) return item
-  if (/[\r\n]/.test(repair.content.trim())) return item
-  return { id: item.id, origin: "material", content: repair.content.trim(), sourceId, quote: spacedEvenly(quote) }
+  if (!source || !containsSourceQuote(source.text, quote)) return item
+  const content = repair.content.trim()
+  if (content.length === 0 || /[\r\n]/.test(content)) return item
+  return { id: item.id, origin: "material", content, sourceId, quote: spacedEvenly(quote) }
 }
 
 export function repairedObservations(
-  records: SessionRecord[],
-  check: AttributionCheck,
+  sources: MaterialSource[],
   observations: RectifiedObservation[],
   repairs: Repair[],
 ): RectifiedObservation[] {
-  const sources = readSources(records, check)
   return observations.map((item) => repairedOne(item, repairs, sources))
 }
 
@@ -74,6 +60,7 @@ export function repairChecks(records: SessionRecord[]): RepairCheck[] {
         coversUpToId,
         userEntryIds: [],
         userMessages: [],
+        materialSources: [],
         observations: pending.map((observation) => ({ id: observation.id, content: observation.content })),
       },
       origins: pending.map((observation) => ({ id: observation.id, origin: "material" })),

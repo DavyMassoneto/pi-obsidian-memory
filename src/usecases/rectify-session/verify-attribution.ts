@@ -1,10 +1,11 @@
 import {
   attributionStep,
+  CHARS_PER_TOKEN,
   type CompletionPort,
   closedOrigins,
   falseAttributions,
+  materialSources,
   mergedOrigins,
-  observerChunkText,
   rectifiedData,
   repairedObservations,
   repairStep,
@@ -63,14 +64,17 @@ export async function repairAttribution(
   if (!settings.succeeded) return settings
   const { records, check } = request
   const { model, thinking, chunkTokens } = settings.output.observer
+  const sources = materialSources(records, check, chunkTokens * CHARS_PER_TOKEN)
   let observations = request.origins
   for (const _attempt of REPAIR_ATTEMPTS) {
     const wrong = falseAttributions(check, observations)
     if (wrong.length === 0) break
-    const chunk = observerChunkText(records, check, chunkTokens)
-    const repairs = await repairStep({ signal: context.signal, model, thinking, chunk, observations: wrong }, complete)
+    const repairs = await repairStep(
+      { signal: context.signal, model, thinking, sources, observations: wrong },
+      complete,
+    )
     if (!repairs.succeeded && "modelCall" in repairs) return repairs
-    if (repairs.succeeded) observations = repairedObservations(records, check, observations, repairs.output)
+    if (repairs.succeeded) observations = repairedObservations(sources, observations, repairs.output)
   }
   return { succeeded: true, output: rectifiedData(check, closedOrigins(observations)) }
 }

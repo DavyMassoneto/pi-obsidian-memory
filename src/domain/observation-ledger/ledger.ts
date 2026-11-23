@@ -36,9 +36,21 @@ function coveredRanges(
   return ranges
 }
 
-function addUserWords(records: SessionRecord[], ranges: CoveredRange[], used: Set<string>): void {
+function replayUserWordsAndTombstones(
+  records: SessionRecord[],
+  ranges: CoveredRange[],
+  used: Set<string>,
+): Set<string> {
   const projection = new UserWordsProjection(used)
+  const consolidated = new Set<string>()
   for (const record of records) {
+    if (record.kind === "consolidated") {
+      for (const id of record.data.observationIds) {
+        used.add(id)
+        consolidated.add(id)
+      }
+      continue
+    }
     if (record.kind !== "user-words") continue
     const index = records.findIndex((candidate) => candidate.id === record.data.entryId)
     const message = records[index]
@@ -49,6 +61,7 @@ function addUserWords(records: SessionRecord[], ranges: CoveredRange[], used: Se
       range.observations.push({ ...line, userEntryIndex: index })
     }
   }
+  return consolidated
 }
 
 function metaRecordsOf(records: SessionRecord[]): ConsolidationMetaRecord[] {
@@ -102,15 +115,7 @@ export function ledgerOf(records: SessionRecord[]): Ledger {
   const used = new Set<string>()
   const kept = new Map<string, string>()
   const ranges = coveredRanges(records, used, kept, origins)
-  addUserWords(records, ranges, used)
-  const consolidated = new Set<string>()
-  for (const record of records) {
-    if (record.kind !== "consolidated") continue
-    for (const id of record.data.observationIds) {
-      used.add(id)
-      consolidated.add(id)
-    }
-  }
+  const consolidated = replayUserWordsAndTombstones(records, ranges, used)
   const metaRecords = metaRecordsOf(records)
   const aware = journeyAwareOf(metaRecords)
   const corrections = ranges

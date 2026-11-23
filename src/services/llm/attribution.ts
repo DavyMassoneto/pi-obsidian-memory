@@ -4,7 +4,8 @@ import { ATTRIBUTION_POLICY } from "./constants.ts"
 import type { AttributionRequest, AttributionStepResult, CompletionPort, CompletionRequest } from "./types.ts"
 
 export function attributionData(check: AttributionCheck): string {
-  return JSON.stringify({ userMessages: check.userMessages, observations: check.observations })
+  const { userEntryIds, userMessages, materialSources, observations } = check
+  return JSON.stringify({ userEntryIds, userMessages, materialSources, observations })
 }
 
 export function attributionRequest(request: AttributionRequest): CompletionRequest {

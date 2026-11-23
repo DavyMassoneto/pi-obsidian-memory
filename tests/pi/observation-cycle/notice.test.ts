@@ -9,6 +9,7 @@ import {
   type NoticeTarget,
   observerSavedNotice,
   observerStartedNotice,
+  rectificationOutcomeNotice,
   rectifiedNotice,
   uncheckedNotice,
 } from "#src/pi"
@@ -33,14 +34,33 @@ test("each notice names what the cycle did, with its counts", () => {
   )
   expect(consolidatedNotice(12, 3)).toBe("Memory consolidated: 12 observation(s), 3 change(s) to the vaults.")
   expect(rectifiedNotice(9, 7, 0)).toBe(
-    "Memory checked the origin of 9 observation(s): 7 came from material the assistant read, not from the user.",
+    "Memory checked the origin of 9 observation(s): 7 came from material the assistant read or produced, not from the user.",
   )
   expect(rectifiedNotice(6, 0, 6)).toBe("6 observation(s) remain unconfirmed and are not saved as notes.")
   expect(rectifiedNotice(4, 1, 2)).toBe(
-    "Memory checked the origin of 2 observation(s): 1 came from material the assistant read, not from the user. 2 observation(s) remain unconfirmed and are not saved as notes.",
+    "Memory checked the origin of 2 observation(s): 1 came from material the assistant read or produced, not from the user. 2 observation(s) remain unconfirmed and are not saved as notes.",
   )
   expect(uncheckedNotice(6)).toBe(
     "Memory could not check the origin of 6 observation(s) after 3 attempts: they stay marked as unconfirmed and are not saved as notes.",
+  )
+})
+
+test("rectification notices report settled outcomes only, without double-counting pending repairs", () => {
+  const pending = { id: "2026-11-22T08:18:00.04", origin: "material" } as const
+  const inconclusive = { id: "2026-11-22T08:18:00.05", origin: "unconfirmed" } as const
+  const settled = {
+    id: "2026-11-22T08:18:00.03",
+    origin: "material",
+    content: "The assistant wrote a fictional heading in its own reply.",
+    sourceId: "assistant-message",
+  } as const
+
+  expect(rectificationOutcomeNotice([pending])).toBe("")
+  expect(rectificationOutcomeNotice([pending, inconclusive, settled])).toBe(
+    "Memory checked the origin of 1 observation(s): 1 came from material the assistant read or produced, not from the user. 1 observation(s) remain unconfirmed and are not saved as notes.",
+  )
+  expect(rectificationOutcomeNotice([{ ...pending, origin: "unconfirmed" }])).toBe(
+    "1 observation(s) remain unconfirmed and are not saved as notes.",
   )
 })
 

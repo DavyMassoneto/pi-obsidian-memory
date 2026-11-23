@@ -22,10 +22,6 @@ export const RECTIFY_FAILED_TYPE = "obsidian-memory-rectify-failed"
 
 export const RECTIFY_ATTEMPTS = 3
 
-export const QUOTED_PASSAGE = /'([^'\n]{8,})'|"([^"\n]{8,})"|“([^”\n]{8,})”/g
-
-export const MIN_EVIDENCE_LETTERS = 12
-
 export const USER_WORDS_ID_SUFFIX = ".9"
 
 export const USER_WORDS_SUPPLEMENT_SUFFIX = ".00"
@@ -33,7 +29,7 @@ export const USER_WORDS_SUPPLEMENT_SUFFIX = ".00"
 export const USER_WORDS_WHOLE_CHARS = 400
 
 export const CORRECTION_LEAD =
-  "Correction: this was recorded earlier as something the user said, asked, ordered or authorized, but this session's user did not say it. What was actually read:"
+  "Correction: this was recorded earlier as something the user said, asked, ordered or authorized, but this session's user did not say it. What the assistant wrote or read instead:"
 
 export const USER_WORDS_LEAD = "User wrote:"
 

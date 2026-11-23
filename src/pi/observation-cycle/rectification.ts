@@ -18,7 +18,7 @@ import {
   wholeUserWords,
 } from "#src/usecases"
 import { OBSERVER_RETRY_NOTICE, OBSERVER_UNEXPECTED, RECTIFICATION_FAILED } from "./constants.ts"
-import { type NoticeQueue, rectifiedNotice, tell, uncheckedNotice } from "./notice.ts"
+import { type NoticeQueue, rectificationOutcomeNotice, tell, uncheckedNotice } from "./notice.ts"
 import { recordsOf } from "./records.ts"
 import type { AfterVerified, CancelSignal, ObservationCycleDeps, RectificationJob } from "./types.ts"
 
@@ -173,8 +173,7 @@ export class Rectification {
 
   #append(ctx: MemoryPiContext, data: ObservationsRectified): void {
     this.#deps.appendRectified(data)
-    const material = data.observations.filter((observation) => observation.origin === "material").length
-    const unconfirmed = data.observations.filter((observation) => observation.origin === "unconfirmed").length
-    this.#notices.add(ctx, rectifiedNotice(data.observations.length, material, unconfirmed))
+    const notice = rectificationOutcomeNotice(data.observations)
+    if (notice.length > 0) this.#notices.add(ctx, notice)
   }
 }

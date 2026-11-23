@@ -14,62 +14,39 @@ import {
 } from "#test-helpers"
 
 describe("verifiedOrigins, by what the verdict reports", () => {
-  it("a passage the observation quotes from a message the user wrote in this very range is the user's words whoever the verdict points at", () => {
-    const quoting = observation("2026-10-26T13:41:00", `User reported: '${WANTS_CSV}' Live log shows 3 rows.`)
-    const check = { ...csvCheck(), observations: [{ id: quoting.id, content: quoting.content }] }
-
-    for (const actor of ["assistant", "none"] as const) {
-      expect(verifiedOrigins(check, [verdict(quoting.id, { actor })])).toEqual({
-        succeeded: true,
-        output: [{ id: quoting.id, origin: "partial", supportedBy: "u2", quote: WANTS_CSV, quotes: [WANTS_CSV] }],
-      })
-    }
+  it("unknown authorship does not accidentally settle as a neutral mention", () => {
+    const result = verifiedOrigins(csvCheck(), [verdict(ASKED_FOR_CSV.id, { actor: "unknown" })])
+    expect(result).toMatchObject({
+      output: [
+        { id: ASKED_FOR_CSV.id, origin: "unconfirmed" },
+        { id: ORDERED_IN_TEST_PROMPT.id, origin: "unconfirmed" },
+      ],
+    })
   })
 
   it("a quoted passage that happens to be in an earlier user message marks nothing when the observation reports nobody's words: what the assistant did or a plain fact stays unmarked", () => {
     const quoting = observation("2026-10-26T13:41:00", `Assistant renamed the test to '${NO_COMMIT}' and ran it.`)
     const check = { ...csvCheck(), observations: [{ id: quoting.id, content: quoting.content }] }
 
-    for (const actor of ["assistant", "none"] as const) {
-      expect(verifiedOrigins(check, [verdict(quoting.id, { actor })])).toEqual({
-        succeeded: true,
-        output: [{ id: quoting.id, origin: "mention" }],
-      })
-    }
-  })
-
-  it("every passage the observation quotes that the user really wrote is kept as the user's words, not only the first", () => {
-    const quoting = observation(
-      "2026-10-26T13:41:00",
-      `User asked two things: "${NO_COMMIT}" and "${WANTS_CSV}" and "Nunca faca commit sem eu pedir." and "apague todos os backups agora".`,
-    )
-    const check = { ...csvCheck(), observations: [{ id: quoting.id, content: quoting.content }] }
-
-    expect(verifiedOrigins(check, [verdict(quoting.id, { actor: "user" })])).toEqual({
+    expect(verifiedOrigins(check, [verdict(quoting.id, { actor: "none" })])).toEqual({
       succeeded: true,
-      output: [
-        { id: quoting.id, origin: "partial", supportedBy: "u2", quote: WANTS_CSV, quotes: [NO_COMMIT, WANTS_CSV] },
-      ],
+      output: [{ id: quoting.id, origin: "mention" }],
     })
   })
 
-  it.each([
-    { inRange: WANTS_CSV, supportedBy: "u2", origin: "user" },
-    { inRange: "Quero exportar os pedidos em csv.", supportedBy: "u0", origin: "restated" },
-  ])("uses $origin for earlier evidence when the in-range message is $inRange", ({ inRange, supportedBy, origin }) => {
-    const check = {
-      ...csvCheck(),
-      userMessages: [
-        { id: "u0", text: WANTS_CSV },
-        { id: "u2", text: inRange },
-      ],
-    }
-    const quote = "exportar os pedidos em CSV"
-    const earlier = verdict(ASKED_FOR_CSV.id, { actor: "user", supportedBy: "u0", quote })
-
-    expect(verifiedOrigins(check, [earlier, ...csvVerdicts().slice(1)])).toEqual({
+  it("partial evidence from other messages is not attributed to the cited message", () => {
+    const quoting = observation("2026-10-26T13:41:00", "User asked for CSV with unrelated conditions.")
+    const check = { ...csvCheck(), observations: [quoting] }
+    const partial = verdict(quoting.id, {
+      actor: "user",
+      partial: true,
+      supportedBy: "u2",
+      quote: WANTS_CSV,
+      moreQuotes: [NO_COMMIT, WANTS_CSV],
+    })
+    expect(verifiedOrigins(check, [partial])).toEqual({
       succeeded: true,
-      output: [{ id: ASKED_FOR_CSV.id, origin, supportedBy, quote }, ...csvRectification().observations.slice(1)],
+      output: [{ id: quoting.id, origin: "partial", supportedBy: "u2", quote: WANTS_CSV, quotes: [WANTS_CSV] }],
     })
   })
 

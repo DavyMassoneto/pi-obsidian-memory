@@ -5,6 +5,7 @@ import type {
   ChatModelReference,
   CheckedObservation,
   MaterialItem,
+  MaterialSource,
   ObserverDraft,
   RectifiedObservation,
   Repair,
@@ -42,7 +43,7 @@ export interface UserWordsRequest extends ModelStepContext {
 
 export interface RepairRequest extends ModelStepContext {
   thinking: ThinkingLevel
-  chunk: string
+  sources: MaterialSource[]
   observations: CheckedObservation[]
 }
 

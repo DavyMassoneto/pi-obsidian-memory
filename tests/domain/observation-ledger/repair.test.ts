@@ -4,6 +4,7 @@ import {
   closedOrigins,
   falseAttributions,
   ledgerOf,
+  materialSources,
   parseRepairReply,
   rectifiedData,
   repairChecks,
@@ -40,37 +41,30 @@ describe("repairedObservations", () => {
   })
 
   it("a rewrite whose quoted words are in the named entry of the range replaces the text and keeps the entry and the words", () => {
-    const records = recordedBeforeOrigins()
-
-    expect(repairedObservations(records, transcriptCheck(), transcriptOrigins(), [repair])).toEqual(
-      transcriptRepaired(),
-    )
+    const sources = materialSources(recordedBeforeOrigins(), transcriptCheck(), 1000)
+    expect(repairedObservations(sources, transcriptOrigins(), [repair])).toEqual(transcriptRepaired())
   })
 
-  it("the quoted words of a rewrite are matched whatever the accents", () => {
-    const records = recordedBeforeOrigins()
+  it("changing accents or case in a repair's quotation does not count as evidence", () => {
+    const sources = materialSources(recordedBeforeOrigins(), transcriptCheck(), 1000)
     const accented = { ...repair, quote: "pút the bót in PRODUCTION" }
-
-    expect(repairedObservations(records, transcriptCheck(), transcriptOrigins(), [accented])[0]?.content).toBe(
-      SAID_REWRITTEN,
-    )
+    expect(repairedObservations(sources, transcriptOrigins(), [accented])).toEqual(transcriptOrigins())
   })
 
   it("a rewrite is ignored when its source is outside the range, is a user message, does not contain the quoted words, or has more than one line", () => {
-    const records = recordedBeforeOrigins()
+    const sources = materialSources(recordedBeforeOrigins(), transcriptCheck(), 1000)
     const refused = [
       { ...repair, sourceId: "t2" },
       { ...repair, sourceId: "u0", quote: "Nunca faça commit" },
       { ...repair, quote: "deploy now" },
       { ...repair, sourceId: null, quote: null },
       { ...repair, content: "two\nlines" },
+      { ...repair, content: "   " },
       { ...repair, id: RESTATED_NO_COMMIT.id },
     ]
 
     for (const candidate of refused) {
-      expect(repairedObservations(records, transcriptCheck(), transcriptOrigins(), [candidate])).toEqual(
-        transcriptOrigins(),
-      )
+      expect(repairedObservations(sources, transcriptOrigins(), [candidate])).toEqual(transcriptOrigins())
     }
   })
 
@@ -93,6 +87,7 @@ describe("repairChecks", () => {
           coversUpToId: "t1",
           userEntryIds: [],
           userMessages: [],
+          materialSources: [],
           observations: [{ id: SAID_IN_TRANSCRIPT.id, content: SAID_IN_TRANSCRIPT.content }],
         },
         origins: [pending],

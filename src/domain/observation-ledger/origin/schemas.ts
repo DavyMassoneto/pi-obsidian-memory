@@ -88,7 +88,7 @@ export const ObservationsRectifiedSchema = Type.Object(
 export const AttributionVerdictSchema = Type.Object(
   {
     id: ObservationIdSchema,
-    actor: Type.Enum(["user", "assistant", "other", "none"]),
+    actor: Type.Enum(["user", "assistant", "other", "none", "unknown"]),
     partial: Type.Boolean(),
     supportedBy: Type.Union([Type.String({ minLength: 1 }), Type.Null()]),
     quote: Type.Union([Type.String({ minLength: 1 }), Type.Null()]),

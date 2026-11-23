@@ -74,6 +74,13 @@ export interface UserMessageText {
   text: string
 }
 
+export interface MaterialSource {
+  id: string
+  role: "assistant" | "toolResult" | "bashExecution" | "custom-message" | "branch-summary"
+  text: string
+  truncated: boolean
+}
+
 export interface CheckedObservation {
   id: string
   content: string
@@ -85,6 +92,7 @@ export interface AttributionCheck {
   coversUpToId: string
   userEntryIds: string[]
   userMessages: UserMessageText[]
+  materialSources: MaterialSource[]
   observations: CheckedObservation[]
 }
 

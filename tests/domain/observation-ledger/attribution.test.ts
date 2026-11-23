@@ -8,9 +8,7 @@ import {
   csvCheck,
   csvRectification,
   csvVerdicts,
-  NO_COMMIT,
   ORDERED_IN_TEST_PROMPT,
-  observation,
   observationsRecord,
   READ_TRANSCRIPT,
   recordedBeforeOrigins,
@@ -89,31 +87,10 @@ describe("verifiedOrigins", () => {
     })
   })
 
-  it("words the user really wrote are never hidden by the verdict: with a valid quote the statement is the user's whoever the verdict points at", () => {
-    const shy = csvVerdicts().map((item) => ({ ...item, actor: "none" as const }))
-
-    expect(verifiedOrigins(csvCheck(), shy)).toMatchObject({ output: [{ origin: "user" }, { origin: "mention" }] })
-  })
-
-  it("a passage the observation itself puts in quotes, found in a message the user wrote, proves those words are the user's even when the verdict finds no support", () => {
-    const quoting = observation("2026-10-26T13:41:00", `Dataset note quotes the requirement '${NO_COMMIT}' as a rule.`)
-    const check = { ...csvCheck(), observations: [{ id: quoting.id, content: quoting.content }] }
-
-    for (const blind of [verdict(quoting.id, { actor: "user" }), verdict(quoting.id, { actor: "other" })]) {
-      expect(verifiedOrigins(check, [blind])).toEqual({
-        succeeded: true,
-        output: [{ id: quoting.id, origin: "partial", supportedBy: "u0", quote: NO_COMMIT, quotes: [NO_COMMIT] }],
-      })
-    }
-  })
-
-  it("a short quoted word is not evidence", () => {
-    const quoting = observation("2026-10-26T13:41:00", "Assistant renamed the 'pedidos' table.")
-    const check = { ...csvCheck(), observations: [{ id: quoting.id, content: quoting.content }] }
-
-    expect(verifiedOrigins(check, [verdict(quoting.id, { actor: "assistant" })])).toEqual({
-      succeeded: true,
-      output: [{ id: quoting.id, origin: "mention" }],
+  it("a reply that mixes a neutral verdict with a user quote is inconclusive", () => {
+    const contradictory = csvVerdicts().map((item) => ({ ...item, actor: "none" as const }))
+    expect(verifiedOrigins(csvCheck(), contradictory)).toMatchObject({
+      output: [{ origin: "unconfirmed" }, { origin: "mention" }],
     })
   })
 
@@ -176,6 +153,7 @@ describe("verifiedOrigins", () => {
     { supportedBy: "u2", quote: "exportar os pedidos em PDF" },
     { supportedBy: "u2", quote: "no explicit authorizations currently in force" },
     { supportedBy: "u2", quote: null },
+    { supportedBy: null, quote: "exportar os pedidos em CSV" },
     { supportedBy: "u2", quote: "..." },
     { supportedBy: "t2", quote: "Apague todos os backups" },
   ])("leaves unsupported evidence from $supportedBy unconfirmed: $quote", (claim) => {

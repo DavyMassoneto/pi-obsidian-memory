@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest"
 
 import {
   activeObservations,
+  compactionObservations,
   ledgerOf,
   parseUserWordsReply,
+  selectPromotion,
   textTokens,
   type UserPassage,
   verifiedUserWords,
@@ -91,31 +93,86 @@ describe("ledgerOf with the user's own words", () => {
     const second = userRecord("second", "Two", 1)
     const w1 = userWordsRecord("w1", { entryId: first.id, passages: [{ kind: "message", quote: "One" }] })
     const w2 = userWordsRecord("w2", { entryId: second.id, passages: [{ kind: "message", quote: "Two" }] })
+    const repeat = userWordsRecord("w2-copy", w2.data)
     const oldId = "2026-10-26T13:35:00.900"
+    const overflowId = "2026-10-26T13:35:00.001"
+    const observed = [first, second, observationsRecord("o", first.id, second.id, [])]
+    const records = [...observed, w1, consolidatedRecord("c", [oldId], "past"), w2, repeat]
+    const ledger = ledgerOf(records)
+    const items = compactionObservations(ledger, records.length)
+
+    expect(items.map(({ id, sources }) => [id, sources])).toEqual([
+      [oldId, [first.id]],
+      [overflowId, [second.id]],
+    ])
+    expect(activeObservations(ledger)).toEqual(items.slice(1))
+    expect(ledger.used).toEqual(new Set([oldId, overflowId]))
+    expect(ledger.consolidated).toEqual(new Set([oldId]))
+    for (const [companions, firstId, secondId] of [
+      [[w1, w2], oldId, overflowId],
+      [[w2, w1], overflowId, oldId],
+    ] as const) {
+      const branch = [...observed, ...companions, repeat]
+      const projected = ledgerOf(branch)
+      const active = activeObservations(projected)
+      expect(active.map(({ id, sources }) => [id, sources])).toEqual([
+        [firstId, [first.id]],
+        [secondId, [second.id]],
+      ])
+      expect(compactionObservations(projected, branch.length)).toEqual(active)
+      expect(selectPromotion(projected, 1)).toEqual(active.slice(0, 1))
+      expect(ledgerOf(branch)).toEqual(projected)
+    }
+  })
+
+  it("does not assign a recorded tombstone to a later citation when its original owner is absent", () => {
+    const tombstoned = "2026-10-26T13:35:00.900"
+    const nextId = "2026-10-26T13:35:00.001"
+    const user = userRecord("u", "Verify the page count.", 6)
     const records = [
-      first,
-      second,
-      observationsRecord("o", first.id, second.id, []),
-      w1,
-      consolidatedRecord("c", [oldId], "past"),
-      w2,
-      w2,
+      consolidatedRecord("c", [tombstoned], "Prior scope was consolidated."),
+      user,
+      observationsRecord("o", user.id, user.id, []),
+      userWordsRecord("w", { entryId: user.id, passages: [{ kind: "message", quote: "Verify the page count." }] }),
     ]
     const ledger = ledgerOf(records)
-    const items = ledger.ranges.flatMap((range) => range.observations)
 
-    expect(items.map((item) => item.sources)).toEqual([[first.id], [second.id]])
-    expect(items[0]?.id).toBe(oldId)
-    expect(items[1]?.id).toMatch(/^2026-10-26T13:35:00\.\d+$/)
-    expect(activeObservations(ledger).map((line) => line.sources)).toEqual([[second.id]])
-    expect(ledger.used.size).toBe(2)
-    for (const companions of [
-      [w1, w2],
-      [w2, w1],
-    ]) {
-      const active = activeObservations(ledgerOf([...records.slice(0, 3), ...companions]))
-      expect(active.map((line) => line.sources)).toEqual([[first.id], [second.id]])
-    }
+    expect(activeObservations(ledger).map(({ id, sources }) => [id, sources])).toEqual([[nextId, [user.id]]])
+    expect(ledger.used).toEqual(new Set([tombstoned, nextId]))
+  })
+
+  it("keeps a cited owner through consolidation and appends around an ownerless fallback tombstone", () => {
+    const first = userRecord("first", "Check the headings.", 5)
+    const second = userRecord("second", "Count the pages.", 5)
+    const legacyId = "2026-10-26T13:35:00.900"
+    const missingId = "2026-10-26T13:35:00.001"
+    const nextId = "2026-10-26T13:35:00.002"
+    const observed = [first, second, observationsRecord("o", first.id, second.id, [])]
+    const before = [
+      ...observed,
+      userWordsRecord("w1", { entryId: first.id, passages: [{ kind: "message", quote: "Check the headings." }] }),
+    ]
+    const cited = compactionObservations(ledgerOf(before), before.length)
+    expect(cited.map(({ id }) => id)).toEqual([legacyId])
+
+    const records = [
+      ...before,
+      consolidatedRecord("c", [legacyId, missingId], "Summarized earlier work."),
+      userWordsRecord("w2", { entryId: second.id, passages: [{ kind: "message", quote: "Count the pages." }] }),
+    ]
+    const ledger = ledgerOf(records)
+    const active = activeObservations(ledger)
+
+    expect(active.map(({ id, sources }) => [id, sources])).toEqual([[nextId, [second.id]]])
+    expect(compactionObservations(ledger, records.length)).toEqual([...cited, ...active])
+    expect(ledger.used).toEqual(new Set([legacyId, missingId, nextId]))
+    expect(ledger.consolidated).toEqual(new Set([legacyId, missingId]))
+
+    const later = [...records, consolidatedRecord("c2", [nextId], "Page count summarized.")]
+    const reloaded = ledgerOf(later)
+    expect(compactionObservations(reloaded, later.length)).toEqual([...cited, ...active])
+    expect(activeObservations(reloaded)).toEqual([])
+    expect(reloaded.used).toEqual(ledger.used)
   })
 
   it("an old partial or empty extraction still shows the complete short message without upgrading a non-user source", () => {

@@ -110,6 +110,15 @@ instruction is history, not new permission; passages of messages over 400 charac
   Windows. Pending until CI passes it.
 - [ ] Release, once the E2E is green in CI.
 
+### OM cycle fixes (local candidate only; not released)
+
+- [x] Keep the user's verified words in mixed clauses without attributing assistant-authored or read material to the user.
+- [x] Keep same-second passage IDs distinct and retain the passages across consolidation tombstones and later compaction.
+- [x] Report verified and inconclusive outcomes separately. Exhausted observations stay marked unconfirmed and produce
+  no durable notes.
+- [x] Three isolated Pi E2Es passed locally for authorship, passage collisions and retention, and inconclusive notices.
+- [ ] Windows E2E for this isolated release candidate in CI.
+
 ## Where each VISION decision still lands
 
 | Decision | Pending |
