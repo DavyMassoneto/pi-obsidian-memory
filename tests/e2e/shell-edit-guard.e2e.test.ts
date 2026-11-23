@@ -25,12 +25,22 @@ const options: WorldOptions = {
 const SHELL_COMMANDS: LabelledShellCommand[] = [
   { shell: "bash", command: "echo x > notes.txt", expected: "redirection", creates: ["notes.txt"], removes: [] },
   { shell: "bash", command: "cat src.txt", expected: "allow", creates: [], removes: [], output: "old line" },
+  {
+    shell: "bash",
+    command: "node report.js --help",
+    expected: "allow",
+    creates: [],
+    removes: [],
+    output: "Usage: node report.js [--help | save]",
+  },
 ]
 
-async function expectRanAsLabelled(item: LabelledShellCommand, text: string): Promise<void> {
+async function expectRanAsLabelled(item: LabelledShellCommand, text: string, cwd: string): Promise<void> {
   expect.soft(text, item.command).not.toContain(SHELL_EDIT_REFUSED)
   expect.soft(text, item.command).not.toContain(SHELL_EDIT_UNCHECKED)
   if (typeof item.output === "string") expect.soft(text, item.command).toContain(item.output)
+  expect.soft(await changedFixtureFiles(cwd), item.command).toEqual([])
+  expect.soft(await fileExists(join(cwd, "written.txt")), item.command).toBe(false)
 }
 
 async function expectRefusedWithoutChange(item: LabelledShellCommand, text: string, cwd: string): Promise<void> {
@@ -54,7 +64,7 @@ test("with no memory config, a file-editing command is refused and a read-only c
     expect.soft(end, message).not.toBeNull()
     if (!end) continue
     const text = toolText(end)
-    if (item.expected === "allow") await expectRanAsLabelled(item, text)
+    if (item.expected === "allow") await expectRanAsLabelled(item, text, cwd)
     else await expectRefusedWithoutChange(item, text, cwd)
   }
 })

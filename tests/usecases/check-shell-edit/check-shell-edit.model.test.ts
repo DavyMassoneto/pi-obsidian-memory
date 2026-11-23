@@ -56,6 +56,33 @@ test("refuses a script that writes a file, naming script_writes", async () => {
   expect("problems" in result && result.problems[0]).toContain("script_writes")
 })
 
+test.each(["python report.py --help", "python report.py show"])(
+  "allows the read-only invocation %s",
+  async (command) => {
+    const cwd = await useTempFolder()
+    await resetShellEditProject(cwd)
+    const result = await checkShellEdit(
+      { command, cwd },
+      { jev: liveShellEditJev, signal: new AbortController().signal },
+    )
+    expect(result).toEqual({ succeeded: true })
+  },
+)
+
+test.each(["python report.py save", "python startup.py --help"])(
+  "refuses the file-writing invocation %s",
+  async (command) => {
+    const cwd = await useTempFolder()
+    await resetShellEditProject(cwd)
+    const result = await checkShellEdit(
+      { command, cwd },
+      { jev: liveShellEditJev, signal: new AbortController().signal },
+    )
+    expect(result.succeeded).toBe(false)
+    expect("problems" in result && result.problems[0]).toContain("script_writes")
+  },
+)
+
 test("lets a test run through", async () => {
   const cwd = await useTempFolder()
   await resetShellEditProject(cwd)

@@ -85,10 +85,11 @@ export const SHELL_EDIT_QUESTIONS: ShellEditQuestions = {
   script_writes: {
     type: "bool",
     instructions:
-      "Does the code in any `scripts[*].text` create or write a file with its own code, rather than only launching a linter, formatter, test runner, build, git or a package manager?",
+      "Does this invocation of `command` run code in `scripts[*].text` that creates or writes a file, rather than only launching a linter, formatter, test runner, build, git or a package manager (follow startup code and the paths selected by the actual arguments, including what executes before any help flag is handled)?",
     criteria: {
-      true: "a script's own code creates or writes a file",
-      false: "no script's own code creates or writes a file",
+      true: "the invocation runs a script's own code that creates or writes a file, or may do so on a path it can take",
+      false:
+        "the invocation runs no script-owned file write; any write code is on a path this invocation does not take",
     },
   },
   copy_download: {
