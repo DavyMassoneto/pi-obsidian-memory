@@ -64,7 +64,6 @@ function retainRegistrationField(fields: ConfigFields, observation: ConfigFieldO
 function retainSettingField(fields: ConfigFields, observation: ConfigFieldObservation): void {
   if (observation.field === "/limits/maxBodyChars") fields.limits.maxBodyChars = observation.value
   if (observation.field === "/limits/maxStatementChars") fields.limits.maxStatementChars = observation.value
-  if (observation.field === "/limits/maxNotesPerFolder") fields.limits.maxNotesPerFolder = observation.value
   if (observation.field === "/context/budgetChars") fields.context.budgetChars = observation.value
   retainCycleField(fields, observation)
   if (observation.field === "/memoryAgent/model/provider") fields.memoryAgent.model.provider = observation.value

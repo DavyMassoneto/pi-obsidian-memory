@@ -70,7 +70,6 @@ export const ConfigFieldObservationSchema = Type.Union([
   Type.Object({ field: Type.Literal("/projects/vault"), index: Type.Integer(), value: ConfigPathSchema }),
   Type.Object({ field: Type.Literal("/limits/maxBodyChars"), index: Type.Integer(), value: ConfigLimitSchema }),
   Type.Object({ field: Type.Literal("/limits/maxStatementChars"), index: Type.Integer(), value: ConfigLimitSchema }),
-  Type.Object({ field: Type.Literal("/limits/maxNotesPerFolder"), index: Type.Integer(), value: ConfigLimitSchema }),
   Type.Object({ field: Type.Literal("/context/budgetChars"), index: Type.Integer(), value: ConfigLimitSchema }),
   Type.Object({ field: Type.Literal("/observer/model/provider"), index: Type.Integer(), value: ChatModelPartSchema }),
   Type.Object({ field: Type.Literal("/observer/model/id"), index: Type.Integer(), value: ChatModelPartSchema }),
@@ -157,7 +156,7 @@ export const MemoryConfigSchema = Type.Object(
     global: Type.Object({ vault: ConfigPathSchema }, { additionalProperties: false }),
     projects: Type.Array(ProjectEntrySchema),
     limits: Type.Object(
-      { maxBodyChars: ConfigLimitSchema, maxStatementChars: ConfigLimitSchema, maxNotesPerFolder: ConfigLimitSchema },
+      { maxBodyChars: ConfigLimitSchema, maxStatementChars: ConfigLimitSchema },
       { additionalProperties: false },
     ),
     observer: Type.Object(

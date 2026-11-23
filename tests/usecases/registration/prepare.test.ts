@@ -115,7 +115,7 @@ test("invalid nested fields keep valid siblings and use selection only for missi
     ...customizedSettings(),
     observer: { model: { provider: "kept", id: 7 }, thinking: "high", chunkTokens: 5000, concurrency: 2 },
     memoryAgent: { model: { provider: false, id: "retained-id" } },
-    limits: { maxBodyChars: 321, maxStatementChars: -1, maxNotesPerFolder: 9 },
+    limits: { maxBodyChars: 321, maxStatementChars: -1 },
     unknown: "discard me",
   })
   await writeRegistrationSnapshot(context, text)
@@ -127,7 +127,7 @@ test("invalid nested fields keep valid siblings and use selection only for missi
       draft: {
         observer: { model: { provider: "kept", id: "chosen-id" }, thinking: "high", chunkTokens: 5000, concurrency: 2 },
         memoryAgent: { model: { provider: "chosen", id: "retained-id" } },
-        limits: { maxBodyChars: 321, maxStatementChars: 100, maxNotesPerFolder: 9 },
+        limits: { maxBodyChars: 321, maxStatementChars: 100 },
         embeddings: customizedSettings().embeddings,
         decisionModel: customizedSettings().decisionModel,
         problems: expect.arrayContaining([expect.stringContaining("unknown")]),
@@ -135,6 +135,26 @@ test("invalid nested fields keep valid siblings and use selection only for missi
     },
   })
   expect(await registrationDiskTree(root)).toEqual(before)
+  expect(await readFile(context.configPath, "utf8")).toBe(text)
+  await expectRegistrationLeaseReleased(context)
+})
+
+test("setup preserves an old config while dropping the retired setting without a repair warning", async () => {
+  const { context, config } = await registrationUsecaseFixture()
+  const settings = { ...customizedSettings(), limits: { maxBodyChars: 1234, maxStatementChars: 123 } }
+  const text = JSON.stringify({ ...config, ...settings, limits: { ...settings.limits, maxNotesPerFolder: 35 } })
+  await writeRegistrationSnapshot(context, text)
+
+  const result = await prepareMemorySetup({ selectedModel: null }, context)
+  expect(result.succeeded).toBe(true)
+  if (!result.succeeded) throw new Error("setup preparation failed")
+  expect(result.output.draft).toMatchObject({
+    ...settings,
+    global: config.global,
+    projects: config.projects,
+    problems: [],
+  })
+  expect(result.output.draft.limits).toEqual(settings.limits)
   expect(await readFile(context.configPath, "utf8")).toBe(text)
   await expectRegistrationLeaseReleased(context)
 })

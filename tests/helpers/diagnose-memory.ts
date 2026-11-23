@@ -3,25 +3,21 @@ import { type DiagnosedMemory, type MemoryOperationContext, resolveMemory } from
 import { noteWithId, searchFixture } from "./search-memory.ts"
 import { putCatalogFile } from "./vault-catalog.ts"
 
-export async function putBrokenVault(vault: VaultContext, maxNotesPerFolder: number): Promise<void> {
+export async function putBrokenVault(vault: VaultContext): Promise<void> {
   await putCatalogFile(vault, "tools/Good.md", noteWithId(1, "Fine.", []))
   await putCatalogFile(vault, "tools/Broken.md", noteWithId(2, "Broken.", ["colour: red"]))
   await putCatalogFile(vault, "copies/Copy one.md", noteWithId(3, "Copy.", []))
   await putCatalogFile(vault, "copies/Copy two.md", noteWithId(3, "Copy.", []))
   await putCatalogFile(vault, "Blank.md", "")
   await putCatalogFile(vault, "tools/Half.md.tmp-abc", "partial")
-  for (let number = 1; number <= maxNotesPerFolder + 1; number++) {
-    await putCatalogFile(vault, `crowded/Note ${number}.md`, noteWithId(10 + number, `Crowded ${number}.`, []))
-  }
 }
 
-const CLEAN_DIAGNOSIS = { invalid: [], blank: [], duplicateIds: [], temporaries: [], crowdedFolders: [] }
+const CLEAN_DIAGNOSIS = { invalid: [], blank: [], duplicateIds: [], temporaries: [] }
 
 export function diagnosedMemory(overrides: Partial<DiagnosedMemory>): DiagnosedMemory {
   return {
     vaults: [{ vault: "global", diagnosis: CLEAN_DIAGNOSIS, blanks: [], unreadable: [] }],
     projectMissing: false,
-    maxNotesPerFolder: 20,
     omLoaded: false,
     embeddings: { provider: "local", model: "Xenova/multilingual-e5-small", status: "ready" },
     decision: { provider: "typesafe", model: "jev-latest", status: "ready", detail: "model and API key found" },

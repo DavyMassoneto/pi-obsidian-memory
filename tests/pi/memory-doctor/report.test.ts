@@ -32,7 +32,6 @@ test("every kind of problem is listed under its own heading with its paths", () 
             blank: ["Blank.md"],
             duplicateIds: [{ id: "01JABC", paths: ["a.md", "b.md"] }],
             temporaries: ["tools/Half.md.tmp-abc"],
-            crowdedFolders: [{ folder: "crowded", count: 21 }],
           },
           blanks: [],
           unreadable: ["tools/Locked.md: EBUSY"],
@@ -46,7 +45,6 @@ test("every kind of problem is listed under its own heading with its paths", () 
   expect(report).toContain("Copied ids:\n- 01JABC: a.md, b.md")
   expect(report).toContain("Blank notes (no frontmatter):\n- Blank.md")
   expect(report).toContain("Leftover temporary files:\n- tools/Half.md.tmp-abc")
-  expect(report).toContain("Folders above 20 notes (consider splitting them):\n- crowded: 21 notes")
   expect(report).toContain("Files that could not be read:\n- tools/Locked.md: EBUSY")
   expect(report).not.toContain("no problems found")
 })

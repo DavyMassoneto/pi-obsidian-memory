@@ -25,7 +25,7 @@ import {
 } from "./constants.ts"
 
 export function renderDoctorReport(diagnosed: DiagnosedMemory): string {
-  const sections = diagnosed.vaults.map((report) => renderVault(report, diagnosed.maxNotesPerFolder))
+  const sections = diagnosed.vaults.map(renderVault)
   const lines = [DOCTOR_TITLE, "", ...sections.flatMap((section) => [...section, ""])]
   if (diagnosed.projectMissing) lines.push(DOCTOR_NO_PROJECT_VAULT, "")
   lines.push(MODELS_HEADING, ...diagnosed.models.map(renderModel), renderEmbeddings(diagnosed.embeddings))
@@ -34,7 +34,7 @@ export function renderDoctorReport(diagnosed: DiagnosedMemory): string {
   return lines.join("\n")
 }
 
-function renderVault(report: VaultReport | VaultReportFailure, limit: number): string[] {
+function renderVault(report: VaultReport | VaultReportFailure): string[] {
   const title = vaultTitle(report.vault)
   if ("problems" in report) return [`${title}: ${COULD_NOT_CHECK}`, ...report.problems.map((problem) => `- ${problem}`)]
   const { diagnosis } = report
@@ -51,11 +51,6 @@ function renderVault(report: VaultReport | VaultReportFailure, limit: number): s
   )
   addGroup(groups, BLANK_HEADING, diagnosis.blank)
   addGroup(groups, TEMPORARIES_HEADING, diagnosis.temporaries)
-  addGroup(
-    groups,
-    `Folders above ${limit} notes (consider splitting them):`,
-    diagnosis.crowdedFolders.map((folder) => `${folder.folder}: ${folder.count} notes`),
-  )
   addGroup(groups, UNREADABLE_HEADING, report.unreadable)
   if (groups.length === 0) return [`${title}: ${NO_PROBLEMS}`]
   return [`${title}:`, ...groups.flat()]

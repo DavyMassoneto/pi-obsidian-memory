@@ -13,10 +13,19 @@ export function upgradeLegacyConfig(text: string): string {
     throw error
   }
   if (!Value.Check(ConfigObjectSchema, document)) return text
-  const withObserver = upgradeCapture(document)
-  const upgraded = upgradeObserver(withObserver)
+  const withCapture = upgradeCapture(document)
+  const withObserver = upgradeObserver(withCapture)
+  const upgraded = dropLegacyFolderLimit(withObserver)
   if (upgraded === document) return text
   return JSON.stringify(upgraded)
+}
+
+function dropLegacyFolderLimit(document: object): object {
+  const limits = Value.Pointer.Get(document, "/limits")
+  if (!Value.Check(ConfigObjectSchema, limits) || !Value.Pointer.Has(limits, "/maxNotesPerFolder")) return document
+  const kept = { ...limits }
+  Value.Pointer.Delete(kept, "/maxNotesPerFolder")
+  return { ...document, limits: kept }
 }
 
 function upgradeCapture(document: object): object {

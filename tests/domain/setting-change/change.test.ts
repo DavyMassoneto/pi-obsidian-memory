@@ -17,7 +17,7 @@ describe("changeSetting", () => {
 
     expect(changed(config, { kind: "embeddings", embeddings }).embeddings).toEqual(embeddings)
     expect(changed(config, { kind: "budgetChars", value: 500 }).context).toEqual({ budgetChars: 500 })
-    for (const name of ["maxBodyChars", "maxStatementChars", "maxNotesPerFolder"] as const) {
+    for (const name of ["maxBodyChars", "maxStatementChars"] as const) {
       expect(changed(config, { kind: "limit", name, value: 7 }).limits).toEqual({ ...config.limits, [name]: 7 })
     }
   })

@@ -19,17 +19,24 @@ test("old config is refused without migration or partial settings while its exac
   expect(result).toMatchObject({ succeeded: false, reason: "invalid-config" })
   expect(result).not.toHaveProperty("output")
   if (result.succeeded) throw new Error("old config accepted")
-  for (const field of [
-    "maxNotesPerFolder",
-    "observer",
-    "compaction",
-    "memoryAgent",
-    "context",
-    "embeddings",
-    "decisionModel",
-  ]) {
+  for (const field of ["observer", "compaction", "memoryAgent", "context", "embeddings", "decisionModel"]) {
     expect(result.problems.join(" ")).toContain(field)
   }
+  expect(await readFile(path, "utf8")).toBe(text)
+})
+
+test("reads an old config without the retired setting or changes to the file", async () => {
+  const folder = await useTempFolder()
+  const config = {
+    ...memoryConfigAt(folder),
+    ...customizedSettings(),
+    limits: { maxBodyChars: 2345, maxStatementChars: 123 },
+  }
+  const path = join(folder, "config.json")
+  const text = JSON.stringify({ ...config, limits: { ...config.limits, maxNotesPerFolder: 37 } }, null, 2)
+  await writeFile(path, text)
+
+  expect(await readConfig(path, testPlatform())).toEqual({ succeeded: true, output: config })
   expect(await readFile(path, "utf8")).toBe(text)
 })
 

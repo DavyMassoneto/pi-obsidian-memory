@@ -6,6 +6,22 @@ test("reads a complete config", () => {
   expect(parseConfig(JSON.stringify(aConfig()))).toEqual({ succeeded: true, output: aConfig() })
 })
 
+test.each([20, 0, "obsolete", null])(
+  "drops the retired folder setting with value %j while preserving every other value",
+  (value) => {
+    const config = { ...aConfig(), limits: { maxBodyChars: 777, maxStatementChars: 77 } }
+    const text = JSON.stringify({ ...config, limits: { ...config.limits, maxNotesPerFolder: value } })
+
+    expect(parseConfig(text)).toEqual({ succeeded: true, output: config })
+  },
+)
+
+test("accepts a config with no retired folder setting", () => {
+  const config = { ...aConfig(), limits: { maxBodyChars: 777, maxStatementChars: 77 } }
+
+  expect(parseConfig(JSON.stringify(config))).toEqual({ succeeded: true, output: config })
+})
+
 test("accepts a config with no projects yet", () => {
   const config = { ...aConfig(), projects: [] }
 
@@ -84,7 +100,7 @@ test("strict settings report every independent missing, wrong and unknown nested
       observer: { model: { provider: "", apiKey: "secret" }, thinking: "extreme", extra: 1 },
       memoryAgent: { model: { id: false }, extra: 1 },
       context: { budgetChars: 0, extra: 1 },
-      limits: { maxBodyChars: 0, maxStatementChars: -1, maxNotesPerFolder: 1.5 },
+      limits: { maxBodyChars: 0, maxStatementChars: -1 },
     }),
   )
   expect(result.succeeded).toBe(false)
@@ -102,7 +118,6 @@ test("strict settings report every independent missing, wrong and unknown nested
     "context.extra",
     "limits.maxBodyChars",
     "limits.maxStatementChars",
-    "limits.maxNotesPerFolder",
   ]) {
     expect(result.problems.join(" ")).toContain(field)
   }

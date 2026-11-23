@@ -22,6 +22,43 @@ describe("upgradeLegacyConfig", () => {
     expect(JSON.parse(upgradeLegacyConfig(text))).not.toHaveProperty("capture")
   })
 
+  test("the retired folder setting is dropped together with the capture upgrade", () => {
+    const config = aConfig()
+    const text = JSON.stringify({
+      ...JSON.parse(legacyConfigText({ model, ...sixKeys })),
+      limits: { ...config.limits, maxNotesPerFolder: 20 },
+    })
+
+    expect(parseConfig(text)).toEqual({ succeeded: true, output: config })
+  })
+
+  test("dropping the retired setting preserves unrelated fields for validation", () => {
+    const config = aConfig()
+    const limits = { ...config.limits, other: 5 }
+    const text = JSON.stringify({ ...config, limits: { ...limits, maxNotesPerFolder: 20 } })
+
+    expect(JSON.parse(upgradeLegacyConfig(text))).toEqual({ ...config, limits })
+    expect(parseConfig(text)).toEqual({ succeeded: false, problems: ["limits.other: not a known field"] })
+  })
+
+  test("repair ignores the retired setting while retaining valid siblings and reporting unrelated damage", () => {
+    const config = aConfig()
+    const text = JSON.stringify({
+      ...config,
+      limits: { maxBodyChars: 700, maxStatementChars: 0, maxNotesPerFolder: "obsolete", extra: 5 },
+    })
+    const draft = inspectConfigForRepair(text)
+
+    expect(draft.limits).toEqual({ maxBodyChars: 700, maxStatementChars: 100 })
+    expect(draft.global).toEqual(config.global)
+    expect(draft.projects).toEqual(config.projects)
+    expect(draft.observer).toEqual(config.observer)
+    expect(draft.problems).toEqual(
+      expect.arrayContaining(["limits.extra: not a known field", expect.stringContaining("limits.maxStatementChars")]),
+    )
+    expect(draft.problems.join(" ")).not.toContain("maxNotesPerFolder")
+  })
+
   test("a config with capture.when reads the same way", () => {
     for (const when of ["after-each-turn", "at-session-end", "on-compaction"]) {
       expect(parseConfig(legacyConfigText({ model, when }))).toEqual({ succeeded: true, output: aConfig() })

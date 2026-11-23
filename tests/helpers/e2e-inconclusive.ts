@@ -39,7 +39,7 @@ function noticeConfig(vault: string): MemoryConfig {
   return {
     global: { vault },
     projects: [],
-    limits: { maxBodyChars: 1000, maxStatementChars: 100, maxNotesPerFolder: 20 },
+    limits: { maxBodyChars: 1000, maxStatementChars: 100 },
     observer: { ...DEFAULT_OBSERVER, concurrency: 1, model: UNREGISTERED_VERIFIER },
     compaction: { ...DEFAULT_COMPACTION, tailTokens: 1 },
     consolidator: { ...DEFAULT_CONSOLIDATOR, poolTargetTokens: 1, thinking: "low", model: TEST_MODEL },

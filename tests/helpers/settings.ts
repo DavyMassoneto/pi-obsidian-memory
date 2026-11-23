@@ -17,7 +17,7 @@ export function emptyConfigFields(): ConfigFields {
 
 export function productSettings(): Omit<MemoryConfig, "global" | "projects"> {
   return {
-    limits: { maxBodyChars: 1000, maxStatementChars: 100, maxNotesPerFolder: 20 },
+    limits: { maxBodyChars: 1000, maxStatementChars: 100 },
     observer: {
       model: { provider: "test-chat", id: "selected-chat" },
       thinking: "low",
@@ -47,7 +47,7 @@ export function productSettings(): Omit<MemoryConfig, "global" | "projects"> {
 
 export function customizedSettings(): Omit<MemoryConfig, "global" | "projects"> {
   return {
-    limits: { maxBodyChars: 2000, maxStatementChars: 200, maxNotesPerFolder: 30 },
+    limits: { maxBodyChars: 2000, maxStatementChars: 200 },
     observer: {
       model: { provider: "observer-provider", id: "observer-id" },
       thinking: "high",

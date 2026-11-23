@@ -25,7 +25,6 @@ test("the screen lists the observer, compaction and consolidator lines, then the
     "Context budget",
     "Max note body",
     "Max statement",
-    "Max notes per folder",
     "Global vault",
     "Projects",
   ])
@@ -48,7 +47,6 @@ test("each line shows its current value", () => {
   const config = aConfig()
 
   expect(lineLabels(config)).toContain("Context budget: 12000 characters")
-  expect(lineLabels(config)).toContain("Max notes per folder: 20")
   expect(lineLabels(config)).toContain("Projects: 2")
   expect(lineLabels(config)).toContain("Observer model: test-chat/selected-chat")
   expect(lineLabels(config)).toContain("Observer thinking: low")

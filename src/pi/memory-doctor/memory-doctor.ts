@@ -71,13 +71,7 @@ function levelOf(diagnosed: DiagnosedMemory): "info" | "warning" {
   for (const report of diagnosed.vaults) {
     if ("problems" in report) return "warning"
     const { diagnosis } = report
-    const found = [
-      diagnosis.invalid,
-      diagnosis.duplicateIds,
-      diagnosis.blank,
-      diagnosis.temporaries,
-      diagnosis.crowdedFolders,
-    ]
+    const found = [diagnosis.invalid, diagnosis.duplicateIds, diagnosis.blank, diagnosis.temporaries]
     if (found.some((items) => items.length > 0) || report.unreadable.length > 0) return "warning"
   }
   if (diagnosed.omLoaded) return "warning"

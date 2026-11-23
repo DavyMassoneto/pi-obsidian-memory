@@ -14,7 +14,6 @@ start. The commands are `/memory-setup`, `/memory-init`, `/memory-doctor`, `/mem
   1. From general to specific: `typescript/testing/`, not `testing/typescript/`, for testing in TypeScript.
   2. Reuse before creating: the LLM walks the existing tree and uses the path that already covers the subject.
   3. When two paths make sense, the LLM asks the user.
-- Splitting a folder that grew too much is up to the user, or suggested by `/memory-doctor`.
 - Every folder has an `index.md` listing its subfolders and its notes (with type and don't forget mark), so the LLM can
   walk down the tree level by level. `memory_add` and completed lifecycle operations refresh affected indexes;
   manual edits to them are overwritten. The primitive create/update APIs leave refresh to their caller.

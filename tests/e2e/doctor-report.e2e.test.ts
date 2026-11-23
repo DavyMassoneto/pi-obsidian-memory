@@ -20,7 +20,7 @@ import {
   writeVaultFile,
 } from "#test-helpers"
 
-test("one report names the broken note, the copies, the blank note, the temporary file and the crowded folder, and nothing changes on disk", async () => {
+test("one report names the broken note, the copies, the blank note and the temporary file, and nothing changes on disk", async () => {
   const world = await configuredWorld({})
   const { globalVault, projectVault } = world.folders
   await writeVaultFile(globalVault, "tools/Broken.md", "---\nid: nope\n---\nBody.")
@@ -29,7 +29,7 @@ test("one report names the broken note, the copies, the blank note, the temporar
   await writeVaultFile(globalVault, "Blank.md", "")
   await writeVaultFile(globalVault, "tools/Half.md.tmp-abc", "half")
   for (let number = 0; number < 21; number += 1)
-    await writeVaultFile(globalVault, `crowded/Note ${number}.md`, noteWithId(100 + number, `Note ${number}.`, []))
+    await writeVaultFile(globalVault, `tools/Note ${number}.md`, noteWithId(100 + number, `Note ${number}.`, []))
   const before = [await memoryReadTree(globalVault), await memoryReadTree(projectVault)]
   const turn = await runDoctor(world, [chooseType("global/Blank.md", { cancelled: true })], 1)
   const [report, skipped] = turn.notifications
@@ -40,10 +40,7 @@ test("one report names the broken note, the copies, the blank note, the temporar
   )
   expect(report?.message).toContain(`${BLANK_HEADING}\n- Blank.md`)
   expect(report?.message).toContain(`${TEMPORARIES_HEADING}\n- tools/Half.md.tmp-abc`)
-  const { maxNotesPerFolder } = (await storedConfig(world)).limits
-  expect(report?.message).toContain(
-    `Folders above ${maxNotesPerFolder} notes (consider splitting them):\n- crowded: 21 notes`,
-  )
+  expect(report?.message).not.toContain("Folders above")
   expect(report?.message).toContain(`Project vault: ${NO_PROBLEMS}`)
   const { observer, memoryAgent } = await storedConfig(world)
   expect(report?.message).toContain(`${MODELS_HEADING}\n- observer ${observer.model.provider}/${observer.model.id}:`)

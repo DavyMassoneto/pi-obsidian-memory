@@ -32,7 +32,7 @@ export async function writeConfig(folder: string, config: MemoryConfig): Promise
 }
 
 export function configTextWithLimits(limits: LimitsInput): string {
-  return JSON.stringify({ ...aConfig(), limits: { maxNotesPerFolder: 20, ...limits } })
+  return JSON.stringify({ ...aConfig(), limits })
 }
 
 export function volumeGuidRoot(drive: string): string | null {

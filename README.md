@@ -242,7 +242,6 @@ All settings are changed in the `/memory-setup` screen, or by asking pi. You nev
 | `context.budgetChars` | 12,000 | Characters of relevant notes added at session start and to each message (Don't forget notes do not count) |
 | `limits.maxStatementChars` | 100 | Longest note name |
 | `limits.maxBodyChars` | 1,000 | Longest note body |
-| `limits.maxNotesPerFolder` | 20 | `/memory-doctor` suggests splitting a folder above this |
 | Embeddings | local | Model for search by meaning: local (no key), OpenAI (`OPENAI_API_KEY`) or Google (`GEMINI_API_KEY`) |
 | Decision model | Jev | Jev (TypeSafe, cutoffs 0.5/0.5) or Laya (local server, you set the cutoffs) |
 

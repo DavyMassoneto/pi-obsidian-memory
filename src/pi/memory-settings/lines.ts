@@ -179,11 +179,6 @@ export function settingLines(config: MemoryConfig): SettingLine[] {
       name: "maxStatementChars",
       value,
     })),
-    countLine("Max notes per folder", "", limits.maxNotesPerFolder, (value) => ({
-      kind: "limit",
-      name: "maxNotesPerFolder",
-      value,
-    })),
     { label: `Global vault: ${config.global.vault}`, edit: (env) => env.deps.changeGlobalVault(env.context) },
     { label: `Projects: ${config.projects.length}`, edit: projectsEdit },
   ]

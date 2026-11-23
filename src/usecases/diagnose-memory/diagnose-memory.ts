@@ -42,18 +42,17 @@ export async function diagnoseMemory<TModel>(
       projectMissing = false
     }
     const vaults: DiagnosedMemory["vaults"] = []
-    for (const target of targets) vaults.push(await reportVault(memory.output, target, context))
+    for (const target of targets) vaults.push(await reportVault(target, context))
     const models = await modelReportsOf(memory.output.config, request.port)
     const embeddings = await checkEmbeddings(memory.output.config.embeddings, request.embeddings, context.signal)
     const decision = await checkDecision(memory.output.config.decisionModel, request.decision, context.signal)
     const cutoffs = resolveCutoffs(memory.output.config.decisionModel)
     const interrupted = memoryOperationInterruption(context)
     if (interrupted) return interrupted
-    const { maxNotesPerFolder } = memory.output.config.limits
     const { omLoaded } = request
     return {
       succeeded: true,
-      output: { vaults, projectMissing, maxNotesPerFolder, models, embeddings, decision, cutoffs, omLoaded },
+      output: { vaults, projectMissing, models, embeddings, decision, cutoffs, omLoaded },
     }
   } finally {
     lease.release()

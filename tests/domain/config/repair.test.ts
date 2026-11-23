@@ -63,7 +63,6 @@ test("old configuration is invalid at runtime and repair never invents a chat mo
   expect(parsed).not.toHaveProperty("output")
   if (parsed.succeeded) throw new Error("old config accepted")
   for (const field of [
-    "maxNotesPerFolder",
     "observer",
     "compaction",
     "consolidator",
@@ -76,7 +75,7 @@ test("old configuration is invalid at runtime and repair never invents a chat mo
   }
   expect(inspectConfigForRepair(text)).toMatchObject({
     ...old,
-    limits: { ...old.limits, maxNotesPerFolder: 20 },
+    limits: old.limits,
     observer: { model: {}, thinking: "low", chunkTokens: 10000, concurrency: 4 },
     consolidator: { model: {}, thinking: "medium", atPoolTokens: 15000, poolTargetTokens: 10000, journeyTokens: 1000 },
     memoryAgent: { model: {} },
@@ -112,13 +111,13 @@ test("repair retains independently valid nested siblings and names discarded unk
     ...aConfig(),
     observer: { model: { provider: "keep", id: " ", apiKey: "discard-secret" }, thinking: "high", extra: 1 },
     memoryAgent: { model: { provider: false, id: "keep-id" } },
-    limits: { maxBodyChars: 700, maxStatementChars: 0, maxNotesPerFolder: 31 },
+    limits: { maxBodyChars: 700, maxStatementChars: 0 },
     context: { budgetChars: 5678, extra: 1 },
   })
   const draft = inspectConfigForRepair(text)
   expect(draft.observer).toEqual({ model: { provider: "keep" }, thinking: "high", chunkTokens: 10000, concurrency: 4 })
   expect(draft.memoryAgent).toEqual({ model: { id: "keep-id" } })
-  expect(draft.limits).toEqual({ maxBodyChars: 700, maxStatementChars: 100, maxNotesPerFolder: 31 })
+  expect(draft.limits).toEqual({ maxBodyChars: 700, maxStatementChars: 100 })
   expect(draft.context).toEqual({ budgetChars: 5678 })
   expect(draft.problems).toEqual(
     expect.arrayContaining([

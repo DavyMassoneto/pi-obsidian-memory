@@ -11,7 +11,7 @@ export function prepareSetupDefaults(model: ChatModelReference | null): ConfigRe
   return {
     global: {},
     projects: [],
-    limits: { maxBodyChars: 1000, maxStatementChars: 100, maxNotesPerFolder: 20 },
+    limits: { maxBodyChars: 1000, maxStatementChars: 100 },
     observer: { model: { ...selected }, ...DEFAULT_OBSERVER },
     compaction: { ...DEFAULT_COMPACTION },
     consolidator: { model: { ...selected }, ...DEFAULT_CONSOLIDATOR },

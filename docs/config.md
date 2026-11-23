@@ -17,7 +17,7 @@ explicitly chosen available chat model's provider and id. They are not built-in 
   "projects": [
     { "name": "loja", "folder": "D:/Projects/loja", "vault": "C:/Users/me/OneDrive/Obsidian/loja" }
   ],
-  "limits": { "maxBodyChars": 1000, "maxStatementChars": 100, "maxNotesPerFolder": 20 },
+  "limits": { "maxBodyChars": 1000, "maxStatementChars": 100 },
   "observer": {
     "model": { "provider": "selected-provider", "id": "selected-model" },
     "thinking": "low",
@@ -50,7 +50,6 @@ explicitly chosen available chat model's provider and id. They are not built-in 
 | `projects[].vault` | Absolute vault folder path | User selection |
 | `limits.maxBodyChars` | Positive integer | 1000 |
 | `limits.maxStatementChars` | Positive integer | 100 |
-| `limits.maxNotesPerFolder` | Positive integer; doctor reporting threshold | 20 |
 | `observer.model` | Exactly `{provider, id}`, both nonblank strings | The pi model in use when `/memory-setup` runs, or another chosen from the priced list; changed by re-running it |
 | `observer.thinking` | One of `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max` (pi's thinking levels) | `low` |
 | `observer.chunkTokens` | Positive integer: tokens of conversation in one observed chunk | 10000 |

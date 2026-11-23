@@ -36,7 +36,6 @@ export interface ModelReport {
 export interface DiagnosedMemory {
   vaults: (VaultReport | VaultReportFailure)[]
   projectMissing: boolean
-  maxNotesPerFolder: number
   models: ModelReport[]
   embeddings: EmbeddingReport
   decision: DecisionReport

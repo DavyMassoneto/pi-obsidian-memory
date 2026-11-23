@@ -1,12 +1,4 @@
-import { catalogFolder } from "#src/domain/search-catalog"
-import { isRootArchive, type VaultCatalogEntry } from "#src/domain/vault-catalog"
-import type {
-  CrowdedFolder,
-  DuplicateNoteId,
-  InvalidVaultNote,
-  VaultDiagnosis,
-  VaultDiagnosisRequest,
-} from "./types.ts"
+import type { DuplicateNoteId, InvalidVaultNote, VaultDiagnosis, VaultDiagnosisRequest } from "./types.ts"
 
 export function diagnoseVault(request: VaultDiagnosisRequest): VaultDiagnosis {
   return {
@@ -20,7 +12,6 @@ export function diagnoseVault(request: VaultDiagnosisRequest): VaultDiagnosis {
       .filter((entry) => entry.kind === "temporary")
       .map((entry) => entry.path)
       .sort(compareText),
-    crowdedFolders: crowdedFolders(request),
   }
 }
 
@@ -51,25 +42,6 @@ function duplicateIds(request: VaultDiagnosisRequest): DuplicateNoteId[] {
     .filter(([, paths]) => paths.length > 1)
     .map(([id, paths]) => ({ id, paths: paths.sort(compareText) }))
     .sort((left, right) => compareText(left.id, right.id))
-}
-
-function crowdedFolders(request: VaultDiagnosisRequest): CrowdedFolder[] {
-  const counts = new Map<string, number>()
-  for (const entry of request.entries) {
-    if (!isLiveNote(entry)) continue
-    const folder = catalogFolder(entry.path)
-    const count = counts.get(folder)
-    if (count) counts.set(folder, count + 1)
-    else counts.set(folder, 1)
-  }
-  return [...counts]
-    .filter(([, count]) => count > request.limits.maxNotesPerFolder)
-    .map(([folder, count]) => ({ folder, count }))
-    .sort((left, right) => compareText(left.folder, right.folder))
-}
-
-function isLiveNote(entry: VaultCatalogEntry): boolean {
-  return entry.kind === "note" && !entry.archived && !isRootArchive(entry.path)
 }
 
 function compareText(left: string, right: string): number {
