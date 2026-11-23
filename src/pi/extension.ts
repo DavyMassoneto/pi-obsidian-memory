@@ -21,7 +21,6 @@ import { memoryConfigPath, memoryIndexPath, memoryModelCachePath } from "#src/pi
 import { RelevantMemoryRuntime } from "#src/pi/relevant-memory"
 import { SemanticRuntime } from "#src/pi/semantic"
 import { sessionStartHandler } from "#src/pi/session-start"
-import { shellEditGuardEnabled, shellEditGuardHandler } from "#src/pi/shell-edit-guard"
 import { vaultGuardHandler } from "#src/pi/vault-guard"
 import { loadDontForget } from "#src/usecases"
 import { entryParts } from "./entry-parts.ts"
@@ -93,21 +92,12 @@ function partsOf(entry: EntryParts | undefined): EntryParts {
 function registerOptionalParts(registrar: ExtensionRegistrar, parts: EntryParts, optional: OptionalDeps): void {
   if (parts.cycle) registerCycle(registrar, optional.cycle)
   if (parts.vaultGuard) registrar.onToolCall(vaultGuardHandler(optional.configPath, homedir()))
-  if (parts.shellEditGuard) registerShellEditGuard(registrar)
 }
 
 function registerCycle(registrar: ExtensionRegistrar, cycle: ObservationRuntime): void {
   registrar.onTurnEnd(turnEndHandler(cycle))
   registrar.onAgentStart(agentStartHandler(cycle))
   registrar.onBeforeCompact(beforeCompactHandler(cycle))
-}
-
-function registerShellEditGuard(registrar: ExtensionRegistrar): void {
-  let enabled = true
-  registrar.onSessionKey((payload) => {
-    enabled = shellEditGuardEnabled(payload)
-  })
-  registrar.onShellToolCall(shellEditGuardHandler(() => enabled))
 }
 
 function registerTools(registrar: ExtensionRegistrar, memory: ToolDeps, names: readonly string[]): void {

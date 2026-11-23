@@ -46,8 +46,7 @@ pi → usecases → services → domain. Each layer imports only the one right b
   dialogs; every result is checked on disk. One scenario loads the package the way the user installs it, which proves
   pi loads the extension. It runs one test file at a time, and only one e2e run at a time. The Laya tests, on a real
   laya-serve on 127.0.0.1, are the separate `e2e-laya` project and run only on request.
-- `npm run test:model` runs the live model tests: the shell-edit cutoff measurement and the `checkShellEdit` checks
-  against `jev-latest`, Laya, the local embeddings model and the real model download. Run it when asked or when a
+- `npm run test:model` runs the live model tests: Laya, the local embeddings model and the real model download. Run it when asked or when a
   model changes; measured numbers go to `docs/`.
 - Files and vaults: real disk in a temp folder. Tests never touch the user's real vaults, config or agent folder.
 - vitest. `tests/` mirrors `src/` (`src/services/vault/save.ts` → `tests/services/vault/save.test.ts`); live model

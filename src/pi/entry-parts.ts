@@ -18,7 +18,6 @@ export function entryParts(mode: EntryMode): EntryParts {
       commands: [],
       injection: true,
       vaultGuard: true,
-      shellEditGuard: false,
       cycle: false,
     }
   }
@@ -40,7 +39,6 @@ export function entryParts(mode: EntryMode): EntryParts {
     ],
     injection: true,
     vaultGuard: true,
-    shellEditGuard: true,
     cycle: true,
   }
 }

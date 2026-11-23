@@ -28,11 +28,10 @@ note in Obsidian.
 | [pi](https://pi.dev) | Runs the package. Tested with pi 1.3.0. | Yes |
 | Node 22.19 or later | pi runs the package on it. | Yes |
 | A chat model configured in pi | Turns the conversation into observations for compaction (observer) and finds notes for each message (memory agent). Any model pi can use works; a small, cheap one is enough for the memory agent. | Yes |
-| A TypeSafe API key (`TYPESAFE_API_KEY`) | Jev, TypeSafe's classifier, decides which notes help each message and checks shell commands (see [Guards](#guards)). Get a key at [typesafe.ai](https://docs.typesafe.ai). Price: $0.042 per million input tokens. | Strongly recommended |
+| A TypeSafe API key (`TYPESAFE_API_KEY`) | Jev, TypeSafe's classifier, decides which notes help each message. Get a key at [typesafe.ai](https://docs.typesafe.ai). Price: $0.042 per million input tokens. | Strongly recommended |
 | [Obsidian](https://obsidian.md) | Reading and editing the notes. | No: notes are plain Markdown |
 
-**Without `TYPESAFE_API_KEY`:** no notes are added to your messages (pi tells you once per session), and every
-`bash` or `powershell` call is refused, because the shell-edit guard cannot check it.
+**Without `TYPESAFE_API_KEY`:** no notes are added to your messages (pi tells you once per session).
 
 ### Setting the TypeSafe key
 
@@ -181,10 +180,6 @@ The bundled skill `obsidian-memory` teaches the agent where notes go and how to 
 - **Vault guard.** The agent reaches the vaults only through the memory tools. pi's file tools (`read`, `write`,
   `edit`, `grep`, `find`, `ls`) on a vault are refused, and so are shell commands that write a vault path out. You and
   Obsidian are not affected.
-- **Shell-edit guard.** Before every `bash` or `powershell` call, Jev checks whether the command edits a file: a
-  redirect, an in-place edit, inline code, a script that writes, a copy or download that creates a file, or a
-  hardlink. If so, the call is refused and the agent is told to use `edit` or `write`. When Jev cannot answer, the
-  call is refused.
 
 ### Read-only entry
 
@@ -197,21 +192,8 @@ but never change it. It registers:
 - the injection of memory into the prompt (session start and each message);
 - the vault guard.
 
-It does not register the other four memory tools, the observation cycle (no observer, no memory compaction, no
-consolidator: pi compacts such a session on its own) or the shell-edit guard.
-
-### Shell-edit guard key
-
-Another extension can turn the shell-edit guard off for one session. It emits an event on the pi event bus:
-
-- **Channel:** `pi-obsidian-memory:session-key`.
-- **Payload:** `{ shellEditGuard: boolean }`.
-- **Default:** the guard is on. Only a payload with `shellEditGuard: false` turns it off; `shellEditGuard: true` turns it
-  back on. The last payload wins.
-- **Malformed payload:** anything else (no payload, `null`, an object without the key, `"false"`, `0`) leaves the guard on,
-  or turns it on again.
-
-The key affects only the shell-edit guard. The vault guard does not change.
+It does not register the other four memory tools or the observation cycle (no observer, no memory compaction, no
+consolidator: pi compacts such a session on its own).
 
 ### Dashboard
 
@@ -263,7 +245,7 @@ folder (OneDrive, iCloud, Dropbox).
 
 - The observer, the consolidator and the memory agent send conversation and note content to the chat models you choose.
 - Observations and the journey are kept in the pi session file, like the conversation.
-- Jev sends your messages, candidate notes and shell commands to TypeSafe.
+- Jev sends your messages and candidate notes to TypeSafe.
 - Search by meaning runs on your machine by default; OpenAI or Google receive note content and queries only if you
   choose them.
 - `/memory-setup` shows each of these before it saves.
@@ -279,7 +261,6 @@ thing it offers to change is a blank note, after asking you.
 | "Memory is off" or "Run /memory-setup first" | Run `/memory-setup` |
 | "No chat model is available" during setup | Connect a model in pi (`/login`), then run `/memory-setup` again |
 | No relevant notes are ever added | Check that `TYPESAFE_API_KEY` is set, then run `/memory-doctor` |
-| "Refused: the shell-edit guard could not check this command" | Same: the shell-edit guard needs Jev |
 | "Memory observer failed: …" | The text after the colon names the cause, for example a model without a key. It tries again a minute later; `/memory-doctor` checks the observer model |
 | "Memory consolidation failed: …" | The text after the colon names the cause. It tries again a minute later; `/memory-doctor` checks the consolidator model |
 | "Memory could not check the origin of observations: …" | The text after the colon names the cause. It tries again in a minute; after three failed attempts they stay unconfirmed and are not saved as notes. |

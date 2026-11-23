@@ -6,7 +6,6 @@ export const defaultLayaSettings = {
   headMaxTokens: 192,
 } as const
 
-export const defaultJevModel = "jev-latest"
 export const maxDecisionResponseBytes = 65_536
 
 export const modelVersionPattern = /^\d+(?:\.\d+)*$/

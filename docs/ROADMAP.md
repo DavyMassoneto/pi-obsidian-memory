@@ -33,10 +33,9 @@ Every milestone:
 - **Done when:**
   - a test proves that reading and writing a vault file through each guarded route is refused and that the file on
     disk is unchanged;
-  - the same routes still read and write a file outside the vaults;
-  - the shell-edit guard (next milestone) refuses hardlink creation.
-- **Decided by the user (2026-10-17).** Hardlink creation through the shell is refused by the shell-edit guard
-  below. Reading a vault through a path the shell builds indirectly, tools of other installed extensions, and
+  - the same routes still read and write a file outside the vaults.
+- **Decided by the user (2026-10-17).** Hardlink creation through the shell was refused by the shell-edit guard
+  below, removed on 2026-11-23. Reading a vault through a path the shell builds indirectly, tools of other installed extensions, and
   foreground subagents (which load no extensions; background ones load this extension) are accepted as they are.
   Claude Code through pi-claude-bridge is outside this package.
 - **Today** the guard blocks pi's file tools (`read`, `write`, `edit`,
@@ -50,7 +49,10 @@ Every milestone:
   deleting `~/.pi/agent`) are not recognised. With no valid config no vault is known, so nothing is refused. Tools the guard does not know
   pass. Evidence for the routes an extension cannot close is in `.pi/research/vault-guard.md`.
 
-### Shell-edit guard (Jev)
+### Shell-edit guard (Jev) — removed
+
+- [x] **Removed by the user (2026-11-23):** it got in the way more than it helped. The guard, its session key, its
+  tests and its measured cutoffs are gone; the history below is kept as a record.
 
 - **Goal (user rule):** the shell never edits files; files are created or changed only with the `edit` and `write`
   tools. Deleting, moving and renaming stay allowed, and so do lint, formatters, git, npm and test runners.

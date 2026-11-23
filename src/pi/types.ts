@@ -15,7 +15,6 @@ import type {
   TurnEndHandler,
 } from "#src/pi/observation-cycle"
 import type { SessionStartHandler } from "#src/pi/session-start"
-import type { SessionKeyPayload, ShellEditHandler } from "#src/pi/shell-edit-guard"
 import type { ToolCallHandler } from "#src/pi/vault-guard"
 import type {
   CycleCompanion,
@@ -36,8 +35,6 @@ export interface ExtensionRegistrar {
   onSessionStart(handler: SessionStartHandler): void
   onBeforeAgentStart(handler: BeforeAgentStartHandler): void
   onToolCall(handler: ToolCallHandler): void
-  onShellToolCall(handler: ShellEditHandler): void
-  onSessionKey(handler: SessionKeyHandler): void
   onTurnEnd(handler: TurnEndHandler): void
   onAgentStart(handler: AgentStartHandler): void
   appendObservations(data: ObservationsRecorded): void
@@ -78,8 +75,6 @@ export interface OptionalDeps {
   cycle: ObservationRuntime
 }
 
-export type SessionKeyHandler = (payload: SessionKeyPayload) => void
-
 export type EntryMode = "full" | "read-only"
 
 export interface EntryParts {
@@ -87,6 +82,5 @@ export interface EntryParts {
   commands: readonly string[]
   injection: boolean
   vaultGuard: boolean
-  shellEditGuard: boolean
   cycle: boolean
 }

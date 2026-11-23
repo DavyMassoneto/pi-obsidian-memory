@@ -30,8 +30,8 @@ history.
     exact string.
 12. **Vault access only through the memory system.** The LLM never reads or writes vault files directly: the extension
     blocks pi's file tools on vault paths, and the LLM uses the memory tools, which bring search with embeddings.
-    The user edits the vault freely in Obsidian. Missing: a Jev guard that refuses shell commands which create or
-    change a file's contents, or create a hardlink. Accepted by the user (2026-10-17): reading a vault through a path
+    The user edits the vault freely in Obsidian. The Jev shell-edit guard was removed by the user (2026-11-23): it got
+    in the way more than it helped. Accepted by the user (2026-10-17): reading a vault through a path
     the shell builds indirectly, tools of other extensions, and foreground subagents (they load no extensions).
 14. **Platform.** pi only for now. Windows, macOS and Linux.
 15. **OM cycle.** The package observes, compacts and consolidates like OM, with the same kinds of settings (observed

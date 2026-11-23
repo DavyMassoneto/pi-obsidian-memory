@@ -38,7 +38,7 @@ describe("entry parts", () => {
         MEMORY_SETUP_COMMAND,
       ].sort(),
     )
-    expect(parts).toMatchObject({ injection: true, vaultGuard: true, shellEditGuard: true, cycle: true })
+    expect(parts).toMatchObject({ injection: true, vaultGuard: true, cycle: true })
   })
 
   it("the read-only entry has only memory_search and memory_get", () => {
@@ -53,7 +53,7 @@ describe("entry parts", () => {
     expect(entryParts("read-only")).toMatchObject({ injection: true, vaultGuard: true })
   })
 
-  it("the read-only entry has no observation cycle and no shell-edit guard", () => {
-    expect(entryParts("read-only")).toMatchObject({ cycle: false, shellEditGuard: false })
+  it("the read-only entry has no observation cycle", () => {
+    expect(entryParts("read-only")).toMatchObject({ cycle: false })
   })
 })
