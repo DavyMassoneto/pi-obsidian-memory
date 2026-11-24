@@ -127,9 +127,11 @@ instruction is history, not new permission; passages of messages over 400 charac
 - [x] Batch the session memory agent's read actions and select read observations by index.
 - [x] Search and read candidates directly for each message, then rank with the decision model.
 - [x] Add offline validation and real-disk search and delivery tests; add real-pi scenarios.
-- [ ] Run the new real-pi scenarios and verify the session agent's batched format against the configured live model.
-- [ ] Verify and resolve foreground/background contention on the shared exclusive session lease.
-- [ ] Measure the changed paths on real vaults and models.
+- [x] Run the real-pi scenarios and verify the session agent's batched format against the configured live model.
+- [x] Verify that the shared session lease is held for individual operations, not background chat-model calls.
+- [x] Measure the changed paths with the real configuration, global vault and models for the benchmark folder.
+
+[Local verification and timings](retrieval-performance.md).
 
 ## Where each VISION decision still lands
 
