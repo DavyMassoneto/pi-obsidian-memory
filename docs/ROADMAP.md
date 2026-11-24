@@ -96,21 +96,31 @@ Every milestone:
     folder, the task and its progress are not saved, a rule stated in Portuguese is saved in English (VISION 7), and a
     stated secret is saved as written (VISION 11).
 
-### User passages kept after consolidation (pending release)
+### User passages kept after consolidation (released in v0.3.2)
 
-Diagnosed: once a passage you wrote is consolidated, it leaves the compaction block, so later compactions drop your
-scoped instructions. Target: passages checked against your message stay in later compactions after their ordinary
-consolidation, kept in a separate view apart from the consolidation pool: they are neither counted toward it nor
-picked again for notes. Tradeoffs: retained passages get no new size cap, so the compaction block grows; a completed
+Before: once a passage you wrote was consolidated, it left the compaction block, so later compactions dropped your
+scoped instructions. Now: passages checked against your message stay in later compactions after their ordinary
+consolidation, in a separate view apart from the consolidation pool, so they are neither counted toward it nor picked
+again for notes. Tradeoffs: retained passages get no new size cap, so the compaction block grows; a completed
 instruction is history, not new permission; passages of messages over 400 characters are still chosen by the model.
 
 - [x] Offline authorship and citation tests pass: kept passages must appear in your message, and read material is
   marked as not said by the user.
 - [x] Offline: passages kept after consolidation stay in later compactions, and are not counted in the pool or picked
   again for notes.
-- [ ] E2E `tests/e2e/observation-origin.e2e.test.ts`, which asserts behaviour after consolidation, passes in CI on
-  Windows. Pending until CI passes it.
-- [ ] Release, once the E2E is green in CI.
+- [x] E2E `tests/e2e/observation-origin.e2e.test.ts`, which asserts behaviour after consolidation, passed on Windows
+  in release run [45082731783](https://github.com/DavyMassoneto/pi-obsidian-memory/actions/runs/45082731783) (commit
+  `13324fe`).
+- [x] Released as [v0.3.2](https://github.com/DavyMassoneto/pi-obsidian-memory/releases/tag/v0.3.2) and published to
+  npm as the latest version.
+
+### OM cycle fixes (local candidate only; not released)
+
+- [x] Keep the user's verified words in mixed clauses without attributing assistant-authored or read material to the user.
+- [x] Keep same-second passage IDs distinct and retain the passages across consolidation tombstones and later compaction.
+- [x] Report verified and inconclusive outcomes separately. Exhausted observations stay marked unconfirmed and produce
+  no durable notes.
+- [x] Three isolated Pi E2Es passed for authorship, passage collisions and retention, and inconclusive notices.
 
 ### OM cycle fixes (local candidate only; not released)
 
