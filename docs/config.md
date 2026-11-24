@@ -73,8 +73,9 @@ The relevant-memory budget limits the notes loaded at session start and the note
 notes are outside it. The observer runs
 with `observer.model` at `observer.thinking`, and the consolidator with `consolidator.model` at
 `consolidator.thinking`; the memory agent, with `memoryAgent.model`, searches and reads at session start. Its read
-actions can be batched, and it selects previously read observations. This work runs in the background: only the
-Don't forget block waits for loading before the first message. Session notes ready at a `before_agent_start` are sent
+actions can be batched, and it selects previously read observations. This work runs in the background: the first
+message awaits the Don't forget block, not the agent's completion. Vault operations share an exclusive session
+lease, so foreground and background vault work can still wait for each other. Session notes ready at a `before_agent_start` are sent
 as a hidden message with their loaded-note details; otherwise they wait for the next message. A chat reference is
 syntactically validated when the config is read; its availability is checked by `/memory-doctor` and at use.
 

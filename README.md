@@ -120,7 +120,7 @@ is in [docs/vault-format.md](docs/vault-format.md).
 
 1. **Session start.** Every note marked `dontForget: true` is loaded into pi's system prompt, in full. The memory
    agent finds other relevant notes in the background; they arrive as a hidden message at the next user message once
-   ready. The first message does not wait for that search.
+   ready. The first message does not await the agent's completion, though vault operations share a session lease.
 2. **Each message.** Jev decides whether stored memory would help. If yes, memory searches the available vaults directly,
    reads the hits, and Jev scores notes not already loaded. The notes that help are added in a hidden message, within
    `context.budgetChars` (12,000 characters by default). A note you changed since it was loaded is sent again.

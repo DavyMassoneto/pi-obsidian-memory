@@ -31,7 +31,7 @@ export async function findNotes(
       continue
     }
     if ("action" in step.output) return { succeeded: true, output: chosen(step.output.notes, observations) }
-    observations.push(...(await Promise.all(step.output.actions.map((action) => observe(action, context)))))
+    for (const action of step.output.actions) observations.push(await observe(action, context))
   }
 }
 
