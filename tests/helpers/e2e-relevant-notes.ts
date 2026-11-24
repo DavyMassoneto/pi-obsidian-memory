@@ -1,13 +1,25 @@
+import { readFile } from "node:fs/promises"
+
+import Type from "typebox"
+
 import { type LoadedNote, loadedNoteBlock } from "#src/domain"
 import { BLOCK_INTRO, BLOCK_SEPARATOR, DONT_FORGET_HEADING, RELEVANT_MESSAGE_TYPE, STATUS_LOADING } from "#src/pi"
 import type { MemoryConfig } from "#src/services"
-import { RELEVANT_INTRO } from "#src/usecases"
+import { LoadedChangesSchema, RELEVANT_INTRO } from "#src/usecases"
 import { configuredWorld, rewriteConfig } from "./e2e-config.ts"
-import { NotifySchema, recordsOf, StatusSchema } from "./e2e-records.ts"
+import { NotifySchema, recordOf, recordsOf, StatusSchema } from "./e2e-records.ts"
 import { statusCleared } from "./e2e-turns.ts"
 import { writeVaultFile } from "./e2e-vault.ts"
 import type { E2eWorld } from "./e2e-world.ts"
 import { noteWithId } from "./search-memory.ts"
+
+const RelevantEntrySchema = Type.Object({
+  type: Type.Literal("custom_message"),
+  customType: Type.Literal(RELEVANT_MESSAGE_TYPE),
+  content: Type.String(),
+  display: Type.Literal(false),
+  details: LoadedChangesSchema,
+})
 
 export const DEPLOY = {
   path: "deploy/Deploys go through the blue-harbor pipeline.md",
@@ -79,4 +91,21 @@ export async function messageTwiceOnLaya(settings: MemoryConfig["decisionModel"]
 
 export function relevantMessages(world: E2eWorld): Promise<string[]> {
   return world.pi.customMessages(RELEVANT_MESSAGE_TYPE)
+}
+
+export async function relevantEntries(world: E2eWorld) {
+  const text = await readFile(await world.pi.sessionFile(), "utf8")
+  return text.split("\n").flatMap((line) => {
+    if (line.trim() === "") return []
+    const entry = recordOf(RelevantEntrySchema, line)
+    if (!entry) return []
+    return [entry]
+  })
+}
+
+export function statusSetBeforeClear(world: E2eWorld, setKey: string, clearKey: string): boolean {
+  const statuses = recordsOf(StatusSchema, world.pi.lines)
+  const set = statuses.findIndex((status) => status.statusKey === setKey && typeof status.statusText === "string")
+  const clear = statuses.findIndex((status) => status.statusKey === clearKey && typeof status.statusText !== "string")
+  return set >= 0 && clear >= 0 && set < clear
 }

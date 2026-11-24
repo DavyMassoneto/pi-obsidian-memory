@@ -1,11 +1,12 @@
 import { STATUS_LOADING, withMemoryStatus } from "#src/pi/context"
 import { trackDontForget } from "#src/usecases"
-import { BLOCK_SEPARATOR, MEMORY_BLOCK_SECTION, RELEVANT_LOAD_ERROR_PREFIX } from "./constants.ts"
+import { MEMORY_BLOCK_SECTION, RELEVANT_LOAD_ERROR_PREFIX } from "./constants.ts"
 import { loadNotices, renderLoadFailure, renderLoadNotice, renderMemoryBlock } from "./render.ts"
 import type { BeforeAgentStartHandler, BlockStart, DontForgetLoader } from "./types.ts"
 
 export class MemoryBlock {
   #text: Promise<string | null> = Promise.resolve(null)
+  #settled: Promise<void> = Promise.resolve()
   #load: DontForgetLoader
 
   constructor(load: DontForgetLoader) {
@@ -17,11 +18,15 @@ export class MemoryBlock {
       this.clear()
       return
     }
-    this.#text = withMemoryStatus(start.ctx, STATUS_LOADING, () => this.#loadBlock(start))
+    this.#text = this.#loadBlock(start)
+    const dontForget = this.#text
+    this.#settled = withMemoryStatus(start.ctx, STATUS_LOADING, async () => {
+      await Promise.all([dontForget, start.relevant().catch((error) => this.#relevantFailed(start, error))])
+    })
   }
 
   async #loadBlock(start: BlockStart): Promise<string | null> {
-    const dontForget = this.#load(start.context).then(
+    return this.#load(start.context).then(
       (result) => {
         trackDontForget(start.loaded, result)
         start.notify(loadNotices(result))
@@ -32,11 +37,6 @@ export class MemoryBlock {
         return renderLoadFailure(errorMessage(error))
       },
     )
-    const [block, extra] = await Promise.all([
-      dontForget,
-      start.relevant().catch((error) => this.#relevantFailed(start, error)),
-    ])
-    return joined(block, extra)
   }
 
   #relevantFailed(start: BlockStart, error: Error | string): null {
@@ -45,11 +45,12 @@ export class MemoryBlock {
   }
 
   async settled(): Promise<void> {
-    await this.#text.then(noop, noop)
+    await this.#settled.then(noop, noop)
   }
 
   clear(): void {
     this.#text = Promise.resolve(null)
+    this.#settled = Promise.resolve()
   }
 
   beforeAgentStart(): BeforeAgentStartHandler {
@@ -62,12 +63,6 @@ export class MemoryBlock {
 }
 
 function noop(): void {}
-
-function joined(block: string | null, extra: string | null): string | null {
-  if (typeof block !== "string") return null
-  if (typeof extra !== "string") return block
-  return [block, extra].join(BLOCK_SEPARATOR)
-}
 
 function errorMessage(error: Error | string): string {
   if (error instanceof Error) return error.message

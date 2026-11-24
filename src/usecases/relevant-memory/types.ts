@@ -40,7 +40,6 @@ export interface RetrieveDeps {
 
 export interface SessionMemoryDeps {
   complete: CompletionPort
-  loaded: LoadedStore
 }
 
 export interface RetrieveRequest {

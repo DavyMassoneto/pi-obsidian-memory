@@ -62,6 +62,7 @@ export function registerExtension(
   const cycle = cycleFor(registrar, { paths, sessions, completionOf })
   registrar.onSessionStart(sessionStartHandler(paths, sessions, block, relevant, cycle))
   registrar.onBeforeAgentStart(block.beforeAgentStart())
+  registrar.onBeforeAgentStart(relevant.sessionBeforeAgentStart())
   registrar.onBeforeAgentStart(relevant.beforeAgentStart())
   registerOptionalParts(registrar, parts, { configPath: paths.configPath, cycle })
   registrar.onSessionShutdown(async () => {

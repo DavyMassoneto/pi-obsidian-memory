@@ -2,14 +2,22 @@ import { Value } from "typebox/value"
 
 import { type MemoryPiContext, STATUS_SEARCHING, withMemoryStatus } from "#src/pi/context"
 import type { BeforeAgentStartHandler } from "#src/pi/memory-block"
-import { type JevSource, LoadedChangesSchema, loadSessionMemory, retrieveMemory } from "#src/usecases"
+import {
+  deliverSessionMemory,
+  type JevSource,
+  LoadedChangesSchema,
+  loadSessionMemory,
+  retrieveMemory,
+} from "#src/usecases"
 import { JEV_MISSING, RELEVANT_MESSAGE_TYPE } from "./constants.ts"
 import { classifierPrompt } from "./prompt.ts"
-import type { RelevantMemoryDeps } from "./types.ts"
+import type { PendingSessionMemory, RelevantMemoryDeps } from "./types.ts"
 
 export class RelevantMemoryRuntime {
   #deps: RelevantMemoryDeps
   #told = new Set<string>()
+  #sessionToken = Symbol()
+  #pending: PendingSessionMemory | null = null
 
   constructor(deps: RelevantMemoryDeps) {
     this.#deps = deps
@@ -17,6 +25,8 @@ export class RelevantMemoryRuntime {
 
   reset(): void {
     this.#told = new Set<string>()
+    this.#sessionToken = Symbol()
+    this.#pending = null
   }
 
   restore(ctx: MemoryPiContext): void {
@@ -30,13 +40,31 @@ export class RelevantMemoryRuntime {
   async sessionText(ctx: MemoryPiContext): Promise<string | null> {
     const operation = this.#deps.sessions.retrievalOperation(ctx.cwd, this.#deps.paths)
     if (!operation) return null
-    const result = await loadSessionMemory(operation, {
-      complete: this.#deps.completionOf(ctx),
-      loaded: this.#deps.sessions.loaded(),
-    })
-    if (!result.succeeded) return null
+    const token = this.#sessionToken
+    const result = await loadSessionMemory(operation, { complete: this.#deps.completionOf(ctx) })
+    if (!result.succeeded || token !== this.#sessionToken || operation.signal.aborted) return null
     this.tell(ctx, result.output.notices)
+    this.#pending = { result: result.output, signal: operation.signal }
     return result.output.text
+  }
+
+  sessionBeforeAgentStart(): BeforeAgentStartHandler {
+    return async (event) => {
+      if (event.messageType !== "user" || !this.#pending) return undefined
+      const pending = this.#pending
+      this.#pending = null
+      if (pending.signal.aborted) return undefined
+      const delivered = deliverSessionMemory(pending.result, this.#deps.sessions.loaded())
+      if (typeof delivered.text !== "string") return undefined
+      return {
+        message: {
+          customType: RELEVANT_MESSAGE_TYPE,
+          content: delivered.text,
+          display: false,
+          details: delivered.changes,
+        },
+      }
+    }
   }
 
   beforeAgentStart(): BeforeAgentStartHandler {

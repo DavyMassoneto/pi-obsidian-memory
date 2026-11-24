@@ -40,10 +40,9 @@ export async function loadSessionMemory(
     found.output.filter((note) => !note.dontForget),
     config.context.budgetChars,
   )
-  for (const note of fitted) deps.loaded.remember(note)
   if (fitted.length === 0) return { succeeded: true, output: { text: null, notices: [], changes: NO_CHANGES } }
   const text = [SESSION_INTRO, ...fitted.map(loadedNoteBlock)].join(BLOCK_SEPARATOR)
-  return { succeeded: true, output: { text, notices: [], changes: NO_CHANGES } }
+  return { succeeded: true, output: { text, notices: [], changes: { loaded: fitted, forgotten: [] } } }
 }
 
 function failedLoad(notice: string | null): RetrievedMemory {
