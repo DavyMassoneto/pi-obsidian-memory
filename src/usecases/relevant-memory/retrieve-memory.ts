@@ -1,11 +1,11 @@
 import { fitBudget, loadedNoteBlock, shouldRetrieveMemory } from "#src/services"
 import type { MemoryOperationContext } from "#src/usecases/operation-context"
 import { type ResolvedMemory, resolveMemory } from "#src/usecases/resolve-memory"
-import { findNotes } from "./agent.ts"
 import { BLOCK_SEPARATOR, RELEVANT_INTRO } from "./constants.ts"
 import { cutoffsMissingNotice, decidingCutoffs, resolveCutoffs } from "./cutoffs.ts"
 import { decisionContextOf, decisionNotice, needsMemory, rankNotes } from "./decision.ts"
 import { refreshLoaded } from "./refresh.ts"
+import { searchRelevantNotes } from "./search-relevant.ts"
 import type { RankedNotes, RetrieveDeps, RetrieveMemoryResult, RetrieveRequest } from "./types.ts"
 
 export async function retrieveMemory(
@@ -47,16 +47,7 @@ async function relevantNotes(
   const needed = await needsMemory(decision, message, project, folder)
   if (!needed.succeeded) return { notes: [], notice: decisionNotice(needed) }
   if (!shouldRetrieveMemory(needed.output.probability, cutoffs.gate)) return { notes: [], notice: null }
-  const agent = await findNotes(
-    {
-      agent: { project, folder },
-      query: message,
-      model: memory.config.memoryAgent.model,
-    },
-    context,
-    deps.complete,
-  )
-  if (!agent.succeeded) return { notes: [], notice: agent.notice }
-  const fresh = agent.output.filter((note) => !note.dontForget && !deps.loaded.has(note))
-  return rankNotes(decision, message, fresh, cutoffs.relevance)
+  const found = await searchRelevantNotes(message, context, deps.loaded)
+  if (found.notice) return found
+  return rankNotes(decision, message, found.notes, cutoffs.relevance)
 }

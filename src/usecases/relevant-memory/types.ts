@@ -34,7 +34,6 @@ export interface LoadedStore {
 }
 
 export interface RetrieveDeps {
-  complete: CompletionPort
   jev: JevSource
   loaded: LoadedStore
 }

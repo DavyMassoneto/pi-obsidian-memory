@@ -46,7 +46,6 @@ export class RelevantMemoryRuntime {
       if (!operation) return undefined
       const result = await withMemoryStatus(ctx, STATUS_SEARCHING, () =>
         retrieveMemory({ message: event.prompt }, operation, {
-          complete: this.#deps.completionOf(ctx),
           jev: this.#jevFor(ctx),
           loaded: this.#deps.sessions.loaded(),
         }),
