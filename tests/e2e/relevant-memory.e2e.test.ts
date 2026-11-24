@@ -13,6 +13,7 @@ import {
   relevantMessages,
   relevantWorld,
   restartMemory,
+  rewriteConfig,
   statusStates,
   writeVaultFile,
 } from "#test-helpers"
@@ -37,4 +38,16 @@ test("a Don't forget note reaches the model, and Jev adds a relevant project not
     undefined,
   ])
   expect(turn.disposition).toBe("started")
+})
+
+test("per-message search and ranking work when the session memory agent model is unavailable", async () => {
+  const world = await relevantWorld()
+  await rewriteConfig(world, { memoryAgent: { model: { provider: "unavailable", id: "missing" } } })
+  await restartMemory(world)
+  await putDeployNote(world)
+
+  await world.pi.prompt(DEPLOY.question, [])
+
+  expect(noticesStarting(world, DECISION_UNAVAILABLE)).toEqual([])
+  expect((await relevantMessages(world)).some((message) => message.includes(DEPLOY_BLOCK))).toBe(true)
 })

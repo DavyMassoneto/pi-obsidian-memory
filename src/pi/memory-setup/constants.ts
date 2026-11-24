@@ -18,7 +18,7 @@ export const SETUP_OBSERVER_MODEL_TITLE =
   "Chat model for the observer and the consolidator (they summarize the conversation for compaction and fold the oldest observations into notes; the model in use is the default and Escape keeps the one marked)"
 
 export const SETUP_AGENT_MODEL_TITLE =
-  "Chat model for the memory agent (a small model, it searches memory for each message; sorted by price; Escape keeps the current one)"
+  "Chat model for the memory agent (a small model, it searches memory at session start; sorted by price; Escape keeps the current one)"
 
 export const SETUP_NO_MODEL = "No chat model is available. Connect a model in pi, then run /memory-setup again."
 

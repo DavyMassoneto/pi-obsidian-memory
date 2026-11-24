@@ -72,9 +72,11 @@ explicitly chosen available chat model's provider and id. They are not built-in 
 The relevant-memory budget limits the notes loaded at session start and the notes added to each message; Don't forget
 notes are outside it. The observer runs
 with `observer.model` at `observer.thinking`, and the consolidator with `consolidator.model` at
-`consolidator.thinking`; the memory agent, with `memoryAgent.model`, searches and reads for each
-message and at session start. A chat reference is syntactically validated when the config is read; its availability is checked by
-`/memory-doctor` and at use.
+`consolidator.thinking`; the memory agent, with `memoryAgent.model`, searches and reads at session start. Its read
+actions can be batched, and it selects previously read observations. This work runs in the background: only the
+Don't forget block waits for loading before the first message. Session notes ready at a `before_agent_start` are sent
+as a hidden message with their loaded-note details; otherwise they wait for the next message. A chat reference is
+syntactically validated when the config is read; its availability is checked by `/memory-doctor` and at use.
 
 Embeddings allow only these closed provider/model pairs, with no other fields:
 
@@ -168,14 +170,13 @@ the defaults above.
 ### Running the decision model
 
 Laya and Jev are classifiers: they answer typed questions with a yes/no probability. They never search and never
-generate text. For each user message the decision model is asked two kinds of question, and the memory agent (the chat
-model in `memoryAgent.model`) does the searching and reading in between:
+generate text. For each user message the decision model is asked two kinds of question:
 
-1. **Gate:** "does this message need stored memory?" If the probability is not above the gate cutoff, nothing is added
-   and the memory agent is not started.
-2. **Relevance:** after the memory agent has read some notes, the decision model is asked, for each candidate note,
-   "does this note help answer the message?" Notes at or above the relevance cutoff are added, best first, within
-   `context.budgetChars`. One question per note, sent in a single batch.
+1. **Gate:** "does this message need stored memory?" If the probability is not above the gate cutoff, nothing is added.
+2. **Relevance:** otherwise, memory searches the global vault and the project vault when registered, reads the hits,
+   and excludes Don't forget notes and notes already loaded with the same hash. The decision model is asked for each
+   candidate, "does this note help answer the message?" Notes at or above the relevance cutoff are added, best first,
+   within `context.budgetChars`. One question per note, sent in a single batch. The memory agent is not used here.
 
 A note that cannot be scored (a failed or invalid answer for that note) is dropped on its own, and the user is told
 once per session "could not score N of M notes"; the message fails as a whole only when every note fails. A truncated
@@ -254,8 +255,9 @@ provider, context budget, the three limits, the global vault, and the projects (
 their vault to an existing folder, or remove them from the memory; nothing is deleted). Switching between Jev and Laya
 clears the cutoffs. Choosing Jev or a remote embeddings provider shows its warning. A value the schema refuses is
 not written, and the reason is shown. Changes apply on the next use: the observer, compaction, relevant memory and
-search read the config each time. Only the Don't forget notes and session-start notes already loaded into the conversation's memory block wait
-for the next session or `/reload`, and the notice says so for the global vault and project changes.
+search read the config each time. Don't forget notes already in the conversation's system-prompt block wait for the
+next session or `/reload`; session-start notes are delivered as hidden messages and changed notes are refreshed. The
+notice says so for the global vault and project changes.
 - An invalid config is repaired: every valid value is kept, and one list names each missing key and each value that
   could not be kept. A file that is not valid JSON is replaced only after the user confirms.
 - Before writing, it shows the warnings that apply (below): chat models always; Jev when selected; remote embeddings

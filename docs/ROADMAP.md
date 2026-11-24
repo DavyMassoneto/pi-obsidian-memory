@@ -121,6 +121,15 @@ instruction is history, not new permission; passages of messages over 400 charac
 - [x] Three isolated Pi E2Es passed locally for authorship, passage collisions and retention, and inconclusive notices.
 - [ ] Windows E2E for this isolated release candidate in CI.
 
+### Relevant-memory performance (local candidate)
+
+- [x] Load session notes in the background and deliver them as a hidden message without holding the first message.
+- [x] Batch the session memory agent's read actions and select read observations by index.
+- [x] Search and read candidates directly for each message, then rank with the decision model.
+- [x] Add offline validation and real-disk search and delivery tests; add real-pi scenarios.
+- [ ] Run the new real-pi scenarios and verify the session agent's batched format against the configured live model.
+- [ ] Measure the changed paths on real vaults and models.
+
 ## Where each VISION decision still lands
 
 | Decision | Pending |

@@ -40,7 +40,7 @@ export const CONSOLIDATOR_THINKING_TITLE = "Consolidator thinking level (Escape 
 export const THINKING_LEVELS: ObserverThinking[] = ["off", "minimal", "low", "medium", "high", "xhigh", "max"]
 
 export const AGENT_MODEL_TITLE =
-  "Chat model for the memory agent (it searches memory for each message; Escape keeps the current one)"
+  "Chat model for the memory agent (it searches memory at session start; Escape keeps the current one)"
 
 export const DECISION_TITLE = "Decision model (Escape keeps the current one)"
 

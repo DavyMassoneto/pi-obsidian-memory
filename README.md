@@ -27,7 +27,7 @@ note in Obsidian.
 |---|---|---|
 | [pi](https://pi.dev) | Runs the package. Tested with pi 1.3.0. | Yes |
 | Node 22.19 or later | pi runs the package on it. | Yes |
-| A chat model configured in pi | Turns the conversation into observations for compaction (observer) and finds notes for each message (memory agent). Any model pi can use works; a small, cheap one is enough for the memory agent. | Yes |
+| A chat model configured in pi | Turns the conversation into observations for compaction (observer) and finds relevant notes at session start (memory agent). Any model pi can use works; a small, cheap one is enough for the memory agent. | Yes |
 | A TypeSafe API key (`TYPESAFE_API_KEY`) | Jev, TypeSafe's classifier, decides which notes help each message. Get a key at [typesafe.ai](https://docs.typesafe.ai). Price: $0.042 per million input tokens. | Strongly recommended |
 | [Obsidian](https://obsidian.md) | Reading and editing the notes. | No: notes are plain Markdown |
 
@@ -118,9 +118,11 @@ is in [docs/vault-format.md](docs/vault-format.md).
 
 ### What happens during a session
 
-1. **Session start.** Every note marked `dontForget: true` is loaded into pi's system prompt, in full.
-2. **Each message.** Jev decides whether stored memory would help. If yes, the memory agent searches and reads the
-   vaults, Jev scores each note it found, and the notes that help are added after your message, within
+1. **Session start.** Every note marked `dontForget: true` is loaded into pi's system prompt, in full. The memory
+   agent finds other relevant notes in the background; they arrive as a hidden message at the next user message once
+   ready. The first message does not wait for that search.
+2. **Each message.** Jev decides whether stored memory would help. If yes, memory searches the available vaults directly,
+   reads the hits, and Jev scores notes not already loaded. The notes that help are added in a hidden message, within
    `context.budgetChars` (12,000 characters by default). A note you changed since it was loaded is sent again.
 3. **Observer and compaction.** After each turn, the observer reads each new stretch of the conversation (10,000
    tokens by default) and writes dated observations into the pi session. When the context reaches 150,000 tokens,
@@ -220,7 +222,7 @@ All settings are changed in the `/memory-setup` screen, or by asking pi. You nev
 | `consolidator.atPoolTokens` | 15,000 | Tokens of observations in the session at which the consolidator runs |
 | `consolidator.poolTargetTokens` | 10,000 | Tokens of observations left in the session after it runs |
 | `consolidator.journeyTokens` | 1,000 | Size of the journey; older parts are shortened past this |
-| Memory agent model | chosen at setup | Chat model that searches and reads notes for each message |
+| Memory agent model | chosen at setup | Chat model that searches and reads notes at session start |
 | `context.budgetChars` | 12,000 | Characters of relevant notes added at session start and to each message (Don't forget notes do not count) |
 | `limits.maxStatementChars` | 100 | Longest note name |
 | `limits.maxBodyChars` | 1,000 | Longest note body |
