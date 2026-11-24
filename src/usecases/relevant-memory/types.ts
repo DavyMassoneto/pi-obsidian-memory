@@ -6,7 +6,6 @@ import type {
   CompletionPort,
   JevClassifierPort,
   ReadObservation,
-  RetrievalAction,
 } from "#src/services"
 import type { Succeeded } from "#src/shared"
 import type { MemoryResolutionRefusal } from "#src/usecases/resolve-memory"
@@ -93,12 +92,6 @@ export interface AgentRequest {
   query: string
   model: ChatModelReference
 }
-
-export interface FinishDiscriminant {
-  action: "finish"
-}
-
-export type ReadStep = Exclude<RetrievalAction, FinishDiscriminant>
 
 export interface RankedNotes {
   notes: ReadObservation[]

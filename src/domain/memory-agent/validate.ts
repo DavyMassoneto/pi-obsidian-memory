@@ -17,13 +17,13 @@ export function parseRetrievalAction(text: string, input: RetrievalInput): Retri
     if (!Value.Check(RetrievalActionSchema, action)) {
       return { succeeded: false, problems: ["Invalid retrieval action"] }
     }
-    if (action.action === "finish") {
-      if (!action.notes.every((note) => canSelectNote(note, input))) {
+    if ("action" in action) {
+      if (!action.notes.every((index) => canSelectNote(index, input))) {
         return { succeeded: false, problems: ["Selected notes require matching reads in an available vault"] }
       }
       return { succeeded: true, output: action }
     }
-    const problems = checkReadAction(action, input.context)
+    const problems = action.actions.flatMap((read) => checkReadAction(read, input.context))
     if (problems.length > 0) return { succeeded: false, problems }
     return { succeeded: true, output: action }
   } catch {
@@ -55,12 +55,14 @@ export function hasReadIdentity(identity: MemoryIdentity, observations: readonly
   return latest.id === identity.id && latest.hash === identity.hash
 }
 
-function canSelectNote(identity: MemoryIdentity, input: RetrievalInput): boolean {
+function canSelectNote(index: number, input: RetrievalInput): boolean {
+  const read = input.observations[index]
+  if (read?.kind !== "read") return false
   return (
-    checkAgentVault(identity.vault, input.context).length === 0 &&
-    checkVaultPath(identity.path).length === 0 &&
+    checkAgentVault(read.vault, input.context).length === 0 &&
+    checkVaultPath(read.path).length === 0 &&
     hasReadIdentity(
-      identity,
+      read,
       input.observations.filter((observation) => observation.kind !== "refused"),
     )
   )

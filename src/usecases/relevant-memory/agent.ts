@@ -1,7 +1,7 @@
 import {
   type CompletionPort,
-  type MemoryIdentity,
   type MemoryObservation,
+  type MemoryReadAction,
   type ReadObservation,
   type RetrievalObservation,
   refusalObservation,
@@ -10,7 +10,7 @@ import {
 import { detailOf, observeGet, observeList, observeSearch } from "#src/usecases/capture-memory"
 import { type MemoryOperationContext, memoryOperationInterruption } from "#src/usecases/operation-context"
 import { AGENT_FAILED } from "./constants.ts"
-import type { AgentOutcome, AgentRequest, ReadStep } from "./types.ts"
+import type { AgentOutcome, AgentRequest } from "./types.ts"
 
 export async function findNotes(
   request: AgentRequest,
@@ -30,26 +30,21 @@ export async function findNotes(
       observations.push(refusalObservation(step.problems))
       continue
     }
-    if (step.output.action === "finish") return { succeeded: true, output: chosen(step.output.notes, observations) }
-    observations.push(await observe(step.output, context))
+    if ("action" in step.output) return { succeeded: true, output: chosen(step.output.notes, observations) }
+    observations.push(...(await Promise.all(step.output.actions.map((action) => observe(action, context)))))
   }
 }
 
-function observe(action: ReadStep, context: MemoryOperationContext): Promise<MemoryObservation> {
+function observe(action: MemoryReadAction, context: MemoryOperationContext): Promise<MemoryObservation> {
   if (action.action === "search") return observeSearch(action.vault, action.query, context)
   if (action.action === "get") return observeGet({ vault: action.vault, path: action.path }, context)
   return observeList(action.vault, action.folder, context)
 }
 
-function chosen(identities: MemoryIdentity[], observations: RetrievalObservation[]): ReadObservation[] {
-  const reads = observations.filter((observation) => observation.kind === "read")
-  return identities.flatMap((identity) =>
-    reads.filter(
-      (read) =>
-        read.vault === identity.vault &&
-        read.path === identity.path &&
-        read.id === identity.id &&
-        read.hash === identity.hash,
-    ),
-  )
+function chosen(indices: number[], observations: RetrievalObservation[]): ReadObservation[] {
+  return indices.flatMap((index) => {
+    const observation = observations[index]
+    if (observation?.kind === "read") return [observation]
+    return []
+  })
 }

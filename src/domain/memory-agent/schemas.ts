@@ -93,8 +93,8 @@ export const ReadActionSchema = Type.Union([
 ])
 
 export const RetrievalActionSchema = Type.Union([
-  ReadActionSchema,
-  Type.Object({ action: Type.Literal("finish"), notes: Type.Array(IdentitySchema) }, { additionalProperties: false }),
+  Type.Object({ actions: Type.Array(ReadActionSchema) }, { additionalProperties: false }),
+  Type.Object({ action: Type.Literal("finish"), notes: Type.Array(Type.Integer()) }, { additionalProperties: false }),
 ])
 
 export const AgentContextSchema = Type.Object(

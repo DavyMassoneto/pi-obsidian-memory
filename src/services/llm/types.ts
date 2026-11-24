@@ -113,6 +113,7 @@ export type {
   ChatModelReference,
   MemoryIdentity,
   MemoryObservation,
+  ReadAction as MemoryReadAction,
   ReadObservation,
   RetrievalAction,
   RetrievalInput,
