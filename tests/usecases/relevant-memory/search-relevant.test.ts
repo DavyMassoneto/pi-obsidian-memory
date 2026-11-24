@@ -28,9 +28,21 @@ test("reads every search hit in both vaults, excluding Don't forget and already 
   expect(result.notes.map((note) => note.path)).toEqual(expected)
   expect(result.notes.every((note) => note.kind === "read" && note.body.includes("pnpm"))).toBe(true)
   expect(result.notice).toBeNull()
+})
+
+test("reads again a loaded note whose content changed on disk", async () => {
+  const { vault, context, loaded } = await relevantFixture()
+  const remembered = await putNote(vault, "Remembered", 1, "pnpm remembered")
+  const read = await observeRead({ vault: "global", path: remembered }, context)
+  if (typeof read === "string") throw new Error(read)
+  loaded.remember(read)
+  const unchanged = await searchRelevantNotes("pnpm", context, loaded)
+  expect(unchanged.notes).toEqual([])
+
   await putCatalogFile(vault, remembered, noteWithId(1, "pnpm changed", []))
   const changed = await searchRelevantNotes("pnpm", context, loaded)
-  expect(changed.notes.find((note) => note.path === remembered)?.body).toBe("pnpm changed")
+
+  expect(changed.notes.map((note) => [note.path, note.body])).toEqual([[remembered, "pnpm changed"]])
 })
 
 test("searches the global vault when there is no registered project", async () => {

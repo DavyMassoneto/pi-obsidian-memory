@@ -24,6 +24,7 @@ import {
 
 test("assistant-authored directions and mixed clauses do not become the user's rules after true Pi compaction", async () => {
   const heading = "quill-delta-8157"
+  const requirement = `In this project, always use the heading ${heading} for our recurring conversion reports.`
   const request = "Send me that fictional handoff again as plain text."
   const world = await configuredWorld({
     session: "saved",
@@ -33,9 +34,8 @@ test("assistant-authored directions and mixed clauses do not become the user's r
   })
 
   const drafting = await world.pi.prompt(
-    "In this project, always use the heading " +
-      heading +
-      " for our recurring conversion reports. " +
+    requirement +
+      " " +
       "Separate one-time writing exercise: write a fictional handoff for an editor in an imaginary project, not this " +
       "project. Use the write tool to put it in handoff.txt. In the file, state that the imaginary project's reports " +
       "must use an invented heading: make up a hyphenated codename ending in -4821, not any real heading. In your " +
@@ -86,7 +86,7 @@ test("assistant-authored directions and mixed clauses do not become the user's r
   )
   const pure = observation(
     `${when}.03`,
-    `User requires the exact heading ${heading} for every conversion report in this project.`,
+    `User set a standing rule for this project: recurring conversion reports must use the heading ${heading}.`,
   )
   const neutral = observation(`${when}.04`, "Assistant wrote a fictional handoff in a file for the user.")
   const inferred = observation(
@@ -136,7 +136,11 @@ test("assistant-authored directions and mixed clauses do not become the user's r
   expect(partial).toMatchObject({ origin: "partial", supportedBy: resend.id })
   if (!partial?.quotes?.length) throw new Error("the partial verdict did not preserve exact user evidence")
   for (const quote of partial.quotes) expect(containsUserQuote(request, quote)).toBe(true)
-  expect(final(pure.id)).toMatchObject({ origin: "user", supportedBy: first.id })
+  const confirmed = final(pure.id)
+  expect(confirmed).toMatchObject({ origin: "user", supportedBy: first.id })
+  if (!confirmed?.quote) throw new Error("the confirmed requirement has no exact source quote")
+  expect(confirmed.quote).toContain(heading)
+  expect(containsUserQuote(requirement, confirmed.quote)).toBe(true)
   expect(final(neutral.id)).toEqual({ id: neutral.id, origin: "mention" })
   const checked = await waitForNativeNoticeLine(
     world,
@@ -195,12 +199,11 @@ test("assistant-authored directions and mixed clauses do not become the user's r
     expect.arrayContaining([authored.id, mixed.id, pure.id, inferred.id]),
   )
   const notes = [...projectNotes, ...globalNotes].map(({ path, text }) => `${path}\n${text}`.toLowerCase())
-  expect(notes.some((note) => note.includes(heading))).toBe(true)
+  expect(notes, finished).toEqual(expect.arrayContaining([expect.stringContaining(heading)]))
   for (const note of notes) {
     expect(note).not.toContain(draftHeading.toLowerCase())
     expect(note).not.toContain(draftGate.toLowerCase())
   }
   expect(world.pi.unexpected).toEqual([])
-  console.info("Compacted and denied fictional approval", compacted.id, compacted.firstKeptEntryId)
   console.info("Consolidation notice", finished)
 })

@@ -1,10 +1,11 @@
 import { writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
-import { expect, test } from "vitest"
+import { SessionManager } from "@earendil-works/pi-coding-agent"
+import { assert, expect, test } from "vitest"
 
-import { OBSERVATION_SEPARATOR, USER_WORDS_WHOLE_CHARS } from "#src/domain"
-import { STATUS_CONSOLIDATING, STATUS_LOADING } from "#src/pi"
+import { containsUserQuote, OBSERVATION_SEPARATOR, ORIGIN_MARKS, recordText, USER_WORDS_WHOLE_CHARS } from "#src/domain"
+import { STATUS_CONSOLIDATING, STATUS_LOADING, recordsOf as sessionRecordsOf } from "#src/pi"
 import { COMPACTION_DETAILS_TYPE } from "#src/usecases"
 import {
   compactionsIn,
@@ -99,17 +100,36 @@ Responda apenas OK.`
   )
   expect(borrowed.length, "the observer recorded the rule from the tool result").toBeGreaterThan(0)
   const rectifications = await rectificationsIn(file)
+  const sessionRecords = sessionRecordsOf(SessionManager.open(file).getBranch())
+  const summaryLines = firstCompaction.summary.split("\n")
   for (const { recordId, id } of borrowed) {
     const verdict = rectifications
       .filter(({ data }) => data.recordId === recordId)
       .flatMap(({ data }) => data.observations)
       .findLast((observation) => observation.id === id)
-    expect(["material", "unconfirmed"]).toContain(verdict?.origin)
+    if (verdict?.origin !== "partial") {
+      expect(["material", "unconfirmed"]).toContain(verdict?.origin)
+      continue
+    }
+    const source = sessionRecords.find(
+      (record) => record.id === verdict.supportedBy && record.kind === "message" && record.role === "user",
+    )
+    assert(source?.kind === "message", `partial verdict ${id} has no user source`)
+    assert(verdict.quotes?.length, `partial verdict ${id} has no verified user passage`)
+    const prefix = `${id}${OBSERVATION_SEPARATOR}User wrote:`
+    const line = summaryLines.find((line) => line.startsWith(prefix))
+    expect(line).toContain(ORIGIN_MARKS.unconfirmed)
+    const userWords = line?.split(ORIGIN_MARKS.unconfirmed)[0]
+    verdict.quotes.forEach((quote) => {
+      expect(containsUserQuote(recordText(source), quote)).toBe(true)
+      expect(quote.toLowerCase()).not.toContain(borrowedFooter)
+      expect(userWords).toContain(`"${quote}"`)
+    })
   }
-  for (const line of firstCompaction.summary
-    .split("\n")
-    .filter((line) => line.toLowerCase().includes(borrowedFooter))) {
-    expect(line).toMatch(/\[(?:not said by the user|user attribution unconfirmed)\]/)
+  for (const line of summaryLines.filter((line) => line.toLowerCase().includes(borrowedFooter))) {
+    const untrustedBoundary = line.search(/\[(?:not said by the user|user attribution unconfirmed)\]/)
+    expect(untrustedBoundary).toBeGreaterThanOrEqual(0)
+    expect(line.toLowerCase().indexOf(borrowedFooter)).toBeGreaterThan(untrustedBoundary)
   }
 
   expect(await consolidatedEntriesIn(file)).toEqual([])
