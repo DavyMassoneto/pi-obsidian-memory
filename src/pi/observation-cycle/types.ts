@@ -1,8 +1,11 @@
 import type {
+  AgentEndEvent,
   AgentStartEvent,
+  CompactionEntryDraft,
   SessionBeforeCompactEvent,
   SessionBeforeCompactResult,
   TurnEndEvent,
+  TurnEndEventResult,
 } from "@earendil-works/pi-coding-agent"
 
 import type { CompletionFactory } from "#src/pi/completion"
@@ -21,7 +24,9 @@ import type {
   SessionRecord,
 } from "#src/usecases"
 
-export type TurnEndHandler = (event: TurnEndEvent, ctx: MemoryPiContext) => Promise<void>
+export type TurnEndHandler = (event: TurnEndEvent, ctx: MemoryPiContext) => Promise<TurnEndEventResult | undefined>
+
+export type AgentEndHandler = (event: AgentEndEvent, ctx: MemoryPiContext) => void
 
 export type AgentStartHandler = (event: AgentStartEvent, ctx: MemoryPiContext) => Promise<void>
 
@@ -36,7 +41,12 @@ export type AppendConsolidated = (data: ObservationsConsolidated) => void
 
 export type AppendRectified = (data: ObservationsRectified) => void
 
-export type SendResume = () => void
+export interface CompactionAttempt {
+  afterId: string
+  draft: CompactionEntryDraft
+}
+
+export type CompactionBuild = () => Promise<CompactionEntryDraft | null>
 
 export type IdleRelease = () => void
 
@@ -79,5 +89,4 @@ export interface ObservationCycleDeps {
   appendConsolidated: AppendConsolidated
   appendRectified: AppendRectified
   appendCompanion: AppendCompanion
-  sendResume: SendResume
 }

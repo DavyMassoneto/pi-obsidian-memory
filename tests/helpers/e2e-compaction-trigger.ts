@@ -1,13 +1,11 @@
 import { writeFile } from "node:fs/promises"
 import { join } from "node:path"
-import { setTimeout as delay } from "node:timers/promises"
 
 import Type, { type Static } from "typebox"
 
 import { RESUME_TYPE } from "#src/usecases"
 import { configuredWorld } from "./e2e-config.ts"
-import { entriesIn, OBSERVATION_WAIT_MS } from "./e2e-observation-cycle.ts"
-import { recordsOf, SettledSchema } from "./e2e-records.ts"
+import { entriesIn } from "./e2e-observation-cycle.ts"
 import type { E2eWorld } from "./e2e-world.ts"
 
 const TRIGGER_FILE_BYTES = 6000
@@ -20,7 +18,6 @@ const TIMELINE_ENTRY_SCHEMA = Type.Object({
   type: Type.String(),
   id: Type.String(),
   customType: Type.Optional(Type.String()),
-  display: Type.Optional(Type.Boolean()),
   message: Type.Optional(Type.Object({ role: Type.String() })),
 })
 
@@ -41,7 +38,6 @@ export async function triggerWorld(): Promise<E2eWorld> {
   return withTriggerFiles(
     await configuredWorld({
       session: "saved",
-      compactsSmallSessions: true,
       tools: ["read"],
       cycle: TRIGGER_CYCLE,
     }),
@@ -49,7 +45,16 @@ export async function triggerWorld(): Promise<E2eWorld> {
 }
 
 export async function refusedCompactionWorld(): Promise<E2eWorld> {
-  return withTriggerFiles(await configuredWorld({ session: "saved", tools: ["read"], cycle: TRIGGER_CYCLE }))
+  return withTriggerFiles(
+    await configuredWorld({
+      session: "saved",
+      tools: ["read"],
+      cycle: {
+        ...TRIGGER_CYCLE,
+        observer: { ...TRIGGER_CYCLE.observer, model: { provider: "unregistered", id: "observer" } },
+      },
+    }),
+  )
 }
 
 export function timelineIn(file: string): Promise<TimelineEntry[]> {
@@ -58,32 +63,4 @@ export function timelineIn(file: string): Promise<TimelineEntry[]> {
 
 export function isResume(entry: TimelineEntry): boolean {
   return entry.type === "custom_message" && entry.customType === RESUME_TYPE
-}
-
-export function assistantAfterLastResume(timeline: TimelineEntry[]): boolean {
-  const last = timeline.findLastIndex(isResume)
-  if (last < 0) return false
-  return timeline.slice(last + 1).some((entry) => entry.message?.role === "assistant")
-}
-
-export async function waitForResumedRun(file: string): Promise<TimelineEntry[]> {
-  const deadline = Date.now() + OBSERVATION_WAIT_MS
-  let timeline = await timelineIn(file)
-  while (!assistantAfterLastResume(timeline)) {
-    if (Date.now() >= deadline)
-      throw new Error(`no assistant message after a resume in ${file} after ${OBSERVATION_WAIT_MS} ms`)
-    await delay(500)
-    timeline = await timelineIn(file)
-  }
-  return timeline
-}
-
-export function waitForSettledRun(world: E2eWorld): Promise<string> {
-  return world.pi.waitFor(
-    {
-      description: "an agent_settled that was not aborted",
-      matches: (line) => recordsOf(SettledSchema, [line]).some((settled) => !settled.aborted),
-    },
-    0,
-  )
 }

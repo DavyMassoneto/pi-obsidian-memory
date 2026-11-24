@@ -9,6 +9,7 @@ import type { MemorySessionKeeper, SessionShutdownHandler } from "#src/pi/memory
 import type { MemorySucceedTool } from "#src/pi/memory-succeed"
 import type { MemoryUpdateTool } from "#src/pi/memory-update"
 import type {
+  AgentEndHandler,
   AgentStartHandler,
   BeforeCompactHandler,
   ObservationRuntime,
@@ -37,11 +38,11 @@ export interface ExtensionRegistrar {
   onToolCall(handler: ToolCallHandler): void
   onTurnEnd(handler: TurnEndHandler): void
   onAgentStart(handler: AgentStartHandler): void
+  onAgentEnd(handler: AgentEndHandler): void
   appendObservations(data: ObservationsRecorded): void
   appendConsolidated(data: ObservationsConsolidated): void
   appendRectified(data: ObservationsRectified): void
   appendCompanion(record: CycleCompanion): void
-  sendResume(): void
   commandNames(): string[]
   onBeforeCompact(handler: BeforeCompactHandler): void
   onSessionShutdown(handler: SessionShutdownHandler): void

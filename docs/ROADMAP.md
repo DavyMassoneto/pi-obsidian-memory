@@ -80,7 +80,10 @@ Every milestone:
   - [x] The compaction block: journey, memory map, observations and a verbatim tail.
   - [x] The memory map: the vault notes shown in the form of OM's map, with the instruction to use `memory_search`
     and `memory_get`.
-  - [x] The trigger and the resume after a compaction in the middle of a run.
+  - [ ] Mid-run compaction at `turn_end` continues without an abort or a hidden resume message when the memory block is
+    available. Still missing: invoke Pi's native fallback at the memory threshold when the block is unavailable, without
+    aborting the run. Pi 1.3 exposes the summary function, but not native preparation or a non-aborting native trigger for
+    extensions; boundary drafts are always recorded as extension compactions.
   - [x] The current capture is removed.
   - [x] The settings of the observer and of compaction, in [config.md](config.md), written by `/memory-setup`.
   - [x] `/memory-doctor` and the README tell the user to uninstall OM.

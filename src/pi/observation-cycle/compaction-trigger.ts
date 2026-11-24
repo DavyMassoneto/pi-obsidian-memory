@@ -1,32 +1,41 @@
-import type { MemoryPiContext } from "#src/pi/context"
+import type { CompactionEntryDraft, SessionEntry } from "@earendil-works/pi-coding-agent"
+
 import { compactionRetryDue, rawTokensSinceLastCompaction, type SessionRecord } from "#src/usecases"
-import {
-  COMPACTION_CANCELLED,
-  COMPACTION_DONE,
-  COMPACTION_NOT_DONE,
-  COMPACTION_STARTED,
-  RUN_GOES_ON,
-} from "./constants.ts"
-import { tell } from "./notice.ts"
-import { recordsOf } from "./records.ts"
-import type { SendResume } from "./types.ts"
+import type { CompactionAttempt, CompactionBuild } from "./types.ts"
 
 export class CompactionTrigger {
-  #sendResume: SendResume
-  #running = false
+  #active: AbortSignal | null = null
   #failedAtTokens: number | null = null
-
-  constructor(sendResume: SendResume) {
-    this.#sendResume = sendResume
-  }
+  #pending: CompactionAttempt | null = null
 
   get running(): boolean {
-    return this.#running
+    return this.#active instanceof AbortSignal
   }
 
   reset(): void {
-    this.#running = false
+    this.#active = null
     this.#failedAtTokens = null
+    this.#pending = null
+  }
+
+  confirm(branch: SessionEntry[]): boolean {
+    const pending = this.#pending
+    if (!pending) return false
+    this.#pending = null
+    const after = branch.findIndex((entry) => entry.id === pending.afterId)
+    if (after < 0) return false
+    const { draft } = pending
+    const committed = branch
+      .slice(after + 1)
+      .some(
+        (entry) =>
+          entry.type === "compaction" &&
+          entry.fromHook &&
+          entry.firstKeptEntryId === draft.firstKeptEntryId &&
+          entry.summary === draft.summary,
+      )
+    if (committed) this.#failedAtTokens = null
+    return committed
   }
 
   retryDue(records: SessionRecord[], chunkTokens: number): boolean {
@@ -34,36 +43,22 @@ export class CompactionTrigger {
     return compactionRetryDue(this.#failedAtTokens, rawTokensSinceLastCompaction(records), chunkTokens)
   }
 
-  run(ctx: MemoryPiContext, resume: boolean): void {
-    const attemptedAtTokens = rawTokensSinceLastCompaction(recordsOf(ctx.sessionManager.getBranch()))
-    this.#running = true
-    tell(ctx, COMPACTION_STARTED, "info")
-    ctx.compact({
-      onComplete: () => {
-        this.#running = false
-        this.#failedAtTokens = null
-        tell(ctx, COMPACTION_DONE, "info")
-        if (resume) this.#resume()
-      },
-      onError: (error) => {
-        this.#running = false
-        if (error.message === COMPACTION_CANCELLED) return
-        this.#failedAtTokens = attemptedAtTokens
-        if (resume) {
-          tell(ctx, `${COMPACTION_NOT_DONE} ${error.message}. ${RUN_GOES_ON}`, "warning")
-          this.#resume()
-          return
-        }
-        tell(ctx, `${COMPACTION_NOT_DONE} ${error.message}`, "warning")
-      },
-    })
-  }
-
-  #resume(): void {
+  async attempt(
+    records: SessionRecord[],
+    afterId: string,
+    signal: AbortSignal,
+    build: CompactionBuild,
+  ): Promise<CompactionEntryDraft | null> {
+    const attemptedAtTokens = rawTokensSinceLastCompaction(records)
+    this.#active = signal
     try {
-      this.#sendResume()
-    } catch {
-      return
+      const draft = await build()
+      if (signal.aborted) return null
+      this.#failedAtTokens = attemptedAtTokens
+      if (draft) this.#pending = { afterId, draft }
+      return draft
+    } finally {
+      if (this.#active === signal) this.#active = null
     }
   }
 }

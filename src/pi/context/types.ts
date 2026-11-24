@@ -89,11 +89,6 @@ export interface ContextTokens {
   tokens: number | null
 }
 
-export interface CompactRequest {
-  onComplete(): void
-  onError(error: Error): void
-}
-
 export interface MemoryPiContext {
   cwd: string
   hasUI: boolean
@@ -101,7 +96,7 @@ export interface MemoryPiContext {
   model: ChatModelSource | undefined
   modelRegistry: AvailableModels
   sessionManager: SessionIdSource
-  compact(options: CompactRequest): void
+  signal: AbortSignal | undefined
   getContextUsage(): ContextTokens | undefined
 }
 

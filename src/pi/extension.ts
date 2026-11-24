@@ -16,7 +16,13 @@ import { MemorySessionKeeper } from "#src/pi/memory-session"
 import { MEMORY_SETUP_COMMAND, memorySetupCommand } from "#src/pi/memory-setup"
 import { MEMORY_SUCCEED_TOOL_NAME, memorySucceedTool } from "#src/pi/memory-succeed"
 import { MEMORY_UPDATE_TOOL_NAME, memoryUpdateTool } from "#src/pi/memory-update"
-import { agentStartHandler, beforeCompactHandler, ObservationRuntime, turnEndHandler } from "#src/pi/observation-cycle"
+import {
+  agentEndHandler,
+  agentStartHandler,
+  beforeCompactHandler,
+  ObservationRuntime,
+  turnEndHandler,
+} from "#src/pi/observation-cycle"
 import { memoryConfigPath, memoryIndexPath, memoryModelCachePath } from "#src/pi/paths"
 import { RelevantMemoryRuntime } from "#src/pi/relevant-memory"
 import { SemanticRuntime } from "#src/pi/semantic"
@@ -81,7 +87,6 @@ function cycleFor(registrar: ExtensionRegistrar, memory: CycleMemoryDeps): Obser
     appendConsolidated: (data) => registrar.appendConsolidated(data),
     appendRectified: (data) => registrar.appendRectified(data),
     appendCompanion: (record) => registrar.appendCompanion(record),
-    sendResume: () => registrar.sendResume(),
   })
 }
 
@@ -98,6 +103,7 @@ function registerOptionalParts(registrar: ExtensionRegistrar, parts: EntryParts,
 function registerCycle(registrar: ExtensionRegistrar, cycle: ObservationRuntime): void {
   registrar.onTurnEnd(turnEndHandler(cycle))
   registrar.onAgentStart(agentStartHandler(cycle))
+  registrar.onAgentEnd(agentEndHandler(cycle))
   registrar.onBeforeCompact(beforeCompactHandler(cycle))
 }
 

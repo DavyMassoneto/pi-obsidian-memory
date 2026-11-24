@@ -30,10 +30,6 @@ jobs:
     concurrency:
       group: e2e
       cancel-in-progress: false
-    env:
-      OMNIROUTE_URL: ${{ secrets.OMNIROUTE_URL }}
-      OMNIROUTE_API_KEY: ${{ secrets.OMNIROUTE_API_KEY }}
-      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -45,4 +41,10 @@ jobs:
           path: ~\AppData\Local\pi-obsidian-memory-bench\models
           key: local-embeddings-model-761b726dd34fb83930e26aab4e9ac3899aa1fa78
       - run: npm ci
+      - name: Install isolated Pi Web for E2E
+        run: npm install --prefix "$env:RUNNER_TEMP/pi-web-memory-e2e-install" --no-audit --no-fund @agegr/pi-web@0.18.0
       - run: npm run test:e2e
+        env:
+          OMNIROUTE_URL: ${{ secrets.OMNIROUTE_URL }}
+          OMNIROUTE_API_KEY: ${{ secrets.OMNIROUTE_API_KEY }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}

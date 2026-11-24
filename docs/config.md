@@ -115,10 +115,11 @@ record of what was consolidated stay in the session, in `obsidian-memory-consoli
   `compaction.atContextTokens` tokens and the conversation since the last compaction is longer than
   `compaction.tailTokens` by at least `observer.chunkTokens`. Nothing is triggered while pi retries a failed turn.
   The user is told `Memory is compacting the session: the context reached its limit.` when it starts and `Memory
-  compacted the session.` when it ends.
-  When the turn ended with tool results, the run goes on after the compaction with a hidden message, even when the
-  compaction fails; only `Compaction cancelled` (Esc) leaves the run stopped. After a failed attempt the trigger waits
-  until the conversation since the last compaction gets shorter, or longer by at least `observer.chunkTokens`.
+  compacted the session.` once the compaction is in the session.
+  The compaction is added to the session at that turn boundary: the run is not aborted and goes on by itself, with no
+  hidden message, so a host never sees the run stop. A run stopped during the attempt is not compacted. After a failed
+  attempt the trigger waits until the conversation since the last compaction gets shorter, or longer by at least
+  `observer.chunkTokens`.
 - **Compaction.** Every compaction (this trigger, `/compact` and pi's own) first observes the history that would be
   cut. It then keeps the latest conversation word for word: the cut is placed after a fully observed part, as close
   as it can to `compaction.tailTokens` tokens. The older part is replaced by a block: a short intro, the memory map
@@ -129,12 +130,12 @@ record of what was consolidated stay in the session, in `obsidian-memory-consoli
   `compaction.mapTokens` tokens; the line `<N> more notes are not listed; memory_search finds them.` follows when
   notes were left out. A vault that cannot be read gets `Could not read the <vault> vault: <problems>.`, and with no
   notes the map says `The vaults hold no notes yet.`
-- **When it cannot.** With no fully observed part yet, pi compacts on its own and the user is told `Memory had no
-  observations for the start of this session yet, so pi compacted it on its own.` When memory cannot build its block,
-  pi compacts on its own and the user is told `Memory could not build the compaction block, so pi compacted the session
-  on its own: <cause>`. When a compaction the trigger started fails, for example pi answers `Nothing to compact
-  (session too small)`, nothing is compacted and the user is told `Memory could not compact the session: <cause>`,
-  followed by `The run goes on.` when the run resumes. With no config or an invalid one,
+- **When it cannot.** In `/compact` and pi's own compactions, with no fully observed part yet, pi compacts on its own
+  and the user is told `Memory had no observations for the start of this session yet, so pi compacted it on its own.`
+  When memory cannot build its block there, pi compacts on its own and the user is told `Memory could not build the
+  compaction block, so pi compacted the session on its own: <cause>`. When the trigger cannot build the block, nothing
+  is compacted at that point, the run goes on and the user is told `Memory could not compact the session: <cause>`;
+  pi's own compaction still happens at pi's limit. With no config or an invalid one,
   nothing is observed and pi compacts on its own. Esc during a compaction stops it and its observers.
 
 - **Consolidator.** It runs at `agent_start` and at each `turn_end`, after the observers, one run at a time. When the

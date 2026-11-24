@@ -1,6 +1,7 @@
 import { expect, test } from "vitest"
 
-import { COMPACTION_DONE, COMPACTION_STARTED } from "#src/pi"
+import { COMPACTION_DONE, COMPACTION_NOT_DONE, COMPACTION_STARTED } from "#src/pi"
+import { NOT_OBSERVED } from "#src/usecases"
 import {
   compactionsIn,
   ExtensionErrorSchema,
@@ -9,49 +10,50 @@ import {
   noticesStarting,
   recordsOf,
   refusedCompactionWorld,
+  SettledSchema,
   TRIGGER_PROMPT,
+  timelineIn,
   triggerWorld,
-  waitForResumedRun,
-  waitForSettledRun,
 } from "#test-helpers"
 
-test("crossing the threshold mid-run compacts between turns and resumes the run with a hidden message", async () => {
+function expectSingleSettledRun(lines: string[]) {
+  expect(recordsOf(SettledSchema, lines)).toEqual([{ type: "agent_settled", aborted: false }])
+}
+
+test("crossing the threshold mid-run compacts between turns and continues the same run", async () => {
   const world = await triggerWorld()
 
   await world.pi.prompt(TRIGGER_PROMPT, [])
   const file = await world.pi.sessionFile()
-  const timeline = await waitForResumedRun(file)
-  await waitForSettledRun(world)
 
+  const timeline = await timelineIn(file)
   const compactions = await compactionsIn(file)
   expect(compactions.length).toBeGreaterThan(0)
   expect(compactions.some((compaction) => compaction.fromHook)).toBe(true)
+  expect(timeline.filter(isResume)).toEqual([])
+  expectSingleSettledRun(world.pi.lines)
   const firstCompaction = timeline.findIndex((entry) => entry.type === "compaction")
-  const resumes = timeline.filter(isResume)
-  expect(resumes.length).toBeGreaterThan(0)
-  for (const resume of resumes) expect(resume.display).toBe(false)
-  expect(timeline.findIndex(isResume)).toBeGreaterThan(firstCompaction)
+  const lastAssistant = timeline.findLastIndex((entry) => entry.message?.role === "assistant")
+  expect(lastAssistant).toBeGreaterThan(firstCompaction)
+  expect((await world.pi.lastAssistantText())?.trim()).toContain("DONE")
   expect(noticesStarting(world, COMPACTION_STARTED).length).toBeGreaterThan(0)
   expect(noticesStarting(world, COMPACTION_DONE).length).toBeGreaterThan(0)
   expect(world.pi.unexpected).toEqual([])
   expect(recordsOf(ExtensionErrorSchema, world.pi.lines)).toEqual([])
 })
 
-test("a mid-run compaction that pi refuses still lets the run finish", async () => {
+test("when memory cannot build the block yet, it says so and the run finishes without an abort", async () => {
   const world = await refusedCompactionWorld()
 
   await world.pi.prompt(TRIGGER_PROMPT, [])
   const file = await world.pi.sessionFile()
-  const timeline = await waitForResumedRun(file)
-  await waitForSettledRun(world)
 
   expect(await compactionsIn(file)).toEqual([])
-  expect(timeline.some(isResume)).toBe(true)
+  expect((await timelineIn(file)).filter(isResume)).toEqual([])
+  expectSingleSettledRun(world.pi.lines)
   const warnings = recordsOf(NotifySchema, world.pi.lines).filter((notice) => notice.notifyType === "warning")
-  expect(
-    warnings.some((notice) => notice.message.includes("Memory could not compact the session: Nothing to compact")),
-  ).toBe(true)
-  expect(warnings.some((notice) => notice.message.includes("pi compacted"))).toBe(false)
+  expect(warnings.map((notice) => notice.message)).toContain(`${COMPACTION_NOT_DONE} ${NOT_OBSERVED}`)
+  expect((await world.pi.lastAssistantText())?.trim()).toContain("DONE")
   expect(world.pi.unexpected).toEqual([])
   expect(recordsOf(ExtensionErrorSchema, world.pi.lines)).toEqual([])
 })

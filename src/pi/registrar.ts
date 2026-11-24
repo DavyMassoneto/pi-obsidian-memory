@@ -1,6 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent"
 
-import { CONSOLIDATED_TYPE, OBSERVATIONS_TYPE, RECTIFIED_TYPE, RESUME_PROMPT, RESUME_TYPE } from "#src/usecases"
+import { CONSOLIDATED_TYPE, OBSERVATIONS_TYPE, RECTIFIED_TYPE } from "#src/usecases"
 import type { ExtensionRegistrar } from "./types.ts"
 
 export function registrarFor(pi: ExtensionAPI): ExtensionRegistrar {
@@ -17,13 +17,12 @@ export function registrarFor(pi: ExtensionAPI): ExtensionRegistrar {
     onToolCall: (handler) => pi.on("tool_call", handler),
     onTurnEnd: (handler) => pi.on("turn_end", handler),
     onAgentStart: (handler) => pi.on("agent_start", handler),
+    onAgentEnd: (handler) => pi.on("agent_end", handler),
     commandNames: () => pi.getCommands().map((command) => command.name),
     appendObservations: (data) => pi.appendEntry(OBSERVATIONS_TYPE, data),
     appendConsolidated: (data) => pi.appendEntry(CONSOLIDATED_TYPE, data),
     appendRectified: (data) => pi.appendEntry(RECTIFIED_TYPE, data),
     appendCompanion: (record) => pi.appendEntry(record.type, record.data),
-    sendResume: () =>
-      pi.sendMessage({ customType: RESUME_TYPE, content: RESUME_PROMPT, display: false }, { triggerTurn: true }),
     onBeforeCompact: (handler) => pi.on("session_before_compact", handler),
     onSessionShutdown: (handler) => pi.on("session_shutdown", handler),
   }

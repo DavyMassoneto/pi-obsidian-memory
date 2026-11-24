@@ -1,5 +1,4 @@
-import type { MemoryPiContext } from "#src/pi/context"
-import { STATUS_OBSERVING } from "#src/pi/context"
+import { type MemoryPiContext, STATUS_OBSERVING } from "#src/pi/context"
 import {
   assignObservationIds,
   type ChunkRange,
@@ -32,13 +31,12 @@ export class ObservationRuntime {
   #abort = new AbortController()
   #idle: IdleRelease[] = []
   #notices = new NoticeQueue()
-  readonly compaction: CompactionTrigger
+  readonly compaction = new CompactionTrigger()
   readonly consolidation: Consolidation
   readonly rectification: Rectification
 
   constructor(deps: ObservationCycleDeps) {
     this.#deps = deps
-    this.compaction = new CompactionTrigger(() => deps.sendResume())
     this.consolidation = new Consolidation(deps, () => this.#abort.signal, this.#notices)
     this.rectification = new Rectification(
       deps,
@@ -114,6 +112,10 @@ export class ObservationRuntime {
     signal.addEventListener("abort", release, { once: true })
     this.#idle.push(release)
     return idle.promise
+  }
+
+  get signal(): AbortSignal {
+    return this.#abort.signal
   }
 
   compactSession(ctx: MemoryPiContext, signal: AbortSignal): Promise<CompactSessionResult | null> {
