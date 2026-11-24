@@ -7,11 +7,17 @@ import { piCliPath } from "./e2e-paths.ts"
 const run = promisify(execFile)
 
 export interface PiCredentialsEnv {
+  OMNIROUTE_URL: string
+  OMNIROUTE_API_KEY: string
   TYPESAFE_API_KEY: string
 }
 
 export function piCredentialsEnv(): PiCredentialsEnv {
-  return { TYPESAFE_API_KEY: requiredEnv("TYPESAFE_API_KEY") }
+  return {
+    OMNIROUTE_URL: requiredEnv("OMNIROUTE_URL"),
+    OMNIROUTE_API_KEY: requiredEnv("OMNIROUTE_API_KEY"),
+    TYPESAFE_API_KEY: requiredEnv("TYPESAFE_API_KEY"),
+  }
 }
 
 export async function typesafeApiKey(): Promise<string> {

@@ -1,8 +1,8 @@
-import type { MemoryPiContext, RegisteredModel, RegistryContext, RegistryMessage } from "#src/pi/context"
+import type { RegisteredModel, RegistryContext, RegistryMessage } from "#src/pi/context"
 import type { CompletionPort, CompletionRequest } from "#src/usecases"
-import type { TextPart } from "./types.ts"
+import type { CompletionContext, TextPart } from "./types.ts"
 
-export function registryCompletion(ctx: MemoryPiContext): CompletionPort {
+export function registryCompletion(ctx: CompletionContext): CompletionPort {
   return async (request) => {
     const model = ctx.modelRegistry.find(request.model.provider, request.model.id)
     if (!model) return { status: "unsupported" }
@@ -22,7 +22,7 @@ export function registryCompletion(ctx: MemoryPiContext): CompletionPort {
 }
 
 async function requestMessage(
-  ctx: MemoryPiContext,
+  ctx: CompletionContext,
   model: RegisteredModel,
   request: CompletionRequest,
 ): Promise<RegistryMessage> {

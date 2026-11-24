@@ -12,8 +12,6 @@ export function childEnv(start: RpcStart): NodeJS.ProcessEnv {
     PI_SKIP_VERSION_CHECK: "1",
     PI_TELEMETRY: "0",
   }
-  delete env.OMNIROUTE_URL
-  delete env.OMNIROUTE_API_KEY
   delete env.ANTHROPIC_AUTH_TOKEN
   delete env.ANTHROPIC_API_KEY
   withoutEmbeddingProviderKeys(env)
@@ -24,6 +22,7 @@ export function childEnv(start: RpcStart): NodeJS.ProcessEnv {
     env.npm_config_cache = start.offlineNpmCache
   }
   if (start.credentials) return env
+  delete env.OMNIROUTE_URL
   for (const name of Object.keys(env)) if (CREDENTIAL_VARIABLE.test(name)) delete env[name]
   return env
 }

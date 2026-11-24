@@ -1,12 +1,13 @@
 import { mkdir, writeFile } from "node:fs/promises"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
+import { fileURLToPath } from "node:url"
 
-import { E2E_MODEL, E2E_PROVIDER, repoRoot } from "./e2e-paths.ts"
+import { E2E_MODEL, E2E_PROVIDER } from "./e2e-paths.ts"
 
 const EXTENSION_STATE_FOLDER = "pi-omniroute-sync"
 
 export function omnirouteSyncPackageFolder(): string {
-  return join(repoRoot, "node_modules", EXTENSION_STATE_FOLDER)
+  return dirname(fileURLToPath(import.meta.resolve("pi-omniroute-sync/package.json")))
 }
 
 export function omnirouteSyncExtensionPath(): string {
@@ -25,10 +26,9 @@ export function requiredEnv(name: string): string {
 
 export async function writeOmnirouteWorld(agentDir: string): Promise<void> {
   const serverUrl = requiredEnv("OMNIROUTE_URL")
-  const apiKey = requiredEnv("OMNIROUTE_API_KEY")
   const stateFolder = join(agentDir, "extensions", EXTENSION_STATE_FOLDER)
   await mkdir(stateFolder, { recursive: true })
-  await writeFile(join(stateFolder, "settings.json"), JSON.stringify({ serverUrl, providerName: E2E_PROVIDER, apiKey }))
+  await writeFile(join(stateFolder, "settings.json"), JSON.stringify({ serverUrl, providerName: E2E_PROVIDER }))
   const baseUrl = `${serverUrl.trim().replace(/\/+$/, "").replace(/\/v1$/, "")}/v1`
   const provider = {
     baseUrl,
