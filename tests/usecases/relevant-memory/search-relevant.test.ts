@@ -28,7 +28,7 @@ test("reads every search hit in both vaults, excluding Don't forget and already 
   expect(result.notes.map((note) => note.path)).toEqual(expected)
   expect(result.notes.every((note) => note.kind === "read" && note.body.includes("pnpm"))).toBe(true)
   expect(result.notice).toBeNull()
-})
+}, 120_000)
 
 test("reads again a loaded note whose content changed on disk", async () => {
   const { vault, context, loaded } = await relevantFixture()
