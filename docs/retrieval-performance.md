@@ -119,6 +119,14 @@ embedder. One caller's abort and one embedder's shutdown leave the other embedde
 | After loading again | 226.2 | 231.0 |
 | After disposing again | 69.6 | 74.4 |
 
-The single-embedder growth over idle was 156.6 MiB before and 156.7 MiB with the fix. This measures the JavaScript heap, not native
-ONNX memory or Pi Web process RSS. Run the regression with
-`npm run test:model -- tests/services/embeddings/shared-local.model.test.ts --disableConsoleIntercept`.
+The single-embedder growth over idle was 156.6 MiB before and 156.7 MiB with the fix. This measures the
+JavaScript heap, not native ONNX memory or Pi Web process RSS.
+
+The shutdown follow-up measured 152.5 MiB of heap growth for three embedders. In a separate regression an
+embedder became unreachable without disposal while another still used the model. Before the follow-up,
+disposing the remaining owner left 212.7 MiB of heap unchanged; afterward, the heap fell from 216.1 MiB to
+59.5 MiB. A real extraction also verifies that calling dispose after extraction starts releases ONNX only after
+extraction completes. A cancelled waiting request leaves the queue immediately.
+
+Run both regressions with `npm run test:model -- tests/services/embeddings/local.model.test.ts
+ tests/services/embeddings/local-model-registry.model.test.ts --disableConsoleIntercept`.

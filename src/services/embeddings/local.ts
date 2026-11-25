@@ -1,6 +1,7 @@
 import { type EmbeddingBatchRequest, type EmbeddingResult, localEmbeddingConfiguration } from "#src/domain"
 import { finishEmbeddingBatch } from "./batch.ts"
 import { prepareChunks, validateEmbeddingRequest } from "./chunks.ts"
+import { enqueueLocalInference } from "./local-inference-queue.ts"
 import { getSharedLocalModel } from "./local-model-load.ts"
 import { acquireLocalModel, releaseLocalModel } from "./local-model-registry.ts"
 import { runEmbeddingOperation } from "./operation.ts"
@@ -18,25 +19,33 @@ export function createLocalEmbedder(options: LocalEmbeddingOptions): LocalEmbedd
   const state: LocalEmbeddingState = {
     options: { ...options },
     lease: null,
-    settled: Promise.resolve(),
+    owner: null,
+    pending: new Set(),
     disposal: null,
     lifetime: new AbortController(),
   }
-  return {
+  const embedder: LocalEmbedder = {
     embed(context, request) {
       return runEmbeddingOperation(context, (signal) => enqueueLocalEmbedding(state, request, signal))
     },
     dispose() {
       if (!state.disposal) {
-        const lease = state.lease
-        state.lease = null
-        state.disposal = state.settled
-        if (lease) state.disposal = releaseLocalModel(lease, state.settled)
-        state.lifetime.abort()
+        state.disposal = disposeEmbedder(state)
       }
       return state.disposal
     },
   }
+  state.owner = new WeakRef(embedder)
+  return embedder
+}
+
+function disposeEmbedder(state: LocalEmbeddingState): Promise<void> {
+  const lease = state.lease
+  state.lease = null
+  const settled = Promise.allSettled(state.pending).then(() => {})
+  if (lease) return releaseLocalModel(lease, settled)
+  state.lifetime.abort()
+  return settled
 }
 
 async function enqueueLocalEmbedding(
@@ -49,17 +58,17 @@ async function enqueueLocalEmbedding(
   }
   const invalid = validateEmbeddingRequest(request)
   if (invalid) return invalid
-  if (!state.lease) state.lease = acquireLocalModel(state.options)
+  if (!state.lease) state.lease = acquireLocalModel(state)
   const { entry } = state.lease
   const interest = AbortSignal.any([signal, state.lifetime.signal])
   const model = getSharedLocalModel(entry, state.options, interest)
-  const pending = entry.queue.then(() => embedWhenReady(state, request, signal, model))
-  entry.queue = pending.then(
-    () => {},
-    () => {},
-  )
-  state.settled = entry.queue
-  return pending
+  const pending = enqueueLocalInference(entry, interest, signal, () => embedWhenReady(state, request, signal, model))
+  state.pending.add(pending)
+  try {
+    return await pending
+  } finally {
+    state.pending.delete(pending)
+  }
 }
 
 async function embedWhenReady(

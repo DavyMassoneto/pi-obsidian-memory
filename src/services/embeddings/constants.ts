@@ -1,6 +1,7 @@
 import type { ModelAsset } from "./types.ts"
 
-export const localModelRegistryKey = Symbol.for("pi-obsidian-memory.local-model-registry.v1")
+export const localModelRegistryKey = Symbol.for("pi-obsidian-memory.local-model-registry.v2")
+export const localModelRegistryRecoveryKey = Symbol.for("pi-obsidian-memory.local-model-registry.v2.recovery")
 
 export const localModelAssets: readonly ModelAsset[] = [
   {

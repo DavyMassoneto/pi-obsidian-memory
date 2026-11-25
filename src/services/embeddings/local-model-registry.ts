@@ -1,38 +1,67 @@
 import { isAbsolute, resolve } from "node:path"
+import { types } from "node:util"
 
-import { localModelRegistryKey } from "./constants.ts"
-import type { LocalEmbeddingOptions, LocalModelLease, LocalModelRegistry, SharedLocalModel } from "./types.ts"
+import { localModelRegistryKey, localModelRegistryRecoveryKey } from "./constants.ts"
+import { isSharedLocalModel, unmodifiedCollection } from "./local-model-shape.ts"
+import type { LocalEmbeddingState, LocalModelLease, SharedLocalModel } from "./types.ts"
 
-export function acquireLocalModel(options: LocalEmbeddingOptions): LocalModelLease {
-  if (options.loadModel || !isAbsolute(options.cachePath)) return { entry: newEntry(Promise.resolve()), cacheKey: null }
-
-  const cacheKey = resolve(options.cachePath)
-  const registry = localModelRegistry()
-  const previous = registry.get(cacheKey)
-  if (previous && !previous.retirement) {
-    previous.owners++
-    return { entry: previous, cacheKey }
+export function acquireLocalModel(state: LocalEmbeddingState): LocalModelLease {
+  const owner = state.owner
+  const embedder = owner?.deref()
+  if (!owner || !embedder) throw new Error("Local embedder no longer exists")
+  const { cachePath, loadModel } = state.options
+  if (loadModel || !isAbsolute(cachePath)) {
+    const entry = newEntry(Promise.resolve())
+    entry.owners.set(owner, state.lifetime)
+    return { entry, owner, lifetime: state.lifetime, cacheKey: null }
   }
 
+  const cacheKey = resolve(cachePath)
+  const entry = sharedEntry(cacheKey)
+  const lease = { entry, owner, lifetime: state.lifetime, cacheKey }
+  entry.owners.set(owner, state.lifetime)
+  entry.finalizer.register(embedder, lease, owner)
+  return lease
+}
+
+function sharedEntry(cacheKey: string): SharedLocalModel {
+  const registry = localModelRegistry()
   let beforeLoad = Promise.resolve()
-  if (previous?.retirement) beforeLoad = previous.retirement.catch(() => {})
+  if (registry.has(cacheKey)) {
+    const previous = registry.get(cacheKey)
+    if (!previous || typeof previous !== "object" || !isSharedLocalModel(previous)) {
+      registry.delete(cacheKey)
+      throw new Error("Invalid process-wide local model entry")
+    }
+    if (!previous.retirement) return previous
+    beforeLoad = previous.retirement.catch(() => {})
+  }
   const entry = newEntry(beforeLoad)
   registry.set(cacheKey, entry)
-  return { entry, cacheKey }
+  return entry
 }
 
 export function releaseLocalModel(lease: LocalModelLease, settled: Promise<void>): Promise<void> {
-  const { entry } = lease
-  entry.owners--
-  if (entry.owners > 0) return settled
+  const { entry, lifetime, owner } = lease
+  if (!entry.owners.delete(owner)) return settled
+  entry.finalizer.unregister(owner)
+  lifetime.abort()
+  for (const [candidate, abandoned] of entry.owners) {
+    if (candidate.deref()) continue
+    entry.owners.delete(candidate)
+    entry.finalizer.unregister(candidate)
+    abandoned.abort()
+  }
+  if (entry.owners.size > 0) return settled
 
-  entry.retirement = entry.queue.then(() => retireLocalModel(lease))
+  entry.retirement = retireLocalModel(lease)
   entry.loading?.abort()
   return entry.retirement
 }
 
 async function retireLocalModel({ entry, cacheKey }: LocalModelLease): Promise<void> {
   try {
+    await entry.running
     const pending = entry.model
     entry.model = null
     const result = await pending
@@ -47,35 +76,55 @@ async function retireLocalModel({ entry, cacheKey }: LocalModelLease): Promise<v
 
 function newEntry(beforeLoad: Promise<void>): SharedLocalModel {
   return {
-    owners: 1,
+    owners: new Map(),
+    finalizer: new FinalizationRegistry(finalizeLease),
     loading: null,
     model: null,
-    queue: Promise.resolve(),
+    waiting: new Set(),
+    running: null,
     retirement: null,
     beforeLoad,
     interests: new Set(),
   }
 }
 
-function localModelRegistry(): LocalModelRegistry {
+function finalizeLease(lease: LocalModelLease): void {
+  void releaseLocalModel(lease, Promise.resolve()).catch(() => {})
+}
+
+function localModelRegistry() {
   const host: object = globalThis
-  if (localModelRegistryKey in host) {
-    const candidate = host[localModelRegistryKey]
-    if (candidate && typeof candidate === "object" && isLocalModelRegistry(candidate)) return candidate
+  const recovery = recoveryRegistry(host)
+  if (recovery) return recovery
+  if (localModelRegistryKey in host && Object.hasOwn(host, localModelRegistryKey)) {
+    if (hasDataSlot(host, localModelRegistryKey)) {
+      const candidate = host[localModelRegistryKey]
+      if (types.isMap(candidate) && unmodifiedCollection(candidate, Map.prototype)) return candidate
+    }
+    if (!Reflect.deleteProperty(host, localModelRegistryKey)) {
+      Object.defineProperty(host, localModelRegistryRecoveryKey, { value: new Map<string, SharedLocalModel>() })
+    }
     throw new Error("Invalid process-wide local model registry")
   }
   const registry = new Map<string, SharedLocalModel>()
-  Object.defineProperty(globalThis, localModelRegistryKey, { value: registry })
+  Object.defineProperty(host, localModelRegistryKey, { value: registry, configurable: true })
   return registry
 }
 
-function isLocalModelRegistry(candidate: object): candidate is LocalModelRegistry {
-  return (
-    "get" in candidate &&
-    typeof candidate.get === "function" &&
-    "set" in candidate &&
-    typeof candidate.set === "function" &&
-    "delete" in candidate &&
-    typeof candidate.delete === "function"
-  )
+function recoveryRegistry(host: object) {
+  if (localModelRegistryRecoveryKey in host && Object.hasOwn(host, localModelRegistryRecoveryKey)) {
+    if (hasDataSlot(host, localModelRegistryRecoveryKey)) {
+      const recovery = host[localModelRegistryRecoveryKey]
+      if (types.isMap(recovery) && unmodifiedCollection(recovery, Map.prototype)) return recovery
+    }
+    Reflect.deleteProperty(host, localModelRegistryRecoveryKey)
+    throw new Error("Invalid process-wide local model recovery registry")
+  }
+  return null
+}
+
+function hasDataSlot(host: object, key: symbol): boolean {
+  const descriptor = Object.getOwnPropertyDescriptor(host, key)
+  if (!descriptor) return false
+  return Object.hasOwn(descriptor, "value")
 }

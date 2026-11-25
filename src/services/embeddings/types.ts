@@ -57,7 +57,8 @@ export interface LocalEmbedder {
 export interface LocalEmbeddingState {
   options: LocalEmbeddingOptions
   lease: LocalModelLease | null
-  settled: Promise<void>
+  owner: WeakRef<LocalEmbedder> | null
+  pending: Set<Promise<EmbeddingResult>>
   disposal: Promise<void> | null
   lifetime: AbortController
 }
@@ -65,13 +66,17 @@ export interface LocalEmbeddingState {
 export interface LocalModelLease {
   entry: SharedLocalModel
   cacheKey: string | null
+  owner: WeakRef<LocalEmbedder>
+  lifetime: AbortController
 }
 
 export interface SharedLocalModel {
-  owners: number
+  owners: Map<WeakRef<LocalEmbedder>, AbortController>
+  finalizer: FinalizationRegistry<LocalModelLease>
   loading: AbortController | null
   model: Promise<LocalModelResult> | null
-  queue: Promise<void>
+  waiting: Set<QueuedLocalInference>
+  running: Promise<void> | null
   retirement: Promise<void> | null
   beforeLoad: Promise<void>
   interests: Set<DownloadProgressListener>
@@ -79,11 +84,11 @@ export interface SharedLocalModel {
 
 export type LocalModelResult = Succeeded<LocalModel> | EmbeddingFailure
 
-export interface LocalModelRegistry {
-  get(key: string): SharedLocalModel | undefined
-  set(key: string, entry: SharedLocalModel): void
-  delete(key: string): void
+export interface QueuedLocalInference {
+  start(): Promise<void>
 }
+
+export type LocalInference = () => Promise<EmbeddingResult>
 
 export type EmbeddingOperation = (signal: AbortSignal) => Promise<EmbeddingResult>
 export type TextSize = (text: string) => number
