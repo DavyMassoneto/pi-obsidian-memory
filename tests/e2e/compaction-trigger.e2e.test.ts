@@ -8,6 +8,7 @@ import {
   isResume,
   NotifySchema,
   noticesStarting,
+  readsInSeparateTurns,
   recordsOf,
   refusedCompactionWorld,
   SettledSchema,
@@ -28,6 +29,7 @@ test("crossing the threshold mid-run compacts between turns and continues the sa
 
   const timeline = await timelineIn(file)
   const compactions = await compactionsIn(file)
+  expect(readsInSeparateTurns(timeline)).toBe(true)
   expect(compactions.length).toBeGreaterThan(0)
   expect(compactions.some((compaction) => compaction.fromHook)).toBe(true)
   expect(timeline.filter(isResume)).toEqual([])

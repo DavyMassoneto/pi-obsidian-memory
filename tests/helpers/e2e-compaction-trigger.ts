@@ -12,7 +12,9 @@ const TRIGGER_FILE_BYTES = 6000
 
 const TRIGGER_CYCLE = { compaction: { atContextTokens: 1, tailTokens: 200 }, observer: { chunkTokens: 300 } }
 
-export const TRIGGER_PROMPT = "Read a.txt, then b.txt, then reply DONE."
+const SECOND_TRIGGER_FILE = "bananas-shelf-41.txt"
+
+export const TRIGGER_PROMPT = "Read a.txt. Its last line names another file: read that file too, then reply DONE."
 
 const TIMELINE_ENTRY_SCHEMA = Type.Object({
   type: Type.String(),
@@ -29,8 +31,11 @@ function fileOf(topic: string): string {
 }
 
 async function withTriggerFiles(world: E2eWorld): Promise<E2eWorld> {
-  await writeFile(join(world.folders.cwd, "a.txt"), fileOf("apples"))
-  await writeFile(join(world.folders.cwd, "b.txt"), fileOf("bananas"))
+  await writeFile(
+    join(world.folders.cwd, "a.txt"),
+    `${fileOf("apples")}The next file to read is ${SECOND_TRIGGER_FILE}\n`,
+  )
+  await writeFile(join(world.folders.cwd, SECOND_TRIGGER_FILE), fileOf("bananas"))
   return world
 }
 
@@ -59,6 +64,11 @@ export async function refusedCompactionWorld(): Promise<E2eWorld> {
 
 export function timelineIn(file: string): Promise<TimelineEntry[]> {
   return entriesIn(file, TIMELINE_ENTRY_SCHEMA)
+}
+
+export function readsInSeparateTurns(timeline: TimelineEntry[]): boolean {
+  const roles = timeline.map((entry) => entry.message?.role)
+  return roles.slice(roles.indexOf("toolResult"), roles.lastIndexOf("toolResult")).includes("assistant")
 }
 
 export function isResume(entry: TimelineEntry): boolean {
