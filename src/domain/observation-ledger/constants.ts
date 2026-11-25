@@ -8,6 +8,8 @@ export const COMPACTION_DETAILS_TYPE = "obsidian-memory-compaction"
 
 export const CHARS_PER_TOKEN = 4
 
+export const ECHOED_JOURNEY_INPUT_FIELDS = ["now", "journeyTokens", "journeyWords", "material", "corrections"]
+
 export const OBSERVER_RETRY_MS = 60_000
 
 export const RECTIFIED_TYPE = "obsidian-memory-rectified"

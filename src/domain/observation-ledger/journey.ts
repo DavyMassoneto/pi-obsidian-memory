@@ -3,13 +3,17 @@ import { Value } from "typebox/value"
 import type { ConsolidationMeta } from "#src/domain/observation-ledger/origin"
 import { describeSchemaErrors } from "#src/domain/validation"
 import type { Failed, Succeeded } from "#src/shared"
+import { ECHOED_JOURNEY_INPUT_FIELDS } from "./constants.ts"
 import { activeObservations } from "./pool.ts"
-import { JourneyReplySchema } from "./schemas.ts"
+import { JourneyReplySchema, JourneyReplyShapeSchema } from "./schemas.ts"
 import type { ConsolidationWrite, JourneyReply, Ledger, LedgerObservation, SavedNote, WorkStateItem } from "./types.ts"
 
 export function parseJourneyReply(text: string): Succeeded<JourneyReply> | Failed {
   try {
     const reply = JSON.parse(text)
+    if (Value.Check(JourneyReplyShapeSchema, reply)) {
+      for (const field of ECHOED_JOURNEY_INPUT_FIELDS) Reflect.deleteProperty(reply, field)
+    }
     if (!Value.Check(JourneyReplySchema, reply)) {
       return {
         succeeded: false,

@@ -70,6 +70,35 @@ describe("parseJourneyReply", () => {
     }
   })
 
+  it("drops the input fields the model echoed back and keeps the reply", () => {
+    const reply = {
+      journey: "text",
+      workState: [{ sourceId: "2026-11-24T13:25:00", text: "one item", replaces: [] }],
+    }
+    const echoed = { ...reply, corrections: [], material: [{ label: "a", text: "b" }], now: "2026-10-26 13:35" }
+
+    expect(parseJourneyReply(JSON.stringify(echoed))).toEqual({ succeeded: true, output: reply })
+    expect(parseJourneyReply(JSON.stringify({ ...reply, journeyTokens: 9, journeyWords: 7 }))).toEqual({
+      succeeded: true,
+      output: reply,
+    })
+  })
+
+  it("an echoed input field does not excuse another problem in the reply", () => {
+    const unknownKey = parseJourneyReply(JSON.stringify({ journey: "text", workState: [], corrections: [], note: "x" }))
+    const nested = parseJourneyReply(
+      JSON.stringify({
+        journey: "text",
+        workState: [{ sourceId: "2026-11-24T13:25:00", text: "t", replaces: [], corrections: [] }],
+      }),
+    )
+    const wrongType = parseJourneyReply(JSON.stringify({ journey: 5, workState: [], corrections: [] }))
+
+    expect(unknownKey).toEqual({ succeeded: false, problems: ["note: not a known field"] })
+    expect(nested).toEqual({ succeeded: false, problems: ["workState.0.corrections: not a known field"] })
+    expect(wrongType.succeeded).toBe(false)
+  })
+
   it("a journey reply with extra keys is refused", () => {
     const refusal = parseJourneyReply(JSON.stringify({ journey: "text", workState: [], note: "extra" }))
 

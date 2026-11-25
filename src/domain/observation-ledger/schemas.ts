@@ -40,6 +40,8 @@ export const JourneyReplySchema = Type.Object(
   { additionalProperties: false },
 )
 
+export const JourneyReplyShapeSchema = Type.Object({})
+
 export const ObserverDraftSchema = Type.Object(
   {
     timestamp: Type.String({ pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$" }),
