@@ -16,3 +16,15 @@ test("the local model is used before any session is attached", async () => {
 
   expect(port).toMatchObject({ available: true })
 })
+
+test("concurrent local lookups in one session return the same port", async () => {
+  const folder = await useTempFolder()
+  const runtime = new SemanticRuntime(join(folder, "models"))
+  try {
+    const [first, second] = await Promise.all([runtime.source(local), runtime.source(local)])
+    expect(first).toMatchObject({ available: true })
+    expect(second).toBe(first)
+  } finally {
+    await runtime.shutdown()
+  }
+})

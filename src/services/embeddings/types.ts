@@ -56,9 +56,33 @@ export interface LocalEmbedder {
 
 export interface LocalEmbeddingState {
   options: LocalEmbeddingOptions
-  model: Promise<LocalModel> | null
+  lease: LocalModelLease | null
+  settled: Promise<void>
+  disposal: Promise<void> | null
+  lifetime: AbortController
+}
+
+export interface LocalModelLease {
+  entry: SharedLocalModel
+  cacheKey: string | null
+}
+
+export interface SharedLocalModel {
+  owners: number
+  loading: AbortController | null
+  model: Promise<LocalModelResult> | null
   queue: Promise<void>
-  disposed: boolean
+  retirement: Promise<void> | null
+  beforeLoad: Promise<void>
+  interests: Set<DownloadProgressListener>
+}
+
+export type LocalModelResult = Succeeded<LocalModel> | EmbeddingFailure
+
+export interface LocalModelRegistry {
+  get(key: string): SharedLocalModel | undefined
+  set(key: string, entry: SharedLocalModel): void
+  delete(key: string): void
 }
 
 export type EmbeddingOperation = (signal: AbortSignal) => Promise<EmbeddingResult>

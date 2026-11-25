@@ -1,101 +1,85 @@
 import { type EmbeddingBatchRequest, type EmbeddingResult, localEmbeddingConfiguration } from "#src/domain"
 import { finishEmbeddingBatch } from "./batch.ts"
 import { prepareChunks, validateEmbeddingRequest } from "./chunks.ts"
+import { getSharedLocalModel } from "./local-model-load.ts"
+import { acquireLocalModel, releaseLocalModel } from "./local-model-registry.ts"
 import { runEmbeddingOperation } from "./operation.ts"
-import { loadLocalModel } from "./runtime.ts"
 import type {
   LocalEmbedder,
   LocalEmbeddingOptions,
   LocalEmbeddingState,
   LocalModel,
+  LocalModelResult,
   ParsedVectors,
   PreparedChunk,
 } from "./types.ts"
 
 export function createLocalEmbedder(options: LocalEmbeddingOptions): LocalEmbedder {
-  const state: LocalEmbeddingState = { options: { ...options }, model: null, queue: Promise.resolve(), disposed: false }
+  const state: LocalEmbeddingState = {
+    options: { ...options },
+    lease: null,
+    settled: Promise.resolve(),
+    disposal: null,
+    lifetime: new AbortController(),
+  }
   return {
     embed(context, request) {
       return runEmbeddingOperation(context, (signal) => enqueueLocalEmbedding(state, request, signal))
     },
-    async dispose() {
-      state.disposed = true
-      await state.queue
-      if (state.model) {
-        const model = await state.model.catch(() => null)
-        if (model) {
-          await model.dispose()
-        }
-        state.model = null
+    dispose() {
+      if (!state.disposal) {
+        const lease = state.lease
+        state.lease = null
+        state.disposal = state.settled
+        if (lease) state.disposal = releaseLocalModel(lease, state.settled)
+        state.lifetime.abort()
       }
+      return state.disposal
     },
   }
 }
 
-function enqueueLocalEmbedding(
+async function enqueueLocalEmbedding(
   state: LocalEmbeddingState,
   request: EmbeddingBatchRequest,
   signal: AbortSignal,
 ): Promise<EmbeddingResult> {
-  const pending = state.queue.then(() => embedLocally(state, request, signal))
-  state.queue = pending.then(
+  if (state.disposal || state.options.cachePath.trim().length === 0) {
+    return { succeeded: false, status: "unavailable" }
+  }
+  const invalid = validateEmbeddingRequest(request)
+  if (invalid) return invalid
+  if (!state.lease) state.lease = acquireLocalModel(state.options)
+  const { entry } = state.lease
+  const interest = AbortSignal.any([signal, state.lifetime.signal])
+  const model = getSharedLocalModel(entry, state.options, interest)
+  const pending = entry.queue.then(() => embedWhenReady(state, request, signal, model))
+  entry.queue = pending.then(
     () => {},
     () => {},
   )
+  state.settled = entry.queue
   return pending
 }
 
-async function getLocalModel(state: LocalEmbeddingState, signal: AbortSignal): Promise<LocalModel> {
-  if (state.model) {
-    return state.model
-  }
-
-  let loader = loadLocalModel
-  if (state.options.loadModel) {
-    loader = state.options.loadModel
-  }
-  const options = { cachePath: state.options.cachePath, signal }
-  if (state.options.onProgress) {
-    state.model = loader({ ...options, onProgress: state.options.onProgress })
-  } else {
-    state.model = loader(options)
-  }
-
-  const pending = state.model
-  try {
-    const model = await pending
-    if (signal.aborted || state.disposed) {
-      await model.dispose()
-      signal.throwIfAborted()
-      throw new Error("Local embedder disposed")
-    }
-    return model
-  } catch (error) {
-    if (state.model === pending) {
-      state.model = null
-    }
-    throw error
-  }
-}
-
-async function embedLocally(
+async function embedWhenReady(
   state: LocalEmbeddingState,
   request: EmbeddingBatchRequest,
   signal: AbortSignal,
+  pending: Promise<LocalModelResult>,
 ): Promise<EmbeddingResult> {
+  const model = await pending
   signal.throwIfAborted()
-  if (state.disposed || state.options.cachePath.trim().length === 0) {
-    return { succeeded: false, status: "unavailable" }
-  }
+  if (state.disposal) return { succeeded: false, status: "unavailable" }
+  if (!model.succeeded) return model
+  return embedLocally(model.output, request, signal)
+}
 
-  const invalid = validateEmbeddingRequest(request)
-  if (invalid) {
-    return invalid
-  }
-
-  const model = await getLocalModel(state, signal)
-  signal.throwIfAborted()
-
+async function embedLocally(
+  model: LocalModel,
+  request: EmbeddingBatchRequest,
+  signal: AbortSignal,
+): Promise<EmbeddingResult> {
   let prefix = "passage: "
   if (request.purpose === "query") {
     prefix = "query: "

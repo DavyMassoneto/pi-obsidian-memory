@@ -1,5 +1,7 @@
 import type { ModelAsset } from "./types.ts"
 
+export const localModelRegistryKey = Symbol.for("pi-obsidian-memory.local-model-registry.v1")
+
 export const localModelAssets: readonly ModelAsset[] = [
   {
     path: "config.json",

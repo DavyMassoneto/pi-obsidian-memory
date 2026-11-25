@@ -101,3 +101,24 @@ Across the two runs, the background lease held for 0.024–0.025 s for config re
 0.027–0.030 s per list, and 0.210–0.236 s per search. The first message's acquisition wait overlapped a held background
 lease for **0.024 s**. Its longest individual acquisition waited **0.399 s**; that figure includes queueing behind its
 own foreground reads. Cold-search contention, real-project-vault performance and CI results were not verified here.
+
+## Local embedding model lifetime
+
+The real-model regression test loads the cached multilingual E5 model through two independent jiti evaluations
+with the module cache disabled. In each run it measures Node's post-GC JavaScript heap. All three embedders
+issue requests before the first load finishes and return the same normalized 384-dimensional vector as a single
+embedder. One caller's abort and one embedder's shutdown leave the other embedders usable.
+
+| Post-GC heap (MiB) | Before fix | With shared model |
+|---|---:|---:|
+| One embedder | 225.8 | 235.6 |
+| After disposing the single embedder (idle reference) | 69.1 | 79.0 |
+| Three embedders | 539.4 | 231.4 |
+| Three embedders, growth over idle | 470.3 | 152.4 |
+| After disposing all three | 69.6 | 74.7 |
+| After loading again | 226.2 | 231.0 |
+| After disposing again | 69.6 | 74.4 |
+
+The single-embedder growth over idle was 156.6 MiB before and 156.7 MiB with the fix. This measures the JavaScript heap, not native
+ONNX memory or Pi Web process RSS. Run the regression with
+`npm run test:model -- tests/services/embeddings/shared-local.model.test.ts --disableConsoleIntercept`.
