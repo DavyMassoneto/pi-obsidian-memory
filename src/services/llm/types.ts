@@ -4,6 +4,7 @@ import type {
   CaptureResult,
   ChatModelReference,
   CheckedObservation,
+  JourneyReply,
   MaterialItem,
   MaterialSource,
   ObserverDraft,
@@ -14,6 +15,7 @@ import type {
   ThinkingLevel,
   UserWords,
   UserWordsCheck,
+  WorkStateItem,
 } from "#src/domain"
 import type { Failed, Succeeded } from "#src/shared"
 
@@ -55,6 +57,7 @@ export interface AttributionRequest extends ModelStepContext {
 export interface JourneyRequest extends ModelStepContext {
   thinking: ThinkingLevel
   journey: string
+  workState: WorkStateItem[]
   material: MaterialItem[]
   corrections: MaterialItem[]
   targetTokens: number
@@ -90,7 +93,7 @@ export interface ModelCallFailure extends Failed {
 export type CompletionResult = Succeeded<string> | Failed | ModelCallFailure
 export type CaptureStepResult = CaptureResult | ModelCallFailure
 export type RetrievalStepResult = RetrievalResult | ModelCallFailure
-export type JourneyStepResult = Succeeded<string> | Failed | ModelCallFailure
+export type JourneyStepResult = Succeeded<JourneyReply> | Failed | ModelCallFailure
 export type ObserveStepResult = Succeeded<ObserverDraft[]> | Failed | ModelCallFailure
 export type UserWordsStepResult = Succeeded<UserWords> | Failed | ModelCallFailure
 export type AttributionStepResult = Succeeded<RectifiedObservation[]> | Failed | ModelCallFailure

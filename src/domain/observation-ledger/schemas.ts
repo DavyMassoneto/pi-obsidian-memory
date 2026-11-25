@@ -1,6 +1,6 @@
 import Type from "typebox"
 
-import { ObservationIdSchema } from "#src/domain/observation-ledger/origin"
+import { ObservationIdSchema, WorkStateItemSchema } from "#src/domain/observation-ledger/origin"
 import { COMPACTION_DETAILS_TYPE } from "./constants.ts"
 
 export const LedgerObservationSchema = Type.Object(
@@ -26,7 +26,19 @@ export const ObservationsConsolidatedSchema = Type.Object(
   { additionalProperties: false },
 )
 
-export const JourneyReplySchema = Type.Object({ journey: Type.String() }, { additionalProperties: false })
+export const WorkStateChangeSchema = Type.Object(
+  {
+    sourceId: ObservationIdSchema,
+    text: Type.Union([WorkStateItemSchema.properties.text, Type.Null()]),
+    replaces: Type.Array(Type.Integer({ minimum: 0 }), { uniqueItems: true }),
+  },
+  { additionalProperties: false },
+)
+
+export const JourneyReplySchema = Type.Object(
+  { journey: Type.String(), workState: Type.Array(WorkStateChangeSchema) },
+  { additionalProperties: false },
+)
 
 export const ObserverDraftSchema = Type.Object(
   {

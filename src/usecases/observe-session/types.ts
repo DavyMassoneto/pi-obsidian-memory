@@ -3,6 +3,7 @@ import type { Succeeded } from "#src/shared"
 import type { MemoryResolutionRefusal } from "#src/usecases/resolve-memory"
 
 export interface CycleSettings {
+  vaultConfigured: boolean
   observer: MemoryConfig["observer"]
   compaction: MemoryConfig["compaction"]
   consolidator: MemoryConfig["consolidator"]

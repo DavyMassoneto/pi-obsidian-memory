@@ -99,8 +99,8 @@ Decision settings allow only:
 ### When the observer, compaction and the consolidator run
 
 The cycle and its defaults follow pi-observational-memory (MIT). Observations live only in the pi session, in
-`obsidian-memory-observations` entries. The consolidator turns the oldest ones into vault notes; the journey and the
-record of what was consolidated stay in the session, in `obsidian-memory-consolidated` entries.
+`obsidian-memory-observations` entries. The consolidator turns the oldest ones into vault notes; the journey, work state and
+record of what was consolidated stay in the session, in `obsidian-memory-consolidated` entries and companion records.
 
 - **Observer.** It runs at `agent_start` and at each `turn_end`. It cuts the conversation not observed yet into chunks
   of about `observer.chunkTokens` tokens, breaking only where pi can cut, and starts up to `observer.concurrency`
@@ -122,8 +122,11 @@ record of what was consolidated stay in the session, in `obsidian-memory-consoli
   `observer.chunkTokens`.
 - **Compaction.** Every compaction (this trigger, `/compact` and pi's own) first observes the history that would be
   cut. It then keeps the latest conversation word for word: the cut is placed after a fully observed part, as close
-  as it can to `compaction.tailTokens` tokens. The older part is replaced by a block: a short intro, the memory map
-  and `## Observations`, one line per observation (`<id>  <text>`).
+  as it can to `compaction.tailTokens` tokens. The older part is replaced by a block with a short intro, `## Journey`, `## Work state`, the memory map,
+  `## Observations`, and `## Consolidated observations`, when those sections have content. Observation lines use
+  `<id>  <text>` and keep their attribution. The work state follows the journey and tells the agent to check existing
+  work before rebuilding it. Consolidated observations stay as historical evidence, outside the active pool;
+  retained user passages are not duplicated there.
 - **Memory map.** It starts with `## Memory map` and tells the agent to read notes with `memory_get` and find more with
   `memory_search`. Then `### project vault (<name>)` and `### global vault (<name>)`, each with one line per note not
   archived, sorted by path: `` - `<path>` · <type> ``, plus ` · don't forget` when marked. It fits in
@@ -135,8 +138,9 @@ record of what was consolidated stay in the session, in `obsidian-memory-consoli
   When memory cannot build its block there, pi compacts on its own and the user is told `Memory could not build the
   compaction block, so pi compacted the session on its own: <cause>`. When the trigger cannot build the block, nothing
   is compacted at that point, the run goes on and the user is told `Memory could not compact the session: <cause>`;
-  pi's own compaction still happens at pi's limit. With no config or an invalid one,
-  nothing is observed and pi compacts on its own. Esc during a compaction stops it and its observers.
+  pi's own compaction still happens at pi's limit. With no configuration file, the session cycle uses pi's active chat
+  model and the defaults above; no vault is needed, no notes are written and there is no memory map. An unreadable
+  or structurally invalid config still disables the cycle. Esc during a compaction stops it and its observers.
 
 - **Consolidator.** It runs at `agent_start` and at each `turn_end`, after the observers, one run at a time. When the
   observations of the session not consolidated yet hold `consolidator.atPoolTokens` tokens or more, it keeps the
@@ -145,8 +149,14 @@ record of what was consolidated stay in the session, in `obsidian-memory-consoli
   project vault, through the same rules as the memory tools, with no approval step; what it is unsure of is not
   saved. Then it writes the journey: one dated segment of two to five sentences for this batch, descriptive and in
   the past tense, with the oldest segments shortened once the journey passes `consolidator.journeyTokens`. The
-  session records the consolidated observations and the journey; from then on the compaction block opens with the
-  journey and leaves those observations out. The status line shows `memory: consolidating` while it runs. The user
+  same model reply updates the **work state**, a specific inventory of features, commands, files, versions, settings
+  and verification results (passed, failed or unverified). The state has no size setting or cap. Omitted items carry
+  forward; changing or retiring an item requires a citation to newer batch material, and attribution corrections
+  cite the affected source. The model judges whether newer material concerns the same point. Consolidated source
+  observations remain in the compaction block without a size cap, even when the inventory omits or supersedes a
+  detail. Neither the journey nor the work state is saved to a vault. The latest state record wins; older sessions
+  without one start with an empty inventory. The retained text can grow with the session and counts toward the
+  model’s actual context window. The status line shows `memory: consolidating` while it runs. The user
   is told `Memory consolidator started: <n> observation(s), about <t> tokens.` when it starts and `Memory
   consolidated: <n> observation(s), <m> change(s) to the vaults.` when it ends. A failed run is tried again
   at the first `turn_end` or `agent_start` a minute or more later; the user is told `Memory consolidation failed:
@@ -156,7 +166,7 @@ record of what was consolidated stay in the session, in `obsidian-memory-consoli
   name starts with a dot (`.runs`) and files that are not `.md`. Each file is split into parts of at most
   `observer.chunkTokens` tokens, and `consolidator.model` reviews each part through the consolidation rules, told
   that the file belongs to the registered project. It only reads `.memory`, and it does not change the session
-  journey. It stops at the first model failure and says which parts were done. The user is told `Imported <files>
+  journey or work state. It stops at the first model failure and says which parts were done. The user is told `Imported <files>
   file(s) from <folder>/.memory: <n> change(s) to the vaults.`; with no `.memory` files, `No pi-observational-memory
   files were found in <folder>/.memory.`; in a folder with no project vault, `This folder has no project vault. Run
   /memory-init first, then /memory-import again.`
@@ -252,7 +262,7 @@ every key. Once the config is valid, it opens the settings screen.
 leaves. Each choice is written at once and the screen shows the new value. The lines are: `Observer model`,
 `Observer thinking` (one of the seven levels), `Observe every` (chunk tokens), `Observers at a time`, `Compact at`
 (context tokens), `Verbatim tail` (tokens), `Memory map` (tokens), `Consolidator model`, `Consolidator thinking`,
-`Consolidate at` (pool tokens), `Pool after consolidating` (tokens), `Journey size` (tokens), memory-agent model, decision model (Jev, or Laya with its endpoint), gate cutoff, relevance cutoff (a number from 0 to 1, or `none`), embeddings
+`Consolidate at` (pool tokens), `Pool after consolidating` (tokens), `Journey size` (tokens; the work state has no size setting), memory-agent model, decision model (Jev, or Laya with its endpoint), gate cutoff, relevance cutoff (a number from 0 to 1, or `none`), embeddings
 provider, context budget, the three limits, the global vault, and the projects (change
 their vault to an existing folder, or remove them from the memory; nothing is deleted). Switching between Jev and Laya
 clears the cutoffs. Choosing Jev or a remote embeddings provider shows its warning. A value the schema refuses is

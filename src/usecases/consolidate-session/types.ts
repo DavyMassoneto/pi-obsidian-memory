@@ -1,4 +1,4 @@
-import type { LedgerObservation } from "#src/services"
+import type { LedgerObservation, WorkStateItem } from "#src/services"
 import type { Succeeded } from "#src/shared"
 import type {
   AppliedListener,
@@ -14,6 +14,7 @@ export interface ConsolidateSessionRequest {
   corrections: LedgerObservation[]
   correctionNotes: ExplicitSave[]
   journey: string
+  workState: WorkStateItem[]
   saved: ExplicitSave[]
   owedNotes: ExplicitSave[]
   onApplied: AppliedListener
@@ -25,6 +26,7 @@ export interface ConsolidatedSession {
   applied: AppliedWrite[]
   notes: ExplicitSave[]
   journey: string
+  workState: WorkStateItem[]
 }
 
 export type ConsolidateSessionResult = Succeeded<ConsolidatedSession> | MemoryResolutionRefusal | CaptureFailure

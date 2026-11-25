@@ -18,12 +18,17 @@ test("a valid config gives the consolidator settings too", async () => {
 
   expect(await cycleSettings(context)).toEqual({
     succeeded: true,
-    output: { observer: custom.observer, compaction: custom.compaction, consolidator: custom.consolidator },
+    output: {
+      observer: custom.observer,
+      compaction: custom.compaction,
+      consolidator: custom.consolidator,
+      vaultConfigured: true,
+    },
   })
   await expectRegistrationLeaseReleased(context)
 })
 
-test("with no config the settings are refused as not configured", async () => {
+test("with neither config nor an active model, settings are refused as not configured", async () => {
   const { context } = await memoryReadFixture()
   await rm(context.configPath)
 
@@ -44,4 +49,15 @@ test("an invalid config is refused with its problems", async () => {
     problems: [expect.any(String)],
   })
   await expectRegistrationLeaseReleased(context)
+})
+
+test("the active pi model runs the session cycle when no config or vault is registered", async () => {
+  const { context } = await memoryReadFixture()
+  await rm(context.configPath)
+  const model = { provider: "cc", id: "claude-haiku-5-5" }
+
+  expect(await cycleSettings({ ...context, cycleModel: model })).toMatchObject({
+    succeeded: true,
+    output: { vaultConfigured: false, observer: { model }, consolidator: { model } },
+  })
 })

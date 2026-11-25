@@ -40,9 +40,11 @@ export type {
   SummaryParts,
   UserWords,
   UserWordsCheck,
+  WorkStateItem,
 } from "#src/domain"
 export {
   activeObservations,
+  applyWorkState,
   assignObservationIds,
   attributionChecks,
   awaitsVerification,
@@ -99,6 +101,7 @@ export {
   renderMemoryMap,
   repairChecks,
   repairedObservations,
+  retainedConsolidated,
   retriedByPi,
   retryDue,
   savedNotesIn,

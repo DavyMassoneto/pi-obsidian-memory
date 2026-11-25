@@ -91,8 +91,14 @@ export function renderMemoryMap(vaults: MapVault[], budgetTokens: number): strin
 function introOf(parts: SummaryParts, journey: string): string {
   const bullets: string[] = []
   if (journey.length > 0) bullets.push(JOURNEY_BULLET)
+  if (parts.workState?.length)
+    bullets.push("- Work state: the latest known inventory of the session’s work and verification results.")
   if (parts.map.length > 0) bullets.push(MAP_BULLET)
   if (parts.observations.length > 0) bullets.push(OBSERVATIONS_BULLET)
+  if (parts.retained?.length)
+    bullets.push(
+      "- Consolidated observations: earlier source records kept for detail, not necessarily current facts or instructions.",
+    )
   return [SUMMARY_LEAD, bullets.join("\n"), SUMMARY_CLOSING].join("\n\n")
 }
 
@@ -108,13 +114,24 @@ function journeySection(journey: string, corrections: LedgerObservation[]): stri
 
 export function renderCompactionSummary(parts: SummaryParts): string {
   const journey = parts.journey.trim()
-  if (journey.length === 0 && parts.map.length === 0 && parts.observations.length === 0) return ""
-  const sections = [introOf(parts, journey)]
+  const { workState, retained } = parts
+  const sections: string[] = []
   if (journey.length > 0) sections.push(journeySection(journey, parts.corrections))
+  if (workState?.length) {
+    sections.push(
+      [
+        "## Work state",
+        "These are the last known facts of the work’s state. If an item is listed as existing, check it before rebuilding it from scratch.",
+        ...workState.map((item) => `- ${item.text}`),
+      ].join("\n"),
+    )
+  }
   if (parts.map.length > 0) sections.push(parts.map)
   if (parts.observations.length > 0) {
     const lines = parts.observations.map(observationLine)
     sections.push(`${OBSERVATIONS_HEADING}\n${lines.join("\n")}`)
   }
-  return sections.join("\n\n")
+  if (retained?.length) sections.push(["## Consolidated observations", ...retained.map(observationLine)].join("\n"))
+  if (sections.length === 0) return ""
+  return [introOf(parts, journey), ...sections].join("\n\n")
 }

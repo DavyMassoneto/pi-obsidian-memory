@@ -1,4 +1,5 @@
 export * from "./canonicalize.ts"
+export * from "./defaults.ts"
 export * from "./fully-qualified-path.ts"
 export * from "./path-identity.ts"
 export * from "./read.ts"

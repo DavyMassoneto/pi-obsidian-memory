@@ -146,6 +146,12 @@ instruction is history, not new permission; passages of messages over 400 charac
 
 [Local verification and timings](retrieval-performance.md).
 
+### Work state and lossless consolidation (VISION 15)
+
+- [x] Offline: validate state changes, carry over omitted items, read the latest state, and retain consolidated source observations.
+- [x] Offline: resolve cycle settings without a vault and render work state after the journey.
+- [x] Real pi: prove a fact present only in consolidated material appears in the work-state section after compaction.
+
 ## Where each VISION decision still lands
 
 | Decision | Pending |

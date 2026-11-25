@@ -35,7 +35,7 @@ export function memoryImportCommand(
     description: MEMORY_IMPORT_DESCRIPTION,
     async handler(_args, ctx) {
       if (!ctx.hasUI) return
-      const operation = sessions.cycleOperation(ctx.cwd, paths)
+      const operation = sessions.cycleOperation(ctx, paths)
       if (!operation) return ctx.ui.notify(NO_SESSION_NOTICE, "error")
       await runMemoryImport(ctx, operation, completionOf)
     },

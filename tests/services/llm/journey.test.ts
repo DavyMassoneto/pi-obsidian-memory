@@ -9,6 +9,7 @@ describe("journeyData", () => {
     expect(JSON.parse(journeyData(request))).toEqual({
       now: "2026-10-26 13:35",
       journey: request.journey,
+      workState: [],
       journeyTokens: 1000,
       journeyWords: 750,
       material: request.material,

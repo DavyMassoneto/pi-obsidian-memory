@@ -64,12 +64,14 @@ describe("parseJourneyReply", () => {
   it("reads the journey text as it is", () => {
     const journey = "### 2026-10-26 13:35\nWorked on the pool.\n"
 
-    expect(parseJourneyReply(JSON.stringify({ journey }))).toEqual({ succeeded: true, output: journey })
-    expect(parseJourneyReply(JSON.stringify({ journey: "" }))).toEqual({ succeeded: true, output: "" })
+    for (const text of [journey, ""]) {
+      const reply = { journey: text, workState: [] }
+      expect(parseJourneyReply(JSON.stringify(reply))).toEqual({ succeeded: true, output: reply })
+    }
   })
 
   it("a journey reply with extra keys is refused", () => {
-    const refusal = parseJourneyReply(JSON.stringify({ journey: "text", note: "extra" }))
+    const refusal = parseJourneyReply(JSON.stringify({ journey: "text", workState: [], note: "extra" }))
 
     expect(refusal.succeeded).toBe(false)
     if (!refusal.succeeded) expect(refusal.problems.length).toBeGreaterThan(0)

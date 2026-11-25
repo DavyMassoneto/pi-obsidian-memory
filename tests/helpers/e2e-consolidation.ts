@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises"
+import { readFile, writeFile } from "node:fs/promises"
 import { join, posix } from "node:path"
 import { setTimeout as delay } from "node:timers/promises"
 
@@ -17,6 +17,10 @@ import { noteWithId } from "./search-memory.ts"
 export const CONSOLIDATION_WAIT_MS = 240_000
 
 export const TASK_MARKER = "build-cache-9137"
+
+export const VERIFIED_REPORT = "build-cache-check.txt"
+
+export const VERIFIED_RESULT = "cache_verified_27c9"
 
 const RULE_TEXT = "pnpm"
 
@@ -98,7 +102,12 @@ const CONSOLIDATED_ENTRY_SCHEMA = Type.Object({
 export type ConsolidatedEntry = Static<typeof CONSOLIDATED_ENTRY_SCHEMA>
 
 export async function consolidationWorld(): Promise<E2eWorld> {
-  const world = await configuredWorld({ session: "saved", compactsSmallSessions: true, cycle: CONSOLIDATION_CYCLE })
+  const world = await configuredWorld({
+    session: "saved",
+    compactsSmallSessions: true,
+    cycle: { ...CONSOLIDATION_CYCLE, compaction: { tailTokens: 100 } },
+    tools: ["read"],
+  })
   await writeVaultFile(
     world.folders.projectVault,
     "tooling/Format code with biome.md",
@@ -106,6 +115,22 @@ export async function consolidationWorld(): Promise<E2eWorld> {
   )
   await restartMemory(world)
   return world
+}
+
+export async function readWorkVerification(world: E2eWorld): Promise<void> {
+  const cache = join(world.folders.cwd, "build-cache-entry.txt")
+  await writeFile(cache, VERIFIED_RESULT)
+  expect(await readFile(cache, "utf8")).toBe(VERIFIED_RESULT)
+  await writeFile(
+    join(world.folders.cwd, VERIFIED_REPORT),
+    `Build cache read-back smoke test: PASS; verification ID: ${VERIFIED_RESULT}\n`,
+  )
+  const turn = await world.pi.prompt(
+    `For the current build-cache task, use the read tool to inspect ${VERIFIED_REPORT} for the latest smoke-test result. Then reply with only OK.`,
+    [],
+  )
+  const read = turn.toolEnds.find(({ toolName, isError }) => toolName === "read" && !isError)
+  expect(read?.result.content.some(({ text }) => text?.includes(VERIFIED_RESULT))).toBe(true)
 }
 
 export function consolidatedEntriesIn(file: string): Promise<ConsolidatedEntry[]> {

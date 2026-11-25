@@ -141,13 +141,15 @@ is in [docs/vault-format.md](docs/vault-format.md).
 4. **Consolidation.** When the observations kept in the session pass 15,000 tokens, the consolidator turns the oldest
    ones into notes, in the background, until about 10,000 tokens of observations remain: it adds, updates, archives or
    replaces notes in the global or the project vault. It never asks you anything: what it is unsure of is not saved.
-   Tasks, progress and history are not memory. They go to the journey, a short dated account of the session that stays
-   in the session and opens each compaction block. Observations already consolidated leave the block, except the
-   passages you wrote: those stay in later compactions, but they are not counted toward the next consolidation and are
-   not picked again to become notes. Read material, unverified and unconfirmed observations are never saved as notes,
+   Tasks, progress and history stay in the session. The compaction block opens with a short dated journey and then
+   shows the work state: the last known facts about what exists and what was verified. Consolidated observations and
+   your retained passages stay in the block without a size cap, but are not counted toward the next consolidation or
+   picked again to become notes. Without a vault configuration, pi's active model runs the session cycle using the
+   default thresholds, without reading or writing vault notes. Read material, unverified and unconfirmed observations
+   are never saved as notes,
    and a batch holding unverified observations waits until they are checked. An observation found later to be read
    material, after it was consolidated, is passed back as a correction: the consolidator is asked to archive or update
-   the notes that state it as your rule, never to save it as a note, and the journey is asked not to present it as
+   the notes that state it as your rule, never to save it as a note, and the journey and work state are corrected not to present it as
    your words. That review is model judgement, not a verified repair of the vaults. The cycle follows
    pi-observational-memory.
 

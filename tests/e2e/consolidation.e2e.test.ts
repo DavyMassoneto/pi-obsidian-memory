@@ -17,9 +17,12 @@ import {
   observationsBeforeCut,
   PORTUGUESE_CONVERSATION,
   RULE_CONVERSATION,
+  readWorkVerification,
   recordsOf,
   STATED_SECRET,
   TASK_MARKER,
+  VERIFIED_REPORT,
+  VERIFIED_RESULT,
   vaultNotes,
   waitForConsolidationIdle,
   waitForConsolidations,
@@ -28,11 +31,17 @@ import {
   waitForRuleNote,
 } from "#test-helpers"
 
-test("a stated project rule becomes a note in the existing folder, the task does not, and the journey and tombstones appear in the session", async () => {
+test("a stated project rule becomes a note in the existing folder, the task does not, and the journey and verified work state survive compaction", async () => {
   const world = await consolidationWorld()
   const file = await world.pi.sessionFile()
 
-  for (const message of RULE_CONVERSATION) await world.pi.prompt(message, [])
+  const [rule, ...progress] = RULE_CONVERSATION
+  if (!rule) throw new Error("missing project rule fixture")
+  await world.pi.prompt(rule, [])
+  await readWorkVerification(world)
+  for (const message of progress) await world.pi.prompt(message, [])
+  await waitForObservations(file, 1)
+  await world.pi.prompt(NEXT_TURN_PROMPT, [])
   await waitForRuleNote(world)
   await waitForConsolidations(file, 1, CONSOLIDATION_WAIT_MS)
   await waitForConsolidationIdle(world)
@@ -59,14 +68,21 @@ test("a stated project rule becomes a note in the existing folder, the task does
   expect(promotedBeforeCut.length, "also tombstoned ordinary observations before the cut").toBeGreaterThan(
     retainedQuotes.length,
   )
-  const retainedById = new Map(retainedQuotes.map(({ id, content }) => [id, content]))
+  const evidence = beforeCut.filter(({ content }) => content.includes(VERIFIED_RESULT))
+  expect(evidence.length, "verification result observed before the cut").toBeGreaterThan(0)
+  expect(
+    evidence.every(({ id }) => tombstoned.includes(id)),
+    "verification result only in consolidated material",
+  ).toBe(true)
+  const section = compaction.summary.match(/## Work state\n([\s\S]*?)(?=\n\n## |$)/)
+  expect(section?.[1]).toContain(VERIFIED_RESULT)
+  expect(section?.[1]).toMatch(/\bpass(?:ed)?\b/i)
+  expect(section?.[1]).toContain(VERIFIED_REPORT)
+  const [, historical] = compaction.summary.split("## Consolidated observations\n")
+  expect(historical).toContain(VERIFIED_RESULT)
   const lines = compaction.summary.split("\n")
-  for (const id of tombstoned) {
-    const prefix = `${id}${OBSERVATION_SEPARATOR}`
-    const quote = retainedById.get(id)
-    if (typeof quote === "string") expect(lines).toContain(`${prefix}${quote}`)
-    else expect(lines.some((line) => line.startsWith(prefix))).toBe(false)
-  }
+  for (const { id, content } of retainedQuotes) expect(lines).toContain(id + OBSERVATION_SEPARATOR + content)
+  expect(await noteMentioning(world, VERIFIED_RESULT)).toEqual([])
   await waitForConsolidationIdle(world)
   expect(await noteMentioning(world, TASK_MARKER)).toEqual([])
   expect((await vaultNotes(world.folders.globalVault)).length).toBe(0)

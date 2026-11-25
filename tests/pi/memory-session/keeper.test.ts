@@ -9,7 +9,7 @@ test("a tool call has no operation context before a session started", () => {
 })
 
 test("the cycle operation runs on its own branch of the session", () => {
-  expect(new MemorySessionKeeper().cycleOperation("work", paths)).toBeNull()
+  expect(new MemorySessionKeeper().cycleOperation({ cwd: "work", model: undefined }, paths)).toBeNull()
 })
 
 test("a retrieval operation has no context before a session started", () => {

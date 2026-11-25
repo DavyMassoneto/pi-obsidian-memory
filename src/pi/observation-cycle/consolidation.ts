@@ -97,7 +97,7 @@ export class Consolidation {
   async #attempt(ctx: MemoryPiContext, promotion: Promotion, cancel: AbortSignal): Promise<string[]> {
     const { records, ledger, promoted, corrections } = promotion
     try {
-      const operation = this.#deps.sessions.cycleOperation(ctx.cwd, this.#deps.paths)
+      const operation = this.#deps.sessions.cycleOperation(ctx, this.#deps.paths)
       if (!operation) return [OBSERVER_UNEXPECTED]
       const signal = AbortSignal.any([operation.signal, cancel])
       const ids = promoted.map((observation) => observation.id)
@@ -107,6 +107,7 @@ export class Consolidation {
         corrections,
         correctionNotes: ledger.correctionNotes,
         journey: ledger.journey,
+        workState: ledger.workState,
         saved: savedNotesIn(records, ledger, ids),
         owedNotes: pendingWrittenNotes(records, batchIds),
         onApplied: (write: AppliedWrite) => this.#noteWritten(batchIds, write),
@@ -125,7 +126,14 @@ export class Consolidation {
     const { promoted, corrections } = promotion
     const ledger = ledgerOf(recordsOf(ctx.sessionManager.getBranch()))
     const told = [...promoted, ...corrections]
-    const written = consolidatedData(promoted, ledger, consolidated.journey, told, consolidated.notes)
+    const written = consolidatedData(
+      promoted,
+      ledger,
+      consolidated.journey,
+      told,
+      consolidated.notes,
+      consolidated.workState,
+    )
     if (written.consolidated) this.#deps.appendConsolidated(written.consolidated)
     if (written.meta) this.#deps.appendCompanion({ type: CONSOLIDATION_META_TYPE, data: written.meta })
     const changes = consolidated.applied.filter((write) => write.status === "applied").length

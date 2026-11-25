@@ -63,8 +63,16 @@ export class MemorySessionKeeper {
     return this.#loaded
   }
 
-  cycleOperation(workingFolder: string, paths: MemoryPaths): MemoryOperationContext | null {
-    return this.#siblingOperation(CYCLE_BRANCH, workingFolder, paths)
+  cycleOperation(
+    ctx: Pick<MemoryPiContext, "cwd" | "model">,
+    paths: MemoryPaths,
+    signal?: AbortSignal,
+  ): MemoryOperationContext | null {
+    const operation = this.#siblingOperation(CYCLE_BRANCH, ctx.cwd, paths)
+    if (!operation) return null
+    if (ctx.model) operation.cycleModel = { provider: ctx.model.provider, id: ctx.model.id }
+    if (signal) operation.signal = AbortSignal.any([operation.signal, signal])
+    return operation
   }
 
   retrievalOperation(workingFolder: string, paths: MemoryPaths): MemoryOperationContext | null {

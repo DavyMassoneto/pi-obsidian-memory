@@ -7,6 +7,7 @@ export function journeyData(request: JourneyRequest): string {
   return JSON.stringify({
     now: request.now.slice(0, 16).replace("T", " "),
     journey: request.journey,
+    workState: request.workState.map((item, index) => ({ index, ...item })),
     journeyTokens: request.targetTokens,
     journeyWords: Math.round(request.targetTokens * WORDS_PER_TOKEN),
     material: request.material,
@@ -22,7 +23,18 @@ export function journeyRequest(request: JourneyRequest): CompletionRequest {
 export async function journeyStep(request: JourneyRequest, complete: CompletionPort): Promise<JourneyStepResult> {
   const refused = checkStep(request)
   if (refused) return refused
-  const result = await completeStep(journeyRequest(request), complete)
+  const prompt = journeyRequest(request)
+  const result = await completeStep(prompt, complete)
   if (!result.succeeded) return result
-  return parseJourneyReply(result.output)
+  const parsed = parseJourneyReply(result.output)
+  if (parsed.succeeded) return parsed
+  const retry = await completeStep(
+    {
+      ...prompt,
+      system: `${prompt.system}\nThe previous reply was invalid (${parsed.problems.join("; ")}). Send a fresh JSON object. Escape newlines inside strings as \\n and escape double quotes inside strings. Do not wrap the object in Markdown.`,
+    },
+    complete,
+  )
+  if (!retry.succeeded) return retry
+  return parseJourneyReply(retry.output)
 }

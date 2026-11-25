@@ -1,4 +1,4 @@
-import type { PathPlatform } from "#src/services"
+import type { ChatModelReference, PathPlatform } from "#src/services"
 import type { Failed } from "#src/shared"
 import type { SemanticSource } from "#src/usecases/semantic-port"
 import type { MemorySession, OperationStamp } from "#src/usecases/session"
@@ -12,6 +12,7 @@ export interface MemoryOperationContext {
   stamp: OperationStamp
   signal: AbortSignal
   semantic?: SemanticSource
+  cycleModel?: ChatModelReference
 }
 
 export interface MemoryOperationRefusal extends Failed {

@@ -6,6 +6,7 @@ export function journeyRequestOf(overrides: Partial<JourneyRequest>): JourneyReq
     signal: new AbortController().signal,
     thinking: "medium",
     journey: "### 2026-10-26 12:00\nThe work began.",
+    workState: [],
     material: [
       { label: "0001", text: "User asked for <b>bold</b> output" },
       { label: "0002", text: "completed: wrote src/a.ts" },

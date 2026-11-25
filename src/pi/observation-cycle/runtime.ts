@@ -65,7 +65,7 @@ export class ObservationRuntime {
   }
 
   async settings(ctx: MemoryPiContext): Promise<CycleSettings | null> {
-    const operation = this.#deps.sessions.cycleOperation(ctx.cwd, this.#deps.paths)
+    const operation = this.#deps.sessions.cycleOperation(ctx, this.#deps.paths)
     if (!operation) return null
     const settings = await cycleSettings(operation)
     if (!settings.succeeded) return null
@@ -119,7 +119,7 @@ export class ObservationRuntime {
   }
 
   compactSession(ctx: MemoryPiContext, signal: AbortSignal): Promise<CompactSessionResult | null> {
-    const operation = this.#deps.sessions.currentOperation(ctx.cwd, this.#deps.paths, signal)
+    const operation = this.#deps.sessions.cycleOperation(ctx, this.#deps.paths, signal)
     if (!operation) return Promise.resolve(null)
     return compactSession({ records: recordsOf(ctx.sessionManager.getBranch()) }, operation)
   }
@@ -168,7 +168,7 @@ export class ObservationRuntime {
     cancel: AbortSignal,
   ): Promise<string[]> {
     try {
-      const operation = this.#deps.sessions.cycleOperation(ctx.cwd, this.#deps.paths)
+      const operation = this.#deps.sessions.cycleOperation(ctx, this.#deps.paths)
       if (!operation) return [OBSERVER_UNEXPECTED]
       const signal = AbortSignal.any([operation.signal, cancel])
       const result = await observeChunk({ records, range }, { ...operation, signal }, this.#deps.completionOf(ctx))

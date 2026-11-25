@@ -159,7 +159,7 @@ export class Rectification {
 
   async #worked(ctx: MemoryPiContext, job: RectificationJob, cancel: AbortSignal): Promise<string[]> {
     try {
-      const operation = this.#deps.sessions.cycleOperation(ctx.cwd, this.#deps.paths)
+      const operation = this.#deps.sessions.cycleOperation(ctx, this.#deps.paths)
       if (!operation) return [OBSERVER_UNEXPECTED]
       const signal = AbortSignal.any([operation.signal, cancel])
       const problems = await job.work({ ...operation, signal }, this.#deps.completionOf(ctx))

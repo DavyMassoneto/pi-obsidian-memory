@@ -1,6 +1,14 @@
 import type { ConsolidationMetaRecord, RectifiedOrigins } from "#src/domain/observation-ledger/origin"
 import { rectificationKey, rectifiedOrigins, settledObservation } from "./rectify.ts"
-import type { CoveredRange, Ledger, LedgerObservation, ObservationsRecord, SavedNote, SessionRecord } from "./types.ts"
+import type {
+  CoveredRange,
+  Ledger,
+  LedgerObservation,
+  ObservationsRecord,
+  SavedNote,
+  SessionRecord,
+  WorkStateItem,
+} from "./types.ts"
 import { shortUserText } from "./user-words.ts"
 import { UserWordsProjection } from "./user-words-projection.ts"
 
@@ -110,6 +118,12 @@ function journeyOf(records: SessionRecord[]): string {
   return journey
 }
 
+function workStateOf(records: ConsolidationMetaRecord[]): WorkStateItem[] {
+  const latest = records.findLast((record) => Array.isArray(record.data.workState))
+  if (latest?.data.workState) return latest.data.workState
+  return []
+}
+
 export function ledgerOf(records: SessionRecord[]): Ledger {
   const origins = rectifiedOrigins(records)
   const used = new Set<string>()
@@ -122,5 +136,13 @@ export function ledgerOf(records: SessionRecord[]): Ledger {
     .flatMap((range) => range.observations)
     .filter((observation) => isPendingCorrection(observation, kept.get(observation.id), origins, consolidated, aware))
   const correctionNotes = notesToReview(metaRecords, corrections)
-  return { ranges, used, consolidated, journey: journeyOf(records), corrections, correctionNotes }
+  return {
+    ranges,
+    used,
+    consolidated,
+    journey: journeyOf(records),
+    workState: workStateOf(metaRecords),
+    corrections,
+    correctionNotes,
+  }
 }

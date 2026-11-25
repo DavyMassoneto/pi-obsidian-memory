@@ -19,10 +19,16 @@ export const ChangedNoteSchema = Type.Object(
   { additionalProperties: false },
 )
 
+export const WorkStateItemSchema = Type.Object(
+  { sourceId: ObservationIdSchema, text: Type.String({ pattern: "^\\S[^\\r\\n]*$" }) },
+  { additionalProperties: false },
+)
+
 export const ConsolidationMetaSchema = Type.Object(
   {
     observationIds: Type.Array(ObservationIdSchema),
     journey: Type.Optional(Type.String()),
+    workState: Type.Optional(Type.Array(WorkStateItemSchema)),
     materialIds: Type.Optional(Type.Array(ObservationIdSchema)),
     notes: Type.Optional(Type.Array(ChangedNoteSchema)),
   },

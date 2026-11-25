@@ -30,6 +30,14 @@ function restoreUserMessageOrder(observations: LedgerObservation[]): void {
   }
 }
 
+export function retainedConsolidated(ledger: Ledger, firstKeptIndex: number): LedgerObservation[] {
+  return ledger.ranges
+    .filter((range) => range.to < firstKeptIndex)
+    .flatMap((range) => range.observations)
+    .filter((observation) => typeof observation.userEntryIndex !== "number" && ledger.consolidated.has(observation.id))
+    .sort(byId)
+}
+
 export function compactionObservations(ledger: Ledger, firstKeptIndex: number): LedgerObservation[] {
   const observations = ledger.ranges
     .filter((range) => range.to < firstKeptIndex)

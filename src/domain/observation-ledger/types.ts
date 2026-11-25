@@ -10,13 +10,20 @@ import type {
   RectifiedRecord,
   RectifyFailedRecord,
   UserWordsRecord,
+  WorkStateItemSchema,
 } from "#src/domain/observation-ledger/origin"
 import type {
+  JourneyReplySchema,
   LedgerObservationSchema,
   ObservationsConsolidatedSchema,
   ObservationsRecordedSchema,
   ObserverDraftSchema,
+  WorkStateChangeSchema,
 } from "./schemas.ts"
+
+export type WorkStateItem = Static<typeof WorkStateItemSchema>
+export type WorkStateChange = Static<typeof WorkStateChangeSchema>
+export type JourneyReply = Static<typeof JourneyReplySchema>
 
 export type StoredObservation = Static<typeof LedgerObservationSchema>
 
@@ -107,6 +114,7 @@ export interface Ledger {
   used: ReadonlySet<string>
   consolidated: ReadonlySet<string>
   journey: string
+  workState: WorkStateItem[]
   corrections: LedgerObservation[]
   correctionNotes: SavedNote[]
 }
@@ -155,6 +163,8 @@ export interface MapBudget {
 
 export interface SummaryParts {
   journey: string
+  workState?: WorkStateItem[]
+  retained?: LedgerObservation[]
   map: string
   observations: LedgerObservation[]
   corrections: LedgerObservation[]
